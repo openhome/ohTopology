@@ -1,8 +1,11 @@
+#!/usr/bin/python
+
 import sys
 import os
 
 def options(opt):
     opt.load('msvc')
+    opt.load('compiler_cxx')
     opt.add_option('--ohnet-include-dir', action='store', default=None)
     opt.add_option('--ohnet-lib-dir', action='store', default=None)
     opt.add_option('--ohnet', action='store', default=None)
@@ -63,10 +66,12 @@ def configure(conf):
         conf.fatal('Can only build for {0} on {1}, but currently running on {2}.'.format(dest_platform, build_platform, sys.platform))
 
     conf.env['MSVC_TARGETS'] = ['x86']
-    conf.load('msvc')
     if dest_platform in ['Windows-x86', 'Windows-x64']:
+        conf.load('msvc')
         conf.env.append_value('CXXFLAGS',['/MT' if debugmode == 'Release' else '/MTd', '/EHsc'])
+        conf.env.LIB_OHNET=['ws2_32', 'iphlpapi', 'dbghelp']
     else:
+        conf.load('compiler_cxx')
         conf.env.append_value('CXXFLAGS', [
                 '-Wno-psabi', '-fPIC', '-fexceptions', '-Wall', '-pipe',
                 '-D_GNU_SOURCE', '-D_REENTRANT', '-DDEFINE_'+endian+'_ENDIAN',
@@ -89,8 +94,7 @@ def configure(conf):
             '{options.ohnet}/Build/Obj/{ohnet_plat_dir}/{debugmode}',
         ],
         message='Specify --ohnet-lib-dir or --ohnet'))
-    conf.env.STLIB_OHNET=['ohNetCore', 'TestFramework', 'ohNetProxies']
-    conf.env.LIB_OHNET=['ws2_32', 'iphlpapi', 'dbghelp']
+    conf.env.STLIB_OHNET=['ohNetProxies', 'TestFramework', 'ohNetCore']
 
 def build(bld):
     bld.objects(
