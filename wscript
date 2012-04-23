@@ -12,6 +12,7 @@ def options(opt):
     opt.add_option('--debug', action='store_const', dest="debugmode", const="Debug", default="Release")
     opt.add_option('--release', action='store_const', dest="debugmode",  const="Release", default="Release")
     opt.add_option('--dest-platform', action='store', default=None)
+    opt.add_option('--cross', action='store', default=None)
     #opt.add_option('--big-endian', action='store_const', dest="endian",  const="BIG", default="LITTLE")
     #opt.add_option('--little-endian', action='store_const', dest="endian",  const="LITTLE", default="LITTLE")
     #opt.add_option('--dest', action='store', default=None)
@@ -94,7 +95,6 @@ def configure(conf):
             append('CXXFLAGS',['-fPIC', '-mmacosx-version-min=10.4', '-DPLATFORM_MACOSX_GNU'])
             append('LINKFLAGS',['-framework', 'CoreFoundation', '-framework', 'SystemConfiguration'])
 
-
     set_env('INCLUDES_OHNET', match_path(
         [
             '{options.ohnet_include_dir}',
@@ -108,6 +108,15 @@ def configure(conf):
         ],
         message='Specify --ohnet-lib-dir or --ohnet'))
     conf.env.STLIB_OHNET=['ohNetProxies', 'TestFramework', 'ohNetCore']
+
+    if conf.options.cross or os.environ.get('CROSS_COMPILE', None):
+        cross_compile = conf.options.cross or os.environ['CROSS_COMPILE']
+        conf.msg('Cross compiling using compiler prefix:', cross_compile)
+        env.CC = cross_compile + 'gcc'
+        env.CXX = cross_compile + 'g++'
+        env.AR = cross_compile + 'ar'
+        env.LINK_CXX = cross_compile + 'g++'
+        env.LINK_CC = cross_compile + 'gcc'
 
 def build(bld):
     bld.objects(
