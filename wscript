@@ -20,7 +20,6 @@ platforms = {
         'Linux-x86': dict(endian='LITTLE',   build_platform='linux2', ohnet_plat_dir='Posix'),
         'Linux-x64': dict(endian='LITTLE',   build_platform='linux2', ohnet_plat_dir='Posix'),
         'Linux-ARM': dict(endian='LITTLE',   build_platform='linux2', ohnet_plat_dir='Posix'),
-        'Kirkwood': dict(endian='LITTLE',    build_platform='linux2', ohnet_plat_dir='Posix'),
         'Windows-x86': dict(endian='LITTLE', build_platform='win32',  ohnet_plat_dir='Windows'),
         'Windows-x64': dict(endian='LITTLE', build_platform='win32',  ohnet_plat_dir='Windows'),
         'Core': dict(endian='BIG',           build_platform='linux2', ohnet_plat_dir='Volcano2'),
@@ -61,26 +60,40 @@ def configure(conf):
     ohnet_plat_dir = platform_info['ohnet_plat_dir']
     build_platform = platform_info['build_platform']
     endian = platform_info['endian']
-    
+
     if build_platform != sys.platform:
         conf.fatal('Can only build for {0} on {1}, but currently running on {2}.'.format(dest_platform, build_platform, sys.platform))
 
-    conf.env['MSVC_TARGETS'] = ['x86']
+    env = conf.env
+    append = env.append_value
+    env.MSVC_TARGETS = ['x86']
     if dest_platform in ['Windows-x86', 'Windows-x64']:
         conf.load('msvc')
-        conf.env.append_value('CXXFLAGS',['/MT' if debugmode == 'Release' else '/MTd', '/EHsc'])
-        conf.env.LIB_OHNET=['ws2_32', 'iphlpapi', 'dbghelp']
+        append('CXXFLAGS',['/MT' if debugmode == 'Release' else '/MTd', '/EHsc'])
+        env.LIB_OHNET=['ws2_32', 'iphlpapi', 'dbghelp']
     else:
         conf.load('compiler_cxx')
-        conf.env.append_value('CXXFLAGS', [
-                '-Wno-psabi', '-fPIC', '-fexceptions', '-Wall', '-pipe',
+        append('CXXFLAGS', [
+                '-fexceptions', '-Wall', '-pipe',
                 '-D_GNU_SOURCE', '-D_REENTRANT', '-DDEFINE_'+endian+'_ENDIAN',
                 '-DDEFINE_TRACE', '-fvisibility=hidden', '-Werror'])
         if debugmode == 'Debug':
-            conf.env.append_value('CXX_FLAGS',['-g','-O0'])
+            append('CXXFLAGS',['-g','-O0'])
         else:
-            conf.env.append_value('CXX_FLAGS',['-O2'])
-        conf.env.append_value('LINKFLAGS', ['-pthread'])
+            append('CXXFLAGS',['-O2'])
+        append('LINKFLAGS', ['-pthread'])
+        if dest_platform in ['Linux-x86', 'Linux-x86', 'Linux-ARM']:
+            append('CXXFLAGS',['-Wno-psabi', '-fPIC'])
+        elif dest_platform in ['Mac-x86', 'Mac-x64']:
+            if dest_platform == 'Mac-x86':
+                append('CXXFLAGS', ['-arch', 'i386'])
+                append('LINKFLAGS', ['-arch', 'i386'])
+            if dest_platform == 'Max-x64':
+                append('CXXFLAGS', ['-arch', 'x86_64'])
+                append('LINKFLAGS', ['-arch', 'x86_64'])
+            append('CXXFLAGS',['-fPIC', '-mmacosx-version-min=10.4', '-DPLATFORM_MACOSX_GNU'])
+            append('LINKFLAGS',['-framework', 'CoreFoundation', '-framework', 'SystemConfiguration'])
+
 
     set_env('INCLUDES_OHNET', match_path(
         [
