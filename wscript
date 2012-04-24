@@ -118,6 +118,13 @@ def configure(conf):
         env.LINK_CXX = cross_compile + 'g++'
         env.LINK_CC = cross_compile + 'gcc'
 
+def invoke_test(tsk):
+    import subprocess
+    testfile = tsk.env.cxxprogram_PATTERN % tsk.generator.test
+    bldpath = tsk.generator.bld.bldnode.abspath()
+    testfilepath = os.path.join(bldpath, testfile)
+    subprocess.check_call([testfile], executable=testfilepath, cwd=bldpath)
+
 def build(bld):
     bld.objects(
             source=[
@@ -138,3 +145,28 @@ def build(bld):
     bld.program(source='src/TestTopology3.cpp', use=['OHNET', 'stlib_topology'], target='TestTopology3')
     bld.program(source='src/TestTopology4.cpp', use=['OHNET', 'stlib_topology'], target='TestTopology4')
     bld.program(source='src/TestTopology.cpp',  use=['OHNET', 'stlib_topology'], target='TestTopology')
+
+# == Command for invoking unit tests ==
+
+def test(tst):
+    tst(rule=invoke_test, test='TestTopology', always=True)
+    tst.add_group()
+    tst(rule=invoke_test, test='TestTopology1', always=True)
+    tst.add_group()
+    tst(rule=invoke_test, test='TestTopology2', always=True)
+    tst.add_group()
+    tst(rule=invoke_test, test='TestTopology3', always=True)
+    tst.add_group()
+    tst(rule=invoke_test, test='TestTopology4', always=True)
+    tst.add_group()
+
+
+# == Contexts to make 'waf test' work ==
+
+from waflib.Build import BuildContext
+
+class TestContext(BuildContext):
+    cmd = 'test'
+    fun = 'test'
+
+# vim: set filetype=python softtabstop=4 expandtab shiftwidth=4 tabstop=4:
