@@ -2,6 +2,7 @@
 
 import sys
 import os
+from wafmodules.filetasks import gather_files, build_tree
 
 def options(opt):
     opt.load('msvc')
@@ -126,7 +127,9 @@ def invoke_test(tsk):
     subprocess.check_call([testfile], executable=testfilepath, cwd=bldpath)
 
 def build(bld):
-    bld.objects(
+
+    # Library
+    bld.stlib(
             source=[
                 'src/CpTopology.cpp',
                 'src/CpTopology1.cpp',
@@ -135,22 +138,33 @@ def build(bld):
                 'src/CpTopology4.cpp',
             ],
             use=['OHNET'],
-            target='objects_topology')
-    bld.stlib(
-            source=[],
-            use=['objects_topology'],
-            target='stlib_topology')
-    bld.program(source='src/TestTopology1.cpp', use=['OHNET', 'stlib_topology'], target='TestTopology1')
-    bld.program(source='src/TestTopology2.cpp', use=['OHNET', 'stlib_topology'], target='TestTopology2')
-    bld.program(source='src/TestTopology3.cpp', use=['OHNET', 'stlib_topology'], target='TestTopology3')
-    bld.program(source='src/TestTopology4.cpp', use=['OHNET', 'stlib_topology'], target='TestTopology4')
-    bld.program(source='src/TestTopology.cpp',  use=['OHNET', 'stlib_topology'], target='TestTopology')
+            target='ohTopology')
+
+    # Tests
+    bld.program(source='src/TestTopology1.cpp', use=['OHNET', 'ohTopology'], target='TestTopology1')
+    bld.program(source='src/TestTopology2.cpp', use=['OHNET', 'ohTopology'], target='TestTopology2')
+    bld.program(source='src/TestTopology3.cpp', use=['OHNET', 'ohTopology'], target='TestTopology3')
+    bld.program(source='src/TestTopology4.cpp', use=['OHNET', 'ohTopology'], target='TestTopology4')
+    bld.program(source='src/TestTopology.cpp',  use=['OHNET', 'ohTopology'], target='TestTopology')
+
+    # Bundles
+    header_files = gather_files(bld, '{top}/src', ['*.h'])
+    lib_files = gather_files(bld, '{bld}', [bld.env.cxxstlib_PATTERN % 'ohTopology'])
+    bundle_dev_files = build_tree({
+        'ohTopology/lib' : lib_files,
+        'ohTopology/include' : header_files
+        })
+    bundle_files = build_tree({
+        'ohTopology/lib' : lib_files,
+        })
+    bundle_dev_files.create_tgz_task(bld, 'ohTopology-dev.tar.gz')
+    bundle_files.create_tgz_task(bld, 'ohTopology.tar.gz')
 
 # == Command for invoking unit tests ==
 
 def test(tst):
     tst(rule=invoke_test, test='TestTopology', always=True)
-    tst.add_group()
+    tst.add_group() # Don't start another test until first has finished.
     tst(rule=invoke_test, test='TestTopology1', always=True)
     tst.add_group()
     tst(rule=invoke_test, test='TestTopology2', always=True)

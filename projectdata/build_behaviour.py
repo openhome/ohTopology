@@ -66,7 +66,11 @@ require_version(6)
 # Command-line options. See documentation for Python's optparse module.
 add_option("-t", "--target", help="Target platform. One of Windows-x86, Windows-x64, Linux-x86, Linux-x64, Linux-ARM.")
 add_option("-a", "--artifacts", help="Build artifacts directory. Used to fetch dependencies.")
+add_option("--debug", action="store_const", const="debug", dest="debugmode", default="debug", help="Build debug version.")
+add_option("--release", action="store_const", const="release", dest="debugmode", help="Build release version.")
 add_option("--steps", default="default", help="Steps to run, comma separated. (all,default,fetch,configure,build,tests,publish)")
+add_option("--release-version", action="store", help="Specify version string.")
+add_option("--fetch-only", action="store_const", const="fetch", dest="steps", help="Fetch dependencies only.")
 
 ALL_DEPENDENCIES = [
     "ohnet",
@@ -82,13 +86,14 @@ def choose_optional_steps(context):
 def choose_platform(context):
     if context.options.target:
         context.env["OH_PLATFORM"] = context.options.target
-    elif "slave" in context.env:
+    elif "PLATFORM" in context.env:
         context.env["OH_PLATFORM"] = {
-                "windows-x86" : "Windows-x86",
-                "windows-x64" : "Windows-x64",
-                "linux-x86" : "Linux-x86",
-                "linux-x64" : "Linux-x64",
-                "arm" : "Linux-ARM",
+                "Windows-x86" : "Windows-x86",
+                "Windows-x64" : "Windows-x64",
+                "Linux-x86" : "Linux-x86",
+                "Linux-x64" : "Linux-x64",
+                "Linux-ARM" : "Linux-ARM",
+                "Macos-x64" : "Mac-x64",
             }[context.env["slave"]]
     else:
         context.env["OH_PLATFORM"] = default_platform()
@@ -99,10 +104,15 @@ def setup_universal(context):
     env = context.env
     env.update(
         OHNET_ARTIFACTS=context.options.artifacts or 'http://www.openhome.org/releases/artifacts',
-        OHOS_PUBLISH="releases@www.openhome.org:/home/releases/www/artifacts/ohOs",
+        OH_PUBLISHDIR="releases@www.openhome.org:/home/releases/www/artifacts",
+        OH_PROJECT="ohTopology",
+        OH_DEBUG=context.options.debugmode,
         BUILDDIR='buildhudson',
-        WAFLOCK='.lock-wafbuildhudson')
+        WAFLOCK='.lock-wafbuildhudson',
+        OH_VERSION=context.options.release_version or context.env.get('RELEASE_VERSION', 'UNKNOWN'))
     context.configure_args = get_dependency_args(ALL_DEPENDENCIES)
+    context.configure_args += ["--dest-platform", env["OH_PLATFORM"]]
+    context.configure_args += ["--" + context.options.debugmode]
 
 # Extra Windows build configuration.
 @build_step()
@@ -122,8 +132,6 @@ def setup_windows(context):
 @build_condition(OH_PLATFORM="Linux-ARM")
 def setup_linux(context):
     env = context.env
-    context.configure_args += ["--with-csc-binary", "/usr/bin/dmcs"]
-    context.configure_args += ["--platform", env["OH_PLATFORM"]]
 
 # Principal build steps.
 @build_step("fetch", optional=True)
@@ -134,6 +142,31 @@ def fetch(context):
 def configure(context):
     python("waf", "configure", context.configure_args)
 
+@build_step("clean", optional=True)
+def clean(context):
+    python("waf", "clean")
+
 @build_step("build", optional=True)
 def build(context):
     python("waf")
+
+@build_step("test", optional=True)
+def test(context):
+    python("waf", "test")
+
+@build_step("publish", optional=True, default=False)
+def publish(context):
+    platform = context.env["OH_PLATFORM"]
+    version = context.options.publish_version or context.env.get("RELEASE_VERSION", "UNKNOWN")
+    publishdir = context.env["OHOS_PUBLISH"]
+    builddir = context.env["BUILDDIR"]
+    projectname = context.env["OH_PROJECT"]
+
+    devtargetpath = "{OH_PUBLISHDIR}/{OH_PROJECT}/{OH_PROJECT}-{OH_VERSION}-{OH_PLATFORM}-dev-{OH_DEBUG}.tar.gz".format(**context.env)
+    targetpath    = "{OH_PUBLISHDIR}/{OH_PROJECT}/{OH_PROJECT}-{OH_VERSION}-{OH_PLATFORM}-{OH_DEBUG}.tar.gz".format(**context.env)
+    devsourcepath = os.path.join(builddir, "{OH_PROJECT}-dev.tar.gz")
+    sourcepath    = os.path.join(builddir, "{OH_PROJECT}.tar.gz")
+    print (sourcepath,    targetpath)
+    print (devsourcepath, devtargetpath)
+    #scp(sourcepath,    targetpath)
+    #scp(devsourcepath, devtargetpath)
