@@ -58,7 +58,7 @@
 from ci import (
         build_step, require_version, add_option, specify_optional_steps,
         build_condition, default_platform, get_dependency_args,
-        get_vsvars_environment, fetch_dependencies, python)
+        get_vsvars_environment, fetch_dependencies, python, scp)
 
 require_version(6)
 
@@ -69,7 +69,7 @@ add_option("-a", "--artifacts", help="Build artifacts directory. Used to fetch d
 add_option("--debug", action="store_const", const="debug", dest="debugmode", default="debug", help="Build debug version.")
 add_option("--release", action="store_const", const="release", dest="debugmode", help="Build release version.")
 add_option("--steps", default="default", help="Steps to run, comma separated. (all,default,fetch,configure,build,tests,publish)")
-add_option("--release-version", action="store", help="Specify version string.")
+add_option("--publish-version", action="store", help="Specify version string.")
 add_option("--fetch-only", action="store_const", const="fetch", dest="steps", help="Fetch dependencies only.")
 
 ALL_DEPENDENCIES = [
@@ -109,7 +109,7 @@ def setup_universal(context):
         OH_DEBUG=context.options.debugmode,
         BUILDDIR='buildhudson',
         WAFLOCK='.lock-wafbuildhudson',
-        OH_VERSION=context.options.release_version or context.env.get('RELEASE_VERSION', 'UNKNOWN'))
+        OH_VERSION=context.options.publish_version or context.env.get('RELEASE_VERSION', 'UNKNOWN'))
     context.configure_args = get_dependency_args(ALL_DEPENDENCIES)
     context.configure_args += ["--dest-platform", env["OH_PLATFORM"]]
     context.configure_args += ["--" + context.options.debugmode]
@@ -156,17 +156,9 @@ def test(context):
 
 @build_step("publish", optional=True, default=False)
 def publish(context):
-    platform = context.env["OH_PLATFORM"]
-    version = context.options.publish_version or context.env.get("RELEASE_VERSION", "UNKNOWN")
-    publishdir = context.env["OHOS_PUBLISH"]
-    builddir = context.env["BUILDDIR"]
-    projectname = context.env["OH_PROJECT"]
-
     devtargetpath = "{OH_PUBLISHDIR}/{OH_PROJECT}/{OH_PROJECT}-{OH_VERSION}-{OH_PLATFORM}-dev-{OH_DEBUG}.tar.gz".format(**context.env)
     targetpath    = "{OH_PUBLISHDIR}/{OH_PROJECT}/{OH_PROJECT}-{OH_VERSION}-{OH_PLATFORM}-{OH_DEBUG}.tar.gz".format(**context.env)
-    devsourcepath = os.path.join(builddir, "{OH_PROJECT}-dev.tar.gz")
-    sourcepath    = os.path.join(builddir, "{OH_PROJECT}.tar.gz")
-    print (sourcepath,    targetpath)
-    print (devsourcepath, devtargetpath)
-    #scp(sourcepath,    targetpath)
-    #scp(devsourcepath, devtargetpath)
+    devsourcepath = "{BUILDDIR}/{OH_PROJECT}-dev.tar.gz".format(**context.env)
+    sourcepath    = "{BUILDDIR}/{OH_PROJECT}.tar.gz".format(**context.env)
+    scp(sourcepath,    targetpath)
+    scp(devsourcepath, devtargetpath)
