@@ -1,4 +1,7 @@
 *.swp
-/build/
+
+/build*/
+/dependencies/
 /.waf-*/
 /.lock-*
+
