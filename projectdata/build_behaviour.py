@@ -156,9 +156,6 @@ def test(context):
 
 @build_step("publish", optional=True, default=False)
 def publish(context):
-    devtargetpath = "{OH_PUBLISHDIR}/{OH_PROJECT}/{OH_PROJECT}-{OH_VERSION}-{OH_PLATFORM}-dev-{OH_DEBUG}.tar.gz".format(**context.env)
     targetpath    = "{OH_PUBLISHDIR}/{OH_PROJECT}/{OH_PROJECT}-{OH_VERSION}-{OH_PLATFORM}-{OH_DEBUG}.tar.gz".format(**context.env)
-    devsourcepath = "{BUILDDIR}/{OH_PROJECT}-dev.tar.gz".format(**context.env)
     sourcepath    = "{BUILDDIR}/{OH_PROJECT}.tar.gz".format(**context.env)
     scp(sourcepath,    targetpath)
-    scp(devsourcepath, devtargetpath)
