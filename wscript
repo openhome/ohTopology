@@ -71,7 +71,12 @@ def configure(conf):
     env.MSVC_TARGETS = ['x86']
     if dest_platform in ['Windows-x86', 'Windows-x64']:
         conf.load('msvc')
-        append('CXXFLAGS',['/MT' if debugmode == 'Release' else '/MTd', '/EHsc'])
+        append('CXXFLAGS',['/W4', '/WX', '/EHsc', '/DDEFINE_TRACE', '/DDEFINE_'+endian+'_ENDIAN'])
+        if debugmode == 'Debug':
+            append('CXXFLAGS',['/MTd', '/Z7', '/Od', '/RTC1'])
+            append('LINKFLAGS', ['/debug'])
+        else:
+            append('CXXFLAGS',['/MT', '/Ox'])
         env.LIB_OHNET=['ws2_32', 'iphlpapi', 'dbghelp']
     else:
         conf.load('compiler_cxx')
@@ -109,7 +114,7 @@ def configure(conf):
             '{options.ohnet_lib_dir}',
             '{options.ohnet}/Build/Obj/{ohnet_plat_dir}/{debugmode}',
         ],
-        message='Specify --ohnet-lib-dir or --ohnet'))
+        message='FAILED.  Was --ohnet-lib-dir or --ohnet specified?  Do the directories they point to exist?'))
     conf.env.STLIB_OHNET=['ohNetProxies', 'TestFramework', 'ohNetCore']
 
     if conf.options.cross or os.environ.get('CROSS_COMPILE', None):
@@ -136,7 +141,7 @@ def invoke_test(tsk):
         cmdline = []
         cmdline.append(testfile)
         for arg in testargs:
-            cmdLine.append(arg)
+            cmdline.append(arg)
         subprocess.check_call(cmdline, executable=testfilepath, cwd=bldpath)
     else:
         xmlfile = tsk.generator.test + '.xml'
