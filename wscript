@@ -2,7 +2,8 @@
 
 import sys
 import os
-from wafmodules.filetasks import gather_files, build_tree
+from wafmodules.filetasks import gather_files, build_tree, copy_task
+from waflib.Node import Node
 
 def options(opt):
     opt.load('msvc')
@@ -176,7 +177,33 @@ def invoke_test(tsk):
                 print '---- error end ----'
             raise Exception("Errors from valgrind")
 
+def get_node(bld, node_or_filename):
+    if isinstance(node_or_filename, Node):
+        return node_or_filename
+    return bld.path.find_node(node_or_filename)
+
+def create_copy_task(build_context, files, target_dir='', cwd=None, keep_relative_paths=False, name=None):
+    source_file_nodes = [get_node(build_context, f) for f in files]
+    if keep_relative_paths:
+        cwd_node = build_context.path.find_dir(cwd)
+        target_filenames = [
+                path.join(target_dir, source_node.path_from(cwd_node))
+                for source_node in source_file_nodes]
+    else:
+        target_filenames = [
+                os.path.join(target_dir, source_node.name)
+                for source_node in source_file_nodes]
+        target_filenames = map(build_context.bldnode.make_node, target_filenames)
+    return build_context(
+            rule=copy_task,
+            source=source_file_nodes,
+            target=target_filenames,
+            name=name)
+
 def build(bld):
+
+    create_copy_task(bld, ['OpenHome/Av/CpTopology.h'], 'Include/OpenHome/Av')
+    bld.add_group()
 
     # Library
     bld.stlib(
@@ -219,16 +246,12 @@ def build(bld):
             target='TestTopology')
 
     # Bundles
-    header_files = gather_files(bld, '{top}/src', ['*.h'])
+    header_files = gather_files(bld, '{top}/OpenHome/Av', ['*.h'])
     lib_files = gather_files(bld, '{bld}', [bld.env.cxxstlib_PATTERN % 'ohTopology'])
-    bundle_dev_files = build_tree({
-        'ohTopology/lib' : lib_files,
-        'ohTopology/include' : header_files
-        })
     bundle_files = build_tree({
         'ohTopology/lib' : lib_files,
+        'ohTopology/Include/OpenHome/Av' : header_files
         })
-    bundle_dev_files.create_tgz_task(bld, 'ohTopology-dev.tar.gz')
     bundle_files.create_tgz_task(bld, 'ohTopology.tar.gz')
 
 # == Command for invoking unit tests ==
