@@ -234,24 +234,14 @@ def build(bld):
 # == Command for invoking unit tests ==
 
 def test(tst):
-    #for t, a, when in [['TestTopology', [], True]
-    #                  ,['TestTopology1', ['--mx', '3'], True]
-    #                  ,['TestTopology2', ['--duration', '10'], True]
-    #                  ,['TestTopology3', ['--duration', '10'], True]
-    #                  ,['TestTopology4', ['--duration', '10'], True]
-    #                  ]:
-    #    tst(rule=invoke_test, test=t, args=a, always=when)
-    #    tst.add_group() # Don't start another test until first has finished.
-    tst(rule=invoke_test, test='TestTopology', args=[], always=True)
-    tst.add_group() # Don't start another test until first has finished.
-    tst(rule=invoke_test, test='TestTopology1', args=['--mx', '3'], always=True)
-    tst.add_group()
-    tst(rule=invoke_test, test='TestTopology2', args=['--duration', '10'], always=True)
-    tst.add_group()
-    tst(rule=invoke_test, test='TestTopology3', args=['--duration', '10'], always=True)
-    tst.add_group()
-    tst(rule=invoke_test, test='TestTopology4', args=['--duration', '10'], always=True)
-    tst.add_group()
+    for t, a, when in [['TestTopology', [], True]
+                      ,['TestTopology1', ['--mx', '3'], True]
+                      ,['TestTopology2', ['--duration', '10'], True]
+                      ,['TestTopology3', ['--duration', '10'], True]
+                      ,['TestTopology4', ['--duration', '10'], True]
+                      ]:
+        tst(rule=invoke_test, test=t, args=a, always=when)
+        tst.add_group() # Don't start another test until first has finished.
 
 
 # == Contexts to make 'waf test' work ==
