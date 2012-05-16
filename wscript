@@ -84,6 +84,8 @@ def configure(conf):
         else:
             append('CXXFLAGS',['-O2'])
         append('LINKFLAGS', ['-pthread'])
+        if dest_platform in ['Linux-x86']:
+            append('VALGRIND_ENABLE', ['1'])
         if dest_platform in ['Linux-x86', 'Linux-x86', 'Linux-ARM']:
             append('CXXFLAGS',['-Wno-psabi', '-fPIC'])
         elif dest_platform in ['Mac-x86', 'Mac-x64']:
@@ -119,12 +121,54 @@ def configure(conf):
         env.LINK_CXX = cross_compile + 'g++'
         env.LINK_CC = cross_compile + 'gcc'
 
+def print_vg_frame_component(frame, tag, prefix):
+    o = frame.find(tag)
+    if o != None:
+        print '    ' + prefix + ': ' + o.text
+
 def invoke_test(tsk):
     import subprocess
     testfile = tsk.env.cxxprogram_PATTERN % tsk.generator.test
+    testargs = tsk.generator.args
     bldpath = tsk.generator.bld.bldnode.abspath()
     testfilepath = os.path.join(bldpath, testfile)
-    subprocess.check_call([testfile], executable=testfilepath, cwd=bldpath)
+    if not tsk.env.VALGRIND_ENABLE:
+        cmdline = []
+        cmdline.append(testfile)
+        for arg in testargs:
+            cmdLine.append(arg)
+        subprocess.check_call(cmdline, executable=testfilepath, cwd=bldpath)
+    else:
+        xmlfile = tsk.generator.test + '.xml'
+        cmdline = []
+        cmdline.append('--leak-check=yes')
+        cmdline.append('--suppressions=../ValgrindSuppressions.txt')
+        cmdline.append('--xml=yes')
+        cmdline.append('--xml-file=' + xmlfile)
+        cmdline.append('./' + testfile)
+        for arg in testargs:
+            cmdline.append(arg)
+        subprocess.check_call(cmdline, executable='valgrind', cwd=bldpath)
+
+        import xml.etree.ElementTree as ET
+        doc = ET.parse(os.path.join(bldpath, xmlfile))
+        errors = doc.findall('//error')
+        if len(errors) > 0:
+            for error in errors:
+                print '---- error start ----'
+                frames = error.findall('.//frame')
+                for frame in frames:
+                    print '  ---- frame start ----'
+                    for tag, prefix in [['ip', 'Object'],
+                                        ['fn', 'Function'],
+                                        ['dir', 'Directory'],
+                                        ['file', 'File'],
+                                        ['line', 'Line'],
+                                       ]:
+                        print_vg_frame_component(frame, tag, prefix)
+                    print '  ---- frame end ----'
+                print '---- error end ----'
+            raise Exception("Errors from valgrind")
 
 def build(bld):
 
@@ -163,15 +207,15 @@ def build(bld):
 # == Command for invoking unit tests ==
 
 def test(tst):
-    tst(rule=invoke_test, test='TestTopology', always=True)
+    tst(rule=invoke_test, test='TestTopology', args=[], always=True)
     tst.add_group() # Don't start another test until first has finished.
-    tst(rule=invoke_test, test='TestTopology1', always=True)
+    tst(rule=invoke_test, test='TestTopology1', args=['--mx', '3'], always=True)
     tst.add_group()
-    tst(rule=invoke_test, test='TestTopology2', always=True)
+    tst(rule=invoke_test, test='TestTopology2', args=['--duration', '10'], always=True)
     tst.add_group()
-    tst(rule=invoke_test, test='TestTopology3', always=True)
+    tst(rule=invoke_test, test='TestTopology3', args=['--duration', '10'], always=True)
     tst.add_group()
-    tst(rule=invoke_test, test='TestTopology4', always=True)
+    tst(rule=invoke_test, test='TestTopology4', args=['--duration', '10'], always=True)
     tst.add_group()
 
 
