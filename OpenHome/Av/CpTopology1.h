@@ -8,27 +8,27 @@
 #include <OpenHome/Net/Core/FunctorCpDevice.h>
 
 namespace OpenHome {
-namespace Net {
+namespace Av {
 
 class ICpTopology1Handler
 {
 public:
-    virtual void ProductAdded(CpDevice& aDevice) = 0;
-    virtual void ProductRemoved(CpDevice& aDevice) = 0;
+    virtual void ProductAdded(Net::CpDevice& aDevice) = 0;
+    virtual void ProductRemoved(Net::CpDevice& aDevice) = 0;
     ~ICpTopology1Handler() {}
 };
 
-typedef void (ICpTopology1Handler::*ICpTopology1HandlerFunction)(CpDevice&);
+typedef void (ICpTopology1Handler::*ICpTopology1HandlerFunction)(Net::CpDevice&);
 
 class CpTopology1Job
 {
 public:
     CpTopology1Job(ICpTopology1Handler& aHandler);
-    void Set(CpDevice& aDevice, ICpTopology1HandlerFunction aFunction);
+    void Set(Net::CpDevice& aDevice, ICpTopology1HandlerFunction aFunction);
     virtual void Execute();
 private:
     ICpTopology1Handler* iHandler;
-    CpDevice* iDevice;
+    Net::CpDevice* iDevice;
     ICpTopology1HandlerFunction iFunction;
 };
 
@@ -45,19 +45,19 @@ public:
     ~CpTopology1();
     
 private:
-    void ProductAdded(CpDevice& aDevice);
-    void ProductRemoved(CpDevice& aDevice);
+    void ProductAdded(Net::CpDevice& aDevice);
+    void ProductRemoved(Net::CpDevice& aDevice);
 
     void Run();
     
 private:
-    CpDeviceList* iDeviceListProduct;
+    Net::CpDeviceList* iDeviceListProduct;
     Fifo<CpTopology1Job*> iFree;
     Fifo<CpTopology1Job*> iReady;
     ThreadFunctor* iThread;
 };
 
-} // namespace Net
+} // namespace Av
 } // namespace OpenHome
 
 #endif // HEADER_TOPOLOGY1

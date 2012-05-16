@@ -12,7 +12,7 @@
 #include "CpTopology1.h"
 
 namespace OpenHome {
-namespace Net {
+namespace Av {
 
 class CpTopology2Group;
 
@@ -66,7 +66,7 @@ class CpTopology2Group
 public:
     void AddRef();
     void RemoveRef();
-    CpDevice& Device() const;
+    Net::CpDevice& Device() const;
     TBool Standby() const;
     void SetStandby(TBool aValue);
     const Brx& Room() const;
@@ -82,7 +82,7 @@ public:
     void* UserData() const;
     
 public: // for test purposes
-    CpTopology2Group(CpDevice& aDevice, ICpTopology2GroupHandler& aHandler, TBool aStandby, const Brx& aRoom, const Brx& aName, TUint aSourceIndex, TBool aHasVolumeControl);
+    CpTopology2Group(Net::CpDevice& aDevice, ICpTopology2GroupHandler& aHandler, TBool aStandby, const Brx& aRoom, const Brx& aName, TUint aSourceIndex, TBool aHasVolumeControl);
     void AddSource(const Brx& aName, const Brx& aType, TBool aVisible);
     void UpdateRoom(const Brx& aValue);
     void UpdateName(const Brx& aValue);
@@ -92,7 +92,7 @@ public: // for test purposes
     ~CpTopology2Group();
 
 private:
-    CpDevice& iDevice;
+    Net::CpDevice& iDevice;
     ICpTopology2GroupHandler& iHandler;
     TBool iStandby;
     Bws<kMaxRoomBytes> iRoom;
@@ -121,10 +121,10 @@ private:
 class CpTopology2Device : public INonCopyable, public ICpTopology2GroupHandler
 {
 protected:
-    CpTopology2Device(CpDevice& aDevice);
+    CpTopology2Device(Net::CpDevice& aDevice);
     
 public:
-    TBool IsAttachedTo(CpDevice& aDevice);
+    TBool IsAttachedTo(Net::CpDevice& aDevice);
     virtual ~CpTopology2Device();
 
 private:
@@ -133,13 +133,13 @@ private:
     virtual void SetStandby(TBool aValue) = 0;
 
 protected:
-    CpDevice& iDevice;
+    Net::CpDevice& iDevice;
 };
 
 class CpTopology2Product : public CpTopology2Device 
 {
 public:
-    CpTopology2Product(CpDevice& aDevice, ICpTopology2Handler& aHandler);
+    CpTopology2Product(Net::CpDevice& aDevice, ICpTopology2Handler& aHandler);
     virtual ~CpTopology2Product();
 
 private:
@@ -147,8 +147,8 @@ private:
     virtual void SetSourceIndex(TUint aIndex);
     virtual void SetStandby(TBool aValue);
 
-    void CallbackSetSourceIndex(IAsync& aAsync);        
-    void CallbackSetStandby(IAsync& aAsync);        
+    void CallbackSetSourceIndex(Net::IAsync& aAsync);        
+    void CallbackSetStandby(Net::IAsync& aAsync);        
 
     void ProcessSourceXml(const Brx& aXml, TBool aInitial);
 
@@ -161,10 +161,10 @@ private:
 
 private:
     ICpTopology2Handler& iHandler;
-    CpProxyAvOpenhomeOrgProduct1* iServiceProduct;
+    Net::CpProxyAvOpenhomeOrgProduct1* iServiceProduct;
     CpTopology2Group* iGroup;
-    FunctorAsync iFunctorSetSourceIndex;
-    FunctorAsync iFunctorSetStandby;
+    Net::FunctorAsync iFunctorSetSourceIndex;
+    Net::FunctorAsync iFunctorSetStandby;
 };
 
 class CpTopology2 : public ICpTopology1Handler, public ICpTopology2Handler
@@ -180,10 +180,10 @@ public:
     
 private:
     // ICpTopology1Handler
-    virtual void ProductAdded(CpDevice& aDevice);
-    virtual void ProductRemoved(CpDevice& aDevice);
+    virtual void ProductAdded(Net::CpDevice& aDevice);
+    virtual void ProductRemoved(Net::CpDevice& aDevice);
 
-    void DeviceRemoved(CpDevice& aDevice);
+    void DeviceRemoved(Net::CpDevice& aDevice);
 
     // ICpTopology2Handler
     virtual void GroupAdded(CpTopology2Group& aGroup);
@@ -202,7 +202,7 @@ private:
     std::vector<CpTopology2Device*> iDeviceList;
 };
 
-} // namespace Net
+} // namespace Av
 } // namespace OpenHome
 
 #endif // HEADER_TOPOLOGY2

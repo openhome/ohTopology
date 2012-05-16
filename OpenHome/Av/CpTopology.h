@@ -11,7 +11,7 @@
 #include <list>
 
 namespace OpenHome {
-namespace Net {
+namespace Av {
 
 class IHouse : private INonCopyable
 {
@@ -40,11 +40,11 @@ public:
     virtual const Brx& SourceName(TUint aIndex) const = 0;
     virtual const Brx& SourceType(TUint aIndex) const = 0;
     virtual const Brx& SourceGroup(TUint aIndex) const = 0;
-    virtual CpDevice& SourceDevice(TUint aIndex) const = 0;
+    virtual Net::CpDevice& SourceDevice(TUint aIndex) const = 0;
     virtual const Brx& CurrentSourceName() const = 0;
     virtual const Brx& CurrentSourceType() const = 0;
     virtual const Brx& CurrentSourceGroup() const = 0;
-    virtual CpDevice& CurrentSourceDevice() const = 0;
+    virtual Net::CpDevice& CurrentSourceDevice() const = 0;
     virtual TBool HasVolumeControl() const = 0;
 	virtual TUint Volume() const = 0;
 	virtual TBool Mute() const = 0;
@@ -89,7 +89,7 @@ private:
     IHouse* iHouse;
 };
 
-} // namespace Net
+} // namespace Av
 } // namespace OpenHome
 
 #endif // HEADER_TOPOLOGY

@@ -116,6 +116,7 @@ def configure(conf):
         ],
         message='FAILED.  Was --ohnet-lib-dir or --ohnet specified?  Do the directories they point to exist?'))
     conf.env.STLIB_OHNET=['ohNetProxies', 'TestFramework', 'ohNetCore']
+    conf.env.INCLUDES_TOPOLOGY = conf.path.find_node('.').abspath()
 
     if conf.options.cross or os.environ.get('CROSS_COMPILE', None):
         cross_compile = conf.options.cross or os.environ['CROSS_COMPILE']
@@ -180,21 +181,42 @@ def build(bld):
     # Library
     bld.stlib(
             source=[
-                'src/CpTopology.cpp',
-                'src/CpTopology1.cpp',
-                'src/CpTopology2.cpp',
-                'src/CpTopology3.cpp',
-                'src/CpTopology4.cpp',
+                'OpenHome/Av/CpTopology.cpp',
+                'OpenHome/Av/CpTopology1.cpp',
+                'OpenHome/Av/CpTopology2.cpp',
+                'OpenHome/Av/CpTopology3.cpp',
+                'OpenHome/Av/CpTopology4.cpp',
             ],
             use=['OHNET'],
+            includes = bld.env.INCLUDES_TOPOLOGY,
             target='ohTopology')
 
     # Tests
-    bld.program(source='src/TestTopology1.cpp', use=['OHNET', 'ohTopology'], target='TestTopology1')
-    bld.program(source='src/TestTopology2.cpp', use=['OHNET', 'ohTopology'], target='TestTopology2')
-    bld.program(source='src/TestTopology3.cpp', use=['OHNET', 'ohTopology'], target='TestTopology3')
-    bld.program(source='src/TestTopology4.cpp', use=['OHNET', 'ohTopology'], target='TestTopology4')
-    bld.program(source='src/TestTopology.cpp',  use=['OHNET', 'ohTopology'], target='TestTopology')
+    bld.program(
+            source='OpenHome/Av/Tests/TestTopology1.cpp',
+            use=['OHNET', 'ohTopology'],
+            includes = bld.env.INCLUDES_TOPOLOGY,
+            target='TestTopology1')
+    bld.program(
+            source='OpenHome/Av/Tests/TestTopology2.cpp',
+            use=['OHNET', 'ohTopology'],
+            includes = bld.env.INCLUDES_TOPOLOGY,
+            target='TestTopology2')
+    bld.program(
+            source='OpenHome/Av/Tests/TestTopology3.cpp',
+            use=['OHNET', 'ohTopology'],
+            includes = bld.env.INCLUDES_TOPOLOGY,
+            target='TestTopology3')
+    bld.program(
+            source='OpenHome/Av/Tests/TestTopology4.cpp',
+            use=['OHNET', 'ohTopology'],
+            includes = bld.env.INCLUDES_TOPOLOGY,
+            target='TestTopology4')
+    bld.program(
+            source='OpenHome/Av/Tests/TestTopology.cpp',
+            use=['OHNET', 'ohTopology'],
+            includes = bld.env.INCLUDES_TOPOLOGY,
+            target='TestTopology')
 
     # Bundles
     header_files = gather_files(bld, '{top}/src', ['*.h'])
@@ -212,6 +234,14 @@ def build(bld):
 # == Command for invoking unit tests ==
 
 def test(tst):
+    #for t, a, when in [['TestTopology', [], True]
+    #                  ,['TestTopology1', ['--mx', '3'], True]
+    #                  ,['TestTopology2', ['--duration', '10'], True]
+    #                  ,['TestTopology3', ['--duration', '10'], True]
+    #                  ,['TestTopology4', ['--duration', '10'], True]
+    #                  ]:
+    #    tst(rule=invoke_test, test=t, args=a, always=when)
+    #    tst.add_group() # Don't start another test until first has finished.
     tst(rule=invoke_test, test='TestTopology', args=[], always=True)
     tst.add_group() # Don't start another test until first has finished.
     tst(rule=invoke_test, test='TestTopology1', args=['--mx', '3'], always=True)

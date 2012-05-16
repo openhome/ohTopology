@@ -1,4 +1,4 @@
-#include <OpenHome/Net/Core/CpTopology.h>
+#include <OpenHome/Av/CpTopology.h>
 
 #include <OpenHome/Private/Debug.h>
 #include <OpenHome/Private/Parser.h>
@@ -9,6 +9,7 @@
 
 using namespace OpenHome;
 using namespace OpenHome::Net;
+using namespace OpenHome::Av;
 
 class CpTopologyRoom : public IRoom
 {

@@ -12,7 +12,7 @@
 #include "CpTopology3.h"
 
 namespace OpenHome {
-namespace Net {
+namespace Av {
 
 class CpTopology4Room;
 
@@ -94,7 +94,7 @@ public:
     const Brx& Name() const;
     const Brx& Type() const;
     const Brx& Group() const;
-    CpDevice& Device() const;
+    Net::CpDevice& Device() const;
 
     void Select();
 
@@ -145,11 +145,11 @@ public:
     const Brx& SourceName(TUint aIndex) const;
     const Brx& SourceType(TUint aIndex) const;
     const Brx& SourceGroup(TUint aIndex) const;
-    CpDevice& SourceDevice(TUint aIndex) const;
+    Net::CpDevice& SourceDevice(TUint aIndex) const;
     const Brx& CurrentSourceName() const;
     const Brx& CurrentSourceType() const;
     const Brx& CurrentSourceGroup() const;
-    CpDevice& CurrentSourceDevice() const;
+    Net::CpDevice& CurrentSourceDevice() const;
     TBool HasVolumeControl() const;
 	TUint Volume() const;
 	TBool Mute() const;
@@ -240,7 +240,7 @@ private:
     std::list<CpTopology4Room*> iRoomList;
 };
 
-} // namespace Net
+} // namespace Av
 } // namespace OpenHome
 
 #endif // HEADER_TOPOLOGY4

@@ -8,11 +8,12 @@
 #include <OpenHome/Private/Thread.h>
 #include <OpenHome/Private/Timer.h>
 #include <OpenHome/OsWrapper.h>
-#include "CpTopology3.h"
+#include "../CpTopology3.h"
 
 using namespace OpenHome;
 using namespace OpenHome::Net;
 using namespace OpenHome::TestFramework;
+using namespace OpenHome::Av;
 
 class TopologyLogger : public ICpTopology3Handler
 {

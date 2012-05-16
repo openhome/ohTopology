@@ -7,11 +7,12 @@
 #include <OpenHome/Private/Thread.h>
 #include <OpenHome/Private/Timer.h>
 #include <OpenHome/OsWrapper.h>
-#include "CpTopology4.h"
+#include "../CpTopology4.h"
 
 using namespace OpenHome;
 using namespace OpenHome::Net;
 using namespace OpenHome::TestFramework;
+using namespace OpenHome::Av;
 
 
 class TestCpDevice : public CpDevice

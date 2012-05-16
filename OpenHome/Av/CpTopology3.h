@@ -12,7 +12,7 @@
 #include "CpTopology2.h"
 
 namespace OpenHome {
-namespace Net {
+namespace Av {
 
 class CpTopology3Group;
 
@@ -41,7 +41,7 @@ public:
 
     void AddRef();
     void RemoveRef();
-	CpDevice& Device() const;
+	Net::CpDevice& Device() const;
 	const Brx& Room() const;
     const Brx& Name() const;
     TUint SourceCount() const;
@@ -78,22 +78,22 @@ public:
 	void EventMuteChanged();
 	void EventVolumeLimitChanged();
 
-	void CallbackSetVolume(IAsync& aAsync);
-	void CallbackVolumeInc(IAsync& aAsync);
-	void CallbackVolumeDec(IAsync& aAsync);
-    void CallbackSetMute(IAsync& aAsync);
+	void CallbackSetVolume(Net::IAsync& aAsync);
+	void CallbackVolumeInc(Net::IAsync& aAsync);
+	void CallbackVolumeDec(Net::IAsync& aAsync);
+    void CallbackSetMute(Net::IAsync& aAsync);
 
 private:
 	CpTopology2Group& iGroup;
 	ICpTopology3Handler& iHandler;
 
 	TBool iHasVolumeControl;
-    CpProxyAvOpenhomeOrgVolume1* iServiceVolume;
+    Net::CpProxyAvOpenhomeOrgVolume1* iServiceVolume;
     
-	FunctorAsync iFunctorSetVolume;
-	FunctorAsync iFunctorVolumeInc;
-	FunctorAsync iFunctorVolumeDec;
-    FunctorAsync iFunctorSetMute;
+	Net::FunctorAsync iFunctorSetVolume;
+	Net::FunctorAsync iFunctorVolumeInc;
+	Net::FunctorAsync iFunctorVolumeDec;
+    Net::FunctorAsync iFunctorSetMute;
 
 	TUint iVolume;
 	TBool iMute;
@@ -159,7 +159,7 @@ private:
     ThreadFunctor* iThread;
 };
 
-} // namespace Net
+} // namespace Av
 } // namespace OpenHome
 
 #endif // HEADER_TOPOLOGY3
