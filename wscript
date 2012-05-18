@@ -92,7 +92,7 @@ def configure(conf):
         append('LINKFLAGS', ['-pthread'])
         if dest_platform in ['Linux-x86']:
             append('VALGRIND_ENABLE', ['1'])
-        if dest_platform in ['Linux-x86', 'Linux-x86', 'Linux-ARM']:
+        if dest_platform in ['Linux-x86', 'Linux-x64', 'Linux-ARM']:
             append('CXXFLAGS',['-Wno-psabi', '-fPIC'])
         elif dest_platform in ['Mac-x86', 'Mac-x64']:
             if dest_platform == 'Mac-x86':
