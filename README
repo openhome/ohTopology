@@ -1,0 +1,28 @@
+ohTopology provides a view onto devices implementing the OpenHome Media
+standard.  See http://www.openhome.org/wiki/Av:Developer for details.
+
+The code can be built for Windows, Mac or Linux.
+System requirements:
+- Python (v2.6 or 2.7)
+- MSVC (Windows)
+- GCC (Linux / Mac)
+- ohNet (either binary or source)
+
+Before building, either clone ohNet (https://github.com/openhome/ohNet)
+and build it as described in its README or fetch a binary version.  To fetch it
+as binary, clone ohdevtools (git@github.com:openhome/ohdevtools.git) then run
+'go fetch'.
+
+To build ohTopology:
+
+cd ohTopology
+./waf configure --dest-platform=... --ohnet=... [--debug]
+./waf build
+
+where:
+--dest-platform is one of Windows-x86, Windows-x64, Linux-x86, Linux-x64,
+                          Linux-ARM, Mac-x86, Mac-x64
+--ohnet points to either your ohNet source directory or the fetched binaries
+        (under your ohTopology/dependencies directory)
+--debug is optional and only required for debug builds.
+        The default build is ndebug (aka release)
