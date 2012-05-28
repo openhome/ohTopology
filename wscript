@@ -117,7 +117,7 @@ def configure(conf):
         ],
         message='FAILED.  Was --ohnet-lib-dir or --ohnet specified?  Do the directories they point to exist?'))
     conf.env.STLIB_OHNET=['ohNetProxies', 'TestFramework', 'ohNetCore']
-    conf.env.INCLUDES_TOPOLOGY = conf.path.find_node('.').abspath()
+    conf.env.INCLUDES = conf.path.find_node('.').abspath()
 
     if conf.options.cross or os.environ.get('CROSS_COMPILE', None):
         cross_compile = conf.options.cross or os.environ['CROSS_COMPILE']
@@ -215,34 +215,28 @@ def build(bld):
                 'OpenHome/Av/CpTopology4.cpp',
             ],
             use=['OHNET'],
-            includes = bld.env.INCLUDES_TOPOLOGY,
             target='ohTopology')
 
     # Tests
     bld.program(
             source='OpenHome/Av/Tests/TestTopology1.cpp',
             use=['OHNET', 'ohTopology'],
-            includes = bld.env.INCLUDES_TOPOLOGY,
             target='TestTopology1')
     bld.program(
             source='OpenHome/Av/Tests/TestTopology2.cpp',
             use=['OHNET', 'ohTopology'],
-            includes = bld.env.INCLUDES_TOPOLOGY,
             target='TestTopology2')
     bld.program(
             source='OpenHome/Av/Tests/TestTopology3.cpp',
             use=['OHNET', 'ohTopology'],
-            includes = bld.env.INCLUDES_TOPOLOGY,
             target='TestTopology3')
     bld.program(
             source='OpenHome/Av/Tests/TestTopology4.cpp',
             use=['OHNET', 'ohTopology'],
-            includes = bld.env.INCLUDES_TOPOLOGY,
             target='TestTopology4')
     bld.program(
             source='OpenHome/Av/Tests/TestTopology.cpp',
             use=['OHNET', 'ohTopology'],
-            includes = bld.env.INCLUDES_TOPOLOGY,
             target='TestTopology')
 
     # Bundles
