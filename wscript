@@ -107,7 +107,7 @@ def configure(conf):
     set_env('INCLUDES_OHNET', match_path(
         [
             '{options.ohnet_include_dir}',
-            '{options.ohnet}/Build/Include',
+            '{options.ohnet}/Build/Include/',
         ],
         message='Specify --ohnet-include-dir or --ohnet'))
     set_env('STLIBPATH_OHNET', match_path(
