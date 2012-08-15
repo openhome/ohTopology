@@ -98,7 +98,7 @@ def configure(conf):
             if dest_platform == 'Mac-x86':
                 append('CXXFLAGS', ['-arch', 'i386'])
                 append('LINKFLAGS', ['-arch', 'i386'])
-            if dest_platform == 'Max-x64':
+            if dest_platform == 'Mac-x64':
                 append('CXXFLAGS', ['-arch', 'x86_64'])
                 append('LINKFLAGS', ['-arch', 'x86_64'])
             append('CXXFLAGS',['-fPIC', '-mmacosx-version-min=10.4', '-DPLATFORM_MACOSX_GNU'])
