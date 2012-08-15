@@ -42,15 +42,9 @@ def configure(conf):
         return value
     def match_path(paths, message):
         for p in paths:
-            try:
-                fname = p.format(options=conf.options, debugmode=debugmode, ohnet_plat_dir=ohnet_plat_dir)
-                if os.path.exists(fname):
-                    return os.path.abspath(fname)
-                else:
-                    conf.msg("Not found: {0!r}".format(fname))
-                    conf.fatal(message)
-            except:
-                pass
+            fname = p.format(options=conf.options, debugmode=debugmode, ohnet_plat_dir=ohnet_plat_dir)
+            if os.path.exists(fname):
+                return os.path.abspath(fname)
         conf.fatal(message)
 
     debugmode = conf.options.debugmode
