@@ -42,7 +42,7 @@ def configure(conf):
         return value
     def match_path(paths, message):
         for p in paths:
-            fname = p.format(options=conf.options, debugmode=debugmode, ohnet_plat_dir=ohnet_plat_dir)
+            fname = p.format(options=conf.options, debugmode=debugmode, debugmode_lc=debugmode.lower(), ohnet_plat_dir=ohnet_plat_dir)
             if os.path.exists(fname):
                 return os.path.abspath(fname)
         conf.fatal(message)
@@ -51,7 +51,21 @@ def configure(conf):
     conf.msg("debugmode:", debugmode)
     dest_platform = conf.options.dest_platform
     if dest_platform is None:
-        conf.fatal('Specify --dest-platform')
+        if sys.platform == 'linux2':
+            dest_platform = 'Linux'
+        # http://stackoverflow.com/a/2145582: "Python on Windows always reports 'win32'"
+        elif sys.platform == 'win32':
+            dest_platform = 'Windows'
+        elif sys.platform == 'darwin':
+            dest_platform = 'Mac'
+        else:
+            conf.fatal('Specify --dest-platform')
+        if sys.maxint == 0x7fffffff:
+            dest_isa = 'x86'
+        else:
+            dest_isa = 'x64'
+        dest_platform = conf.options.dest_platform = \
+            '{dest_platform}-{dest_isa}'.format(dest_platform=dest_platform, dest_isa=dest_isa)
 
     platform_info = platforms[dest_platform]
     ohnet_plat_dir = platform_info['ohnet_plat_dir']
@@ -102,12 +116,14 @@ def configure(conf):
         [
             '{options.ohnet_include_dir}',
             '{options.ohnet}/Build/Include/',
+            'dependencies/{options.dest_platform}/ohNet-{options.dest_platform}-{debugmode_lc}-dev/include',
         ],
         message='Specify --ohnet-include-dir or --ohnet'))
     set_env('STLIBPATH_OHNET', match_path(
         [
             '{options.ohnet_lib_dir}',
             '{options.ohnet}/Build/Obj/{ohnet_plat_dir}/{debugmode}',
+            'dependencies/{options.dest_platform}/ohNet-{options.dest_platform}-{debugmode_lc}-dev/lib',
         ],
         message='FAILED.  Was --ohnet-lib-dir or --ohnet specified?  Do the directories they point to exist?'))
     conf.env.STLIB_OHNET=['ohNetProxies', 'TestFramework', 'ohNetCore']
