@@ -14,6 +14,7 @@
 # fetch_dependencies(["ohnet", "log4net"], platform="Windows-x86")
 #     Fetches the specified dependencies for the specified platform. Omit platform
 #     to use the platform defined in the OH_PLATFORM environment variable.
+#     Omit dependency names to fetch everything.
 #
 # get_dependency_args("ohnet", "nunit", "zwave")
 # get_dependency_args(["ohnet", "log4net"])
@@ -60,7 +61,7 @@ from ci import (
         build_condition, default_platform, get_dependency_args,
         get_vsvars_environment, fetch_dependencies, python, scp)
 
-require_version(6)
+require_version(13)
 
 
 # Command-line options. See documentation for Python's optparse module.
@@ -71,10 +72,6 @@ add_option("--release", action="store_const", const="release", dest="debugmode",
 add_option("--steps", default="default", help="Steps to run, comma separated. (all,default,fetch,configure,build,tests,publish)")
 add_option("--publish-version", action="store", help="Specify version string.")
 add_option("--fetch-only", action="store_const", const="fetch", dest="steps", help="Fetch dependencies only.")
-
-ALL_DEPENDENCIES = [
-    "ohnet",
-    ]
 
 @build_step()
 def choose_optional_steps(context):
@@ -110,7 +107,7 @@ def setup_universal(context):
         BUILDDIR='buildhudson',
         WAFLOCK='.lock-wafbuildhudson',
         OH_VERSION=context.options.publish_version or context.env.get('RELEASE_VERSION', 'UNKNOWN'))
-    context.configure_args = get_dependency_args(ALL_DEPENDENCIES)
+    context.configure_args = get_dependency_args(env={'debugmode':context.env['OH_DEBUG']})
     context.configure_args += ["--dest-platform", env["OH_PLATFORM"]]
     context.configure_args += ["--" + context.options.debugmode]
 
@@ -136,7 +133,7 @@ def setup_linux(context):
 # Principal build steps.
 @build_step("fetch", optional=True)
 def fetch(context):
-    fetch_dependencies(ALL_DEPENDENCIES, platform=context.env["OH_PLATFORM"])
+    fetch_dependencies(env={'debugmode':context.env['OH_DEBUG']})
 
 @build_step("configure", optional=True)
 def configure(context):

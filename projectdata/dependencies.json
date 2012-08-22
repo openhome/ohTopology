@@ -1,0 +1,16 @@
+[
+    {   "name": "ohNet",
+        "type": "openhome",
+        "platform-specific": true,
+        "version": "1.0.334",
+        "archive-suffix": "-dev-${debugmode}",
+        "configure-args": [
+            "--ohnet-lib-dir", "${dest}${name}-${platform}-${debugmode}-dev/lib",
+            "--ohnet-include-dir", "${dest}${name}-${platform}-${debugmode}-dev/include/ohnet"
+        ],
+        "_comment": [
+            "See ohos for more examples, and ohdevtools/dependencies.py for details",
+            "of the predefined values and expansion rules."
+        ]
+    }
+]
