@@ -2,8 +2,14 @@
 
 import sys
 import os
-from wafmodules.filetasks import gather_files, build_tree, copy_task
+
 from waflib.Node import Node
+
+import os.path, sys
+sys.path[0:0] = [os.path.join('dependencies', 'AnyPlatform', 'ohWafHelpers')]
+
+from filetasks import gather_files, build_tree, copy_task
+from utilfuncs import set_env_verbose
 
 def options(opt):
     opt.load('msvc')
@@ -32,14 +38,6 @@ platforms = {
         }
 
 def configure(conf):
-    def set_env(varname, value):
-        conf.msg(
-                'Setting %s to' % varname,
-                "True" if value is True else
-                "False" if value is False else
-                value)
-        setattr(conf.env, varname, value)
-        return value
     def match_path(paths, message):
         for p in paths:
             fname = p.format(options=conf.options, debugmode=debugmode, debugmode_lc=debugmode.lower(), ohnet_plat_dir=ohnet_plat_dir)
@@ -112,14 +110,14 @@ def configure(conf):
             append('CXXFLAGS',['-fPIC', '-mmacosx-version-min=10.4', '-DPLATFORM_MACOSX_GNU'])
             append('LINKFLAGS',['-framework', 'CoreFoundation', '-framework', 'SystemConfiguration'])
 
-    set_env('INCLUDES_OHNET', match_path(
+    set_env_verbose(conf, 'INCLUDES_OHNET', match_path(
         [
             '{options.ohnet_include_dir}',
             '{options.ohnet}/Build/Include/',
             'dependencies/{options.dest_platform}/ohNet-{options.dest_platform}-{debugmode_lc}-dev/include',
         ],
         message='Specify --ohnet-include-dir or --ohnet'))
-    set_env('STLIBPATH_OHNET', match_path(
+    set_env_verbose(conf, 'STLIBPATH_OHNET', match_path(
         [
             '{options.ohnet_lib_dir}',
             '{options.ohnet}/Build/Obj/{ohnet_plat_dir}/{debugmode}',
