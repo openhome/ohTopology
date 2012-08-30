@@ -9,7 +9,7 @@ import os.path, sys
 sys.path[0:0] = [os.path.join('dependencies', 'AnyPlatform', 'ohWafHelpers')]
 
 from filetasks import gather_files, build_tree, copy_task
-from utilfuncs import invoke_test, get_platform_info, set_env_verbose
+from utilfuncs import invoke_test, get_platform_info, guess_dest_platform, set_env_verbose
 
 def options(opt):
     opt.load('msvc')
@@ -37,21 +37,10 @@ def configure(conf):
     conf.msg("debugmode:", debugmode)
     dest_platform = conf.options.dest_platform
     if dest_platform is None:
-        if sys.platform == 'linux2':
-            dest_platform = 'Linux'
-        # http://stackoverflow.com/a/2145582: "Python on Windows always reports 'win32'"
-        elif sys.platform == 'win32':
-            dest_platform = 'Windows'
-        elif sys.platform == 'darwin':
-            dest_platform = 'Mac'
-        else:
+        try:
+            dest_platform = conf.options.dest_platform = guess_dest_platform()
+        except KeyError:
             conf.fatal('Specify --dest-platform')
-        if sys.maxint == 0x7fffffff:
-            dest_isa = 'x86'
-        else:
-            dest_isa = 'x64'
-        dest_platform = conf.options.dest_platform = \
-            '{dest_platform}-{dest_isa}'.format(dest_platform=dest_platform, dest_isa=dest_isa)
 
     platform_info = get_platform_info(dest_platform)
     ohnet_plat_dir = platform_info['ohnet_plat_dir']
