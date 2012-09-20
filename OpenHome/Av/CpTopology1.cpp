@@ -72,9 +72,9 @@ void CpTopology1::Refresh()
     
 void CpTopology1::ProductAdded(CpDevice& aDevice)
 {
-    LOG(kTopology, "CpTopology1::ProductAdded ");
-    LOG(kTopology, aDevice.Udn());
-    LOG(kTopology, "\n");
+    LOG(kTrace, "CpTopology1::ProductAdded ");
+    LOG(kTrace, aDevice.Udn());
+    LOG(kTrace, "\n");
 
     CpTopology1Job* job = iFree.Read();
     job->Set(aDevice, &ICpTopology1Handler::ProductAdded);
@@ -83,9 +83,9 @@ void CpTopology1::ProductAdded(CpDevice& aDevice)
 
 void CpTopology1::ProductRemoved(CpDevice& aDevice)
 {
-    LOG(kTopology, "CpTopology1::ProductRemoved ");
-    LOG(kTopology, aDevice.Udn());
-    LOG(kTopology, "\n");
+    LOG(kTrace, "CpTopology1::ProductRemoved ");
+    LOG(kTrace, aDevice.Udn());
+    LOG(kTrace, "\n");
     
     CpTopology1Job* job = iFree.Read();
     job->Set(aDevice, &ICpTopology1Handler::ProductRemoved);

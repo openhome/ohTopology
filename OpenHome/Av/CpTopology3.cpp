@@ -391,9 +391,9 @@ void CpTopology3::GroupRemoved(CpTopology2Group& aGroup)
 
 void CpTopology3::GroupAdded(CpTopology3Group& aGroup)
 {
-    LOG(kTopology, "CpTopology3::GroupAdded ");
-    LOG(kTopology, aGroup.Name());
-    LOG(kTopology, "\n");
+    LOG(kTrace, "CpTopology3::GroupAdded ");
+    LOG(kTrace, aGroup.Name());
+    LOG(kTrace, "\n");
 
     iGroupList.push_back(&aGroup);
 
@@ -426,9 +426,9 @@ void CpTopology3::GroupSourceIndexChanged(CpTopology3Group& aGroup)
 
 void CpTopology3::GroupSourceListChanged(CpTopology3Group& aGroup)
 {
-    LOG(kTopology, "CpTopology3::GroupSourceListChanged ");
-    LOG(kTopology, aGroup.Name());
-    LOG(kTopology, "\n");
+    LOG(kTrace, "CpTopology3::GroupSourceListChanged ");
+    LOG(kTrace, aGroup.Name());
+    LOG(kTrace, "\n");
 
     CpTopology3Job* job = iFree.Read();
     job->Set(aGroup, &ICpTopology3Handler::GroupSourceListChanged);
@@ -437,9 +437,9 @@ void CpTopology3::GroupSourceListChanged(CpTopology3Group& aGroup)
 
 void CpTopology3::GroupRemoved(CpTopology3Group& aGroup)
 {
-    LOG(kTopology, "CpTopology3::GroupRemoved ");
-    LOG(kTopology, aGroup.Name());
-    LOG(kTopology, "\n");
+    LOG(kTrace, "CpTopology3::GroupRemoved ");
+    LOG(kTrace, aGroup.Name());
+    LOG(kTrace, "\n");
 
     std::list<CpTopology3Group*>::iterator it = iGroupList.begin();
     
