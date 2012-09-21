@@ -85,12 +85,10 @@ TUint CpTopology4Source::EvaluateSources(std::vector<CpTopology4Source*>& aVecto
     iSourceCount = 0;
     
     if (iChildList.size() == 0) {
-        // HACK so that all receiver sources appear in Songcast whether they are visible or not
-        // This HACK can be done since only Songcast currently uses ohTopology!!!
-        //if (iGroup.Group().SourceVisible(iIndex)) {
+        if (iGroup.Group().SourceVisible(iIndex)) {
             iSourceCount = 1;
             aVector.push_back(this);
-        //}
+        }
     }
     else {
         std::vector<CpTopology4Group*>::iterator it = iChildList.begin();
