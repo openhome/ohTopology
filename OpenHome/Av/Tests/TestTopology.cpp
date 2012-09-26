@@ -108,7 +108,7 @@ TestRoom::TestRoom(const Brx& aName)
 {
 }
 
-void TestRoom::AddSource(const Brx& aName, const Brx& aType, TBool aVisible)
+void TestRoom::AddSource(const Brx& aName, const Brx& aType, TBool /*aVisible*/)
 {
 //  This check for visibility is commented out to match the HACK in CpTopology4.cpp where
 //  sources that are not visible are no longer discarded - search for "HACK" in that file
