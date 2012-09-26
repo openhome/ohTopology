@@ -39,7 +39,7 @@ class CpTopology2Source
 {
     friend class CpTopology2Group;
     
-    static const TUint kMaxNameBytes = 20;
+    static const TUint kMaxNameBytes = 64;
     static const TUint kMaxTypeBytes = 20;
 
 private:
@@ -60,8 +60,8 @@ class CpTopology2Group
     friend class CpTopology2Product;
     friend class CpTopology2MediaRenderer;
 
-    static const TUint kMaxRoomBytes = 20;
-    static const TUint kMaxNameBytes = 20;
+    static const TUint kMaxRoomBytes = 64;
+    static const TUint kMaxNameBytes = 64;
     
 public:
     void AddRef();

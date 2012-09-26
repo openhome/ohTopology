@@ -123,7 +123,7 @@ class CpTopology4;
 
 class CpTopology4Room : private INonCopyable
 {
-    static const TUint kMaxNameBytes = 20;
+    static const TUint kMaxNameBytes = 64;
 
 public:
     enum EStandby {

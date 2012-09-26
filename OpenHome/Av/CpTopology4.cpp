@@ -400,6 +400,14 @@ CpTopology4Room::CpTopology4Room(const Brx& aName, ICpTopology4Handler& aHandler
     , iRefCount(1)
     , iUserData(0)
 {
+    if (aName.Bytes() > iName.MaxBytes())
+    {
+        iName.Replace(aName.Ptr(), iName.MaxBytes());
+    }
+    else
+    {
+        iName.Replace(aName);
+    }
 }
 
 CpTopology4Room::~CpTopology4Room()

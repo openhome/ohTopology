@@ -12,10 +12,11 @@ using namespace OpenHome::Av;
 // CpTopology2Source
 
 CpTopology2Source::CpTopology2Source(const Brx& aName, const Brx& aType, TBool aVisible)
-    : iName(aName)
-    , iType(aType)
-    , iVisible(aVisible)
+    : iName()
+    , iType()
+    , iVisible(false)
 {
+    Update(aName, aType, aVisible);
 }
 
 const Brx& CpTopology2Source::Name() const
@@ -35,7 +36,15 @@ TBool CpTopology2Source::Visible() const
     
 void CpTopology2Source::Update(const Brx& aName, const Brx& aType, TBool aVisible)
 {
-    iName.Replace(aName);
+    if (aName.Bytes() > iName.MaxBytes())
+    {
+        iName.Replace(aName.Ptr(), iName.MaxBytes());
+    }
+    else
+    {
+        iName.Replace(aName);
+    }
+
     iType.Replace(aType);
     iVisible = aVisible;
 }
@@ -46,13 +55,16 @@ CpTopology2Group::CpTopology2Group(CpDevice& aDevice, ICpTopology2GroupHandler& 
     : iDevice(aDevice)
     , iHandler(aHandler)
     , iStandby(aStandby)
-    , iRoom(aRoom)
-    , iName(aName)
+    , iRoom()
+    , iName()
     , iSourceIndex(aSourceIndex)
     , iHasVolumeControl(aHasVolumeControl)
     , iUserData(0)
     , iRefCount(1)
 {
+    UpdateRoom(aRoom);
+    UpdateName(aName);
+
     if (&iDevice != 0) {  // device with zero address used by test code
         iDevice.AddRef();
     }
@@ -77,12 +89,26 @@ void CpTopology2Group::AddSource(const Brx& aName, const Brx& aType, TBool aVisi
 
 void CpTopology2Group::UpdateRoom(const Brx& aValue)
 {
-    iRoom.Replace(aValue);
+    if (aValue.Bytes() > iRoom.MaxBytes())
+    {
+        iRoom.Replace(aValue.Ptr(), iRoom.MaxBytes());
+    }
+    else
+    {
+        iRoom.Replace(aValue);
+    }
 }
 
 void CpTopology2Group::UpdateName(const Brx& aValue)
 {
-    iName.Replace(aValue);
+    if (aValue.Bytes() > iName.MaxBytes())
+    {
+        iName.Replace(aValue.Ptr(), iName.MaxBytes());
+    }
+    else
+    {
+        iName.Replace(aValue);
+    }
 }
 
 void CpTopology2Group::UpdateSourceIndex(TUint aValue)
