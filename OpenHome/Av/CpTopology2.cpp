@@ -65,6 +65,8 @@ CpTopology2Group::CpTopology2Group(CpDevice& aDevice, ICpTopology2GroupHandler& 
     UpdateRoom(aRoom);
     UpdateName(aName);
 
+	iHandler.AddRef();
+
     if (&iDevice != 0) {  // device with zero address used by test code
         iDevice.AddRef();
     }
@@ -72,6 +74,8 @@ CpTopology2Group::CpTopology2Group(CpDevice& aDevice, ICpTopology2GroupHandler& 
 
 CpTopology2Group::~CpTopology2Group()
 {
+	iHandler.RemoveRef();
+
     if (&iDevice != 0) { // device with zero address used by test code
         iDevice.RemoveRef();
     }
@@ -234,6 +238,7 @@ CpTopology2Product::CpTopology2Product(CpDevice& aDevice, ICpTopology2Handler& a
     , iHandler(aHandler)
     , iServiceProduct(0)
     , iGroup(0)
+	, iRefCount(1)
 {
     iFunctorSetSourceIndex = MakeFunctorAsync(*this, &CpTopology2Product::CallbackSetSourceIndex);
     iFunctorSetStandby = MakeFunctorAsync(*this, &CpTopology2Product::CallbackSetStandby);
@@ -252,10 +257,28 @@ CpTopology2Product::~CpTopology2Product()
     LOG(kTopology, "CpTopology2Product::~CpTopology2Product\n");
 
     delete (iServiceProduct);
-    
-    if (iGroup != 0) {
-        iHandler.GroupRemoved(*iGroup);
+
+	if (iGroup != 0) {
         iGroup->RemoveRef();
+    }
+}
+
+void CpTopology2Product::RemoveGroup()
+{
+	if (iGroup != 0) {
+        iHandler.GroupRemoved(*iGroup);
+    }
+}
+
+void CpTopology2Product::AddRef()
+{
+    iRefCount++;
+}
+
+void CpTopology2Product::RemoveRef()
+{
+    if (--iRefCount == 0) {
+        delete this;
     }
 }
 
@@ -520,7 +543,8 @@ CpTopology2::~CpTopology2()
     std::vector<CpTopology2Device*>::iterator it = iDeviceList.begin();
 
     while (it != iDeviceList.end()) {
-        delete (*it);
+		(*it)->RemoveGroup();
+		(*it)->RemoveRef();
         it++;
     }   
 
@@ -563,7 +587,8 @@ void CpTopology2::DeviceRemoved(CpDevice& aDevice)
     while (it != iDeviceList.end()) {
         if ((*it)->IsAttachedTo(aDevice)) {
             LOG(kTopology, "CpTopology2::ProductRemoved found\n");
-            delete (*it);
+			(*it)->RemoveGroup();
+			(*it)->RemoveRef();
             iDeviceList.erase(it);
             break;
         }

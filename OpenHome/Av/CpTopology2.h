@@ -30,6 +30,8 @@ public:
 class ICpTopology2GroupHandler
 {
 public:
+	virtual void AddRef() = 0;
+	virtual void RemoveRef() = 0;
     virtual void SetSourceIndex(TUint aIndex) = 0;
     virtual void SetStandby(TBool aValue) = 0;
     ~ICpTopology2GroupHandler() {}
@@ -122,10 +124,15 @@ class CpTopology2Device : public INonCopyable, public ICpTopology2GroupHandler
 {
 protected:
     CpTopology2Device(Net::CpDevice& aDevice);
+	virtual ~CpTopology2Device();
     
 public:
+	virtual void RemoveGroup() = 0;
     TBool IsAttachedTo(Net::CpDevice& aDevice);
-    virtual ~CpTopology2Device();
+
+	// ICpTopology2GroupHandler
+	virtual void AddRef() = 0;
+    virtual void RemoveRef() = 0;
 
 private:
     // ICpTopology2GroupHandler
@@ -140,7 +147,15 @@ class CpTopology2Product : public CpTopology2Device
 {
 public:
     CpTopology2Product(Net::CpDevice& aDevice, ICpTopology2Handler& aHandler);
-    virtual ~CpTopology2Product();
+
+	virtual void RemoveGroup();
+
+	// ICpTopology2GroupHandler
+	virtual void AddRef();
+    virtual void RemoveRef();
+
+protected:
+	virtual ~CpTopology2Product();
 
 private:
     // ICpTopology2GroupHandler
@@ -163,6 +178,7 @@ private:
     ICpTopology2Handler& iHandler;
     Net::CpProxyAvOpenhomeOrgProduct1* iServiceProduct;
     CpTopology2Group* iGroup;
+	TUint iRefCount;
     Net::FunctorAsync iFunctorSetSourceIndex;
     Net::FunctorAsync iFunctorSetStandby;
 };

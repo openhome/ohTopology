@@ -24,9 +24,20 @@ public:
 class TestDevice : public ICpTopology2GroupHandler
 {
 public:
+	// ICpTopology2GroupHandler
+	virtual void AddRef();
+    virtual void RemoveRef();
     virtual void SetSourceIndex(TUint aIndex);
     virtual void SetStandby(TBool aValue);
 };
+
+void TestDevice::AddRef()
+{
+}
+
+void TestDevice::RemoveRef()
+{
+}
 
 void TestDevice::SetSourceIndex(TUint /* aIndex */)
 {
