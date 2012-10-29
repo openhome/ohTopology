@@ -257,16 +257,17 @@ CpTopology2Product::~CpTopology2Product()
     LOG(kTopology, "CpTopology2Product::~CpTopology2Product\n");
 
     delete (iServiceProduct);
-
-	if (iGroup != 0) {
-        iGroup->RemoveRef();
-    }
 }
 
 void CpTopology2Product::RemoveGroup()
 {
+    // unsubscribing from the service will ensure that no event handlers get called and the last
+    // event to be emitted for this group is the GroupRemoved
+    iServiceProduct->Unsubscribe();
+
 	if (iGroup != 0) {
         iHandler.GroupRemoved(*iGroup);
+        iGroup->RemoveRef();
     }
 }
 
