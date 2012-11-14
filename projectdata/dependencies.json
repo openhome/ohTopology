@@ -13,10 +13,35 @@
             "of the predefined values and expansion rules."
         ]
     },
+	{   "name": "ohNet-AnyPlatform",
+        "type": "openhome",
+        "platform-specific": true,
+        "version": "1.0.433",
+        "archive-suffix": "-dev-release",
+		"archive-directory": "${binary-repo}/ohNet/",
+        "archive-filename": "${archive-prefix}ohNet-${version}-${archive-platform}${archive-suffix}${archive-extension}",
+        "dest": "dependencies/AnyPlatform/ohNet",
+        "strip-archive-dirs":1
+    },
+	{   "name": "ohOs.App.V1",
+        "type": "openhome",
+        "platform-specific": false,
+        "version": "0.0.29",
+        "archive-suffix": "-Release",
+        "dest": "dependencies/AnyPlatform/ohOs.App.V1",
+        "strip-archive-dirs":1
+    },
     {   "name": "ohWafHelpers",
         "type": "openhome",
         "platform-specific": false,
         "version": "0.0.22",
         "archive-filename": "${name}-${version}.tar.gz"
+    },
+	{   "name": "NuGet",
+        "type": "external",
+        "version": "1.7.30402.9028",
+        "platform-specific": false,
+        "archive-filename": "${name}.${version}.tar.gz",
+        "configure-args": []
     }
 ]

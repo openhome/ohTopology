@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B6F3BF75-F35B-4A83-A3F9-2812B97ACA28}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>OpenHome.Av</RootNamespace>
+    <AssemblyName>ohTopology</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>${MSBuildProjectDirectory}\..\..\..\build\ohTopology\AnyPlatform\Debug\bin\</OutputPath>
+    <IntermediateOutputPath>${MSBuildProjectDirectory}\..\..\..\build\ohTopology\AnyPlatform\Debug\obj\</IntermediateOutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>${MSBuildProjectDirectory}\..\..\..\build\ohTopology\AnyPlatform\Release\bin\</OutputPath>
+    <IntermediateOutputPath>${MSBuildProjectDirectory}\..\..\..\build\ohTopology\AnyPlatform\Release\obj\</IntermediateOutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="ohOs.App.V1">
+      <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Topology.cs" />
+  </ItemGroup>
+  <Import Project="..\SharedSettings.targets" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PackageName>ohTopology-AnyPlatform-$(Configuration)</PackageName>
+    <PackageFilePatterns>ohTopology.dll ohTopology.*db</PackageFilePatterns>
+  </PropertyGroup>
+  <Target Name="AfterBuild">
+    <MakeDir Directories="$(PackageOutputPath)" />
+    <Exec Command="..\..\go make_binball -b $(OutputPath) -p $(PackageName)/ $(PackageOutputPath)/$(PackageName).tar.gz $(PackageFilePatterns)" />
+  </Target>
+</Project>
