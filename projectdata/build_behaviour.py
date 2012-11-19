@@ -101,6 +101,7 @@ def choose_platform(context):
             }[context.env["PLATFORM"]]
     else:
         context.env["OH_PLATFORM"] = default_platform()
+    context.env.update(MSBUILDCONFIGURATION="Release" if context.options.debugmode=="release" else "Debug")
 
 # Universal build configuration.
 @build_step()
@@ -128,6 +129,17 @@ def setup_windows(context):
         OPENHOME_NO_ERROR_DIALOGS="1",
         OHNET_NO_ERROR_DIALOGS="1")
     env.update(get_vsvars_environment())
+    context.env.update(MSBUILDCMD="msbuild /nologo /p:Configuration=%s" % (context.env["MSBUILDCONFIGURATION"]))
+    context.env.update(MSBUILDTARGETSWITCH="/t:")
+    context.env.update(MSBUILDSOLUTIONSUFFIX="Windows")
+    
+@build_condition(OH_PLATFORM="Windows-x86")
+def setup_windows_x86(context):
+    context.env.update(get_vsvars_environment("x86"))
+    
+@build_condition(OH_PLATFORM="Windows-x64")
+def setup_windows_x64(context):
+    context.env.update(get_vsvars_environment("amd64"))
 
 # Extra Linux build configuration.
 @build_step()
@@ -136,11 +148,23 @@ def setup_windows(context):
 @build_condition(OH_PLATFORM="Linux-ARM")
 def setup_linux(context):
     env = context.env
+    context.env.update(MDTOOLBUILDCMD="mdtool build -c:%s|Any CPU" % context.env["MSBUILDCONFIGURATION"])
+    context.env.update(MSBUILDCMD="xbuild /nologo /p:Configuration=%s" % (context.env["MSBUILDCONFIGURATION"]))
+    
+# Extra Mac build configuration.
+@build_step()
+@build_condition(OH_PLATFORM="Mac-x86")
+@build_condition(OH_PLATFORM="Mac-x64")
+@build_condition(OH_PLATFORM="Mac-ARM")
+def setup_mac(context):
+    context.env.update(MDTOOLBUILDCMD="/Applications/MonoDevelop.app/Contents/MacOS/mdtool build -c:%s|Any CPU" % context.env["MSBUILDCONFIGURATION"])
+    context.env.update(MSBUILDCMD="xbuild /nologo /p:Configuration=%s" % (context.env["MSBUILDCONFIGURATION"]))
 
 # Principal build steps.
 @build_step("fetch", optional=True)
 def fetch(context):
-    fetch_dependencies(env={'debugmode':context.env['OH_DEBUG']})
+    fetch_dependencies(env={'debugmode':context.env['OH_DEBUG'],
+                     'titlecase-debugmode':context.options.debugmode.title()})
 
 @build_step("configure", optional=True)
 def configure(context):
@@ -149,10 +173,14 @@ def configure(context):
 @build_step("clean", optional=True)
 def clean(context):
     python("waf", "clean")
+    for solution in solutions:
+        do_build(context, solution, "Clean")
 
 @build_step("build", optional=True)
 def build(context):
     python("waf")
+    for solution in solutions:
+        do_build(context, solution, "Build")
 
 @build_step("test", optional=True)
 def test(context):
@@ -163,3 +191,11 @@ def publish(context):
     targetpath    = "{OH_PUBLISHDIR}/{OH_PROJECT}/{OH_PROJECT}-{OH_VERSION}-{OH_PLATFORM}-{OH_DEBUG}.tar.gz".format(**context.env)
     sourcepath    = "{BUILDDIR}/{OH_PROJECT}.tar.gz".format(**context.env)
     scp(sourcepath,    targetpath)
+    
+def do_build(context, solution, target):
+    mdtool = solution["mdtool"]
+    solutionfile = solution["sln"]
+    msbuild = context.env['MDTOOLBUILDCMD'] if mdtool else context.env['MSBUILDCMD']
+    targetswitch =  "-t:" if mdtool else "/t:"
+    buildshell = "%(msbuild)s %(sln)s %(targetswitch)sBuild" % {'sln':solutionfile, 'msbuild':msbuild, 'targetswitch':targetswitch}
+    shell(buildshell)
