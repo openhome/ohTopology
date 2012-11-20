@@ -43,8 +43,8 @@ namespace OpenHome.Av
         {
             iLock = new object();
             iDisposed = false;
-            iDeviceList = new CpDeviceListUpnpServiceType("openhome.org", "Product", 1, Added, Removed);
-            iTopologyDeviceLookup = new Dictionary<CpDevice, WatchableDevice>();
+            iDeviceList = new CpDeviceListUpnpServiceType("av.openhome.org", "Product", 1, Added, Removed);
+            iTopologyDeviceLookup = new Dictionary<CpDevice, DisposableWatchableDevice>();
             iTopologyDeviceList = new Topology1DeviceWatchableCollection(aThread);
         }
 
@@ -54,7 +54,7 @@ namespace OpenHome.Av
             {
                 if (iDisposed)
                 {
-                    throw new ObjectDisposedException("Topology1");
+                    throw new ObjectDisposedException("Topology1.Dispose");
                 }
 
                 iDeviceList.Dispose();
@@ -63,6 +63,11 @@ namespace OpenHome.Av
                 iTopologyDeviceList.Dispose();
                 iTopologyDeviceList = null;
 
+                foreach (DisposableWatchableDevice device in iTopologyDeviceLookup.Values)
+                {
+                    device.Dispose();
+                }
+                iTopologyDeviceLookup.Clear();
                 iTopologyDeviceLookup = null;
 
                 iDisposed = true;
@@ -75,7 +80,7 @@ namespace OpenHome.Av
             {
                 if (iDisposed)
                 {
-                    throw new ObjectDisposedException("Topology1");
+                    throw new ObjectDisposedException("Topology1.Refresh");
                 }
 
                 iDeviceList.Refresh();
@@ -90,7 +95,7 @@ namespace OpenHome.Av
                 {
                     if (iDisposed)
                     {
-                        throw new ObjectDisposedException("Topology1");
+                        throw new ObjectDisposedException("Topology1.Devices");
                     }
 
                     return iTopologyDeviceList;
@@ -107,7 +112,7 @@ namespace OpenHome.Av
                     return;
                 }
 
-                WatchableDevice device = new WatchableDevice(aDevice);
+                DisposableWatchableDevice device = new DisposableWatchableDevice(aDevice);
                 iTopologyDeviceLookup.Add(aDevice, device);
                 iTopologyDeviceList.Add(device);
             }
@@ -122,10 +127,11 @@ namespace OpenHome.Av
                     return;
                 }
 
-                WatchableDevice device;
+                DisposableWatchableDevice device;
                 if (iTopologyDeviceLookup.TryGetValue(aDevice, out device))
                 {
                     iTopologyDeviceList.Remove(device);
+                    device.Dispose();
                 }
             }
         }
@@ -134,7 +140,7 @@ namespace OpenHome.Av
         private bool iDisposed;
 
         private CpDeviceList iDeviceList;
-        private Dictionary<CpDevice, WatchableDevice> iTopologyDeviceLookup;
+        private Dictionary<CpDevice, DisposableWatchableDevice> iTopologyDeviceLookup;
         private Topology1DeviceWatchableCollection iTopologyDeviceList;
     }
 
@@ -142,26 +148,55 @@ namespace OpenHome.Av
     {
         public MoqTopology1(WatchableThread aThread)
         {
+            iLock = new object();
+            iDisposed = false;
             iTopologyDeviceList = new Topology1DeviceWatchableCollection(aThread);
         }
 
         public void Dispose()
         {
-            iTopologyDeviceList.Dispose();
-            iTopologyDeviceList = null;
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("MoqTopology1.Dispose");
+                }
+
+                iTopologyDeviceList.Dispose();
+                iTopologyDeviceList = null;
+
+                iDisposed = true;
+            }
         }
 
         public void Refresh()
         {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("MoqTopology1.Refresh");
+                }
+            }
         }
 
         public IWatchableCollection<IWatchableDevice> Devices
         {
             get
             {
-                return iTopologyDeviceList;
+                lock (iLock)
+                {
+                    if (iDisposed)
+                    {
+                        throw new ObjectDisposedException("MoqTopology1.Devices");
+                    }
+                    return iTopologyDeviceList;
+                }
             }
         }
+
+        private object iLock;
+        private bool iDisposed;
 
         private Topology1DeviceWatchableCollection iTopologyDeviceList;
     }

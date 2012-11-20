@@ -2,7 +2,7 @@
 
 namespace OpenHome.Net.ControlPoint
 {
-    public interface IWatchableDevice : IDisposable
+    public interface IWatchableDevice
     {
         string Udn { get; }
         bool GetAttribute(string aKey, out string aValue);
@@ -17,22 +17,6 @@ namespace OpenHome.Net.ControlPoint
 
             iDevice = aDevice;
             iDevice.AddRef();
-        }
-
-        public void Dispose()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("WatchableDevice.Dispose");
-                }
-
-                iDevice.RemoveRef();
-                iDevice = null;
-
-                iDisposed = true;
-            }
         }
 
         public string Udn
@@ -64,10 +48,50 @@ namespace OpenHome.Net.ControlPoint
             }
         }
 
-        private object iLock;
-        private bool iDisposed;
+        public CpDevice Device
+        {
+            get
+            {
+                lock (iLock)
+                {
+                    if (iDisposed)
+                    {
+                        throw new ObjectDisposedException("WatchableDevice.Device");
+                    }
 
-        private CpDevice iDevice;
+                    return iDevice;
+                }
+            }
+        }
+
+        protected object iLock;
+        protected bool iDisposed;
+
+        protected CpDevice iDevice;
+    }
+
+    internal class DisposableWatchableDevice : WatchableDevice, IDisposable
+    {
+        public DisposableWatchableDevice(CpDevice aDevice)
+            : base(aDevice)
+        {
+        }
+
+        public void Dispose()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("DisposableWatchableDevice.Dispose");
+                }
+
+                iDevice.RemoveRef();
+                iDevice = null;
+
+                iDisposed = true;
+            }
+        }
     }
 
     public class MockWatchableDevice : IWatchableDevice
@@ -80,19 +104,6 @@ namespace OpenHome.Net.ControlPoint
             iUdn = aUdn;
         }
 
-        public void Dispose()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("MockWatchableDevice.Dispose");
-                }
-
-                iDisposed = true;
-            }
-        }
-
         public string Udn
         {
             get
@@ -103,6 +114,7 @@ namespace OpenHome.Net.ControlPoint
                     {
                         throw new ObjectDisposedException("MockWatchableDevice.Udn");
                     }
+
                     return iUdn;
                 }
             }
@@ -121,9 +133,30 @@ namespace OpenHome.Net.ControlPoint
             }
         }
 
-        private object iLock;
-        private bool iDisposed;
+        protected object iLock;
+        protected bool iDisposed;
 
         private string iUdn;
+    }
+
+    internal class DisposableMockWatchableDevice : MockWatchableDevice, IDisposable
+    {
+        public DisposableMockWatchableDevice(string aUdn)
+            : base(aUdn)
+        {
+        }
+
+        public void Dispose()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("DisposableMockWatchableDevice.Dispose");
+                }
+
+                iDisposed = true;
+            }
+        }
     }
 }
