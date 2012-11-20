@@ -1,6 +1,8 @@
 ﻿using System;
 
-namespace OpenHome.Net.ControlPoint
+using OpenHome.Net.ControlPoint;
+
+namespace OpenHome.Av
 {
     public interface IWatchableDevice
     {

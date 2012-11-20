@@ -6,28 +6,55 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public class Topology1DeviceWatchableCollection : WatchableCollection<IWatchableDevice>, IDisposable
+    internal class WatchableDeviceCollection : WatchableCollection<IWatchableDevice>
     {
-        public Topology1DeviceWatchableCollection(IWatchableThread aThread)
+        public WatchableDeviceCollection(IWatchableThread aThread)
             : base(aThread)
         {
+            iCpDeviceLookup = new Dictionary<CpDevice, DisposableWatchableDevice>();
             iList = new List<IWatchableDevice>();
         }
 
-        public void Add(IWatchableDevice aValue)
+        public new void Dispose()
+        {
+            base.Dispose();
+
+            foreach (DisposableWatchableDevice device in iCpDeviceLookup.Values)
+            {
+                device.Dispose();
+            }
+            iCpDeviceLookup.Clear();
+            iCpDeviceLookup = null;
+        }
+
+        internal void Add(CpDevice aValue)
         {
             uint index = (uint)iList.Count;
-            iList.Add(aValue);
-            CollectionAdd(aValue, index);
+
+            DisposableWatchableDevice device = new DisposableWatchableDevice(aValue);
+            iCpDeviceLookup.Add(aValue, device);
+            iList.Add(device);
+
+            CollectionAdd(device, index);
         }
 
-        public void Remove(IWatchableDevice aValue)
+        internal void Remove(CpDevice aValue)
         {
-            uint index = (uint)iList.IndexOf(aValue);
-            iList.Add(aValue);
-            CollectionRemove(aValue, index);
+            DisposableWatchableDevice device;
+            if (iCpDeviceLookup.TryGetValue(aValue, out device))
+            {
+                iCpDeviceLookup.Remove(aValue);
+
+                uint index = (uint)iList.IndexOf(device);
+                iList.Remove(device);
+             
+                CollectionRemove(device, index);
+
+                device.Dispose();
+            }
         }
 
+        private Dictionary<CpDevice, DisposableWatchableDevice> iCpDeviceLookup;
         private List<IWatchableDevice> iList;
     }
 
@@ -44,8 +71,7 @@ namespace OpenHome.Av
             iLock = new object();
             iDisposed = false;
             iDeviceList = new CpDeviceListUpnpServiceType("av.openhome.org", "Product", 1, Added, Removed);
-            iTopologyDeviceLookup = new Dictionary<CpDevice, DisposableWatchableDevice>();
-            iTopologyDeviceList = new Topology1DeviceWatchableCollection(aThread);
+            iTopologyDeviceList = new WatchableDeviceCollection(aThread);
         }
 
         public void Dispose()
@@ -62,13 +88,6 @@ namespace OpenHome.Av
 
                 iTopologyDeviceList.Dispose();
                 iTopologyDeviceList = null;
-
-                foreach (DisposableWatchableDevice device in iTopologyDeviceLookup.Values)
-                {
-                    device.Dispose();
-                }
-                iTopologyDeviceLookup.Clear();
-                iTopologyDeviceLookup = null;
 
                 iDisposed = true;
             }
@@ -112,9 +131,7 @@ namespace OpenHome.Av
                     return;
                 }
 
-                DisposableWatchableDevice device = new DisposableWatchableDevice(aDevice);
-                iTopologyDeviceLookup.Add(aDevice, device);
-                iTopologyDeviceList.Add(device);
+                iTopologyDeviceList.Add(aDevice);
             }
         }
 
@@ -127,12 +144,7 @@ namespace OpenHome.Av
                     return;
                 }
 
-                DisposableWatchableDevice device;
-                if (iTopologyDeviceLookup.TryGetValue(aDevice, out device))
-                {
-                    iTopologyDeviceList.Remove(device);
-                    device.Dispose();
-                }
+                iTopologyDeviceList.Remove(aDevice);
             }
         }
 
@@ -140,17 +152,16 @@ namespace OpenHome.Av
         private bool iDisposed;
 
         private CpDeviceList iDeviceList;
-        private Dictionary<CpDevice, DisposableWatchableDevice> iTopologyDeviceLookup;
-        private Topology1DeviceWatchableCollection iTopologyDeviceList;
+        private WatchableDeviceCollection iTopologyDeviceList;
     }
 
-    public class MoqTopology1 : ITopology1
+    public class MockTopology1 : ITopology1
     {
-        public MoqTopology1(WatchableThread aThread)
+        public MockTopology1(WatchableThread aThread)
         {
             iLock = new object();
             iDisposed = false;
-            iTopologyDeviceList = new Topology1DeviceWatchableCollection(aThread);
+            iTopologyDeviceList = new WatchableDeviceCollection(aThread);
         }
 
         public void Dispose()
@@ -198,6 +209,6 @@ namespace OpenHome.Av
         private object iLock;
         private bool iDisposed;
 
-        private Topology1DeviceWatchableCollection iTopologyDeviceList;
+        private WatchableDeviceCollection iTopologyDeviceList;
     }
 }

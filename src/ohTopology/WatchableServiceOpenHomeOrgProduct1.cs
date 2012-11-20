@@ -1,52 +1,231 @@
 ﻿using System;
+using System.Threading;
 
 using OpenHome.Os.App;
 using OpenHome.Net.ControlPoint.Proxies;
 
-namespace OpenHome.Net.ControlPoint
+namespace OpenHome.Av
 {
-    public interface IWatchableServiceOpenHomeOrgProduct1 : IDisposable
+    public interface IManufacturer
+    {
+        string ManufacturerImageUri { get; }
+        string ManufacturerInfo { get; }
+        string ManufacturerName { get; }
+        string ManufacturerUrl { get; }
+    }
+
+    public class Manufacturer : IManufacturer
+    {
+        public Manufacturer()
+        {
+            iManufacturerImageUri = string.Empty;
+            iManufacturerInfo = string.Empty;
+            iManufacturerName = string.Empty;
+            iManufacturerUrl = string.Empty;
+        }
+
+        public Manufacturer(string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl)
+        {
+            iManufacturerImageUri = aManufacturerImageUri;
+            iManufacturerInfo = aManufacturerInfo;
+            iManufacturerName = aManufacturerName;
+            iManufacturerUrl = aManufacturerUrl;
+        }
+
+        public string ManufacturerImageUri
+        {
+            get
+            {
+                return iManufacturerImageUri;
+            }
+        }
+
+        public string ManufacturerInfo
+        {
+            get
+            {
+                return iManufacturerInfo;
+            }
+        }
+
+        public string ManufacturerName
+        {
+            get
+            {
+                return iManufacturerName;
+            }
+        }
+
+        public string ManufacturerUrl
+        {
+            get
+            {
+                return iManufacturerUrl;
+            }
+        }
+
+        private string iManufacturerImageUri;
+        private string iManufacturerInfo;
+        private string iManufacturerName;
+        private string iManufacturerUrl;
+    }
+
+    public interface IModel
+    {
+        string ModelImageUri { get; }
+        string ModelInfo { get; }
+        string ModelName { get; }
+        string ModelUrl { get; }
+    }
+
+    public class Model : IModel
+    {
+        public Model()
+        {
+            iModelImageUri = string.Empty;
+            iModelInfo = string.Empty;
+            iModelName = string.Empty;
+            iModelUrl = string.Empty;
+        }
+
+        public Model(string aModelImageUri, string aModelInfo, string aModelName, string aModelUrl)
+        {
+            iModelImageUri = aModelImageUri;
+            iModelInfo = aModelInfo;
+            iModelName = aModelName;
+            iModelUrl = aModelUrl;
+        }
+
+        public string ModelImageUri
+        {
+            get
+            {
+                return iModelImageUri;
+            }
+        }
+
+        public string ModelInfo
+        {
+            get
+            {
+                return iModelInfo;
+            }
+        }
+
+        public string ModelName
+        {
+            get
+            {
+                return iModelName;
+            }
+        }
+
+        public string ModelUrl
+        {
+            get
+            {
+                return iModelUrl;
+            }
+        }
+
+        private string iModelImageUri;
+        private string iModelInfo;
+        private string iModelName;
+        private string iModelUrl;
+    }
+
+    public interface IProduct
+    {
+        string ProductImageUri { get; }
+        string ProductInfo { get; }
+        string ProductName { get; }
+        string ProductRoom { get; }
+        string ProductUrl { get; }
+    }
+
+    public class Product : IProduct
+    {
+        public Product()
+        {
+            iProductImageUri = string.Empty;
+            iProductInfo = string.Empty;
+            iProductName = string.Empty;
+            iProductRoom = string.Empty;
+            iProductUrl = string.Empty;
+        }
+
+        public Product(string aProductImageUri, string aProductInfo, string aProductName, string aProductRoom, string aProductUrl)
+        {
+            iProductImageUri = aProductImageUri;
+            iProductInfo = aProductInfo;
+            iProductName = aProductName;
+            iProductRoom = aProductRoom;
+            iProductUrl = aProductUrl;
+        }
+
+        public string ProductImageUri
+        {
+            get
+            {
+                return iProductImageUri;
+            }
+        }
+
+        public string ProductInfo
+        {
+            get
+            {
+                return iProductInfo;
+            }
+        }
+
+        public string ProductName
+        {
+            get
+            {
+                return iProductName;
+            }
+        }
+
+        public string ProductRoom
+        {
+            get
+            {
+                return iProductRoom;
+            }
+        }
+
+        public string ProductUrl
+        {
+            get
+            {
+                return iProductUrl;
+            }
+        }
+
+        private string iProductImageUri;
+        private string iProductInfo;
+        private string iProductName;
+        private string iProductRoom;
+        private string iProductUrl;
+    }
+
+    public interface IWatchableServiceOpenHomeOrgProduct1
     {
         IWatchable<string> Attributes { get; }
-        IWatchable<string> ManufacturerImageUri { get; }
-        IWatchable<string> ManufacturerInfo { get; }
-        IWatchable<string> ManufacturerName { get; }
-        IWatchable<string> ManufacturerUrl { get; }
-        IWatchable<string> ModelImageUri { get; }
-        IWatchable<string> ModelInfo { get; }
-        IWatchable<string> ModelName { get; }
-        IWatchable<string> ModelUrl { get; }
-        IWatchable<string> ProductImageUri { get; }
-        IWatchable<string> ProductInfo { get; }
-        IWatchable<string> ProductName { get; }
-        IWatchable<string> ProductRoom { get; }
-        IWatchable<string> ProductUrl { get; }
-        IWatchable<string> SourceCount { get; }
+        IWatchable<IManufacturer> Manufacturer { get; }
+        IWatchable<IModel> Model { get; }
+        IWatchable<IProduct> Product { get; }
         IWatchable<string> SourceIndex { get; }
-        IWatchable<string> SourceName { get; }
-        IWatchable<string> SourceType { get; }
-        IWatchable<string> SourceVisible { get; }
         IWatchable<string> SourceXml { get; }
-        IWatchable<string> SourceXmlChangeCount { get; }
         IWatchable<string> Standby { get; }
-
-        void GetAttributes(out string aValue);
-        void GetManufacturer(out string aName, out string aInfo, out string aUrl, out string aImageUri);
-        void GetModel(out string aName, out string aInfo, out string aUrl, out string aImageUri);
-        void GetProduct(out string aRoom, out string aName, out string aInfo, out string aUrl, out string aImageUri);
-        void GetSource(uint aIndex, out string aSystemName, out string aType, out string aName, out bool aVisible);
-        void GetSourceCount(out uint aValue);
-        void GetSourceIndex(out uint aValue);
-        void GetSourceXml(out string aValue);
-        void GetSourceXmlChangeCount(out uint aValue);
-        void GetStandby(out bool aValue);
 
         void SetSourceIndex(uint aValue);
         void SetSourceIndexByName(string aValue);
         void SetStandby(bool aValue);
     }
 
-    public class WatchableServiceOpenHomeOrgProduct1 : IWatchableServiceOpenHomeOrgProduct1
+    public class WatchableServiceOpenHomeOrgProduct1 : IWatchableServiceOpenHomeOrgProduct1, IDisposable
     {
         public WatchableServiceOpenHomeOrgProduct1(WatchableThread aThread, WatchableDevice aDevice)
         {
@@ -59,11 +238,15 @@ namespace OpenHome.Net.ControlPoint
             iAttributes = new Watchable<string>(aThread, "Attributes", string.Empty);
             iServiceProduct.SetPropertyAttributesChanged(HandleAttributesChanged);
 
-            iProductName = new Watchable<string>(aThread, "ProductName", string.Empty);
-            iServiceProduct.SetPropertyProductNameChanged(HandleProductNameChanged);
+            iProductChanged = false;
+            iProduct = new Watchable<IProduct>(aThread, "Product", new Product());
+            iServiceProduct.SetPropertyProductImageUriChanged(HandleProductChanged);
+            iServiceProduct.SetPropertyProductInfoChanged(HandleProductChanged);
+            iServiceProduct.SetPropertyProductNameChanged(HandleProductChanged);
+            iServiceProduct.SetPropertyProductRoomChanged(HandleProductChanged);
+            iServiceProduct.SetPropertyProductUrlChanged(HandleProductChanged);
 
-            iProductRoom = new Watchable<string>(aThread, "ProductRoom", string.Empty);
-            iServiceProduct.SetPropertyProductRoomChanged(HandleProductRoomChanged);
+            iServiceProduct.SetPropertyChanged(HandlePropertyChanged);
 
             iServiceProduct.Subscribe();
         }
@@ -91,72 +274,17 @@ namespace OpenHome.Net.ControlPoint
             get { throw new NotImplementedException(); }
         }
 
-        public IWatchable<string> ManufacturerImageUri
+        public IWatchable<IManufacturer> Manufacturer
         {
             get { throw new NotImplementedException(); }
         }
 
-        public IWatchable<string> ManufacturerInfo
+        public IWatchable<IModel> Model
         {
             get { throw new NotImplementedException(); }
         }
 
-        public IWatchable<string> ManufacturerName
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ManufacturerUrl
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ModelImageUri
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ModelInfo
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ModelName
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ModelUrl
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ProductImageUri
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ProductInfo
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ProductName
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ProductRoom
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ProductUrl
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> SourceCount
+        public IWatchable<IProduct> Product
         {
             get { throw new NotImplementedException(); }
         }
@@ -166,27 +294,7 @@ namespace OpenHome.Net.ControlPoint
             get { throw new NotImplementedException(); }
         }
 
-        public IWatchable<string> SourceName
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> SourceType
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> SourceVisible
-        {
-            get { throw new NotImplementedException(); }
-        }
-
         public IWatchable<string> SourceXml
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> SourceXmlChangeCount
         {
             get { throw new NotImplementedException(); }
         }
@@ -194,56 +302,6 @@ namespace OpenHome.Net.ControlPoint
         public IWatchable<string> Standby
         {
             get { throw new NotImplementedException(); }
-        }
-
-        public void GetAttributes(out string aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetManufacturer(out string aName, out string aInfo, out string aUrl, out string aImageUri)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetModel(out string aName, out string aInfo, out string aUrl, out string aImageUri)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetProduct(out string aRoom, out string aName, out string aInfo, out string aUrl, out string aImageUri)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetSource(uint aIndex, out string aSystemName, out string aType, out string aName, out bool aVisible)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetSourceCount(out uint aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetSourceIndex(out uint aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetSourceXml(out string aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetSourceXmlChangeCount(out uint aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetStandby(out bool aValue)
-        {
-            throw new NotImplementedException();
         }
 
         public void SetSourceIndex(uint aValue)
@@ -272,24 +330,29 @@ namespace OpenHome.Net.ControlPoint
             }
         }
 
-        private void HandleProductNameChanged()
+        private void HandleProductChanged()
         {
             lock (iLock)
             {
                 if (!iDisposed)
                 {
-                    iProductName.Update(iServiceProduct.PropertyProductName());
+                    iProductChanged = true;
                 }
             }
         }
 
-        private void HandleProductRoomChanged()
+        private void HandlePropertyChanged()
         {
             lock (iLock)
             {
                 if (!iDisposed)
                 {
-                    iProductRoom.Update(iServiceProduct.PropertyProductRoom());
+                    if (iProductChanged)
+                    {
+                        iProduct.Update(new Product(iServiceProduct.PropertyProductImageUri(), iServiceProduct.PropertyProductInfo(), iServiceProduct.PropertyProductName(),
+                            iServiceProduct.PropertyProductRoom(), iServiceProduct.PropertyProductUrl()));
+                        iProductChanged = false;
+                    }
                 }
             }
         }
@@ -301,11 +364,11 @@ namespace OpenHome.Net.ControlPoint
         private CpProxyAvOpenhomeOrgProduct1 iServiceProduct;
 
         private Watchable<string> iAttributes;
-        private Watchable<string> iProductName;
-        private Watchable<string> iProductRoom;
+        private bool iProductChanged;
+        private Watchable<IProduct> iProduct;
     }
 
-    public class MockServiceOpenHomeOrgProduct1 : IWatchableServiceOpenHomeOrgProduct1
+    public class MockServiceOpenHomeOrgProduct1 : IWatchableServiceOpenHomeOrgProduct1, IDisposable
     {
         public MockServiceOpenHomeOrgProduct1(MockWatchableDevice aDevice)
         {
@@ -322,72 +385,17 @@ namespace OpenHome.Net.ControlPoint
             get { throw new NotImplementedException(); }
         }
 
-        public IWatchable<string> ManufacturerImageUri
+        public IWatchable<IManufacturer> Manufacturer
         {
             get { throw new NotImplementedException(); }
         }
 
-        public IWatchable<string> ManufacturerInfo
+        public IWatchable<IModel> Model
         {
             get { throw new NotImplementedException(); }
         }
 
-        public IWatchable<string> ManufacturerName
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ManufacturerUrl
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ModelImageUri
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ModelInfo
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ModelName
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ModelUrl
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ProductImageUri
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ProductInfo
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ProductName
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ProductRoom
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> ProductUrl
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> SourceCount
+        public IWatchable<IProduct> Product
         {
             get { throw new NotImplementedException(); }
         }
@@ -397,27 +405,7 @@ namespace OpenHome.Net.ControlPoint
             get { throw new NotImplementedException(); }
         }
 
-        public IWatchable<string> SourceName
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> SourceType
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> SourceVisible
-        {
-            get { throw new NotImplementedException(); }
-        }
-
         public IWatchable<string> SourceXml
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> SourceXmlChangeCount
         {
             get { throw new NotImplementedException(); }
         }
@@ -425,56 +413,6 @@ namespace OpenHome.Net.ControlPoint
         public IWatchable<string> Standby
         {
             get { throw new NotImplementedException(); }
-        }
-
-        public void GetAttributes(out string aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetManufacturer(out string aName, out string aInfo, out string aUrl, out string aImageUri)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetModel(out string aName, out string aInfo, out string aUrl, out string aImageUri)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetProduct(out string aRoom, out string aName, out string aInfo, out string aUrl, out string aImageUri)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetSource(uint aIndex, out string aSystemName, out string aType, out string aName, out bool aVisible)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetSourceCount(out uint aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetSourceIndex(out uint aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetSourceXml(out string aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetSourceXmlChangeCount(out uint aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetStandby(out bool aValue)
-        {
-            throw new NotImplementedException();
         }
 
         public void SetSourceIndex(uint aValue)
