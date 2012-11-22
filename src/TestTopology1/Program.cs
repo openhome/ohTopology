@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using OpenHome.Os.App;
 using OpenHome.Av;
@@ -62,13 +63,17 @@ namespace TestTopology
 
             ExceptionReporter reporter = new ExceptionReporter();
             WatchableThread thread = new  WatchableThread(reporter);
-            Topology1 topology = new Topology1(thread);
+            MockTopology1 topology = new MockTopology1(thread);
 
             DeviceWatcher watcher = new DeviceWatcher();
             topology.Devices.AddWatcher(watcher);
 
-            System.Threading.Thread.Sleep(10000);
+            Mockable mocker = new Mockable();
+            mocker.Add("topology", topology);
 
+            MockableStream stream = new MockableStream(Console.In, mocker);
+            stream.Start();
+            
             topology.Devices.RemoveWatcher(watcher);
             
             topology.Dispose();

@@ -19,7 +19,7 @@ namespace OpenHome.Av
         void SetStandby(bool aValue);
     }
 
-    public interface IWatchableServiceOpenHomeOrgProduct1
+    public interface ITopology1Product
     {
         string Attributes { get; }
         string ManufacturerImageUri { get; }
@@ -35,23 +35,11 @@ namespace OpenHome.Av
         string ProductUrl { get; }
     }
 
-    public class WatchableServiceOpenHomeOrgProduct1 : Watchable<IServiceOpenHomeOrgProduct1>, IWatchableServiceOpenHomeOrgProduct1
+    public abstract class Topology1Product : Watchable<IServiceOpenHomeOrgProduct1>, ITopology1Product
     {
-        public WatchableServiceOpenHomeOrgProduct1(WatchableThread aThread, string aId, CpProxyAvOpenhomeOrgProduct1 aService)
-            : base(aThread, aId, new ServiceOpenHomeOrgProduct1(aThread, aService))
+        protected Topology1Product(WatchableThread aThread, string aId, IServiceOpenHomeOrgProduct1 aValue)
+            : base(aThread, aId, aValue)
         {
-            iAttributes = aService.PropertyAttributes();
-            iManufacturerImageUri = aService.PropertyManufacturerImageUri();
-            iManufacturerInfo = aService.PropertyManufacturerInfo();
-            iManufacturerName = aService.PropertyManufacturerName();
-            iManufacturerUrl = aService.PropertyManufacturerUrl();
-            iModelImageUri = aService.PropertyModelImageUri();
-            iModelInfo = aService.PropertyModelInfo();
-            iModelName = aService.PropertyModelName();
-            iModelUrl = aService.PropertyModelUrl();
-            iProductImageUri = aService.PropertyProductImageUri();
-            iProductInfo = aService.PropertyProductInfo();
-            iProductUrl = aService.PropertyProductUrl();
         }
 
         public string Attributes
@@ -150,18 +138,18 @@ namespace OpenHome.Av
             }
         }
 
-        private string iAttributes;
-        private string iManufacturerImageUri;
-        private string iManufacturerInfo;
-        private string iManufacturerName;
-        private string iManufacturerUrl;
-        private string iModelImageUri;
-        private string iModelInfo;
-        private string iModelName;
-        private string iModelUrl;
-        private string iProductImageUri;
-        private string iProductInfo;
-        private string iProductUrl;
+        protected string iAttributes;
+        protected string iManufacturerImageUri;
+        protected string iManufacturerInfo;
+        protected string iManufacturerName;
+        protected string iManufacturerUrl;
+        protected string iModelImageUri;
+        protected string iModelInfo;
+        protected string iModelName;
+        protected string iModelUrl;
+        protected string iProductImageUri;
+        protected string iProductInfo;
+        protected string iProductUrl;
     }
 
     public class ServiceOpenHomeOrgProduct1 : IServiceOpenHomeOrgProduct1, IDisposable
@@ -379,133 +367,24 @@ namespace OpenHome.Av
         private Watchable<bool> iStandby;
     }
 
-    public class MockWatchableServiceOpenHomeOrgProduct1 : Watchable<IServiceOpenHomeOrgProduct1>, IWatchableServiceOpenHomeOrgProduct1
+    public class WatchableServiceOpenHomeOrgProduct1 : Topology1Product
     {
-        public MockWatchableServiceOpenHomeOrgProduct1(WatchableThread aThread, string aId)
-            : base(aThread, aId, new MockServiceOpenHomeOrgProduct1())
+        public WatchableServiceOpenHomeOrgProduct1(WatchableThread aThread, string aId, CpProxyAvOpenhomeOrgProduct1 aService)
+            : base(aThread, aId, new ServiceOpenHomeOrgProduct1(aThread, aService))
         {
-            iAttributes = string.Empty;
-            iManufacturerImageUri = string.Empty;
-            iManufacturerInfo = string.Empty;
-            iManufacturerName = string.Empty;
-            iManufacturerUrl = string.Empty;
-            iModelImageUri = string.Empty;
-            iModelInfo = string.Empty;
-            iModelName = string.Empty;
-            iModelUrl = string.Empty;
-            iProductImageUri = string.Empty;
-            iProductInfo = string.Empty;
-            iProductUrl = string.Empty;
+            iAttributes = aService.PropertyAttributes();
+            iManufacturerImageUri = aService.PropertyManufacturerImageUri();
+            iManufacturerInfo = aService.PropertyManufacturerInfo();
+            iManufacturerName = aService.PropertyManufacturerName();
+            iManufacturerUrl = aService.PropertyManufacturerUrl();
+            iModelImageUri = aService.PropertyModelImageUri();
+            iModelInfo = aService.PropertyModelInfo();
+            iModelName = aService.PropertyModelName();
+            iModelUrl = aService.PropertyModelUrl();
+            iProductImageUri = aService.PropertyProductImageUri();
+            iProductInfo = aService.PropertyProductInfo();
+            iProductUrl = aService.PropertyProductUrl();
         }
-
-        public string Attributes
-        {
-            get
-            {
-                return iAttributes;
-            }
-        }
-
-        public string ManufacturerImageUri
-        {
-            get
-            {
-                return iManufacturerImageUri;
-            }
-        }
-
-        public string ManufacturerInfo
-        {
-            get
-            {
-                return iManufacturerInfo;
-            }
-        }
-
-        public string ManufacturerName
-        {
-            get
-            {
-                return iManufacturerName;
-            }
-        }
-
-        public string ManufacturerUrl
-        {
-            get
-            {
-                return iManufacturerUrl;
-            }
-        }
-
-        public string ModelImageUri
-        {
-            get
-            {
-                return iModelImageUri;
-            }
-        }
-
-        public string ModelInfo
-        {
-            get
-            {
-                return iModelInfo;
-            }
-        }
-
-        public string ModelName
-        {
-            get
-            {
-                return iModelName;
-            }
-        }
-
-        public string ModelUrl
-        {
-            get
-            {
-                return iModelUrl;
-            }
-        }
-
-        public string ProductImageUri
-        {
-            get
-            {
-                return iProductImageUri;
-            }
-        }
-
-        public string ProductInfo
-        {
-            get
-            {
-                return iProductInfo;
-            }
-        }
-
-        public string ProductUrl
-        {
-            get
-            {
-                return iProductUrl;
-            }
-        }
-
-        private string iAttributes;
-        private string iManufacturerImageUri;
-        private string iManufacturerInfo;
-        private string iManufacturerName;
-        private string iManufacturerUrl;
-        private string iModelImageUri;
-        private string iModelInfo;
-        private string iModelName;
-        private string iModelUrl;
-        private string iProductImageUri;
-        private string iProductInfo;
-        private string iProductUrl;
     }
 
     public class MockServiceOpenHomeOrgProduct1 : IServiceOpenHomeOrgProduct1, IDisposable
@@ -556,6 +435,26 @@ namespace OpenHome.Av
         public void SetStandby(bool aValue)
         {
             throw new NotImplementedException();
+        }
+    }
+
+    public class MockWatchableServiceOpenHomeOrgProduct1 : Topology1Product
+    {
+        public MockWatchableServiceOpenHomeOrgProduct1(WatchableThread aThread, string aId)
+            : base(aThread, aId, new MockServiceOpenHomeOrgProduct1())
+        {
+            iAttributes = string.Empty;
+            iManufacturerImageUri = string.Empty;
+            iManufacturerInfo = string.Empty;
+            iManufacturerName = string.Empty;
+            iManufacturerUrl = string.Empty;
+            iModelImageUri = string.Empty;
+            iModelInfo = string.Empty;
+            iModelName = string.Empty;
+            iModelUrl = string.Empty;
+            iProductImageUri = string.Empty;
+            iProductInfo = string.Empty;
+            iProductUrl = string.Empty;
         }
     }
 }
