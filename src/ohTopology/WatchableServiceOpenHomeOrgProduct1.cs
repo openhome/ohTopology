@@ -6,30 +6,60 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    public interface IManufacturer
+    public interface IServiceOpenHomeOrgProduct1
     {
+        IWatchable<string> Room { get; }
+        IWatchable<string> Name { get; }
+        IWatchable<uint> SourceIndex { get; }
+        IWatchable<string> SourceXml { get; }
+        IWatchable<bool> Standby { get; }
+
+        void SetSourceIndex(uint aValue);
+        void SetSourceIndexByName(string aValue);
+        void SetStandby(bool aValue);
+    }
+
+    public interface IWatchableServiceOpenHomeOrgProduct1
+    {
+        string Attributes { get; }
         string ManufacturerImageUri { get; }
         string ManufacturerInfo { get; }
         string ManufacturerName { get; }
         string ManufacturerUrl { get; }
+        string ModelImageUri { get; }
+        string ModelInfo { get; }
+        string ModelName { get; }
+        string ModelUrl { get; }
+        string ProductImageUri { get; }
+        string ProductInfo { get; }
+        string ProductUrl { get; }
     }
 
-    public class Manufacturer : IManufacturer
+    public class WatchableServiceOpenHomeOrgProduct1 : Watchable<IServiceOpenHomeOrgProduct1>, IWatchableServiceOpenHomeOrgProduct1
     {
-        public Manufacturer()
+        public WatchableServiceOpenHomeOrgProduct1(WatchableThread aThread, string aId, CpProxyAvOpenhomeOrgProduct1 aService)
+            : base(aThread, aId, new ServiceOpenHomeOrgProduct1(aThread, aService))
         {
-            iManufacturerImageUri = string.Empty;
-            iManufacturerInfo = string.Empty;
-            iManufacturerName = string.Empty;
-            iManufacturerUrl = string.Empty;
+            iAttributes = aService.PropertyAttributes();
+            iManufacturerImageUri = aService.PropertyManufacturerImageUri();
+            iManufacturerInfo = aService.PropertyManufacturerInfo();
+            iManufacturerName = aService.PropertyManufacturerName();
+            iManufacturerUrl = aService.PropertyManufacturerUrl();
+            iModelImageUri = aService.PropertyModelImageUri();
+            iModelInfo = aService.PropertyModelInfo();
+            iModelName = aService.PropertyModelName();
+            iModelUrl = aService.PropertyModelUrl();
+            iProductImageUri = aService.PropertyProductImageUri();
+            iProductInfo = aService.PropertyProductInfo();
+            iProductUrl = aService.PropertyProductUrl();
         }
 
-        public Manufacturer(string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl)
+        public string Attributes
         {
-            iManufacturerImageUri = aManufacturerImageUri;
-            iManufacturerInfo = aManufacturerInfo;
-            iManufacturerName = aManufacturerName;
-            iManufacturerUrl = aManufacturerUrl;
+            get
+            {
+                return iAttributes;
+            }
         }
 
         public string ManufacturerImageUri
@@ -64,36 +94,348 @@ namespace OpenHome.Av
             }
         }
 
+        public string ModelImageUri
+        {
+            get
+            {
+                return iModelImageUri;
+            }
+        }
+
+        public string ModelInfo
+        {
+            get
+            {
+                return iModelInfo;
+            }
+        }
+
+        public string ModelName
+        {
+            get
+            {
+                return iModelName;
+            }
+        }
+
+        public string ModelUrl
+        {
+            get
+            {
+                return iModelUrl;
+            }
+        }
+
+        public string ProductImageUri
+        {
+            get
+            {
+                return iProductImageUri;
+            }
+        }
+
+        public string ProductInfo
+        {
+            get
+            {
+                return iProductInfo;
+            }
+        }
+
+        public string ProductUrl
+        {
+            get
+            {
+                return iProductUrl;
+            }
+        }
+
+        private string iAttributes;
         private string iManufacturerImageUri;
         private string iManufacturerInfo;
         private string iManufacturerName;
         private string iManufacturerUrl;
+        private string iModelImageUri;
+        private string iModelInfo;
+        private string iModelName;
+        private string iModelUrl;
+        private string iProductImageUri;
+        private string iProductInfo;
+        private string iProductUrl;
     }
 
-    public interface IModel
+    public class ServiceOpenHomeOrgProduct1 : IServiceOpenHomeOrgProduct1, IDisposable
     {
-        string ModelImageUri { get; }
-        string ModelInfo { get; }
-        string ModelName { get; }
-        string ModelUrl { get; }
-    }
-
-    public class Model : IModel
-    {
-        public Model()
+        public ServiceOpenHomeOrgProduct1(WatchableThread aThread, CpProxyAvOpenhomeOrgProduct1 aService)
         {
+            iLock = new object();
+            iDisposed = false;
+
+            lock (iLock)
+            {
+                iService = aService;
+
+                iService.SetPropertyProductNameChanged(HandleRoomChanged);
+                iService.SetPropertyProductNameChanged(HandleNameChanged);
+                iService.SetPropertySourceIndexChanged(HandleSourceIndexChanged);
+                iService.SetPropertySourceXmlChanged(HandleSourceXmlChanged);
+                iService.SetPropertyStandbyChanged(HandleStandbyChanged);
+
+                iRoom = new Watchable<string>(aThread, "Room", iService.PropertyProductRoom());
+                iName = new Watchable<string>(aThread, "Name", iService.PropertyProductName());
+                iSourceIndex = new Watchable<uint>(aThread, "SourceIndex", iService.PropertySourceIndex());
+                iSourceXml = new Watchable<string>(aThread, "SourceXml", iService.PropertySourceXml());
+                iStandby = new Watchable<bool>(aThread, "Standby", iService.PropertyStandby());
+            }
+        }
+
+        public void Dispose()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgProduct1.Dispose");
+                }
+
+                iService = null;
+
+                iDisposed = true;
+            }
+        }
+
+        public IWatchable<string> Room
+        {
+            get
+            {
+                lock (iLock)
+                {
+                    if (iDisposed)
+                    {
+                        throw new ObjectDisposedException("ServiceOpenHomeOrgProduct1.Room");
+                    }
+
+                    return iRoom;
+                }
+            }
+        }
+
+        public IWatchable<string> Name
+        {
+            get
+            {
+                lock (iLock)
+                {
+                    if (iDisposed)
+                    {
+                        throw new ObjectDisposedException("ServiceOpenHomeOrgProduct1.Name");
+                    }
+
+                    return iName;
+                }
+            }
+        }
+
+        public IWatchable<uint> SourceIndex
+        {
+            get
+            {
+                return iSourceIndex;
+            }
+        }
+
+        public IWatchable<string> SourceXml
+        {
+            get
+            {
+                return iSourceXml;
+            }
+        }
+
+        public IWatchable<bool> Standby
+        {
+            get
+            {
+                return iStandby;
+            }
+        }
+
+        public void SetSourceIndex(uint aValue)
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgProduct1.SetSourceIndex");
+                }
+
+                iService.BeginSetSourceIndex(aValue, null);
+            }
+        }
+
+        public void SetSourceIndexByName(string aValue)
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgProduct1.SetSourceIndexByName");
+                }
+
+                iService.BeginSetSourceIndexByName(aValue, null);
+            }
+        }
+
+        public void SetStandby(bool aValue)
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgProduct1.SetStandby");
+                }
+
+                iService.BeginSetStandby(aValue, null);
+            }
+        }
+
+        private void HandleRoomChanged()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    return;
+                }
+                
+                iRoom.Update(iService.PropertyProductRoom());
+            }
+        }
+
+        private void HandleNameChanged()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    return;
+                }
+                
+                iName.Update(iService.PropertyProductName());
+            }
+        }
+
+        private void HandleSourceIndexChanged()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    return;
+                }
+
+                iSourceIndex.Update(iService.PropertySourceIndex());
+            }
+        }
+
+        private void HandleSourceXmlChanged()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    return;
+                }
+
+                iSourceXml.Update(iService.PropertySourceXml());
+            }
+        }
+
+        private void HandleStandbyChanged()
+        {
+            lock (iLock)
+            {
+                lock (iLock)
+                {
+                    if (iDisposed)
+                    {
+                        return;
+                    }
+
+                    iStandby.Update(iService.PropertyStandby());
+                }
+            }
+        }
+
+        private object iLock;
+        private bool iDisposed;
+
+        private CpProxyAvOpenhomeOrgProduct1 iService;
+
+        private Watchable<string> iRoom;
+        private Watchable<string> iName;
+        private Watchable<uint> iSourceIndex;
+        private Watchable<string> iSourceXml;
+        private Watchable<bool> iStandby;
+    }
+
+    public class MockWatchableServiceOpenHomeOrgProduct1 : Watchable<IServiceOpenHomeOrgProduct1>, IWatchableServiceOpenHomeOrgProduct1
+    {
+        public MockWatchableServiceOpenHomeOrgProduct1(WatchableThread aThread, string aId)
+            : base(aThread, aId, new MockServiceOpenHomeOrgProduct1())
+        {
+            iAttributes = string.Empty;
+            iManufacturerImageUri = string.Empty;
+            iManufacturerInfo = string.Empty;
+            iManufacturerName = string.Empty;
+            iManufacturerUrl = string.Empty;
             iModelImageUri = string.Empty;
             iModelInfo = string.Empty;
             iModelName = string.Empty;
             iModelUrl = string.Empty;
+            iProductImageUri = string.Empty;
+            iProductInfo = string.Empty;
+            iProductUrl = string.Empty;
         }
 
-        public Model(string aModelImageUri, string aModelInfo, string aModelName, string aModelUrl)
+        public string Attributes
         {
-            iModelImageUri = aModelImageUri;
-            iModelInfo = aModelInfo;
-            iModelName = aModelName;
-            iModelUrl = aModelUrl;
+            get
+            {
+                return iAttributes;
+            }
+        }
+
+        public string ManufacturerImageUri
+        {
+            get
+            {
+                return iManufacturerImageUri;
+            }
+        }
+
+        public string ManufacturerInfo
+        {
+            get
+            {
+                return iManufacturerInfo;
+            }
+        }
+
+        public string ManufacturerName
+        {
+            get
+            {
+                return iManufacturerName;
+            }
+        }
+
+        public string ManufacturerUrl
+        {
+            get
+            {
+                return iManufacturerUrl;
+            }
         }
 
         public string ModelImageUri
@@ -128,41 +470,6 @@ namespace OpenHome.Av
             }
         }
 
-        private string iModelImageUri;
-        private string iModelInfo;
-        private string iModelName;
-        private string iModelUrl;
-    }
-
-    public interface IProduct
-    {
-        string ProductImageUri { get; }
-        string ProductInfo { get; }
-        string ProductName { get; }
-        string ProductRoom { get; }
-        string ProductUrl { get; }
-    }
-
-    public class Product : IProduct
-    {
-        public Product()
-        {
-            iProductImageUri = string.Empty;
-            iProductInfo = string.Empty;
-            iProductName = string.Empty;
-            iProductRoom = string.Empty;
-            iProductUrl = string.Empty;
-        }
-
-        public Product(string aProductImageUri, string aProductInfo, string aProductName, string aProductRoom, string aProductUrl)
-        {
-            iProductImageUri = aProductImageUri;
-            iProductInfo = aProductInfo;
-            iProductName = aProductName;
-            iProductRoom = aProductRoom;
-            iProductUrl = aProductUrl;
-        }
-
         public string ProductImageUri
         {
             get
@@ -179,22 +486,6 @@ namespace OpenHome.Av
             }
         }
 
-        public string ProductName
-        {
-            get
-            {
-                return iProductName;
-            }
-        }
-
-        public string ProductRoom
-        {
-            get
-            {
-                return iProductRoom;
-            }
-        }
-
         public string ProductUrl
         {
             get
@@ -203,93 +494,41 @@ namespace OpenHome.Av
             }
         }
 
+        private string iAttributes;
+        private string iManufacturerImageUri;
+        private string iManufacturerInfo;
+        private string iManufacturerName;
+        private string iManufacturerUrl;
+        private string iModelImageUri;
+        private string iModelInfo;
+        private string iModelName;
+        private string iModelUrl;
         private string iProductImageUri;
         private string iProductInfo;
-        private string iProductName;
-        private string iProductRoom;
         private string iProductUrl;
     }
 
-    public interface IWatchableServiceOpenHomeOrgProduct1
+    public class MockServiceOpenHomeOrgProduct1 : IServiceOpenHomeOrgProduct1, IDisposable
     {
-        IWatchable<string> Attributes { get; }
-        IWatchable<IManufacturer> Manufacturer { get; }
-        IWatchable<IModel> Model { get; }
-        IWatchable<IProduct> Product { get; }
-        IWatchable<string> SourceIndex { get; }
-        IWatchable<string> SourceXml { get; }
-        IWatchable<string> Standby { get; }
-
-        void SetSourceIndex(uint aValue);
-        void SetSourceIndexByName(string aValue);
-        void SetStandby(bool aValue);
-    }
-
-    public class WatchableServiceOpenHomeOrgProduct1 : IWatchableServiceOpenHomeOrgProduct1, IDisposable
-    {
-        public WatchableServiceOpenHomeOrgProduct1(WatchableThread aThread, WatchableDevice aDevice)
+        public MockServiceOpenHomeOrgProduct1()
         {
-            iLock = new object();
-            iDisposed = false;
-
-            iDevice = aDevice;
-            iServiceProduct = new CpProxyAvOpenhomeOrgProduct1(aDevice.Device);
-
-            iAttributes = new Watchable<string>(aThread, "Attributes", string.Empty);
-            iServiceProduct.SetPropertyAttributesChanged(HandleAttributesChanged);
-
-            iProductChanged = false;
-            iProduct = new Watchable<IProduct>(aThread, "Product", new Product());
-            iServiceProduct.SetPropertyProductImageUriChanged(HandleProductChanged);
-            iServiceProduct.SetPropertyProductInfoChanged(HandleProductChanged);
-            iServiceProduct.SetPropertyProductNameChanged(HandleProductChanged);
-            iServiceProduct.SetPropertyProductRoomChanged(HandleProductChanged);
-            iServiceProduct.SetPropertyProductUrlChanged(HandleProductChanged);
-
-            iServiceProduct.SetPropertyChanged(HandlePropertyChanged);
-
-            iServiceProduct.Subscribe();
         }
 
         public void Dispose()
         {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("WatchableServiceOpenHomeOrgProduct1.Dispose");
-                }
-
-                iServiceProduct.Dispose();
-                iServiceProduct = null;
-
-                iDevice = null;
-
-                iDisposed = true;
-            }
         }
 
-        public IWatchable<string> Attributes
+        public IWatchable<string> Room
         {
             get { throw new NotImplementedException(); }
         }
 
-        public IWatchable<IManufacturer> Manufacturer
+        public IWatchable<string> Name
         {
             get { throw new NotImplementedException(); }
         }
 
-        public IWatchable<IModel> Model
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<IProduct> Product
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> SourceIndex
+        public IWatchable<uint> SourceIndex
         {
             get { throw new NotImplementedException(); }
         }
@@ -299,7 +538,7 @@ namespace OpenHome.Av
             get { throw new NotImplementedException(); }
         }
 
-        public IWatchable<string> Standby
+        public IWatchable<bool> Standby
         {
             get { throw new NotImplementedException(); }
         }
@@ -318,118 +557,5 @@ namespace OpenHome.Av
         {
             throw new NotImplementedException();
         }
-
-        private void HandleAttributesChanged()
-        {
-            lock (iLock)
-            {
-                if (!iDisposed)
-                {
-                    iAttributes.Update(iServiceProduct.PropertyAttributes());
-                }
-            }
-        }
-
-        private void HandleProductChanged()
-        {
-            lock (iLock)
-            {
-                if (!iDisposed)
-                {
-                    iProductChanged = true;
-                }
-            }
-        }
-
-        private void HandlePropertyChanged()
-        {
-            lock (iLock)
-            {
-                if (!iDisposed)
-                {
-                    if (iProductChanged)
-                    {
-                        iProduct.Update(new Product(iServiceProduct.PropertyProductImageUri(), iServiceProduct.PropertyProductInfo(), iServiceProduct.PropertyProductName(),
-                            iServiceProduct.PropertyProductRoom(), iServiceProduct.PropertyProductUrl()));
-                        iProductChanged = false;
-                    }
-                }
-            }
-        }
-
-        private object iLock;
-        private bool iDisposed;
-
-        private WatchableDevice iDevice;
-        private CpProxyAvOpenhomeOrgProduct1 iServiceProduct;
-
-        private Watchable<string> iAttributes;
-        private bool iProductChanged;
-        private Watchable<IProduct> iProduct;
-    }
-
-    public class MockServiceOpenHomeOrgProduct1 : IWatchableServiceOpenHomeOrgProduct1, IDisposable
-    {
-        public MockServiceOpenHomeOrgProduct1(MockWatchableDevice aDevice)
-        {
-            iDevice = aDevice;
-        }
-
-        public void Dispose()
-        {
-            iDevice = null;
-        }
-
-        public IWatchable<string> Attributes
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<IManufacturer> Manufacturer
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<IModel> Model
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<IProduct> Product
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> SourceIndex
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> SourceXml
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IWatchable<string> Standby
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public void SetSourceIndex(uint aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void SetSourceIndexByName(string aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void SetStandby(bool aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        private MockWatchableDevice iDevice;
     }
 }

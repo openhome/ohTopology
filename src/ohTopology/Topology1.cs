@@ -60,6 +60,7 @@ namespace OpenHome.Av
 
     public interface ITopology1 : IDisposable
     {
+        IWatchableThread WatchableThread { get; }
         IWatchableCollection<IWatchableDevice> Devices { get; }
         void Refresh();
     }
@@ -70,6 +71,8 @@ namespace OpenHome.Av
         {
             iLock = new object();
             iDisposed = false;
+            iThread = aThread;
+
             iDeviceList = new CpDeviceListUpnpServiceType("av.openhome.org", "Product", 1, Added, Removed);
             iTopologyDeviceList = new WatchableDeviceCollection(aThread);
         }
@@ -88,6 +91,8 @@ namespace OpenHome.Av
 
                 iTopologyDeviceList.Dispose();
                 iTopologyDeviceList = null;
+
+                iThread = null;
 
                 iDisposed = true;
             }
@@ -122,6 +127,22 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchableThread WatchableThread
+        {
+            get
+            {
+                lock (iLock)
+                {
+                    if (iDisposed)
+                    {
+                        throw new ObjectDisposedException("Topology1.WatchableThread");
+                    }
+
+                    return iThread;
+                }
+            }
+        }
+
         private void Added(CpDeviceList aList, CpDevice aDevice)
         {
             lock (iLock)
@@ -151,6 +172,7 @@ namespace OpenHome.Av
         private readonly object iLock;
         private bool iDisposed;
 
+        private IWatchableThread iThread;
         private CpDeviceList iDeviceList;
         private WatchableDeviceCollection iTopologyDeviceList;
     }
@@ -161,6 +183,8 @@ namespace OpenHome.Av
         {
             iLock = new object();
             iDisposed = false;
+
+            iThread = aThread;
             iTopologyDeviceList = new WatchableDeviceCollection(aThread);
         }
 
@@ -201,7 +225,24 @@ namespace OpenHome.Av
                     {
                         throw new ObjectDisposedException("MoqTopology1.Devices");
                     }
+                    
                     return iTopologyDeviceList;
+                }
+            }
+        }
+
+        public IWatchableThread WatchableThread
+        {
+            get
+            {
+                lock (iLock)
+                {
+                    if (iDisposed)
+                    {
+                        throw new ObjectDisposedException("MoqTopology1.WatchableThread");
+                    }
+                 
+                    return iThread;
                 }
             }
         }
@@ -209,6 +250,7 @@ namespace OpenHome.Av
         private object iLock;
         private bool iDisposed;
 
+        private IWatchableThread iThread;
         private WatchableDeviceCollection iTopologyDeviceList;
     }
 }

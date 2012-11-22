@@ -2,7 +2,6 @@
 
 using OpenHome.Os.App;
 using OpenHome.Av;
-using OpenHome.Net.ControlPoint;
 using OpenHome.Net.Core;
 
 namespace TestTopology
