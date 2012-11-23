@@ -63,6 +63,7 @@ namespace OpenHome.Av
 
     public interface ITopology2Group
     {
+        string Id { get; }
         IWatchable<string> Room { get; }
         IWatchable<string> Name { get; }
         IWatchable<bool> Standby { get; }
@@ -106,6 +107,22 @@ namespace OpenHome.Av
                 iSources = null;
 
                 iDisposed = true;
+            }
+        }
+
+        public string Id
+        {
+            get
+            {
+                lock (iLock)
+                {
+                    if (iDisposed)
+                    {
+                        throw new ObjectDisposedException("Topology2Group.Id");
+                    }
+
+                    return iProduct.Id;
+                }
             }
         }
 
@@ -460,8 +477,6 @@ namespace OpenHome.Av
                 {
                     throw new ObjectDisposedException("Topology2.CollectionAdd");
                 }
-
-                Console.WriteLine("Collection Add Product");
 
                 Topology2Group group = new Topology2Group(iThread, aItem);
 

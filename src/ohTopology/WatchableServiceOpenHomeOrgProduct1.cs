@@ -23,6 +23,7 @@ namespace OpenHome.Av
 
     public interface IProduct : IServiceOpenHomeOrgProduct1
     {
+        string Id { get; }
         string Attributes { get; }
         string ManufacturerImageUri { get; }
         string ManufacturerInfo { get; }
@@ -105,7 +106,7 @@ namespace OpenHome.Av
                             {
                                 iPendingServices.Remove(aDevice);
 
-                                Product product = new WatchableProduct(iThread, service);
+                                Product product = new WatchableProduct(iThread, aDevice.Udn, service);
 
                                 uint index = (uint)iList.Count;
                                 iList.Add(product);
@@ -122,7 +123,7 @@ namespace OpenHome.Av
             }
             else if (aDevice is MockWatchableDevice)
             {
-                Product product = new MockWatchableProduct(iThread);
+                Product product = new MockWatchableProduct(iThread, aDevice.Udn);
 
                 lock (iLock)
                 {
@@ -185,8 +186,9 @@ namespace OpenHome.Av
 
     public abstract class Product : IProduct, IDisposable
     {
-        protected Product(IServiceOpenHomeOrgProduct1 aService)
+        protected Product(string aId, IServiceOpenHomeOrgProduct1 aService)
         {
+            iId = aId;
             iService = aService;
         }
 
@@ -245,6 +247,14 @@ namespace OpenHome.Av
         public void SetStandby(bool aValue)
         {
             iService.SetStandby(aValue);
+        }
+
+        public string Id
+        {
+            get
+            {
+                return iId;
+            }
         }
 
         public string Attributes
@@ -343,6 +353,8 @@ namespace OpenHome.Av
             }
         }
 
+        private string iId;
+
         protected string iAttributes;
         protected string iManufacturerImageUri;
         protected string iManufacturerInfo;
@@ -361,7 +373,7 @@ namespace OpenHome.Av
 
     public class ServiceOpenHomeOrgProduct1 : IServiceOpenHomeOrgProduct1, IDisposable
     {
-        public ServiceOpenHomeOrgProduct1(IWatchableThread aThread, CpProxyAvOpenhomeOrgProduct1 aService)
+        public ServiceOpenHomeOrgProduct1(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgProduct1 aService)
         {
             iLock = new object();
             iDisposed = false;
@@ -376,11 +388,11 @@ namespace OpenHome.Av
                 iService.SetPropertySourceXmlChanged(HandleSourceXmlChanged);
                 iService.SetPropertyStandbyChanged(HandleStandbyChanged);
 
-                iRoom = new Watchable<string>(aThread, "Room", iService.PropertyProductRoom());
-                iName = new Watchable<string>(aThread, "Name", iService.PropertyProductName());
-                iSourceIndex = new Watchable<uint>(aThread, "SourceIndex", iService.PropertySourceIndex());
-                iSourceXml = new Watchable<string>(aThread, "SourceXml", iService.PropertySourceXml());
-                iStandby = new Watchable<bool>(aThread, "Standby", iService.PropertyStandby());
+                iRoom = new Watchable<string>(aThread, string.Format("Room({0})", aId), iService.PropertyProductRoom());
+                iName = new Watchable<string>(aThread, string.Format("Name({0})", aId), iService.PropertyProductName());
+                iSourceIndex = new Watchable<uint>(aThread, string.Format("SourceIndex({0})", aId), iService.PropertySourceIndex());
+                iSourceXml = new Watchable<string>(aThread, string.Format("SourceXml({0})", aId), iService.PropertySourceXml());
+                iStandby = new Watchable<bool>(aThread, string.Format("Standby({0})", aId), iService.PropertyStandby());
             }
         }
 
@@ -576,8 +588,8 @@ namespace OpenHome.Av
 
     public class WatchableProduct : Product
     {
-        public WatchableProduct(IWatchableThread aThread, CpProxyAvOpenhomeOrgProduct1 aService)
-            : base(new ServiceOpenHomeOrgProduct1(aThread, aService))
+        public WatchableProduct(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgProduct1 aService)
+            : base(aId, new ServiceOpenHomeOrgProduct1(aThread, aId, aService))
         {
             iCpService = aService;
 
@@ -608,13 +620,13 @@ namespace OpenHome.Av
 
     public class MockServiceOpenHomeOrgProduct1 : IServiceOpenHomeOrgProduct1, IMockable, IDisposable
     {
-        public MockServiceOpenHomeOrgProduct1(IWatchableThread aThread)
+        public MockServiceOpenHomeOrgProduct1(IWatchableThread aThread, string aId)
         {
-            iRoom = new Watchable<string>(aThread, "Room", string.Empty);
-            iName = new Watchable<string>(aThread, "Name", string.Empty);
-            iSourceIndex = new Watchable<uint>(aThread, "SourceIndex", 0);
-            iSourceXml = new Watchable<string>(aThread, "SourceXml", string.Empty);
-            iStandby = new Watchable<bool>(aThread, "Standby", false);
+            iRoom = new Watchable<string>(aThread, string.Format("Room({0})", aId), string.Empty);
+            iName = new Watchable<string>(aThread, string.Format("Name({0})", aId), string.Empty);
+            iSourceIndex = new Watchable<uint>(aThread, string.Format("SourceIndex({0})", aId), 0);
+            iSourceXml = new Watchable<string>(aThread, string.Format("SourceXml({0})", aId), string.Empty);
+            iStandby = new Watchable<bool>(aThread, string.Format("Standby({0})", aId), false);
         }
 
         public void Dispose()
@@ -689,8 +701,8 @@ namespace OpenHome.Av
 
     public class MockWatchableProduct : Product, IMockable
     {
-        public MockWatchableProduct(IWatchableThread aThread)
-            : base(new MockServiceOpenHomeOrgProduct1(aThread))
+        public MockWatchableProduct(IWatchableThread aThread, string aId)
+            : base(aId, new MockServiceOpenHomeOrgProduct1(aThread, aId))
         {
             iAttributes = string.Empty;
             iManufacturerImageUri = string.Empty;
