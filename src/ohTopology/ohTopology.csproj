@@ -43,6 +43,7 @@
       <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Mockable.cs" />
@@ -58,6 +59,8 @@
   <PropertyGroup>
     <PackageName>ohTopology-AnyPlatform-$(Configuration)</PackageName>
     <PackageFilePatterns>ohTopology.dll ohTopology.*db</PackageFilePatterns>
+  </PropertyGroup>
+  <PropertyGroup>
   </PropertyGroup>
   <Target Name="AfterBuild">
     <MakeDir Directories="$(PackageOutputPath)" />

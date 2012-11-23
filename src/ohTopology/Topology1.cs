@@ -18,7 +18,6 @@ namespace OpenHome.Av
         internal void Add(IWatchableDevice aValue)
         {
             uint index = (uint)iList.Count;
-
             iList.Add(aValue);
 
             CollectionAdd(aValue, index);
@@ -35,14 +34,14 @@ namespace OpenHome.Av
         private List<IWatchableDevice> iList;
     }
 
-    public interface ITopology1 : IDisposable
+    public interface ITopology1
     {
         IWatchableThread WatchableThread { get; }
         IWatchableCollection<IWatchableDevice> Devices { get; }
         void Refresh();
     }
 
-    public class Topology1 : ITopology1
+    public class Topology1 : ITopology1, IDisposable
     {
         public Topology1(IWatchableThread aThread)
         {
@@ -175,7 +174,7 @@ namespace OpenHome.Av
         private WatchableDeviceCollection iTopologyDeviceList;
     }
 
-    public class MockTopology1 : ITopology1, IMockable
+    public class MockTopology1 : ITopology1, IMockable, IDisposable
     {
         public MockTopology1(WatchableThread aThread)
         {
@@ -270,13 +269,11 @@ namespace OpenHome.Av
             if (command == "add")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-
                 Add(value.First());
             }
             else if (command == "remove")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-
                 Remove(value.First());
             }
             else
