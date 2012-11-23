@@ -73,7 +73,7 @@ namespace OpenHome.Av
         void SetSourceIndex(uint aValue);
     }
 
-    public class Topology2Group : ITopology2Group, IWatcher<IServiceOpenHomeOrgProduct1>, IWatcher<string>, IDisposable
+    public class Topology2Group : ITopology2Group, IWatcher<string>, IDisposable
     {
         public Topology2Group(IWatchableThread aThread, Product aProduct)
         {
@@ -84,8 +84,7 @@ namespace OpenHome.Av
             iThread = aThread;
 
             iProduct = aProduct;
-
-            iProduct.AddWatcher(this);
+            iProduct.SourceXml.AddWatcher(this);
         }
 
         public void Dispose()
@@ -99,65 +98,14 @@ namespace OpenHome.Av
 
                 if (iProduct != null)
                 {
-                    iProduct.RemoveWatcher(this);
+                    iProduct.SourceXml.RemoveWatcher(this);
                     iProduct.Dispose();
                     iProduct = null;
                 }
 
                 iSources = null;
 
-                if (iService != null)
-                {
-                    iService.SourceXml.RemoveWatcher(this);
-                    iService = null;
-                }
-
                 iDisposed = true;
-            }
-        }
-
-        public void ItemOpen(string aId, IServiceOpenHomeOrgProduct1 aValue)
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iService = aValue;
-                iService.SourceXml.AddWatcher(this);
-            }
-        }
-
-        public void ItemClose(string aId, IServiceOpenHomeOrgProduct1 aValue)
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iService.SourceXml.RemoveWatcher(this);
-                iService = null;
-            }
-        }
-
-        public void ItemUpdate(string aId, IServiceOpenHomeOrgProduct1 aValue, IServiceOpenHomeOrgProduct1 aPrevious)
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iService.SourceXml.RemoveWatcher(this);
-
-                iService = aValue;
-
-                iService.SourceXml.AddWatcher(this);
             }
         }
 
@@ -209,7 +157,7 @@ namespace OpenHome.Av
                         throw new ObjectDisposedException("Topology2Group.Room");
                     }
 
-                    return iService.Room;
+                    return iProduct.Room;
                 }
             }
         }
@@ -225,7 +173,7 @@ namespace OpenHome.Av
                         throw new ObjectDisposedException("Topology2Group.Name");
                     }
 
-                    return iService.Name;
+                    return iProduct.Name;
                 }
             }
         }
@@ -241,7 +189,7 @@ namespace OpenHome.Av
                         throw new ObjectDisposedException("Topology2Group.Standby");
                     }
 
-                    return iService.Standby;
+                    return iProduct.Standby;
                 }
             }
         }
@@ -257,7 +205,7 @@ namespace OpenHome.Av
                         throw new ObjectDisposedException("Topology2Group.SourceIndex");
                     }
 
-                    return iService.SourceIndex;
+                    return iProduct.SourceIndex;
                 }
             }
         }
@@ -287,7 +235,7 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("Topology2Group.SetStandby");
                 }
 
-                iService.SetStandby(aValue);
+                iProduct.SetStandby(aValue);
             }
         }
 
@@ -300,7 +248,7 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("Topology2Group.SetSourceIndex");
                 }
 
-                iService.SetSourceIndex(aValue);
+                iProduct.SetSourceIndex(aValue);
             }
         }
 
@@ -367,7 +315,6 @@ namespace OpenHome.Av
 
         private Product iProduct;
         private IWatchableThread iThread;
-        private IServiceOpenHomeOrgProduct1 iService;
         private List<Watchable<ITopology2Source>> iSources;
     }
 
