@@ -74,39 +74,35 @@ namespace OpenHome.Av
         void SetSourceIndex(uint aValue);
     }
 
-    public class Topology2Group : ITopology2Group, IWatcher<string>, IDisposable
+    public class Topology2Group : ITopology2Group, IWatcher<string>
     {
-        public Topology2Group(IWatchableThread aThread, Product aProduct)
+        public Topology2Group(IWatchableThread aThread, string aId, Product aProduct)
         {
+            iThread = aThread;
+            iId = aId;
+
             iLock = new object();
-            iDisposed = false;
             iSources = new List<Watchable<ITopology2Source>>();
 
-            iThread = aThread;
-
             iProduct = aProduct;
+            iRoom = iProduct.Room;
+            iName = iProduct.Name;
+            iStandby = iProduct.Standby;
+            iSourceIndex = iProduct.SourceIndex;
+
             iProduct.SourceXml.AddWatcher(this);
         }
 
-        public void Dispose()
+        public void RemoveProduct()
         {
             lock (iLock)
             {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("Topology2Group.Dispose");
-                }
-
                 if (iProduct != null)
                 {
                     iProduct.SourceXml.RemoveWatcher(this);
                     iProduct.Dispose();
                     iProduct = null;
                 }
-
-                iSources = null;
-
-                iDisposed = true;
             }
         }
 
@@ -114,68 +110,29 @@ namespace OpenHome.Av
         {
             get
             {
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("Topology2Group.Id");
-                    }
-
-                    return iProduct.Id;
-                }
+                return iId;
             }
         }
 
         public void ItemOpen(string aId, string aValue)
         {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                ProcessSourceXml(aValue, true);
-            }
+            ProcessSourceXml(aValue, true);
         }
 
         public void ItemClose(string aId, string aValue)
         {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-            }
         }
 
         public void ItemUpdate(string aId, string aValue, string aPrevious)
         {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                ProcessSourceXml(aValue, false);
-            }
+            ProcessSourceXml(aValue, false);
         }
 
         public IWatchable<string> Room
         {
             get
             {
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("Topology2Group.Room");
-                    }
-
-                    return iProduct.Room;
-                }
+                return iRoom;
             }
         }
 
@@ -183,15 +140,7 @@ namespace OpenHome.Av
         {
             get
             {
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("Topology2Group.Name");
-                    }
-
-                    return iProduct.Name;
-                }
+                return iName;
             }
         }
 
@@ -199,15 +148,7 @@ namespace OpenHome.Av
         {
             get 
             {
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("Topology2Group.Standby");
-                    }
-
-                    return iProduct.Standby;
-                }
+                return iStandby;
             }
         }
 
@@ -215,15 +156,7 @@ namespace OpenHome.Av
         {
             get
             {
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("Topology2Group.SourceIndex");
-                    }
-
-                    return iProduct.SourceIndex;
-                }
+                return iSourceIndex;
             }
         }
 
@@ -231,15 +164,7 @@ namespace OpenHome.Av
         {
             get
             {
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("Topology2Group.Sources");
-                    }
-
-                    return iSources;
-                }
+                return iSources;
             }
         }
 
@@ -247,12 +172,10 @@ namespace OpenHome.Av
         {
             lock (iLock)
             {
-                if (iDisposed)
+                if (iProduct != null)
                 {
-                    throw new ObjectDisposedException("Topology2Group.SetStandby");
+                    iProduct.SetStandby(aValue);
                 }
-
-                iProduct.SetStandby(aValue);
             }
         }
 
@@ -260,12 +183,10 @@ namespace OpenHome.Av
         {
             lock (iLock)
             {
-                if (iDisposed)
+                if (iProduct != null)
                 {
-                    throw new ObjectDisposedException("Topology2Group.SetSourceIndex");
+                    iProduct.SetSourceIndex(aValue);
                 }
-
-                iProduct.SetSourceIndex(aValue);
             }
         }
 
@@ -328,9 +249,13 @@ namespace OpenHome.Av
         }
 
         private object iLock;
-        private bool iDisposed;
 
+        private string iId;
         private Product iProduct;
+        private IWatchable<string> iRoom;
+        private IWatchable<string> iName;
+        private IWatchable<bool> iStandby;
+        private IWatchable<uint> iSourceIndex;
         private IWatchableThread iThread;
         private List<Watchable<ITopology2Source>> iSources;
     }
@@ -398,7 +323,7 @@ namespace OpenHome.Av
 
                 foreach (Topology2Group g in iGroupLookup.Values)
                 {
-                    g.Dispose();
+                    g.RemoveProduct();
                 }
                 iGroupLookup = null;
 
@@ -478,7 +403,7 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("Topology2.CollectionAdd");
                 }
 
-                Topology2Group group = new Topology2Group(iThread, aItem);
+                Topology2Group group = new Topology2Group(iThread, aItem.Id, aItem);
 
                 iGroupLookup.Add(aItem, group);
 
@@ -507,7 +432,7 @@ namespace OpenHome.Av
 
                     iGroupLookup.Remove(aItem);
 
-                    group.Dispose();
+                    group.RemoveProduct();
                 }
             }
         }

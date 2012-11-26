@@ -114,6 +114,7 @@ namespace TestTopology2
 
                     Console.WriteLine("===============================================");
                     Console.WriteLine("");
+                    Console.WriteLine("");
                 }
             }
 
@@ -135,19 +136,20 @@ namespace TestTopology2
                     aItem.Name.RemoveWatcher(this);
                     iList.Remove(aItem);
 
-                    Console.WriteLine("Group Remove at " + aIndex);
+                    Console.WriteLine(string.Format("Group Removed\t\t{0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
+                    iStringLookup.Remove(string.Format("Room({0})", aItem.Id));
+                    iStringLookup.Remove(string.Format("Name({0})", aItem.Id));
                 }
             }
 
             public void ItemOpen(string aId, string aValue)
             {
-                //Console.WriteLine("Open " + aId + " " + aValue);
                 iStringLookup.Add(aId, aValue);
             }
 
             public void ItemClose(string aId, string aValue)
             {
-                iStringLookup.Remove(aId);
+                // key pair removed in CollectionRemove
             }
 
             public void ItemUpdate(string aId, string aValue, string aPrevious)
