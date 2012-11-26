@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{C01F51D1-9DBB-4A46-852A-A64CC3921329}</ProjectGuid>
+    <ProjectGuid>{58118A04-DD5A-48A8-B195-F2996AE2CCEB}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TestTopology1</RootNamespace>
-    <AssemblyName>TestTopology1</AssemblyName>
+    <RootNamespace>TestTopology2</RootNamespace>
+    <AssemblyName>TestTopology2</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -41,8 +41,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\ohNet.net.dll</HintPath>
     </Reference>
-    <Reference Include="ohOs.App.V1, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="ohOs.App.V1">
       <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
     </Reference>
     <Reference Include="System" />
