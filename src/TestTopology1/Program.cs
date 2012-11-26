@@ -46,7 +46,8 @@ namespace TestTopology
 
             public void CollectionRemove(IWatchableDevice aItem, uint aIndex)
             {
-                Console.WriteLine("Collection Remove at " + aIndex);
+                Console.WriteLine("Product Removed");
+                Console.WriteLine("    udn = " + aItem.Udn);
             }
         }
 
