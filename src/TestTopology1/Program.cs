@@ -23,17 +23,16 @@ namespace TestTopology
 
             public void CollectionAdd(IWatchableDevice aItem, uint aIndex)
             {
-                Console.WriteLine("Collection Add at " + aIndex);
+                Console.WriteLine("Product Added");
+                Console.WriteLine("    udn = " + aItem.Udn);
             }
 
             public void CollectionClose()
             {
-                Console.WriteLine("Collection Close");
             }
 
             public void CollectionInitialised()
             {
-                Console.WriteLine("Collection Initialised");
             }
 
             public void CollectionMove(IWatchableDevice aItem, uint aFrom, uint aTo)
@@ -43,7 +42,6 @@ namespace TestTopology
 
             public void CollectionOpen()
             {
-                Console.WriteLine("Collection Open");
             }
 
             public void CollectionRemove(IWatchableDevice aItem, uint aIndex)
@@ -63,13 +61,14 @@ namespace TestTopology
 
             ExceptionReporter reporter = new ExceptionReporter();
             WatchableThread thread = new  WatchableThread(reporter);
-            MockTopology1 topology = new MockTopology1(thread);
+            //MockTopology1 topology = new MockTopology1(thread);
+            Topology1 topology = new Topology1(thread);
 
             DeviceWatcher watcher = new DeviceWatcher();
             topology.Devices.AddWatcher(watcher);
 
             Mockable mocker = new Mockable();
-            mocker.Add("topology", topology);
+            //mocker.Add("topology", topology);
 
             MockableStream stream = new MockableStream(Console.In, mocker);
             stream.Start();
