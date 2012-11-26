@@ -500,12 +500,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("Topology2.CollectionRemove");
                 }
 
-                Console.WriteLine("Collection Remove Product");
-
                 Topology2Group group;
                 if (iGroupLookup.TryGetValue(aItem, out group))
                 {
-                    Console.WriteLine("GroupRemoved");
+                    iGroups.Remove(group);
 
                     iGroupLookup.Remove(aItem);
 

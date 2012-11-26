@@ -50,7 +50,10 @@ namespace OpenHome.Av
                     break;
                 }
 
-                iMockable.Execute(command);
+                if (command.First() != string.Empty)
+                {
+                    iMockable.Execute(command);
+                }
             }
         }
 

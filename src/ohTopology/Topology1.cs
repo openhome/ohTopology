@@ -50,7 +50,7 @@ namespace OpenHome.Av
             iThread = aThread;
 
             iDeviceList = new CpDeviceListUpnpServiceType("av.openhome.org", "Product", 1, Added, Removed);
-            iCpDeviceLookup = new Dictionary<CpDevice, DisposableWatchableDevice>();
+            iCpDeviceLookup = new Dictionary<string, DisposableWatchableDevice>();
             iTopologyDeviceList = new WatchableDeviceCollection(aThread);
         }
 
@@ -137,7 +137,7 @@ namespace OpenHome.Av
                 }
 
                 DisposableWatchableDevice device = new DisposableWatchableDevice(aDevice);
-                iCpDeviceLookup.Add(aDevice, device);
+                iCpDeviceLookup.Add(aDevice.Udn(), device);
 
                 iTopologyDeviceList.Add(device);
             }
@@ -153,9 +153,9 @@ namespace OpenHome.Av
                 }
 
                 DisposableWatchableDevice device;
-                if (iCpDeviceLookup.TryGetValue(aDevice, out device))
+                if (iCpDeviceLookup.TryGetValue(aDevice.Udn(), out device))
                 {
-                    iCpDeviceLookup.Remove(aDevice);
+                    iCpDeviceLookup.Remove(aDevice.Udn());
 
                     iTopologyDeviceList.Remove(device);
 
@@ -170,7 +170,7 @@ namespace OpenHome.Av
         private IWatchableThread iThread;
         private CpDeviceList iDeviceList;
 
-        private Dictionary<CpDevice, DisposableWatchableDevice> iCpDeviceLookup;
+        private Dictionary<string, DisposableWatchableDevice> iCpDeviceLookup;
         private WatchableDeviceCollection iTopologyDeviceList;
     }
 

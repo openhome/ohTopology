@@ -198,4 +198,5 @@ def do_build(context, solution, target):
     msbuild = context.env['MDTOOLBUILDCMD'] if mdtool else context.env['MSBUILDCMD']
     targetswitch =  "-t:" if mdtool else "/t:"
     buildshell = "%(msbuild)s %(sln)s %(targetswitch)sBuild" % {'sln':solutionfile, 'msbuild':msbuild, 'targetswitch':targetswitch}
+    context.env["PLATFORM"] = ""
     shell(buildshell)
