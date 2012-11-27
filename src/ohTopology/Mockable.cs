@@ -21,6 +21,11 @@ namespace OpenHome.Av
         {
             iMockables.Add(aId, aValue);
         }
+
+        public void Remove(string aId)
+        {
+            iMockables.Remove(aId);
+        }
     
         public void Execute(IEnumerable<string> aValue)
         {

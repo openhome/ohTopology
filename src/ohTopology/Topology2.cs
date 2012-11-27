@@ -285,24 +285,21 @@ namespace OpenHome.Av
         private List<ITopology2Group> iList;
     }
 
-    public class Topology2 : ICollectionWatcher<IWatchableDevice>, ICollectionWatcher<Product>, IDisposable
+    public class Topology2 : ICollectionWatcher<Product>, IDisposable
     {
-        public Topology2(ITopology1 aTopology1)
+        public Topology2(IWatchableThread aThread, ITopology1 aTopology1)
         {
             iDisposed = false;
             iLock = new object();
 
-            iThread = aTopology1.WatchableThread;
+            iThread = aThread;
             iTopology1 = aTopology1;
 
             iGroups = new WatchableTopology2GroupCollection(iThread);
 
             iGroupLookup = new Dictionary<Product, Topology2Group>();
-            
-            iProducts = new WatchableProductCollection(iThread);
 
-            iTopology1.Devices.AddWatcher(this);
-            iProducts.AddWatcher(this);
+            iTopology1.Products.AddWatcher(this);
         }
 
         public void Dispose()
@@ -314,10 +311,6 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("Topology2.Dispose");
                 }
 
-                iProducts.RemoveWatcher(this);
-                iProducts.Dispose();
-                iProducts = null;
-
                 iGroups.Dispose();
                 iGroups = null;
 
@@ -327,7 +320,7 @@ namespace OpenHome.Av
                 }
                 iGroupLookup = null;
 
-                iTopology1.Devices.RemoveWatcher(this);
+                iTopology1.Products.RemoveWatcher(this);
                 iTopology1 = null;
 
                 iDisposed = true;
@@ -362,53 +355,14 @@ namespace OpenHome.Av
         {
         }
 
-        public void CollectionAdd(IWatchableDevice aItem, uint aIndex)
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("Topology2.CollectionAdd");
-                }
-
-                iProducts.Add(aItem);
-            }
-        }
-
-        public void CollectionMove(IWatchableDevice aItem, uint aFrom, uint aTo)
-        {
-            throw new NotSupportedException();
-        }
-        
-
-        public void CollectionRemove(IWatchableDevice aItem, uint aIndex)
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("Topology2.CollectionRemove");
-                }
-
-                iProducts.Remove(aItem);
-            }
-        }
-
         public void CollectionAdd(Product aItem, uint aIndex)
         {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("Topology2.CollectionAdd");
-                }
 
-                Topology2Group group = new Topology2Group(iThread, aItem.Id, aItem);
+            Topology2Group group = new Topology2Group(iThread, aItem.Id, aItem);
 
-                iGroupLookup.Add(aItem, group);
+            iGroupLookup.Add(aItem, group);
 
-                iGroups.Add(group);
-            }
+            iGroups.Add(group);
         }
 
         public void CollectionMove(Product aItem, uint aFrom, uint aTo)
@@ -418,29 +372,20 @@ namespace OpenHome.Av
 
         public void CollectionRemove(Product aItem, uint aIndex)
         {
-            lock (iLock)
+            Topology2Group group;
+            if (iGroupLookup.TryGetValue(aItem, out group))
             {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("Topology2.CollectionRemove");
-                }
+                iGroups.Remove(group);
 
-                Topology2Group group;
-                if (iGroupLookup.TryGetValue(aItem, out group))
-                {
-                    iGroups.Remove(group);
+                iGroupLookup.Remove(aItem);
 
-                    iGroupLookup.Remove(aItem);
-
-                    group.RemoveProduct();
-                }
+                group.RemoveProduct();
             }
         }
 
         private object iLock;
         private bool iDisposed;
 
-        private WatchableProductCollection iProducts;
         private IWatchableThread iThread;
         private ITopology1 iTopology1;
         private Dictionary<Product, Topology2Group> iGroupLookup;

@@ -7,7 +7,7 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    internal class WatchableDeviceCollection : WatchableCollection<IWatchableDevice>
+    public class WatchableDeviceCollection : WatchableCollection<IWatchableDevice>
     {
         public WatchableDeviceCollection(IWatchableThread aThread)
             : base(aThread)
@@ -34,260 +34,154 @@ namespace OpenHome.Av
         private List<IWatchableDevice> iList;
     }
 
-    public interface ITopology1
+    public class WatchableProductCollection : WatchableCollection<Product>
     {
-        IWatchableThread WatchableThread { get; }
-        IWatchableCollection<IWatchableDevice> Devices { get; }
-        void Refresh();
+        public WatchableProductCollection(IWatchableThread aThread)
+            : base(aThread)
+        {
+            iList = new List<Product>();
+        }
+
+        public void Add(Product aValue)
+        {
+            uint index = (uint)iList.Count;
+            CollectionAdd(aValue, index);
+            iList.Add(aValue);
+        }
+
+        public void Remove(Product aValue)
+        {
+            uint index = (uint)iList.IndexOf(aValue);
+            iList.Remove(aValue);
+
+            CollectionRemove(aValue, index);
+        }
+
+        private List<Product> iList;
     }
 
-    public class Topology1 : ITopology1, IDisposable
+    public interface ITopology1
     {
-        public Topology1(IWatchableThread aThread)
-        {
-            iLock = new object();
-            iDisposed = false;
-            iThread = aThread;
+        IWatchableCollection<Product> Products { get; }
+    }
 
-            iDeviceList = new CpDeviceListUpnpServiceType("av.openhome.org", "Product", 1, Added, Removed);
-            iCpDeviceLookup = new Dictionary<string, DisposableWatchableDevice>();
-            iTopologyDeviceList = new WatchableDeviceCollection(aThread);
+    public class Topology1 : ITopology1, ICollectionWatcher<IWatchableDevice>, IDisposable
+    {
+        public Topology1(IWatchableThread aThread, INetwork aNetwork)
+        {
+            iDisposed = false;
+
+            iNetwork = aNetwork;
+
+            iPendingSubscriptions = new List<IWatchableDevice>();
+            iProductLookup = new Dictionary<IWatchableDevice, Product>();
+            iProducts = new WatchableProductCollection(aThread);
+
+            iDevices = iNetwork.GetWatchableDeviceCollection<Product>();
+            iDevices.AddWatcher(this);
         }
 
         public void Dispose()
         {
-            lock (iLock)
+            iDevices.RemoveWatcher(this);
+
+            lock (iProducts.WatchableThread)
             {
                 if (iDisposed)
                 {
                     throw new ObjectDisposedException("Topology1.Dispose");
                 }
 
-                iDeviceList.Dispose();
-                iDeviceList = null;
-
-                iTopologyDeviceList.Dispose();
-                iTopologyDeviceList = null;
-
-                foreach (DisposableWatchableDevice device in iCpDeviceLookup.Values)
+                foreach (IWatchableDevice d in iPendingSubscriptions)
                 {
-                    device.Dispose();
+                    d.Unsubscribe<Product>();
                 }
-                iCpDeviceLookup.Clear();
-                iCpDeviceLookup = null;
+                iPendingSubscriptions = null;
 
-                iThread = null;
+                foreach (Product p in iProductLookup.Values)
+                {
+                    p.Dispose();
+                }
+                iProductLookup = null;
 
                 iDisposed = true;
             }
         }
 
-        public void Refresh()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("Topology1.Refresh");
-                }
-
-                iDeviceList.Refresh();
-            }
-        }
-
-        public IWatchableCollection<IWatchableDevice> Devices
+        public IWatchableCollection<Product> Products
         {
             get
             {
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("Topology1.Devices");
-                    }
-
-                    return iTopologyDeviceList;
-                }
+                return iProducts;
             }
         }
 
-        public IWatchableThread WatchableThread
+        public void CollectionOpen()
         {
-            get
+        }
+
+        public void CollectionInitialised()
+        {
+        }
+
+        public void CollectionClose()
+        {
+        }
+
+        public void CollectionAdd(IWatchableDevice aItem, uint aIndex)
+        {
+            if (iDisposed)
             {
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("Topology1.WatchableThread");
-                    }
+                throw new ObjectDisposedException("Topology1.CollectionAdd");
+            }
 
-                    return iThread;
-                }
+            aItem.Subscribe<Product>(Subscribed);
+            iPendingSubscriptions.Add(aItem);
+        }
+
+        public void CollectionMove(IWatchableDevice aItem, uint aFrom, uint aTo)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void CollectionRemove(IWatchableDevice aItem, uint aIndex)
+        {
+            if (iDisposed)
+            {
+                throw new ObjectDisposedException("Topology1.CollectionRemove");
+            }
+
+            Product product;
+            if (iProductLookup.TryGetValue(aItem, out product))
+            {
+                iProducts.Remove(product);
+                iProductLookup.Remove(aItem);
             }
         }
 
-        private void Added(CpDeviceList aList, CpDevice aDevice)
+        private void Subscribed(IWatchableDevice aDevice, Product aProduct)
         {
-            lock (iLock)
+            lock (iProducts.WatchableThread)
             {
                 if (iDisposed)
                 {
                     return;
                 }
 
-                DisposableWatchableDevice device = new DisposableWatchableDevice(aDevice);
-                iCpDeviceLookup.Add(aDevice.Udn(), device);
-
-                iTopologyDeviceList.Add(device);
+                iProducts.Add(aProduct);
+                iProductLookup.Add(aDevice, aProduct);
+                iPendingSubscriptions.Remove(aDevice);
             }
         }
 
-        private void Removed(CpDeviceList aList, CpDevice aDevice)
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                DisposableWatchableDevice device;
-                if (iCpDeviceLookup.TryGetValue(aDevice.Udn(), out device))
-                {
-                    iCpDeviceLookup.Remove(aDevice.Udn());
-
-                    iTopologyDeviceList.Remove(device);
-
-                    device.Dispose();
-                }
-            }
-        }
-
-        private readonly object iLock;
         private bool iDisposed;
 
-        private IWatchableThread iThread;
-        private CpDeviceList iDeviceList;
+        private INetwork iNetwork;
 
-        private Dictionary<string, DisposableWatchableDevice> iCpDeviceLookup;
-        private WatchableDeviceCollection iTopologyDeviceList;
-    }
-
-    public class MockTopology1 : ITopology1, IMockable, IDisposable
-    {
-        public MockTopology1(WatchableThread aThread)
-        {
-            iLock = new object();
-            iDisposed = false;
-
-            iThread = aThread;
-            iUdnLookup = new Dictionary<string, MockWatchableDevice>();
-            iTopologyDeviceList = new WatchableDeviceCollection(aThread);
-        }
-
-        public void Dispose()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("MoqTopology1.Dispose");
-                }
-
-                iTopologyDeviceList.Dispose();
-                iTopologyDeviceList = null;
-
-                iDisposed = true;
-            }
-        }
-
-        public void Refresh()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("MoqTopology1.Refresh");
-                }
-            }
-        }
-
-        public IWatchableCollection<IWatchableDevice> Devices
-        {
-            get
-            {
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("MoqTopology1.Devices");
-                    }
-                    
-                    return iTopologyDeviceList;
-                }
-            }
-        }
-
-        public IWatchableThread WatchableThread
-        {
-            get
-            {
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("MoqTopology1.WatchableThread");
-                    }
-                 
-                    return iThread;
-                }
-            }
-        }
-
-        private void Add(string aUdn)
-        {
-            MockWatchableDevice device = new MockWatchableDevice(aUdn);
-            iUdnLookup.Add(aUdn, device);
-            iTopologyDeviceList.Add(device);
-        }
-
-        private void Remove(string aUdn)
-        {
-            MockWatchableDevice device;
-            if (iUdnLookup.TryGetValue(aUdn, out device))
-            {
-                iUdnLookup.Remove(aUdn);
-
-                iTopologyDeviceList.Remove(device);
-            }
-        }
-
-        public void Execute(IEnumerable<string> aValue)
-        {
-            string command = aValue.First();
-            if (command == "add")
-            {
-                IEnumerable<string> value = aValue.Skip(1);
-                Add(value.First());
-            }
-            else if (command == "remove")
-            {
-                IEnumerable<string> value = aValue.Skip(1);
-                Remove(value.First());
-            }
-            else
-            {
-                throw new NotSupportedException();
-            }
-        }
-
-        private object iLock;
-        private bool iDisposed;
-
-        private IWatchableThread iThread;
-
-        private Dictionary<string, MockWatchableDevice> iUdnLookup;
-        private WatchableDeviceCollection iTopologyDeviceList;
+        private List<IWatchableDevice> iPendingSubscriptions;
+        private Dictionary<IWatchableDevice, Product> iProductLookup;
+        private WatchableProductCollection iProducts;
+        
+        private WatchableDeviceCollection iDevices;
     }
 }

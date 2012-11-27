@@ -44,7 +44,7 @@ namespace TestTopology2
             }
         }
 
-        class GroupWatcher : ICollectionWatcher<ITopology2Group>, IWatcher<string>, IDisposable
+        class GroupWatcher : ICollectionWatcher<ITopology2Group>, IWatcher<string>, IWatcher<uint>, IWatcher<bool>, IDisposable
         {
             public GroupWatcher()
             {
@@ -102,6 +102,8 @@ namespace TestTopology2
 
                     aItem.Room.AddWatcher(this);
                     aItem.Name.AddWatcher(this);
+                    aItem.SourceIndex.AddWatcher(this);
+                    aItem.Standby.AddWatcher(this);
                     iList.Add(aItem);
 
                     Console.WriteLine(string.Format("Group Added\t\t{0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
@@ -134,6 +136,8 @@ namespace TestTopology2
 
                     aItem.Room.RemoveWatcher(this);
                     aItem.Name.RemoveWatcher(this);
+                    aItem.SourceIndex.RemoveWatcher(this);
+                    aItem.Standby.RemoveWatcher(this);
                     iList.Remove(aItem);
 
                     Console.WriteLine(string.Format("Group Removed\t\t{0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
@@ -155,6 +159,34 @@ namespace TestTopology2
             public void ItemUpdate(string aId, string aValue, string aPrevious)
             {
                 iStringLookup[aId] = aValue;
+
+                Console.WriteLine(string.Format("{0} changed from {1} to {2}", aId, aPrevious, aValue));
+            }
+
+            public void ItemOpen(string aId, uint aValue)
+            {
+            }
+
+            public void ItemClose(string aId, uint aValue)
+            {
+            }
+
+            public void ItemUpdate(string aId, uint aValue, uint aPrevious)
+            {
+                Console.WriteLine(string.Format("{0} changed from {1} to {2}", aId, aPrevious, aValue));
+            }
+
+            public void ItemOpen(string aId, bool aValue)
+            {
+            }
+
+            public void ItemClose(string aId, bool aValue)
+            {
+            }
+
+            public void ItemUpdate(string aId, bool aValue, bool aPrevious)
+            {
+                Console.WriteLine(string.Format("{0} changed from {1} to {2}", aId, aPrevious, aValue));
             }
 
             private object iLock;
@@ -167,24 +199,24 @@ namespace TestTopology2
 
         static void Main(string[] args)
         {
-            InitParams initParams = new InitParams();
-            Library library = Library.Create(initParams);
-
-            SubnetList subnets = new SubnetList();
-            library.StartCp(subnets.SubnetAt(0).Subnet());
-            subnets.Dispose();
-
             ExceptionReporter reporter = new ExceptionReporter();
             WatchableThread thread = new WatchableThread(reporter);
-            //MockTopology1 topology1 = new MockTopology1(thread);
-            Topology1 topology1 = new Topology1(thread);
-            Topology2 topology2 = new Topology2(topology1);
+
+            Mockable mocker = new Mockable();
+
+            MockNetwork network = new MockNetwork(thread, mocker);
+
+            mocker.Add("network", network);
+
+            MockWatchableDs ds = new MockWatchableDs(thread, "45");
+
+            network.AddDevice(ds);
+
+            Topology1 topology1 = new Topology1(thread, network);
+            Topology2 topology2 = new Topology2(thread, topology1);
 
             GroupWatcher watcher = new GroupWatcher();
             topology2.Groups.AddWatcher(watcher);
-
-            Mockable mocker = new Mockable();
-            //mocker.Add("topology", topology1);
 
             MockableStream stream = new MockableStream(Console.In, mocker);
             stream.Start();
@@ -196,8 +228,6 @@ namespace TestTopology2
             topology1.Dispose();
 
             thread.Dispose();
-
-            library.Dispose();
         }
     }
 }

@@ -18,13 +18,13 @@ namespace TestTopology
             }
         }
 
-        class DeviceWatcher : ICollectionWatcher<IWatchableDevice>
+        class ProductWatcher : ICollectionWatcher<Product>
         {
 
-            public void CollectionAdd(IWatchableDevice aItem, uint aIndex)
+            public void CollectionAdd(Product aItem, uint aIndex)
             {
                 Console.WriteLine("Product Added");
-                Console.WriteLine("    udn = " + aItem.Udn);
+                Console.WriteLine("    udn = " + aItem.Id);
             }
 
             public void CollectionClose()
@@ -35,7 +35,7 @@ namespace TestTopology
             {
             }
 
-            public void CollectionMove(IWatchableDevice aItem, uint aFrom, uint aTo)
+            public void CollectionMove(Product aItem, uint aFrom, uint aTo)
             {
                 throw new NotImplementedException();
             }
@@ -44,43 +44,42 @@ namespace TestTopology
             {
             }
 
-            public void CollectionRemove(IWatchableDevice aItem, uint aIndex)
+            public void CollectionRemove(Product aItem, uint aIndex)
             {
                 Console.WriteLine("Product Removed");
-                Console.WriteLine("    udn = " + aItem.Udn);
+                Console.WriteLine("    udn = " + aItem.Id);
             }
         }
 
         static void Main(string[] args)
         {
-            InitParams initParams = new InitParams();
-            Library library = Library.Create(initParams);
-
-            SubnetList subnets = new SubnetList();
-            library.StartCp(subnets.SubnetAt(0).Subnet());
-            subnets.Dispose();
-
             ExceptionReporter reporter = new ExceptionReporter();
             WatchableThread thread = new  WatchableThread(reporter);
-            //MockTopology1 topology = new MockTopology1(thread);
-            Topology1 topology = new Topology1(thread);
-
-            DeviceWatcher watcher = new DeviceWatcher();
-            topology.Devices.AddWatcher(watcher);
 
             Mockable mocker = new Mockable();
-            //mocker.Add("topology", topology);
+
+            MockNetwork network = new MockNetwork(thread, mocker);
+
+            mocker.Add("network", network);
+
+            MockWatchableDs ds = new MockWatchableDs(thread, "45");
+
+            network.AddDevice(ds);
+
+            Topology1 topology = new Topology1(thread, network);
+
+            ProductWatcher watcher = new ProductWatcher();
+
+            topology.Products.AddWatcher(watcher);
 
             MockableStream stream = new MockableStream(Console.In, mocker);
             stream.Start();
-            
-            topology.Devices.RemoveWatcher(watcher);
-            
+
+            topology.Products.RemoveWatcher(watcher);
+
             topology.Dispose();
 
             thread.Dispose();
-
-            library.Dispose();
         }
     }
 }

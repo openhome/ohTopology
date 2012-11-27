@@ -8,6 +8,11 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
+    public interface IWatchableService
+    {
+        string Type { get; }
+    }
+
     public interface IServiceOpenHomeOrgProduct1
     {
         IWatchable<string> Room { get; }
@@ -38,153 +43,7 @@ namespace OpenHome.Av
         string ProductUrl { get; }
     }
 
-    public class WatchableProductCollection : WatchableCollection<Product>
-    {
-        public WatchableProductCollection(IWatchableThread aThread)
-            : base(aThread)
-        {
-            iLock = new object();
-            iDisposed = false;
-
-            iThread = aThread;
-
-            iList = new List<Product>();
-            iProductLookup = new Dictionary<IWatchableDevice, Product>();
-            iPendingServices = new Dictionary<IWatchableDevice, CpProxyAvOpenhomeOrgProduct1>();
-        }
-
-        public new void Dispose()
-        {
-            lock (iLock)
-            {
-                if(iDisposed)
-                {
-                    throw new ObjectDisposedException("WatchableProductCollection.Dispose");
-                }
-
-                foreach (CpProxyAvOpenhomeOrgProduct1 s in iPendingServices.Values)
-                {
-                    s.Dispose();
-                }
-                iPendingServices = null;
-
-                foreach (Product p in iList)
-                {
-                    p.Dispose();
-                }
-                iList = null;
-                iProductLookup = null;
-
-                iDisposed = true;
-            }
-        }
-
-        public void Add(IWatchableDevice aDevice)
-        {
-            if (aDevice is WatchableDevice)
-            {
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("WatchableProductCollection.Add");
-                    }
-
-                    WatchableDevice device = aDevice as WatchableDevice;
-
-                    CpProxyAvOpenhomeOrgProduct1 service = new CpProxyAvOpenhomeOrgProduct1(device.Device);
-                    service.SetPropertyInitialEvent(delegate
-                    {
-                        lock (iLock)
-                        {
-                            if (iDisposed)
-                            {
-                                return;
-                            }
-
-                            if (iPendingServices.ContainsKey(aDevice))
-                            {
-                                iPendingServices.Remove(aDevice);
-
-                                Product product = new WatchableProduct(iThread, aDevice.Udn, service);
-
-                                uint index = (uint)iList.Count;
-                                iList.Add(product);
-                                iProductLookup.Add(aDevice, product);
-
-                                CollectionAdd(product, index);
-                            }
-                        }
-                    });
-
-                    iPendingServices.Add(aDevice, service);
-                    service.Subscribe();
-                }
-            }
-            else if (aDevice is MockWatchableDevice)
-            {
-                Product product = new MockWatchableProduct(iThread, aDevice.Udn);
-
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("WatchableProductCollection.Dispose");
-                    }
-
-                    uint index = (uint)iList.Count;
-                    iList.Add(product);
-                    iProductLookup.Add(aDevice, product);
-
-                    CollectionAdd(product, index);
-                }
-            }
-        }
-
-        public void Remove(IWatchableDevice aDevice)
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("WatchableProductCollection.Remove");
-                }
-
-                // handle outstanding subscription
-                CpProxyAvOpenhomeOrgProduct1 service;
-                if (iPendingServices.TryGetValue(aDevice, out service))
-                {
-                    iPendingServices.Remove(aDevice);
-
-                    service.Dispose();
-                    
-                    return;
-                }
-
-                Product product;
-                if (iProductLookup.TryGetValue(aDevice, out product))
-                {
-                    uint index = (uint)iList.IndexOf(product);
-                    iList.Remove(product);
-                    iProductLookup.Remove(aDevice);
-
-                    CollectionRemove(product, index);
-
-                    product.Dispose();
-                }
-            }
-        }
-
-        private object iLock;
-        private bool iDisposed;
-
-        private IWatchableThread iThread;
-        private Dictionary<IWatchableDevice, Product> iProductLookup;
-        private List<Product> iList;
-        private Dictionary<IWatchableDevice, CpProxyAvOpenhomeOrgProduct1> iPendingServices;
-    }
-
-    public abstract class Product : IProduct, IDisposable
+    public abstract class Product : IWatchableService, IProduct, IDisposable
     {
         protected Product(string aId, IServiceOpenHomeOrgProduct1 aService)
         {
@@ -193,6 +52,14 @@ namespace OpenHome.Av
         }
 
         public abstract void Dispose();
+
+        public string Type
+        {
+            get
+            {
+                return "AvOpenHomeProduct1";
+            }
+        }
 
         public IWatchable<string> Room
         {
@@ -368,7 +235,7 @@ namespace OpenHome.Av
         protected string iProductInfo;
         protected string iProductUrl;
 
-        private IServiceOpenHomeOrgProduct1 iService;
+        protected IServiceOpenHomeOrgProduct1 iService;
     }
 
     public class ServiceOpenHomeOrgProduct1 : IServiceOpenHomeOrgProduct1, IDisposable
@@ -620,21 +487,46 @@ namespace OpenHome.Av
 
     public class MockServiceOpenHomeOrgProduct1 : IServiceOpenHomeOrgProduct1, IMockable, IDisposable
     {
-        public MockServiceOpenHomeOrgProduct1(IWatchableThread aThread, string aId)
+        public MockServiceOpenHomeOrgProduct1(IWatchableThread aThread, string aId, string aRoom, string aName, uint aSourceIndex, string aSourceXml, bool aStandby)
         {
-            iRoom = new Watchable<string>(aThread, string.Format("Room({0})", aId), string.Empty);
-            iName = new Watchable<string>(aThread, string.Format("Name({0})", aId), string.Empty);
-            iSourceIndex = new Watchable<uint>(aThread, string.Format("SourceIndex({0})", aId), 0);
-            iSourceXml = new Watchable<string>(aThread, string.Format("SourceXml({0})", aId), string.Empty);
-            iStandby = new Watchable<bool>(aThread, string.Format("Standby({0})", aId), false);
+            iRoom = new Watchable<string>(aThread, string.Format("Room({0})", aId), aRoom);
+            iName = new Watchable<string>(aThread, string.Format("Name({0})", aId), aName);
+            iSourceIndex = new Watchable<uint>(aThread, string.Format("SourceIndex({0})", aId), aSourceIndex);
+            iSourceXml = new Watchable<string>(aThread, string.Format("SourceXml({0})", aId), aSourceXml);
+            iStandby = new Watchable<bool>(aThread, string.Format("Standby({0})", aId), aStandby);
         }
 
         public void Dispose()
         {
         }
 
-        public void Execute(IEnumerable<string> aCommand)
+        public void Execute(IEnumerable<string> aValue)
         {
+            string command = aValue.First();
+            if (command == "room")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+                iRoom.Update(value.First());
+            }
+            else if (command == "name")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+                iName.Update(value.First());
+            }
+            else if (command == "sourceindex")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+                iSourceIndex.Update(uint.Parse(value.First()));
+            }
+            else if (command == "standby")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+                iStandby.Update(bool.Parse(value.First()));
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
         }
 
         public IWatchable<string> Room
@@ -701,21 +593,23 @@ namespace OpenHome.Av
 
     public class MockWatchableProduct : Product, IMockable
     {
-        public MockWatchableProduct(IWatchableThread aThread, string aId)
-            : base(aId, new MockServiceOpenHomeOrgProduct1(aThread, aId))
+        public MockWatchableProduct(IWatchableThread aThread, string aId, string aRoom, string aName, uint aSourceIndex, string aSourceXml, bool aStandby, string aAttributes,
+            string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl, string aModelImageUri, string aModelInfo, string aModelName,
+            string aModelUrl, string aProductImageUri, string aProductInfo, string aProductUrl)
+            : base(aId, new MockServiceOpenHomeOrgProduct1(aThread, aId, aRoom, aName, aSourceIndex, aSourceXml, aStandby))
         {
-            iAttributes = string.Empty;
-            iManufacturerImageUri = string.Empty;
-            iManufacturerInfo = string.Empty;
-            iManufacturerName = string.Empty;
-            iManufacturerUrl = string.Empty;
-            iModelImageUri = string.Empty;
-            iModelInfo = string.Empty;
-            iModelName = string.Empty;
-            iModelUrl = string.Empty;
-            iProductImageUri = string.Empty;
-            iProductInfo = string.Empty;
-            iProductUrl = string.Empty;
+            iAttributes = aAttributes;
+            iManufacturerImageUri = aManufacturerImageUri;
+            iManufacturerInfo = aManufacturerInfo;
+            iManufacturerName = aManufacturerName;
+            iManufacturerUrl = aManufacturerUrl;
+            iModelImageUri = aModelImageUri;
+            iModelInfo = aModelInfo;
+            iModelName = aModelName;
+            iModelUrl = aModelUrl;
+            iProductImageUri = aProductImageUri;
+            iProductInfo = aProductInfo;
+            iProductUrl = aProductUrl;
         }
 
         public override void Dispose()
@@ -725,30 +619,39 @@ namespace OpenHome.Av
         public void Execute(IEnumerable<string> aValue)
         {
             string command = aValue.First();
-            if (command == "attributes")
+            if (command == "room" || command == "name" || command == "sourceindex" || command == "standby")
+            {
+                MockServiceOpenHomeOrgProduct1 p = iService as MockServiceOpenHomeOrgProduct1;
+                p.Execute(aValue);
+            }
+            else if (command == "attributes")
             {
                 IEnumerable<string> value = aValue.Skip(1);
                 iAttributes = value.First();
             }
-            if (command == "manufacturerimageuri")
+            else if (command == "manufacturerimageuri")
             {
                 IEnumerable<string> value = aValue.Skip(1);
                 iManufacturerImageUri = value.First();
             }
-            if (command == "manufacturerinfo")
+            else if (command == "manufacturerinfo")
             {
                 IEnumerable<string> value = aValue.Skip(1);
                 iManufacturerInfo = value.First();
             }
-            if (command == "manufacturername")
+            else if (command == "manufacturername")
             {
                 IEnumerable<string> value = aValue.Skip(1);
                 iManufacturerName = value.First();
             }
-            if (command == "manufacturerurl")
+            else if (command == "manufacturerurl")
             {
                 IEnumerable<string> value = aValue.Skip(1);
                 iManufacturerUrl = value.First();
+            }
+            else
+            {
+                throw new NotSupportedException();
             }
         }
     }
