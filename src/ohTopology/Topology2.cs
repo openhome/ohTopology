@@ -285,6 +285,11 @@ namespace OpenHome.Av
         private List<ITopology2Group> iList;
     }
 
+    public interface ITopology2
+    {
+        IWatchableCollection<ITopology2Group> Groups { get; }
+    }
+
     public class Topology2 : ICollectionWatcher<Product>, IDisposable
     {
         public Topology2(IWatchableThread aThread, ITopology1 aTopology1)
