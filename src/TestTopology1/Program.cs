@@ -53,18 +53,29 @@ namespace TestTopology
 
         static void Main(string[] args)
         {
+            InitParams initParams = new InitParams();
+            Library library = Library.Create(initParams);
+
+            SubnetList subnets = new SubnetList();
+            library.StartCp(subnets.SubnetAt(0).Subnet());
+            subnets.Dispose();
+
             ExceptionReporter reporter = new ExceptionReporter();
             WatchableThread thread = new  WatchableThread(reporter);
 
             Mockable mocker = new Mockable();
 
-            MockNetwork network = new MockNetwork(thread, mocker);
+            /*MockNetwork network = new MockNetwork(thread, mocker);
 
             mocker.Add("network", network);
 
             MockWatchableDs ds = new MockWatchableDs(thread, "45");
 
-            network.AddDevice(ds);
+            network.AddDevice(ds);*/
+
+            MockNetwork network = new FourDsMockNetwork(thread, mocker);
+
+            //Network network = new Network(thread);
 
             Topology1 topology = new Topology1(thread, network);
 
@@ -79,7 +90,11 @@ namespace TestTopology
 
             topology.Dispose();
 
+            network.Dispose();
+
             thread.Dispose();
+
+            library.Dispose();
         }
     }
 }

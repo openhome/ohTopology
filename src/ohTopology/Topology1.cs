@@ -7,33 +7,6 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public class WatchableDeviceCollection : WatchableCollection<IWatchableDevice>
-    {
-        public WatchableDeviceCollection(IWatchableThread aThread)
-            : base(aThread)
-        {
-            iList = new List<IWatchableDevice>();
-        }
-
-        internal void Add(IWatchableDevice aValue)
-        {
-            uint index = (uint)iList.Count;
-            iList.Add(aValue);
-
-            CollectionAdd(aValue, index);
-        }
-
-        internal void Remove(IWatchableDevice aValue)
-        {
-            uint index = (uint)iList.IndexOf(aValue);
-            iList.Remove(aValue);
-             
-            CollectionRemove(aValue, index);
-        }
-
-        private List<IWatchableDevice> iList;
-    }
-
     public class WatchableProductCollection : WatchableCollection<Product>
     {
         public WatchableProductCollection(IWatchableThread aThread)

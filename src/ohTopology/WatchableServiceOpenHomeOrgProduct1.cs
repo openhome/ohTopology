@@ -2,13 +2,15 @@
 using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
+using System.Xml;
 
 using OpenHome.Os.App;
+using OpenHome.Net.ControlPoint;
 using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    public interface IWatchableService
+    public interface IWatchableService : IDisposable
     {
         string Type { get; }
     }
@@ -453,6 +455,143 @@ namespace OpenHome.Av
         private Watchable<bool> iStandby;
     }
 
+    public class ServiceWatchableDeviceCollection : WatchableDeviceCollection
+    {
+        public ServiceWatchableDeviceCollection(IWatchableThread aThread, string aDomainName, string aServiceType, uint aVersion)
+            : base(aThread)
+        {
+            iLock = new object();
+            iDisposed = false;
+
+            iCpDeviceList = new CpDeviceListUpnpServiceType(aDomainName, aServiceType, aVersion, Added, Removed);//"av.openhome.org", "Product", 1, Added, Removed);
+            iCpDeviceLookup = new Dictionary<string, DisposableWatchableDevice>();
+        }
+
+        public new void Dispose()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceWatchableDeviceCollection.Dispose");
+                }
+
+                base.Dispose();
+
+                iCpDeviceList.Dispose();
+                iCpDeviceList = null;
+
+                foreach (DisposableWatchableDevice device in iCpDeviceLookup.Values)
+                {
+                    device.Dispose();
+                }
+                iCpDeviceLookup = null;
+
+                iDisposed = true;
+            }
+        }
+
+        public void Refresh()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceWatchableDeviceCollection.Refresh");
+                }
+
+                iCpDeviceList.Refresh();
+            }
+        }
+
+        private void Added(CpDeviceList aList, CpDevice aDevice)
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    return;
+                }
+
+                DisposableWatchableDevice device = new DisposableWatchableDevice(WatchableThread, aDevice);
+                iCpDeviceLookup.Add(aDevice.Udn(), device);
+
+                Add(device);
+            }
+        }
+
+        private void Removed(CpDeviceList aList, CpDevice aDevice)
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    return;
+                }
+
+                DisposableWatchableDevice device;
+                if (iCpDeviceLookup.TryGetValue(aDevice.Udn(), out device))
+                {
+                    iCpDeviceLookup.Remove(aDevice.Udn());
+
+                    Remove(device);
+
+                    device.Dispose();
+                }
+            }
+        }
+
+        private object iLock;
+        private bool iDisposed;
+
+        private CpDeviceList iCpDeviceList;
+        private Dictionary<string, DisposableWatchableDevice> iCpDeviceLookup;
+    }
+
+    public class WatchableProductFactory : IWatchableServiceFactory
+    {
+        public WatchableProductFactory(IWatchableThread aThread)
+        {
+            iThread = aThread;
+
+            iService = null;
+        }
+
+        public void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback)
+        {
+            if (iService == null && iPendingService == null)
+            {
+                iPendingService = new CpProxyAvOpenhomeOrgProduct1(aDevice.Device);
+                iPendingService.SetPropertyInitialEvent(delegate
+                {
+                    iService = new WatchableProduct(iThread, string.Format("Product({0})", aDevice.Udn), iPendingService);
+                    iPendingService = null;
+                    aCallback(iService);
+                });
+                iPendingService.Subscribe();
+            }
+        }
+
+        public void Unsubscribe()
+        {
+            if (iPendingService != null)
+            {
+                iPendingService.Dispose();
+                iPendingService = null;
+            }
+
+            if (iService != null)
+            {
+                iService.Dispose();
+                iService = null;
+            }
+        }
+
+        private CpProxyAvOpenhomeOrgProduct1 iPendingService;
+        private WatchableProduct iService;
+        private IWatchableThread iThread;
+    }
+
     public class WatchableProduct : Product
     {
         public WatchableProduct(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgProduct1 aService)
@@ -485,14 +624,120 @@ namespace OpenHome.Av
         private CpProxyAvOpenhomeOrgProduct1 iCpService;
     }
 
+    public class SourceXml
+    {
+        public class Source
+        {
+            public Source(string aName, string aType, bool aVisible)
+            {
+                iName = aName;
+                iType = aType;
+                iVisible = aVisible;
+            }
+
+            public string Name
+            {
+                get
+                {
+                    return iName;
+                }
+                set
+                {
+                    iName = value;
+                }
+            }
+
+            public string Type
+            {
+                get
+                {
+                    return iType;
+                }
+            }
+
+            public bool Visible
+            {
+                get
+                {
+                    return iVisible;
+                }
+                set
+                {
+                    iVisible = value;
+                }
+            }
+
+            private string iName;
+            private string iType;
+            private bool iVisible;
+        }
+
+        public SourceXml(Source[] aSources)
+        {
+            iSources = aSources;
+
+            CreateSourceXml();
+        }
+
+        public override string ToString()
+        {
+            return iSourceXml;
+        }
+
+        public void UpdateName(uint aIndex, string aName)
+        {
+            iSources[(int)aIndex].Name = aName;
+        }
+
+        public void UpdateVisible(uint aIndex, bool aVisible)
+        {
+            iSources[(int)aIndex].Visible = aVisible;
+        }
+
+        private void CreateSourceXml()
+        {
+            XmlDocument doc = new XmlDocument();
+
+            XmlElement sources = doc.CreateElement("SourceList");
+
+            foreach (Source s in iSources)
+            {
+                XmlElement source = doc.CreateElement("Source");
+
+                XmlElement name = doc.CreateElement("Name");
+                XmlElement type = doc.CreateElement("Type");
+                XmlElement visible = doc.CreateElement("Visible");
+
+                name.AppendChild(doc.CreateTextNode(s.Name));
+                type.AppendChild(doc.CreateTextNode(s.Type));
+                visible.AppendChild(doc.CreateTextNode(s.Visible.ToString()));
+
+                source.AppendChild(name);
+                source.AppendChild(type);
+                source.AppendChild(visible);
+
+                sources.AppendChild(source);
+            }
+
+            doc.AppendChild(sources);
+
+            iSourceXml = doc.OuterXml;
+        }
+
+        private Source[] iSources;
+        private string iSourceXml;
+    }
+
     public class MockServiceOpenHomeOrgProduct1 : IServiceOpenHomeOrgProduct1, IMockable, IDisposable
     {
-        public MockServiceOpenHomeOrgProduct1(IWatchableThread aThread, string aId, string aRoom, string aName, uint aSourceIndex, string aSourceXml, bool aStandby)
+        public MockServiceOpenHomeOrgProduct1(IWatchableThread aThread, string aId, string aRoom, string aName, uint aSourceIndex, SourceXml aSourceXmlFactory, bool aStandby)
         {
+            iSourceXmlFactory = aSourceXmlFactory;
+
             iRoom = new Watchable<string>(aThread, string.Format("Room({0})", aId), aRoom);
             iName = new Watchable<string>(aThread, string.Format("Name({0})", aId), aName);
             iSourceIndex = new Watchable<uint>(aThread, string.Format("SourceIndex({0})", aId), aSourceIndex);
-            iSourceXml = new Watchable<string>(aThread, string.Format("SourceXml({0})", aId), aSourceXml);
+            iSourceXml = new Watchable<string>(aThread, string.Format("SourceXml({0})", aId), iSourceXmlFactory.ToString());
             iStandby = new Watchable<bool>(aThread, string.Format("Standby({0})", aId), aStandby);
         }
 
@@ -523,10 +768,29 @@ namespace OpenHome.Av
                 IEnumerable<string> value = aValue.Skip(1);
                 iStandby.Update(bool.Parse(value.First()));
             }
-            else
+            else if (command == "source")
             {
-                throw new NotSupportedException();
+                IEnumerable<string> value = aValue.Skip(1);
+                
+                uint index = uint.Parse(value.First());
+
+                value = value.Skip(1);
+
+                string property = value.First();
+                
+                value = value.Skip(1);
+                
+                if (property == "name")
+                {
+                    iSourceXmlFactory.UpdateName(index, value.First());
+                }
+                else if (property == "visible")
+                {
+                    iSourceXmlFactory.UpdateVisible(index, bool.Parse(value.First()));
+                }
             }
+
+            throw new NotSupportedException();
         }
 
         public IWatchable<string> Room
@@ -584,6 +848,8 @@ namespace OpenHome.Av
             iStandby.Update(aValue);
         }
 
+        private SourceXml iSourceXmlFactory;
+
         private Watchable<string> iRoom;
         private Watchable<string> iName;
         private Watchable<uint> iSourceIndex;
@@ -593,10 +859,10 @@ namespace OpenHome.Av
 
     public class MockWatchableProduct : Product, IMockable
     {
-        public MockWatchableProduct(IWatchableThread aThread, string aId, string aRoom, string aName, uint aSourceIndex, string aSourceXml, bool aStandby, string aAttributes,
+        public MockWatchableProduct(IWatchableThread aThread, string aId, string aRoom, string aName, uint aSourceIndex, SourceXml aSourceXmlFactory, bool aStandby, string aAttributes,
             string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl, string aModelImageUri, string aModelInfo, string aModelName,
             string aModelUrl, string aProductImageUri, string aProductInfo, string aProductUrl)
-            : base(aId, new MockServiceOpenHomeOrgProduct1(aThread, aId, aRoom, aName, aSourceIndex, aSourceXml, aStandby))
+            : base(aId, new MockServiceOpenHomeOrgProduct1(aThread, aId, aRoom, aName, aSourceIndex, aSourceXmlFactory, aStandby))
         {
             iAttributes = aAttributes;
             iManufacturerImageUri = aManufacturerImageUri;

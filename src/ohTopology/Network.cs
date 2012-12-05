@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 
 using OpenHome.Os.App;
+using OpenHome.Net.ControlPoint;
 
 namespace OpenHome.Av
 {
@@ -14,98 +15,40 @@ namespace OpenHome.Av
 
     public class Network : INetwork, IDisposable
     {
-         //iDeviceList = new CpDeviceListUpnpServiceType("av.openhome.org", "Product", 1, Added, Removed);
-            //iCpDeviceLookup = new Dictionary<string, DisposableWatchableDevice>();
-
-        public void Refresh()
+        public Network(IWatchableThread aThread)
         {
-            /*lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("Topology1.Refresh");
-                }
+            iDeviceCollections = new Dictionary<Type, ServiceWatchableDeviceCollection>();
 
-                iDeviceList.Refresh();
-            }*/
+            // add device lists for each type of watchable service
+            iDeviceCollections.Add(typeof(Product), new ServiceWatchableDeviceCollection(aThread, "av.openhome.org", "Product", 1));
         }
 
         public void Dispose()
         {
-            /*lock (iLock)
+            foreach (ServiceWatchableDeviceCollection c in iDeviceCollections.Values)
             {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("Topology1.Dispose");
-                }
+                c.Dispose();
+            }
+            iDeviceCollections = null;
+        }
 
-                iDeviceList.Dispose();
-                iDeviceList = null;
-
-                iTopologyDeviceList.Dispose();
-                iTopologyDeviceList = null;
-
-                foreach (DisposableWatchableDevice device in iCpDeviceLookup.Values)
-                {
-                    device.Dispose();
-                }
-                iCpDeviceLookup.Clear();
-                iCpDeviceLookup = null;
-
-                iThread = null;
-
-                iDisposed = true;
-            }*/
+        public void Refresh()
+        {
+            foreach (ServiceWatchableDeviceCollection c in iDeviceCollections.Values)
+            {
+                c.Refresh();
+            }
         }
 
         public WatchableDeviceCollection GetWatchableDeviceCollection<T>() where T : IWatchableService
         {
-            throw new NotImplementedException();
+            return iDeviceCollections[typeof(T)];
         }
 
-        /*private void Added(CpDeviceList aList, CpDevice aDevice)
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                DisposableWatchableDevice device = new DisposableWatchableDevice(aDevice);
-                iCpDeviceLookup.Add(aDevice.Udn(), device);
-
-                iTopologyDeviceList.Add(device);
-            }
-        }
-
-        private void Removed(CpDeviceList aList, CpDevice aDevice)
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                DisposableWatchableDevice device;
-                if (iCpDeviceLookup.TryGetValue(aDevice.Udn(), out device))
-                {
-                    iCpDeviceLookup.Remove(aDevice.Udn());
-
-                    iTopologyDeviceList.Remove(device);
-
-                    device.Dispose();
-                }
-            }
-        }*/
-
-        //private CpDeviceList iDeviceList;
-        //private Dictionary<string, DisposableWatchableDevice> iCpDeviceLookup;
-        //private WatchableDeviceCollection iTopologyDeviceList;
+        private Dictionary<Type, ServiceWatchableDeviceCollection> iDeviceCollections;
     }
 
-    public class MockNetwork : INetwork, IMockable
+    public class MockNetwork : INetwork, IMockable, IDisposable
     {
         public MockNetwork(IWatchableThread aThread, Mockable aMocker)
         {
@@ -117,6 +60,10 @@ namespace OpenHome.Av
             iOnDevices = new Dictionary<string, MockWatchableDevice>();
             iOffDevices = new Dictionary<string, MockWatchableDevice>();
             iDeviceLists = new Dictionary<Type, List<WatchableDeviceCollection>>();
+        }
+
+        public void Dispose()
+        {
         }
 
         public void Refresh()
@@ -179,7 +126,7 @@ namespace OpenHome.Av
         public WatchableDeviceCollection GetWatchableDeviceCollection<T>() where T : IWatchableService
         {
             WatchableDeviceCollection list = new WatchableDeviceCollection(iThread);
-            Type key = new ServiceType<T>().GetType();
+            Type key = typeof(T);
 
             if (iDeviceLists.ContainsKey(key))
             {
@@ -272,11 +219,15 @@ namespace OpenHome.Av
         private Dictionary<Type, List<WatchableDeviceCollection>> iDeviceLists;
     }
 
-    /*public static class NetworkExtensions
+    public class FourDsMockNetwork : MockNetwork
     {
-        public static IWatchableCollection<IWatchableDevice> GetWatchableDeviceCollection<T>(this INetwork aNetwork)
+        public FourDsMockNetwork(IWatchableThread aThread, Mockable aMocker)
+            : base(aThread, aMocker)
         {
-            return aNetwork.GetDevices<IServiceOpenHomeOrgProduct1>();
+            AddDevice(new MockWatchableDs(aThread, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS"));
+            AddDevice(new MockWatchableDsm(aThread, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM"));
+            AddDevice(new MockWatchableDsm(aThread, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM"));
+            AddDevice(new MockWatchableDs(aThread, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS"));
         }
-    }*/
+    }
 }
