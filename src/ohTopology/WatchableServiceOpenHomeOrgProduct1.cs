@@ -675,7 +675,6 @@ namespace OpenHome.Av
         public SourceXml(Source[] aSources)
         {
             iSources = aSources;
-
             CreateSourceXml();
         }
 
@@ -687,11 +686,13 @@ namespace OpenHome.Av
         public void UpdateName(uint aIndex, string aName)
         {
             iSources[(int)aIndex].Name = aName;
+            CreateSourceXml();
         }
 
         public void UpdateVisible(uint aIndex, bool aVisible)
         {
             iSources[(int)aIndex].Visible = aVisible;
+            CreateSourceXml();
         }
 
         private void CreateSourceXml()
@@ -771,26 +772,34 @@ namespace OpenHome.Av
             else if (command == "source")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-                
+
                 uint index = uint.Parse(value.First());
 
                 value = value.Skip(1);
 
                 string property = value.First();
-                
+
                 value = value.Skip(1);
-                
+
                 if (property == "name")
                 {
                     iSourceXmlFactory.UpdateName(index, value.First());
+                    iSourceXml.Update(iSourceXmlFactory.ToString());
                 }
                 else if (property == "visible")
                 {
                     iSourceXmlFactory.UpdateVisible(index, bool.Parse(value.First()));
+                    iSourceXml.Update(iSourceXmlFactory.ToString());
+                }
+                else
+                {
+                    throw new NotSupportedException();
                 }
             }
-
-            throw new NotSupportedException();
+            else
+            {
+                throw new NotSupportedException();
+            }
         }
 
         public IWatchable<string> Room
@@ -885,7 +894,7 @@ namespace OpenHome.Av
         public void Execute(IEnumerable<string> aValue)
         {
             string command = aValue.First();
-            if (command == "room" || command == "name" || command == "sourceindex" || command == "standby")
+            if (command == "room" || command == "name" || command == "sourceindex" || command == "standby" || command == "source")
             {
                 MockServiceOpenHomeOrgProduct1 p = iService as MockServiceOpenHomeOrgProduct1;
                 p.Execute(aValue);

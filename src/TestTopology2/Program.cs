@@ -211,15 +211,8 @@ namespace TestTopology2
 
             Mockable mocker = new Mockable();
 
-            /*MockNetwork network = new MockNetwork(thread, mocker);
-
-            mocker.Add("network", network);
-
-            MockWatchableDs ds = new MockWatchableDs(thread, "45");
-
-            network.AddDevice(ds);*/
-
             MockNetwork network = new FourDsMockNetwork(thread, mocker);
+            mocker.Add("network", network);
 
             //Network network = new Network(thread);
 
