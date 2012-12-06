@@ -359,7 +359,7 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("SPDIF2", "Digital", true));
             sources.Add(new SourceXml.Source("TOSLINK1", "Digital", true));
             SourceXml xml = new SourceXml(sources.ToArray());
-            MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, "Main Room", "Mock DS", 0, xml, true, "",
+            MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, "Main Room", "Mock DS", 0, xml, true, "Info Time Sender",
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DS", "",
                 "", "Linn High Fidelity System Component", "");
@@ -384,9 +384,9 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("TOSLINK1", "Digital", true));
             sources.Add(new SourceXml.Source("TOSLINK2", "Digital", true));
             SourceXml xml = new SourceXml(sources.ToArray());
-            MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, aRoom, aName, 0, xml, true, "",
+            MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, aRoom, aName, 0, xml, true, "Info Time Volume Sender",
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
-                "", "Linn High Fidelity System Component", "Mock DS", "",
+                "", "Linn High Fidelity System Component", "Mock DSM", "",
                 "", "Linn High Fidelity System Component", "");
             Add<Product>(product);
         }
