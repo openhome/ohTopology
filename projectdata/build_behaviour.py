@@ -59,7 +59,7 @@
 from ci import (
         build_step, require_version, add_option, specify_optional_steps,
         build_condition, default_platform, get_dependency_args,
-        get_vsvars_environment, fetch_dependencies, python, scp)
+        get_vsvars_environment, fetch_dependencies, python, scp, shell, cli)
 
 require_version(13)
 
@@ -185,6 +185,8 @@ def build(context):
 @build_step("test", optional=True)
 def test(context):
     python("waf", "test")
+    cli(['build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/TestTopology1.exe', 'build/ohTopology/AnyPlatform/' + context.options.debugmode.title()+ '/bin/Topology1TestScript.txt'])
+    cli(['build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/TestTopology2.exe', 'build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/Topology2TestScript.txt'])
 
 @build_step("publish", optional=True, default=False)
 def publish(context):
