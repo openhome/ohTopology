@@ -7,27 +7,26 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public class WatchableProductCollection : WatchableCollection<Product>
+    public class WatchableProductUnordered : WatchableUnordered<Product>
     {
-        public WatchableProductCollection(IWatchableThread aThread)
+        public WatchableProductUnordered(IWatchableThread aThread)
             : base(aThread)
         {
             iList = new List<Product>();
         }
 
-        public void Add(Product aValue)
+        public new void Add(Product aValue)
         {
-            uint index = (uint)iList.Count;
-            CollectionAdd(aValue, index);
             iList.Add(aValue);
+
+            base.Add(aValue);
         }
 
-        public void Remove(Product aValue)
+        public new void Remove(Product aValue)
         {
-            uint index = (uint)iList.IndexOf(aValue);
             iList.Remove(aValue);
 
-            CollectionRemove(aValue, index);
+            base.Remove(aValue);
         }
 
         private List<Product> iList;
@@ -35,10 +34,10 @@ namespace OpenHome.Av
 
     public interface ITopology1
     {
-        IWatchableCollection<Product> Products { get; }
+        IWatchableUnordered<Product> Products { get; }
     }
 
-    public class Topology1 : ITopology1, ICollectionWatcher<IWatchableDevice>, IDisposable
+    public class Topology1 : ITopology1, IUnorderedWatcher<IWatchableDevice>, IDisposable
     {
         public Topology1(IWatchableThread aThread, INetwork aNetwork)
         {
@@ -48,7 +47,7 @@ namespace OpenHome.Av
 
             iPendingSubscriptions = new List<IWatchableDevice>();
             iProductLookup = new Dictionary<IWatchableDevice, Product>();
-            iProducts = new WatchableProductCollection(aThread);
+            iProducts = new WatchableProductUnordered(aThread);
 
             iDevices = iNetwork.GetWatchableDeviceCollection<Product>();
             iDevices.AddWatcher(this);
@@ -58,30 +57,27 @@ namespace OpenHome.Av
         {
             iDevices.RemoveWatcher(this);
 
-            lock (iProducts.WatchableThread)
+            if (iDisposed)
             {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("Topology1.Dispose");
-                }
-
-                foreach (IWatchableDevice d in iPendingSubscriptions)
-                {
-                    d.Unsubscribe<Product>();
-                }
-                iPendingSubscriptions = null;
-
-                foreach (Product p in iProductLookup.Values)
-                {
-                    p.Dispose();
-                }
-                iProductLookup = null;
-
-                iDisposed = true;
+                throw new ObjectDisposedException("Topology1.Dispose");
             }
+
+            foreach (IWatchableDevice d in iPendingSubscriptions)
+            {
+                d.Unsubscribe<Product>();
+            }
+            iPendingSubscriptions = null;
+
+            foreach (Product p in iProductLookup.Values)
+            {
+                p.Dispose();
+            }
+            iProductLookup = null;
+
+            iDisposed = true;
         }
 
-        public IWatchableCollection<Product> Products
+        public IWatchableUnordered<Product> Products
         {
             get
             {
@@ -89,41 +85,26 @@ namespace OpenHome.Av
             }
         }
 
-        public void CollectionOpen()
+        public void UnorderedOpen()
         {
         }
 
-        public void CollectionInitialised()
+        public void UnorderedInitialised()
         {
         }
 
-        public void CollectionClose()
+        public void UnorderedClose()
         {
         }
 
-        public void CollectionAdd(IWatchableDevice aItem, uint aIndex)
+        public void UnorderedAdd(IWatchableDevice aItem)
         {
-            if (iDisposed)
-            {
-                throw new ObjectDisposedException("Topology1.CollectionAdd");
-            }
-
             aItem.Subscribe<Product>(Subscribed);
             iPendingSubscriptions.Add(aItem);
         }
 
-        public void CollectionMove(IWatchableDevice aItem, uint aFrom, uint aTo)
+        public void UnorderedRemove(IWatchableDevice aItem)
         {
-            throw new NotSupportedException();
-        }
-
-        public void CollectionRemove(IWatchableDevice aItem, uint aIndex)
-        {
-            if (iDisposed)
-            {
-                throw new ObjectDisposedException("Topology1.CollectionRemove");
-            }
-
             Product product;
             if (iProductLookup.TryGetValue(aItem, out product))
             {
@@ -134,17 +115,9 @@ namespace OpenHome.Av
 
         private void Subscribed(IWatchableDevice aDevice, Product aProduct)
         {
-            lock (iProducts.WatchableThread)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iProducts.Add(aProduct);
-                iProductLookup.Add(aDevice, aProduct);
-                iPendingSubscriptions.Remove(aDevice);
-            }
+            iProducts.Add(aProduct);
+            iProductLookup.Add(aDevice, aProduct);
+            iPendingSubscriptions.Remove(aDevice);
         }
 
         private bool iDisposed;
@@ -153,8 +126,8 @@ namespace OpenHome.Av
 
         private List<IWatchableDevice> iPendingSubscriptions;
         private Dictionary<IWatchableDevice, Product> iProductLookup;
-        private WatchableProductCollection iProducts;
+        private WatchableProductUnordered iProducts;
         
-        private WatchableDeviceCollection iDevices;
+        private WatchableDeviceUnordered iDevices;
     }
 }

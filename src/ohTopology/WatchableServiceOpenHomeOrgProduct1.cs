@@ -455,7 +455,7 @@ namespace OpenHome.Av
         private Watchable<bool> iStandby;
     }
 
-    public class ServiceWatchableDeviceCollection : WatchableDeviceCollection
+    public class ServiceWatchableDeviceCollection : WatchableDeviceUnordered
     {
         public ServiceWatchableDeviceCollection(IWatchableThread aThread, string aDomainName, string aServiceType, uint aVersion)
             : base(aThread)
@@ -564,9 +564,12 @@ namespace OpenHome.Av
                 iPendingService = new CpProxyAvOpenhomeOrgProduct1(aDevice.Device);
                 iPendingService.SetPropertyInitialEvent(delegate
                 {
-                    iService = new WatchableProduct(iThread, string.Format("Product({0})", aDevice.Udn), iPendingService);
-                    iPendingService = null;
-                    aCallback(iService);
+                    iThread.Schedule(() =>
+                    {
+                        iService = new WatchableProduct(iThread, string.Format("Product({0})", aDevice.Udn), iPendingService);
+                        iPendingService = null;
+                        aCallback(iService);
+                    });
                 });
                 iPendingService.Subscribe();
             }

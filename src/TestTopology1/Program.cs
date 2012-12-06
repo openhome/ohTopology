@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 
 using OpenHome.Os.App;
@@ -18,66 +19,73 @@ namespace TestTopology
             }
         }
 
-        class ProductWatcher : ICollectionWatcher<Product>
+        class ProductWatcher : IUnorderedWatcher<Product>
         {
-
-            public void CollectionAdd(Product aItem, uint aIndex)
+            public ProductWatcher(MockableScriptRunner aRunner)
             {
-                Console.WriteLine("Product Added");
-                Console.WriteLine("    udn = " + aItem.Id);
+                iRunner = aRunner;
             }
 
-            public void CollectionClose()
+            public void UnorderedOpen()
             {
             }
 
-            public void CollectionInitialised()
+            public void UnorderedClose()
             {
             }
 
-            public void CollectionMove(Product aItem, uint aFrom, uint aTo)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void CollectionOpen()
+            public void UnorderedInitialised()
             {
             }
 
-            public void CollectionRemove(Product aItem, uint aIndex)
+            public void UnorderedAdd(Product aItem)
             {
-                Console.WriteLine("Product Removed");
-                Console.WriteLine("    udn = " + aItem.Id);
+                iRunner.Result("Product Added");
+                iRunner.Result("    udn = " + aItem.Id);
             }
+
+            public void UnorderedRemove(Product aItem)
+            {
+                iRunner.Result("Product Removed");
+                iRunner.Result("    udn = " + aItem.Id);
+            }
+
+            private MockableScriptRunner iRunner;
         }
 
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
-            InitParams initParams = new InitParams();
-            Library library = Library.Create(initParams);
-
-            SubnetList subnets = new SubnetList();
-            library.StartCp(subnets.SubnetAt(0).Subnet());
-            subnets.Dispose();
+            if (args.Length != 1)
+            {
+                Console.WriteLine("Usage: TestTopology1.exe <testscript>");
+            }
 
             ExceptionReporter reporter = new ExceptionReporter();
-            WatchableThread thread = new  WatchableThread(reporter);
+            WatchableThread thread = new WatchableThread(reporter);
 
             Mockable mocker = new Mockable();
 
             MockNetwork network = new FourDsMockNetwork(thread, mocker);
             mocker.Add("network", network);
 
-            //Network network = new Network(thread);
-
             Topology1 topology = new Topology1(thread, network);
 
-            ProductWatcher watcher = new ProductWatcher();
+            MockableScriptRunner runner = new MockableScriptRunner();
+
+            ProductWatcher watcher = new ProductWatcher(runner);
 
             topology.Products.AddWatcher(watcher);
 
-            MockableStream stream = new MockableStream(Console.In, mocker);
-            stream.Start();
+            thread.WaitComplete();
+
+            try
+            {
+                runner.Run(thread, new StringReader(File.ReadAllText(args[0])), mocker);
+            }
+            catch (MockableScriptRunner.AssertError)
+            {
+                return 1;
+            }
 
             topology.Products.RemoveWatcher(watcher);
 
@@ -87,7 +95,7 @@ namespace TestTopology
 
             thread.Dispose();
 
-            library.Dispose();
+            return 0;
         }
     }
 }

@@ -10,7 +10,7 @@ namespace OpenHome.Av
     public interface INetwork
     {
         void Refresh();
-        WatchableDeviceCollection GetWatchableDeviceCollection<T>() where T : IWatchableService;
+        WatchableDeviceUnordered GetWatchableDeviceCollection<T>() where T : IWatchableService;
     }
 
     public class Network : INetwork, IDisposable
@@ -40,7 +40,7 @@ namespace OpenHome.Av
             }
         }
 
-        public WatchableDeviceCollection GetWatchableDeviceCollection<T>() where T : IWatchableService
+        public WatchableDeviceUnordered GetWatchableDeviceCollection<T>() where T : IWatchableService
         {
             return iDeviceCollections[typeof(T)];
         }
@@ -59,7 +59,7 @@ namespace OpenHome.Av
 
             iOnDevices = new Dictionary<string, MockWatchableDevice>();
             iOffDevices = new Dictionary<string, MockWatchableDevice>();
-            iDeviceLists = new Dictionary<Type, List<WatchableDeviceCollection>>();
+            iDeviceLists = new Dictionary<Type, List<WatchableDeviceUnordered>>();
         }
 
         public void Dispose()
@@ -77,11 +77,11 @@ namespace OpenHome.Av
                 iOnDevices.Add(aDevice.Udn, aDevice);
                 iMocker.Add(aDevice.Udn, aDevice);
 
-                foreach (KeyValuePair<Type, List<WatchableDeviceCollection>> k in iDeviceLists)
+                foreach (KeyValuePair<Type, List<WatchableDeviceUnordered>> k in iDeviceLists)
                 {
                     if (aDevice.HasService(k.Key))
                     {
-                        foreach (WatchableDeviceCollection c in k.Value)
+                        foreach (WatchableDeviceUnordered c in k.Value)
                         {
                             c.Add(aDevice);
                         }
@@ -110,11 +110,11 @@ namespace OpenHome.Av
                 iOffDevices.Add(aDevice.Udn, aDevice);
                 iMocker.Remove(aDevice.Udn);
 
-                foreach (KeyValuePair<Type, List<WatchableDeviceCollection>> k in iDeviceLists)
+                foreach (KeyValuePair<Type, List<WatchableDeviceUnordered>> k in iDeviceLists)
                 {
                     if (aDevice.HasService(k.Key))
                     {
-                        foreach (WatchableDeviceCollection c in k.Value)
+                        foreach (WatchableDeviceUnordered c in k.Value)
                         {
                             c.Remove(aDevice);
                         }
@@ -123,9 +123,9 @@ namespace OpenHome.Av
             }
         }
 
-        public WatchableDeviceCollection GetWatchableDeviceCollection<T>() where T : IWatchableService
+        public WatchableDeviceUnordered GetWatchableDeviceCollection<T>() where T : IWatchableService
         {
-            WatchableDeviceCollection list = new WatchableDeviceCollection(iThread);
+            WatchableDeviceUnordered list = new WatchableDeviceUnordered(iThread);
             Type key = typeof(T);
 
             if (iDeviceLists.ContainsKey(key))
@@ -134,7 +134,7 @@ namespace OpenHome.Av
             }
             else
             {
-                iDeviceLists.Add(key, new List<WatchableDeviceCollection>(new WatchableDeviceCollection[] { list }));
+                iDeviceLists.Add(key, new List<WatchableDeviceUnordered>(new WatchableDeviceUnordered[] { list }));
 
                 foreach (MockWatchableDevice d in iOnDevices.Values)
                 {
@@ -216,7 +216,7 @@ namespace OpenHome.Av
 
         private Dictionary<string, MockWatchableDevice> iOnDevices;
         private Dictionary<string, MockWatchableDevice> iOffDevices;
-        private Dictionary<Type, List<WatchableDeviceCollection>> iDeviceLists;
+        private Dictionary<Type, List<WatchableDeviceUnordered>> iDeviceLists;
     }
 
     public class FourDsMockNetwork : MockNetwork

@@ -22,28 +22,26 @@ namespace OpenHome.Av
         void Unsubscribe<T>() where T : IWatchableService;
     }
 
-    public class WatchableDeviceCollection : WatchableCollection<IWatchableDevice>
+    public class WatchableDeviceUnordered : WatchableUnordered<IWatchableDevice>
     {
-        public WatchableDeviceCollection(IWatchableThread aThread)
+        public WatchableDeviceUnordered(IWatchableThread aThread)
             : base(aThread)
         {
             iList = new List<IWatchableDevice>();
         }
 
-        internal void Add(IWatchableDevice aValue)
+        internal new void Add(IWatchableDevice aValue)
         {
-            uint index = (uint)iList.Count;
             iList.Add(aValue);
 
-            CollectionAdd(aValue, index);
+            base.Add(aValue);
         }
 
-        internal void Remove(IWatchableDevice aValue)
+        internal new void Remove(IWatchableDevice aValue)
         {
-            uint index = (uint)iList.IndexOf(aValue);
             iList.Remove(aValue);
 
-            CollectionRemove(aValue, index);
+            base.Remove(aValue);
         }
 
         private List<IWatchableDevice> iList;
@@ -209,8 +207,9 @@ namespace OpenHome.Av
 
     public class MockWatchableDevice : IWatchableDevice, IMockable
     {
-        public MockWatchableDevice(string aUdn)
+        public MockWatchableDevice(IWatchableThread aThread, string aUdn)
         {
+            iThread = aThread;
             iUdn = aUdn;
             iServices = new Dictionary<Type, IWatchableService>();
         }
@@ -237,10 +236,9 @@ namespace OpenHome.Av
             IWatchableService service;
             if (iServices.TryGetValue(typeof(T), out service))
             {
-                Task task = new Task(new Action(delegate { 
+                iThread.Schedule(() => { 
                     aCallback(this, (T)service);
-                }));
-                task.Start();
+                });
 
                 return;
             }
@@ -276,13 +274,14 @@ namespace OpenHome.Av
 
         protected Dictionary<Type, IWatchableService> iServices;
 
+        private IWatchableThread iThread;
         private string iUdn;
     }
 
     public class MockWatchableDs : MockWatchableDevice
     {
         public MockWatchableDs(IWatchableThread aThread, string aUdn)
-            : base(aUdn)
+            : base(aThread, aUdn)
         {
             // add a mock product service
             List<SourceXml.Source> sources = new List<SourceXml.Source>();
@@ -300,7 +299,7 @@ namespace OpenHome.Av
         }
 
         public MockWatchableDs(IWatchableThread aThread, string aUdn, string aRoom, string aName)
-            : base(aUdn)
+            : base(aThread, aUdn)
         {
             // add a mock product service
             List<SourceXml.Source> sources = new List<SourceXml.Source>();
@@ -344,7 +343,7 @@ namespace OpenHome.Av
     public class MockWatchableDsm : MockWatchableDevice
     {
         public MockWatchableDsm(IWatchableThread aThread, string aUdn)
-            : base(aUdn)
+            : base(aThread, aUdn)
         {
             // add a mock product service
             List<SourceXml.Source> sources = new List<SourceXml.Source>();
@@ -368,7 +367,7 @@ namespace OpenHome.Av
         }
 
         public MockWatchableDsm(IWatchableThread aThread, string aUdn, string aRoom, string aName)
-            : base(aUdn)
+            : base(aThread, aUdn)
         {
             // add a mock product service
             List<SourceXml.Source> sources = new List<SourceXml.Source>();

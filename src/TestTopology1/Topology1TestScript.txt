@@ -1,0 +1,22 @@
+﻿expect Product Added
+expect     udn = 4c494e4e-0026-0f99-1111-ef000004013f
+expect Product Added
+expect     udn = 4c494e4e-0026-0f99-1112-ef000004013f
+expect Product Added
+expect     udn = 4c494e4e-0026-0f99-1113-ef000004013f
+expect Product Added
+expect     udn = 4c494e4e-0026-0f99-1114-ef000004013f
+expect empty
+mock network add ds 67
+wait
+wait
+expect Product Added
+expect     udn = 67
+expect empty
+mock network remove ds 67
+wait
+wait
+expect Product Removed
+expect     udn = 67
+expect empty
+exit

@@ -58,8 +58,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\dependencies\Windows-x86\ohNet-Windows-x86-debug-dev\lib\ohNet.dll">
-      <Link>ohNet.dll</Link>
+    <Content Include="Topology1TestScript.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

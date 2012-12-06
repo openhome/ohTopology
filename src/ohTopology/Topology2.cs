@@ -290,7 +290,7 @@ namespace OpenHome.Av
         IWatchableCollection<ITopology2Group> Groups { get; }
     }
 
-    public class Topology2 : ICollectionWatcher<Product>, IDisposable
+    public class Topology2 : IUnorderedWatcher<Product>, IDisposable
     {
         public Topology2(IWatchableThread aThread, ITopology1 aTopology1)
         {
@@ -348,19 +348,19 @@ namespace OpenHome.Av
             }
         }
 
-        public void CollectionOpen()
+        public void UnorderedOpen()
         {
         }
 
-        public void CollectionClose()
+        public void UnorderedClose()
         {
         }
 
-        public void CollectionInitialised()
+        public void UnorderedInitialised()
         {
         }
 
-        public void CollectionAdd(Product aItem, uint aIndex)
+        public void UnorderedAdd(Product aItem)
         {
 
             Topology2Group group = new Topology2Group(iThread, aItem.Id, aItem);
@@ -370,12 +370,7 @@ namespace OpenHome.Av
             iGroups.Add(group);
         }
 
-        public void CollectionMove(Product aItem, uint aFrom, uint aTo)
-        {
-            throw new NotSupportedException();
-        }
-
-        public void CollectionRemove(Product aItem, uint aIndex)
+        public void UnorderedRemove(Product aItem)
         {
             Topology2Group group;
             if (iGroupLookup.TryGetValue(aItem, out group))

@@ -197,15 +197,8 @@ namespace TestTopology2
             private Dictionary<string, string> iStringLookup;
         }
 
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
-            InitParams initParams = new InitParams();
-            Library library = Library.Create(initParams);
-
-            SubnetList subnets = new SubnetList();
-            library.StartCp(subnets.SubnetAt(0).Subnet());
-            subnets.Dispose();
-
             ExceptionReporter reporter = new ExceptionReporter();
             WatchableThread thread = new WatchableThread(reporter);
 
@@ -235,7 +228,7 @@ namespace TestTopology2
 
             thread.Dispose();
 
-            library.Dispose();
+            return 0;
         }
     }
 }
