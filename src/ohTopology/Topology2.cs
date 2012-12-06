@@ -260,26 +260,24 @@ namespace OpenHome.Av
         private List<Watchable<ITopology2Source>> iSources;
     }
 
-    public class WatchableTopology2GroupCollection : WatchableCollection<ITopology2Group>
+    public class WatchableTopology2Unordered : WatchableUnordered<ITopology2Group>
     {
-        public WatchableTopology2GroupCollection(IWatchableThread aThread)
+        public WatchableTopology2Unordered(IWatchableThread aThread)
             : base(aThread)
         {
             iList = new List<ITopology2Group>();
         }
 
-        public void Add(ITopology2Group aValue)
+        public new void Add(ITopology2Group aValue)
         {
-            uint index = (uint)iList.Count;
-            CollectionAdd(aValue, index);
-            iList.Add(aValue);
+            iList.Add(aValue); 
+            base.Add(aValue);
         }
 
-        public void Remove(ITopology2Group aValue)
+        public new void Remove(ITopology2Group aValue)
         {
-            uint index = (uint)iList.IndexOf(aValue);
-            CollectionRemove(aValue, index);
             iList.Remove(aValue);
+            base.Remove(aValue);
         }
 
         private List<ITopology2Group> iList;
@@ -287,7 +285,7 @@ namespace OpenHome.Av
 
     public interface ITopology2
     {
-        IWatchableCollection<ITopology2Group> Groups { get; }
+        IWatchableUnordered<ITopology2Group> Groups { get; }
     }
 
     public class Topology2 : IUnorderedWatcher<Product>, IDisposable
@@ -300,7 +298,7 @@ namespace OpenHome.Av
             iThread = aThread;
             iTopology1 = aTopology1;
 
-            iGroups = new WatchableTopology2GroupCollection(iThread);
+            iGroups = new WatchableTopology2Unordered(aThread);
 
             iGroupLookup = new Dictionary<Product, Topology2Group>();
 
@@ -332,19 +330,11 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchableCollection<ITopology2Group> Groups
+        public IWatchableUnordered<ITopology2Group> Groups
         {
             get
             {
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("Topology2.Groups");
-                    }
-
-                    return iGroups;
-                }
+                return iGroups;
             }
         }
 
@@ -389,6 +379,6 @@ namespace OpenHome.Av
         private IWatchableThread iThread;
         private ITopology1 iTopology1;
         private Dictionary<Product, Topology2Group> iGroupLookup;
-        private WatchableTopology2GroupCollection iGroups;
+        private WatchableTopology2Unordered iGroups;
     }
 }

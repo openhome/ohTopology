@@ -150,12 +150,12 @@ namespace OpenHome.Av
 
         public void Execute(IEnumerable<string> aValue)
         {
-            string command = aValue.First();
+            string command = aValue.First().ToLowerInvariant();
             if (command == "add")
             {
                 IEnumerable<string> value = aValue.Skip(1);
                 string type = value.First();
-                if (type == "ds")
+                if (type == "ds" || type == "dsm")
                 {
                     value = value.Skip(1);
                     string udn = value.First();
@@ -168,7 +168,14 @@ namespace OpenHome.Av
                         return;
                     }
 
-                    AddDevice(new MockWatchableDs(iThread, udn));
+                    if (type == "ds")
+                    {
+                        AddDevice(new MockWatchableDs(iThread, udn));
+                    }
+                    else
+                    {
+                        AddDevice(new MockWatchableDsm(iThread, udn));
+                    }
                 }
             }
             else if (command == "remove")

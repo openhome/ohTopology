@@ -73,9 +73,9 @@ namespace TestTopology
             MockableScriptRunner runner = new MockableScriptRunner();
 
             ProductWatcher watcher = new ProductWatcher(runner);
-
             topology.Products.AddWatcher(watcher);
 
+            thread.WaitComplete();
             thread.WaitComplete();
 
             try

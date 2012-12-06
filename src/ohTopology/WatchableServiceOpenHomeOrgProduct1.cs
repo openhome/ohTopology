@@ -751,16 +751,16 @@ namespace OpenHome.Av
 
         public void Execute(IEnumerable<string> aValue)
         {
-            string command = aValue.First();
+            string command = aValue.First().ToLowerInvariant();
             if (command == "room")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-                iRoom.Update(value.First());
+                iRoom.Update(string.Join(" ", value));
             }
             else if (command == "name")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-                iName.Update(value.First());
+                iName.Update(string.Join(" ", value));
             }
             else if (command == "sourceindex")
             {
@@ -786,7 +786,7 @@ namespace OpenHome.Av
 
                 if (property == "name")
                 {
-                    iSourceXmlFactory.UpdateName(index, value.First());
+                    iSourceXmlFactory.UpdateName(index, string.Join(" ", value));
                     iSourceXml.Update(iSourceXmlFactory.ToString());
                 }
                 else if (property == "visible")
@@ -896,7 +896,7 @@ namespace OpenHome.Av
 
         public void Execute(IEnumerable<string> aValue)
         {
-            string command = aValue.First();
+            string command = aValue.First().ToLowerInvariant();
             if (command == "room" || command == "name" || command == "sourceindex" || command == "standby" || command == "source")
             {
                 MockServiceOpenHomeOrgProduct1 p = iService as MockServiceOpenHomeOrgProduct1;
@@ -910,22 +910,22 @@ namespace OpenHome.Av
             else if (command == "manufacturerimageuri")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-                iManufacturerImageUri = value.First();
+                iManufacturerImageUri = string.Join(" ", value);
             }
             else if (command == "manufacturerinfo")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-                iManufacturerInfo = value.First();
+                iManufacturerInfo = string.Join(" ", value);
             }
             else if (command == "manufacturername")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-                iManufacturerName = value.First();
+                iManufacturerName = string.Join(" ", value);
             }
             else if (command == "manufacturerurl")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-                iManufacturerUrl = value.First();
+                iManufacturerUrl = string.Join(" ", value);
             }
             else
             {

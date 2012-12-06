@@ -321,7 +321,7 @@ namespace OpenHome.Av
             base.Execute(aValue);
 
             Type key = typeof(Product);
-            string command = aValue.First();
+            string command = aValue.First().ToLowerInvariant();
             if (command == "product")
             {
                 foreach (KeyValuePair<Type, IWatchableService> s in iServices)
@@ -396,7 +396,7 @@ namespace OpenHome.Av
             base.Execute(aValue);
 
             Type key = typeof(Product);
-            string command = aValue.First();
+            string command = aValue.First().ToLowerInvariant();
             if (command == "product")
             {
                 foreach (KeyValuePair<Type, IWatchableService> s in iServices)

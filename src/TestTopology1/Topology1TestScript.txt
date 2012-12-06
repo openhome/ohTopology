@@ -1,4 +1,5 @@
-﻿expect Product Added
+﻿// test network is populated with 4 devices
+expect Product Added
 expect     udn = 4c494e4e-0026-0f99-1111-ef000004013f
 expect Product Added
 expect     udn = 4c494e4e-0026-0f99-1112-ef000004013f
@@ -7,16 +8,21 @@ expect     udn = 4c494e4e-0026-0f99-1113-ef000004013f
 expect Product Added
 expect     udn = 4c494e4e-0026-0f99-1114-ef000004013f
 expect empty
+
+// test product is added when ds appears on network
 mock network add ds 67
 wait
 wait
 expect Product Added
 expect     udn = 67
 expect empty
+
+// test product is removed when ds disappears from network
 mock network remove ds 67
 wait
 wait
 expect Product Removed
 expect     udn = 67
 expect empty
+
 exit

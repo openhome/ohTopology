@@ -51,16 +51,17 @@ namespace OpenHome.Av
             while (true)
             {
                 string line = iTextReader.ReadLine();
-                IEnumerable<string> command = line.Trim().ToLowerInvariant().Split(' ');
+                IEnumerable<string> commandLine = line.Trim().Split(' ');
 
-                if (command.First() == "exit")
+                string command = commandLine.First().ToLowerInvariant();
+                if (command == "exit")
                 {
                     break;
                 }
 
-                if (command.First() != string.Empty)
+                if (commandLine.First() != string.Empty)
                 {
-                    iMockable.Execute(command);
+                    iMockable.Execute(commandLine);
                 }
             }
         }
@@ -93,19 +94,20 @@ namespace OpenHome.Av
                     break;
                 }
 
-                if (!string.IsNullOrEmpty(line))
+                if (!string.IsNullOrEmpty(line) && !line.StartsWith("//"))
                 {
-                    IEnumerable<string> command = line.Trim().ToLowerInvariant().Split(' ');
+                    IEnumerable<string> commandLine = line.Trim().Split(' ');
 
-                    if (command.First() == "mock")
+                    string command = commandLine.First().ToLowerInvariant();
+                    if (command == "mock")
                     {
-                        IEnumerable<string> value = command.Skip(1);
+                        IEnumerable<string> value = commandLine.Skip(1);
                         
                         aMockable.Execute(value);
 
                         wait = true;
                     }
-                    else if (command.First() == "expect")
+                    else if (command == "expect")
                     {
                         if (wait)
                         {
@@ -123,10 +125,10 @@ namespace OpenHome.Av
                         {
                             string result = iResultQueue.Dequeue();
 
-                            Assert(result == expected);
+                            Assert(result, expected);
                         }
                     }
-                    else if(command.First() == "wait")
+                    else if(command == "wait")
                     {
                         aThread.WaitComplete();
                     }
@@ -143,15 +145,24 @@ namespace OpenHome.Av
             iResultQueue.Enqueue(aValue);
         }
 
+        private void Assert(string aActual, string aExpected)
+        {
+            if (aActual != aExpected)
+            {
+                Console.WriteLine(string.Format("Failed\nExpected: {0}\nReceived: {1}", aExpected, aActual));
+                throw new AssertError();
+            }
+            else
+            {
+                Console.Write('.');
+            }
+        }
+
         private void Assert(bool aExpression)
         {
             if (!aExpression)
             {
-                StackTrace st = new StackTrace(true);
-                StackFrame sf = st.GetFrame(1);
-
-                Console.WriteLine(sf.GetFileName(), sf.GetFileLineNumber());
-
+                Console.WriteLine("Failed");
                 throw new AssertError();
             }
             else

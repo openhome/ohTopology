@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 
 using OpenHome.Os.App;
@@ -20,8 +21,9 @@ namespace TestTopology2
 
         class SourceWatcher : IWatcher<ITopology2Source>, IDisposable
         {
-            public SourceWatcher()
+            public SourceWatcher(MockableScriptRunner aRunner)
             {
+                iRunner = aRunner;
             }
 
             public void Dispose()
@@ -30,7 +32,7 @@ namespace TestTopology2
 
             public void ItemOpen(string aId, ITopology2Source aValue)
             {
-                Console.WriteLine(string.Format("{0}. {1} {2} {3}", aId, aValue.Name, aValue.Type, aValue.Visible));
+                iRunner.Result(string.Format("{0}. {1} {2} {3}", aId, aValue.Name, aValue.Type, aValue.Visible));
             }
 
             public void ItemClose(string aId, ITopology2Source aValue)
@@ -39,19 +41,19 @@ namespace TestTopology2
 
             public void ItemUpdate(string aId, ITopology2Source aValue, ITopology2Source aPrevious)
             {
-                Console.WriteLine(string.Format("{0}. {1} {2} {3} -> {4} {5} {6}", aId, aPrevious.Name, aPrevious.Type, aPrevious.Visible, aValue.Name, aValue.Type, aValue.Visible));
-                Console.WriteLine("");
+                iRunner.Result(string.Format("{0}. {1} {2} {3} -> {4} {5} {6}", aId, aPrevious.Name, aPrevious.Type, aPrevious.Visible, aValue.Name, aValue.Type, aValue.Visible));
             }
+
+            private MockableScriptRunner iRunner;
         }
 
-        class GroupWatcher : ICollectionWatcher<ITopology2Group>, IWatcher<string>, IWatcher<uint>, IWatcher<bool>, IDisposable
+        class GroupWatcher : IUnorderedWatcher<ITopology2Group>, IWatcher<string>, IWatcher<uint>, IWatcher<bool>, IDisposable
         {
-            public GroupWatcher()
+            public GroupWatcher(MockableScriptRunner aRunner)
             {
-                iLock = new object();
-                iDisposed = false;
+                iRunner = aRunner;
 
-                iWatcher = new SourceWatcher();
+                iWatcher = new SourceWatcher(aRunner);
 
                 iStringLookup = new Dictionary<string, string>();
                 iList = new List<ITopology2Group>();
@@ -59,91 +61,64 @@ namespace TestTopology2
 
             public void Dispose()
             {
-                lock (iLock)
-                {   
-                    foreach (ITopology2Group g in iList)
-                    {
-                        foreach (IWatchable<ITopology2Source> s in g.Sources)
-                        {
-                            s.RemoveWatcher(iWatcher);
-                        }
-
-                        g.Room.RemoveWatcher(this);
-                        g.Name.RemoveWatcher(this);
-                    }
-                    iList = null;
-
-                    iStringLookup = null;
-
-                    iDisposed = true;
-                }
-            }
-
-            public void CollectionOpen()
-            {
-            }
-
-            public void CollectionClose()
-            {
-            }
-
-            public void CollectionInitialised()
-            {
-            }
-
-            public void CollectionAdd(ITopology2Group aItem, uint aIndex)
-            {
-                lock (iLock)
+                foreach (ITopology2Group g in iList)
                 {
-                    if (iDisposed)
+                    foreach (IWatchable<ITopology2Source> s in g.Sources)
                     {
-                        return;
+                        s.RemoveWatcher(iWatcher);
                     }
 
-                    aItem.Room.AddWatcher(this);
-                    aItem.Name.AddWatcher(this);
-                    aItem.SourceIndex.AddWatcher(this);
-                    aItem.Standby.AddWatcher(this);
-                    iList.Add(aItem);
-
-                    Console.WriteLine(string.Format("Group Added\t\t{0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
-                    Console.WriteLine("===============================================");
-
-                    foreach (IWatchable<ITopology2Source> s in aItem.Sources)
-                    {
-                        s.AddWatcher(iWatcher);
-                    }
-
-                    Console.WriteLine("===============================================");
-                    Console.WriteLine("");
-                    Console.WriteLine("");
+                    g.Room.RemoveWatcher(this);
+                    g.Name.RemoveWatcher(this);
                 }
+                iList = null;
+
+                iStringLookup = null;
             }
 
-            public void CollectionMove(ITopology2Group aItem, uint aFrom, uint aTo)
+            public void UnorderedOpen()
             {
-                throw new NotImplementedException();
             }
 
-            public void CollectionRemove(ITopology2Group aItem, uint aIndex)
+            public void UnorderedClose()
             {
-                lock (iLock)
+            }
+
+            public void UnorderedInitialised()
+            {
+            }
+
+            public void UnorderedAdd(ITopology2Group aItem)
+            {
+
+                aItem.Room.AddWatcher(this);
+                aItem.Name.AddWatcher(this);
+                aItem.SourceIndex.AddWatcher(this);
+                aItem.Standby.AddWatcher(this);
+                iList.Add(aItem);
+
+                iRunner.Result(string.Format("Group Added\t\t{0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
+                iRunner.Result("===============================================");
+
+                foreach (IWatchable<ITopology2Source> s in aItem.Sources)
                 {
-                    if (iDisposed)
-                    {
-                        return;
-                    }
-
-                    aItem.Room.RemoveWatcher(this);
-                    aItem.Name.RemoveWatcher(this);
-                    aItem.SourceIndex.RemoveWatcher(this);
-                    aItem.Standby.RemoveWatcher(this);
-                    iList.Remove(aItem);
-
-                    Console.WriteLine(string.Format("Group Removed\t\t{0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
-                    iStringLookup.Remove(string.Format("Room({0})", aItem.Id));
-                    iStringLookup.Remove(string.Format("Name({0})", aItem.Id));
+                    s.AddWatcher(iWatcher);
                 }
+
+                iRunner.Result("===============================================");
+            }
+
+            public void UnorderedRemove(ITopology2Group aItem)
+            {
+                aItem.Room.RemoveWatcher(this);
+                aItem.Name.RemoveWatcher(this);
+                aItem.SourceIndex.RemoveWatcher(this);
+                aItem.Standby.RemoveWatcher(this);
+                iList.Remove(aItem);
+
+                iRunner.Result(string.Format("Group Removed\t\t{0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
+                iStringLookup.Remove(string.Format("Room({0})", aItem.Id));
+                iStringLookup.Remove(string.Format("Name({0})", aItem.Id));
             }
 
             public void ItemOpen(string aId, string aValue)
@@ -160,7 +135,7 @@ namespace TestTopology2
             {
                 iStringLookup[aId] = aValue;
 
-                Console.WriteLine(string.Format("{0} changed from {1} to {2}", aId, aPrevious, aValue));
+                iRunner.Result(string.Format("{0} changed from {1} to {2}", aId, aPrevious, aValue));
             }
 
             public void ItemOpen(string aId, uint aValue)
@@ -173,7 +148,7 @@ namespace TestTopology2
 
             public void ItemUpdate(string aId, uint aValue, uint aPrevious)
             {
-                Console.WriteLine(string.Format("{0} changed from {1} to {2}", aId, aPrevious, aValue));
+                iRunner.Result(string.Format("{0} changed from {1} to {2}", aId, aPrevious, aValue));
             }
 
             public void ItemOpen(string aId, bool aValue)
@@ -186,11 +161,10 @@ namespace TestTopology2
 
             public void ItemUpdate(string aId, bool aValue, bool aPrevious)
             {
-                Console.WriteLine(string.Format("{0} changed from {1} to {2}", aId, aPrevious, aValue));
+                iRunner.Result(string.Format("{0} changed from {1} to {2}", aId, aPrevious, aValue));
             }
 
-            private object iLock;
-            private bool iDisposed;
+            private MockableScriptRunner iRunner;
 
             private SourceWatcher iWatcher;
             private List<ITopology2Group> iList;
@@ -199,6 +173,11 @@ namespace TestTopology2
 
         static int Main(string[] args)
         {
+            if (args.Length != 1)
+            {
+                Console.WriteLine("Usage: TestTopology2.exe <testscript>");
+            }
+
             ExceptionReporter reporter = new ExceptionReporter();
             WatchableThread thread = new WatchableThread(reporter);
 
@@ -207,16 +186,26 @@ namespace TestTopology2
             MockNetwork network = new FourDsMockNetwork(thread, mocker);
             mocker.Add("network", network);
 
-            //Network network = new Network(thread);
-
             Topology1 topology1 = new Topology1(thread, network);
             Topology2 topology2 = new Topology2(thread, topology1);
 
-            GroupWatcher watcher = new GroupWatcher();
+            MockableScriptRunner runner = new MockableScriptRunner();
+
+            GroupWatcher watcher = new GroupWatcher(runner);
             topology2.Groups.AddWatcher(watcher);
 
-            MockableStream stream = new MockableStream(Console.In, mocker);
-            stream.Start();
+            thread.WaitComplete();
+            thread.WaitComplete();
+            thread.WaitComplete();
+
+            try
+            {
+                runner.Run(thread, new StringReader(File.ReadAllText(args[0])), mocker);
+            }
+            catch (MockableScriptRunner.AssertError)
+            {
+                return 1;
+            }
 
             topology2.Groups.RemoveWatcher(watcher);
 
