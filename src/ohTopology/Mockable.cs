@@ -91,6 +91,7 @@ namespace OpenHome.Av
                 
                 if (line == "exit")
                 {
+                    Console.WriteLine("");
                     break;
                 }
 
