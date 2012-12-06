@@ -28,7 +28,6 @@
         "platform-specific": false,
         "version": "0.0.95",
         "archive-suffix": "-Release",
-        "archive-path": "../ohOs2/build/packages/ohOs.App.V1-AnyPlatform-Debug.tar.gz",
         "dest": "dependencies/AnyPlatform/ohOs.App.V1",
         "strip-archive-dirs":1
     },
