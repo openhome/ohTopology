@@ -118,25 +118,22 @@ namespace OpenHome.Av
 
                         string expected = line.Substring("expect".Length + 1);
 
-                        if (expected == "empty")
+                        try
                         {
-                            Assert(iResultQueue.Count == 0);
-                        }
-                        else
-                        {
-                            try
-                            {
-                                string result = iResultQueue.Dequeue();
+                            string result = iResultQueue.Dequeue();
 
-                                Assert(result, expected);
-                            }
-                            catch (InvalidOperationException)
-                            {
-                                Console.WriteLine(string.Format("Failed\nExpected: {0} but queue was empty", expected));
-                                throw;
-                            }
+                            Assert(result, expected);
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            Console.WriteLine(string.Format("Failed\nExpected: {0} but queue was empty", expected));
+                            throw;
                         }
                     }
+					else if (command == "empty")
+					{
+						Assert(iResultQueue.Count == 0);
+					}
                     else
                     {
                         throw new NotSupportedException();

@@ -45,7 +45,7 @@ expect 2. UPnP AV UpnpAv False
 expect 3. Songcast Receiver True
 expect 4. Net Aux NetAux False
 expect ===============================================
-expect empty
+empty
 
 // test group is added when ds appears on network
 mock network add ds 67
@@ -57,27 +57,27 @@ expect 2. UPnP AV UpnpAv False
 expect 3. Songcast Receiver True
 expect 4. Net Aux NetAux False
 expect ===============================================
-expect empty
+empty
 
 // test group room name changes
 mock network update ds 67 product room Bathroom
 expect Room(67) changed from Main Room to Bathroom
-expect empty
+empty
 
 // test group name changes
 mock network update ds 67 product name Majik DS
 expect Name(67) changed from Mock DS to Majik DS
-expect empty
+empty
 
 // test group standby changes
 mock network update ds 67 product standby false
 expect Standby(67) changed from True to False
-expect empty
+empty
 
 // test group source index changes
 mock network update ds 67 product sourceindex 2
 expect SourceIndex(67) changed from 0 to 2
-expect empty
+empty
 
 // test group source name changes
 mock network update ds 67 product source 0 name My Playlist
@@ -86,7 +86,7 @@ expect 1. Radio Radio True -> Radio Radio True
 expect 2. UPnP AV UpnpAv False -> UPnP AV UpnpAv False
 expect 3. Songcast Receiver True -> Songcast Receiver True
 expect 4. Net Aux NetAux False -> Net Aux NetAux False
-expect empty
+empty
 
 // test group source visible changes
 mock network update ds 67 product source 4 visible true
@@ -95,11 +95,11 @@ expect 1. Radio Radio True -> Radio Radio True
 expect 2. UPnP AV UpnpAv False -> UPnP AV UpnpAv False
 expect 3. Songcast Receiver True -> Songcast Receiver True
 expect 4. Net Aux NetAux False -> Net Aux NetAux True
-expect empty
+empty
 
 // test group is removed when ds disappears from network
 mock network remove ds 67
 expect Group Removed		Bathroom:Majik DS
-expect empty
+empty
 
 exit

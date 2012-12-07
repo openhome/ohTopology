@@ -10,14 +10,13 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>OpenHome.Av</RootNamespace>
     <AssemblyName>ohTopology.net</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
+    <DebugSymbols>True</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(MSBuildProjectDirectory)\..\..\build\ohTopology\AnyPlatform\Debug\bin\</OutputPath>
+    <Optimize>False</Optimize>
+    <OutputPath>..\build\ohTopology\AnyPlatform\Debug\bin\</OutputPath>
     <IntermediateOutputPath>$(MSBuildProjectDirectory)\..\..\build\ohTopology\AnyPlatform\Debug\obj\</IntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -25,8 +24,8 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>$(MSBuildProjectDirectory)\..\..\build\ohTopology\AnyPlatform\Release\bin\</OutputPath>
+    <Optimize>True</Optimize>
+    <OutputPath>..\build\ohTopology\AnyPlatform\Release\bin\</OutputPath>
     <IntermediateOutputPath>$(MSBuildProjectDirectory)\..\..\build\ohTopology\AnyPlatform\Release\obj\</IntermediateOutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -43,7 +42,7 @@
       <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.XML" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Mockable.cs" />
