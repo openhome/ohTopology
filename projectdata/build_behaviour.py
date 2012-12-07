@@ -97,8 +97,8 @@ def choose_platform(context):
                 "Linux-x86" : "Linux-x86",
                 "Linux-x64" : "Linux-x64",
                 "Linux-ARM" : "Linux-ARM",
-                "Macos-x86" : "Mac-x86",
-                "Macos-x64" : "Mac-x64",
+                "Mac-x86" : "Mac-x86",
+                "Mac-x64" : "Mac-x64",
             }[context.env["PLATFORM"]]
     else:
         context.env["OH_PLATFORM"] = default_platform()
