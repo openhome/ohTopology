@@ -57,6 +57,7 @@ namespace TestTopology
             if (args.Length != 1)
             {
                 Console.WriteLine("Usage: TestTopology1.exe <testscript>");
+                return 1;
             }
 
             ExceptionReporter reporter = new ExceptionReporter();
@@ -69,17 +70,16 @@ namespace TestTopology
 
             Topology1 topology = new Topology1(thread, network);
 
+            thread.WaitComplete();
+
             MockableScriptRunner runner = new MockableScriptRunner();
 
             ProductWatcher watcher = new ProductWatcher(runner);
             topology.Products.AddWatcher(watcher);
 
-            thread.WaitComplete();
-            thread.WaitComplete();
-
             try
             {
-                runner.Run(thread, new StringReader(File.ReadAllText(args[0])), mocker);
+                runner.Run(thread, new StreamReader(args[0]), mocker);
             }
             catch (MockableScriptRunner.AssertError)
             {

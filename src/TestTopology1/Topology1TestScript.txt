@@ -11,16 +11,12 @@ expect empty
 
 // test product is added when ds appears on network
 mock network add ds 67
-wait
-wait
 expect Product Added
 expect     udn = 67
 expect empty
 
 // test product is removed when ds disappears from network
 mock network remove ds 67
-wait
-wait
 expect Product Removed
 expect     udn = 67
 expect empty

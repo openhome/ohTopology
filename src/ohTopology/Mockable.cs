@@ -82,12 +82,12 @@ namespace OpenHome.Av
             iResultQueue = new Queue<string>();
         }
 
-        public void Run(IWatchableThread aThread, TextReader aTextReader, IMockable aMockable)
+        public void Run(IWatchableThread aThread, TextReader aStream, IMockable aMockable)
         {
             bool wait = false;
             while (true)
             {
-                string line = aTextReader.ReadLine();
+                string line = aStream.ReadLine();
                 
                 if (line == "exit")
                 {
@@ -128,10 +128,6 @@ namespace OpenHome.Av
 
                             Assert(result, expected);
                         }
-                    }
-                    else if(command == "wait")
-                    {
-                        aThread.WaitComplete();
                     }
                     else
                     {

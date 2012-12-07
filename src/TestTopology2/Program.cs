@@ -175,6 +175,7 @@ namespace TestTopology2
             if (args.Length != 1)
             {
                 Console.WriteLine("Usage: TestTopology2.exe <testscript>");
+                return 1;
             }
 
             ExceptionReporter reporter = new ExceptionReporter();
@@ -188,18 +189,16 @@ namespace TestTopology2
             Topology1 topology1 = new Topology1(thread, network);
             Topology2 topology2 = new Topology2(thread, topology1);
 
+            thread.WaitComplete();
+
             MockableScriptRunner runner = new MockableScriptRunner();
 
             GroupWatcher watcher = new GroupWatcher(runner);
             topology2.Groups.AddWatcher(watcher);
 
-            thread.WaitComplete();
-            thread.WaitComplete();
-            thread.WaitComplete();
-
             try
             {
-                runner.Run(thread, new StringReader(File.ReadAllText(args[0])), mocker);
+                runner.Run(thread, new StreamReader(args[0]), mocker);
             }
             catch (MockableScriptRunner.AssertError)
             {

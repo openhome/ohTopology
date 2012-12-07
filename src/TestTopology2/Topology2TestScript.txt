@@ -49,9 +49,6 @@ expect empty
 
 // test group is added when ds appears on network
 mock network add ds 67
-wait
-wait
-wait
 expect Group Added		Main Room:Mock DS
 expect ===============================================
 expect 0. Playlist Playlist True
@@ -84,8 +81,6 @@ expect empty
 
 // test group source name changes
 mock network update ds 67 product source 0 name My Playlist
-wait
-wait
 expect 0. Playlist Playlist True -> My Playlist Playlist True
 expect 1. Radio Radio True -> Radio Radio True
 expect 2. UPnP AV UpnpAv False -> UPnP AV UpnpAv False
@@ -95,8 +90,6 @@ expect empty
 
 // test group source visible changes
 mock network update ds 67 product source 4 visible true
-wait
-wait
 expect 0. My Playlist Playlist True -> My Playlist Playlist True
 expect 1. Radio Radio True -> Radio Radio True
 expect 2. UPnP AV UpnpAv False -> UPnP AV UpnpAv False
@@ -106,9 +99,6 @@ expect empty
 
 // test group is removed when ds disappears from network
 mock network remove ds 67
-wait
-wait
-wait
 expect Group Removed		Bathroom:Majik DS
 expect empty
 
