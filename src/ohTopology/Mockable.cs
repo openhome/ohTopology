@@ -124,9 +124,17 @@ namespace OpenHome.Av
                         }
                         else
                         {
-                            string result = iResultQueue.Dequeue();
+                            try
+                            {
+                                string result = iResultQueue.Dequeue();
 
-                            Assert(result, expected);
+                                Assert(result, expected);
+                            }
+                            catch (InvalidOperationException)
+                            {
+                                Console.WriteLine(string.Format("Failed\nExpected: {0} but queue was empty", expected));
+                                throw;
+                            }
                         }
                     }
                     else
