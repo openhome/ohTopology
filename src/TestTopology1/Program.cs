@@ -4,7 +4,6 @@ using System.Collections.Generic;
 
 using OpenHome.Os.App;
 using OpenHome.Av;
-using OpenHome.Net.Core;
 
 namespace TestTopology
 {

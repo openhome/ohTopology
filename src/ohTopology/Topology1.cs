@@ -55,19 +55,23 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            iDevices.RemoveWatcher(this);
-
             if (iDisposed)
             {
                 throw new ObjectDisposedException("Topology1.Dispose");
             }
 
+            iDevices.RemoveWatcher(this);
+            iDevices.Dispose();
+            iDevices = null;
+
+            // stop subscriptions for all products that are outstanding
             foreach (IWatchableDevice d in iPendingSubscriptions)
             {
                 d.Unsubscribe<Product>();
             }
             iPendingSubscriptions = null;
 
+            // dispose of all products, which will in turn unsubscribe
             foreach (Product p in iProductLookup.Values)
             {
                 p.Dispose();

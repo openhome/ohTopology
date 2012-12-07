@@ -74,14 +74,14 @@ namespace OpenHome.Av
         void SetSourceIndex(uint aValue);
     }
 
-    public class Topology2Group : ITopology2Group, IWatcher<string>
+    public class Topology2Group : ITopology2Group, IWatcher<string>, IDisposable
     {
         public Topology2Group(IWatchableThread aThread, string aId, Product aProduct)
         {
             iThread = aThread;
             iId = aId;
 
-            iLock = new object();
+            iDisposed = false;
             iSources = new List<Watchable<ITopology2Source>>();
 
             iProduct = aProduct;
@@ -93,17 +93,18 @@ namespace OpenHome.Av
             iProduct.SourceXml.AddWatcher(this);
         }
 
-        public void RemoveProduct()
+        public void Dispose()
         {
-            lock (iLock)
+            if (iDisposed)
             {
-                if (iProduct != null)
-                {
-                    iProduct.SourceXml.RemoveWatcher(this);
-                    iProduct.Dispose();
-                    iProduct = null;
-                }
+                throw new ObjectDisposedException("Topology2Group.Dispose");
             }
+
+            iProduct.SourceXml.RemoveWatcher(this);
+            iProduct.Dispose();
+            iProduct = null;
+
+            iDisposed = true;
         }
 
         public string Id
@@ -170,23 +171,17 @@ namespace OpenHome.Av
 
         public void SetStandby(bool aValue)
         {
-            lock (iLock)
+            if (iProduct != null)
             {
-                if (iProduct != null)
-                {
-                    iProduct.SetStandby(aValue);
-                }
+                iProduct.SetStandby(aValue);
             }
         }
 
         public void SetSourceIndex(uint aValue)
         {
-            lock (iLock)
+            if (iProduct != null)
             {
-                if (iProduct != null)
-                {
-                    iProduct.SetSourceIndex(aValue);
-                }
+                iProduct.SetSourceIndex(aValue);
             }
         }
 
@@ -248,7 +243,7 @@ namespace OpenHome.Av
             }
         }
 
-        private object iLock;
+        private bool iDisposed;
 
         private string iId;
         private Product iProduct;
@@ -288,12 +283,11 @@ namespace OpenHome.Av
         IWatchableUnordered<ITopology2Group> Groups { get; }
     }
 
-    public class Topology2 : IUnorderedWatcher<Product>, IDisposable
+    public class Topology2 : ITopology2, IUnorderedWatcher<Product>, IDisposable
     {
         public Topology2(IWatchableThread aThread, ITopology1 aTopology1)
         {
             iDisposed = false;
-            iLock = new object();
 
             iThread = aThread;
             iTopology1 = aTopology1;
@@ -307,27 +301,24 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            lock (iLock)
+            if (iDisposed)
             {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("Topology2.Dispose");
-                }
-
-                iGroups.Dispose();
-                iGroups = null;
-
-                foreach (Topology2Group g in iGroupLookup.Values)
-                {
-                    g.RemoveProduct();
-                }
-                iGroupLookup = null;
-
-                iTopology1.Products.RemoveWatcher(this);
-                iTopology1 = null;
-
-                iDisposed = true;
+                throw new ObjectDisposedException("Topology2.Dispose");
             }
+
+            iGroups.Dispose();
+            iGroups = null;
+
+            foreach (Topology2Group g in iGroupLookup.Values)
+            {
+                g.Dispose();
+            }
+            iGroupLookup = null;
+
+            iTopology1.Products.RemoveWatcher(this);
+            iTopology1 = null;
+
+            iDisposed = true;
         }
 
         public IWatchableUnordered<ITopology2Group> Groups
@@ -369,11 +360,14 @@ namespace OpenHome.Av
 
                 iGroupLookup.Remove(aItem);
 
-                group.RemoveProduct();
+                // schedule the disposale for the group for after all watchers of the group collection have been notified
+                iThread.Schedule(() =>
+                {
+                    group.Dispose();
+                });
             }
         }
 
-        private object iLock;
         private bool iDisposed;
 
         private IWatchableThread iThread;
