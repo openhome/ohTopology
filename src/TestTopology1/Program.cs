@@ -54,46 +54,47 @@ namespace TestTopology
 
         static int Main (string[] args)
 		{
-			for (uint i = 0; i < 2000; ++i)
+			if (args.Length != 1)
 			{
-				if (args.Length != 1) {
-					Console.WriteLine ("Usage: TestTopology1.exe <testscript>");
-					return 1;
-				}
-
-				ExceptionReporter reporter = new ExceptionReporter ();
-				WatchableThread thread = new WatchableThread (reporter);
-
-				Mockable mocker = new Mockable ();
-
-				MockNetwork network = new FourDsMockNetwork (thread, mocker);
-				mocker.Add ("network", network);
-
-				Topology1 topology = new Topology1 (thread, network);
-
-				thread.WaitComplete ();
-
-				MockableScriptRunner runner = new MockableScriptRunner ();
-
-				ProductWatcher watcher = new ProductWatcher (runner);
-				topology.Products.AddWatcher (watcher);
-
-				try {
-					runner.Run (thread, new StreamReader (args [0]), mocker);
-				} catch (MockableScriptRunner.AssertError) {
-					return 1;
-				}
-
-				topology.Products.RemoveWatcher (watcher);
-
-				topology.Dispose ();
-
-				network.Dispose ();
-
-				thread.Dispose ();
+				Console.WriteLine("Usage: TestTopology1.exe <testscript>");
+				return 1;
 			}
 
-            return 0;
-        }
+			ExceptionReporter reporter = new ExceptionReporter();
+			WatchableThread thread = new WatchableThread(reporter);
+
+			Mockable mocker = new Mockable ();
+
+			MockNetwork network = new FourDsMockNetwork(thread, mocker);
+			mocker.Add("network", network);
+
+			Topology1 topology = new Topology1(thread, network);
+
+			thread.WaitComplete();
+
+			MockableScriptRunner runner = new MockableScriptRunner();
+
+			ProductWatcher watcher = new ProductWatcher(runner);
+			topology.Products.AddWatcher(watcher);
+
+			try
+			{
+				runner.Run(thread, new StreamReader(args [0]), mocker);
+			}
+			catch(MockableScriptRunner.AssertError)
+			{
+				return 1;
+			}
+
+			topology.Products.RemoveWatcher(watcher);
+
+			topology.Dispose();
+
+			network.Dispose();
+
+			thread.Dispose();
+
+        	return 0;
+		}
     }
 }
