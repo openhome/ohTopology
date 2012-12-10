@@ -16,8 +16,8 @@
     <DebugSymbols>True</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
-    <OutputPath>..\build\ohTopology\AnyPlatform\Debug\bin\</OutputPath>
-    <IntermediateOutputPath>$(MSBuildProjectDirectory)\..\..\build\ohTopology\AnyPlatform\Debug\obj\</IntermediateOutputPath>
+    <OutputPath>..\..\build\ohTopology\AnyPlatform\Debug\bin\</OutputPath>
+    <IntermediateOutputPath>..\..\build\ohTopology\AnyPlatform\Debug\obj\</IntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -25,8 +25,8 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>True</Optimize>
-    <OutputPath>..\build\ohTopology\AnyPlatform\Release\bin\</OutputPath>
-    <IntermediateOutputPath>$(MSBuildProjectDirectory)\..\..\build\ohTopology\AnyPlatform\Release\obj\</IntermediateOutputPath>
+    <OutputPath>..\..\build\ohTopology\AnyPlatform\Release\bin\</OutputPath>
+    <IntermediateOutputPath>..\..\build\ohTopology\AnyPlatform\Release\obj\</IntermediateOutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>

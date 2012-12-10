@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{C01F51D1-9DBB-4A46-852A-A64CC3921329}</ProjectGuid>
@@ -12,23 +12,22 @@
     <AssemblyName>TestTopology1</AssemblyName>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
-    <OutputPath>..\build\ohTopology\AnyPlatform\Debug\bin\</OutputPath>
-    <IntermediateOutputPath>$(MSBuildProjectDirectory)\..\..\build\ohTopology\AnyPlatform\Debug\obj\</IntermediateOutputPath>
+    <OutputPath>..\..\build\ohTopology\AnyPlatform\Debug\bin\</OutputPath>
+    <IntermediateOutputPath>..\..\build\ohTopology\AnyPlatform\Debug\obj\</IntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Commandlineparameters>Topology1TestScript.txt</Commandlineparameters>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>True</Optimize>
-    <OutputPath>..\build\ohTopology\AnyPlatform\Release\bin\</OutputPath>
-    <IntermediateOutputPath>$(MSBuildProjectDirectory)\..\..\build\ohTopology\AnyPlatform\Release\obj\</IntermediateOutputPath>
+    <OutputPath>..\..\build\ohTopology\AnyPlatform\Release\bin\</OutputPath>
+    <IntermediateOutputPath>..\..\build\ohTopology\AnyPlatform\Release\obj\</IntermediateOutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>

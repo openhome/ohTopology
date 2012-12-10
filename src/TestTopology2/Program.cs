@@ -198,7 +198,10 @@ namespace TestTopology2
 
             try
             {
-                runner.Run(thread, new StreamReader(args[0]), mocker);
+				for(uint i = 0; i < 2000; ++i)
+				{
+                	runner.Run(thread, new StreamReader(args[0]), mocker);
+				}
             }
             catch (MockableScriptRunner.AssertError)
             {
