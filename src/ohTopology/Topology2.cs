@@ -9,20 +9,28 @@ namespace OpenHome.Av
 {
     public interface ITopology2Source
     {
+        uint Index { get; }
         string Name { get; }
         string Type { get; }
         bool Visible { get; }
-
-        void Update(string aName, string aType, bool aVisible);
     }
 
     public class Topology2Source : ITopology2Source
     {
-        public Topology2Source(string aName, string aType, bool aVisible)
+        public Topology2Source(uint aIndex, string aName, string aType, bool aVisible)
         {
+            iIndex = aIndex;
             iName = aName;
             iType = aType;
             iVisible = aVisible;
+        }
+
+        public uint Index
+        {
+            get
+            {
+                return iIndex;
+            }
         }
 
         public string Name
@@ -49,16 +57,10 @@ namespace OpenHome.Av
             }
         }
 
-        public void Update(string aName, string aType, bool aVisible)
-        {
-            iName = aName;
-            iType = aType;
-            iVisible = aVisible;
-        }
-
         private string iName;
         private string iType;
         private bool iVisible;
+        private uint iIndex;
     }
 
     public interface ITopology2Group
@@ -232,11 +234,11 @@ namespace OpenHome.Av
 
                 if (aInitial)
                 {
-                    iSources.Add(new Watchable<ITopology2Source>(iThread, index.ToString(), new Topology2Source(name, type, visible)));
+                    iSources.Add(new Watchable<ITopology2Source>(iThread, index.ToString(), new Topology2Source(index, name, type, visible)));
                 }
                 else
                 {
-                    iSources[(int)index].Update(new Topology2Source(name, type, visible));
+                    iSources[(int)index].Update(new Topology2Source(index, name, type, visible));
                 }
 
                 ++index;
@@ -255,9 +257,9 @@ namespace OpenHome.Av
         private List<Watchable<ITopology2Source>> iSources;
     }
 
-    public class WatchableTopology2Unordered : WatchableUnordered<ITopology2Group>
+    public class WatchableTopology2GroupUnordered : WatchableUnordered<ITopology2Group>
     {
-        public WatchableTopology2Unordered(IWatchableThread aThread)
+        public WatchableTopology2GroupUnordered(IWatchableThread aThread)
             : base(aThread)
         {
             iList = new List<ITopology2Group>();
@@ -292,7 +294,7 @@ namespace OpenHome.Av
             iThread = aThread;
             iTopology1 = aTopology1;
 
-            iGroups = new WatchableTopology2Unordered(aThread);
+            iGroups = new WatchableTopology2GroupUnordered(aThread);
 
             iGroupLookup = new Dictionary<Product, Topology2Group>();
 
@@ -373,6 +375,6 @@ namespace OpenHome.Av
         private IWatchableThread iThread;
         private ITopology1 iTopology1;
         private Dictionary<Product, Topology2Group> iGroupLookup;
-        private WatchableTopology2Unordered iGroups;
+        private WatchableTopology2GroupUnordered iGroups;
     }
 }

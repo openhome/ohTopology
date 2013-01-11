@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ohTopology", "ohTopology\ohTopology.csproj", "{B6F3BF75-F35B-4A83-A3F9-2812B97ACA28}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestTopology1", "TestTopology1\TestTopology1.csproj", "{C01F51D1-9DBB-4A46-852A-A64CC3921329}"
@@ -9,16 +9,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestTopology2", "TestTopolo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestTopology3", "TestTopology3\TestTopology3.csproj", "{FECD1705-18BE-4F0E-8EFB-BF4FBB8F29F8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestTopology4", "TestTopology4\TestTopology4.csproj", "{568BA31E-AD8F-4E37-9EB2-B1D831D23AE9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{58118A04-DD5A-48A8-B195-F2996AE2CCEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{58118A04-DD5A-48A8-B195-F2996AE2CCEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{58118A04-DD5A-48A8-B195-F2996AE2CCEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{58118A04-DD5A-48A8-B195-F2996AE2CCEB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B6F3BF75-F35B-4A83-A3F9-2812B97ACA28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B6F3BF75-F35B-4A83-A3F9-2812B97ACA28}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B6F3BF75-F35B-4A83-A3F9-2812B97ACA28}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -27,15 +25,23 @@ Global
 		{C01F51D1-9DBB-4A46-852A-A64CC3921329}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C01F51D1-9DBB-4A46-852A-A64CC3921329}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C01F51D1-9DBB-4A46-852A-A64CC3921329}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58118A04-DD5A-48A8-B195-F2996AE2CCEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58118A04-DD5A-48A8-B195-F2996AE2CCEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58118A04-DD5A-48A8-B195-F2996AE2CCEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58118A04-DD5A-48A8-B195-F2996AE2CCEB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FECD1705-18BE-4F0E-8EFB-BF4FBB8F29F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FECD1705-18BE-4F0E-8EFB-BF4FBB8F29F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FECD1705-18BE-4F0E-8EFB-BF4FBB8F29F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FECD1705-18BE-4F0E-8EFB-BF4FBB8F29F8}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = TestTopology1\TestTopology1.csproj
+		{568BA31E-AD8F-4E37-9EB2-B1D831D23AE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{568BA31E-AD8F-4E37-9EB2-B1D831D23AE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{568BA31E-AD8F-4E37-9EB2-B1D831D23AE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{568BA31E-AD8F-4E37-9EB2-B1D831D23AE9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = TestTopology1\TestTopology1.csproj
 	EndGlobalSection
 EndGlobal

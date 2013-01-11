@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using OpenHome.Av;
 using OpenHome.Os.App;
 
-namespace TestTopology3
+namespace TestTopology4
 {
     class Program
     {
@@ -18,77 +18,54 @@ namespace TestTopology3
             }
         }
 
-        class GroupWatcher : IUnorderedWatcher<ITopology2Group>, IWatcher<string>, IDisposable
+        class SourceWatcher : IWatcher<IEnumerable<ITopology4Source>>, IDisposable
         {
-            public GroupWatcher(MockableScriptRunner aRunner)
+            public SourceWatcher(MockableScriptRunner aRunner)
             {
                 iRunner = aRunner;
 
-                iStringLookup = new Dictionary<string, string>();
+                //iStringLookup = new Dictionary<string, string>();
             }
 
             public void Dispose()
             {
-                iStringLookup = null;
+                //iStringLookup = null;
+            }            
+
+            public void ItemOpen(string aId, IEnumerable<ITopology4Source> aValue)
+            {
+                foreach (ITopology4Source s in aValue)
+                {
+                    Console.WriteLine(string.Format("Added: {0}: Name={1}, Type={2}, Visible={3}", s.Index, s.Name, s.Type, s.Visible));
+                }
             }
 
-            public void UnorderedOpen()
+            public void ItemUpdate(string aId, IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
             {
+                foreach (ITopology4Source s in aValue)
+                {
+                    Console.WriteLine(string.Format("Updated: {0}: Name={1}, Type={2}, Visible={3}", s.Index, s.Name, s.Type, s.Visible));
+                }
             }
 
-            public void UnorderedInitialised()
+            public void ItemClose(string aId, IEnumerable<ITopology4Source> aValue)
             {
-            }
-
-            public void UnorderedClose()
-            {
-            }
-
-            public void UnorderedAdd(ITopology2Group aItem)
-            {
-                aItem.Room.AddWatcher(this);
-                aItem.Name.AddWatcher(this);
-
-                Console.WriteLine(string.Format("Group Added {0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
-            }
-
-            public void UnorderedRemove(ITopology2Group aItem)
-            {
-                aItem.Room.RemoveWatcher(this);
-                aItem.Name.RemoveWatcher(this);
-
-                Console.WriteLine(string.Format("Group Removed {0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
-
-                iStringLookup.Remove(string.Format("Room({0})", aItem.Id));
-                iStringLookup.Remove(string.Format("Name({0})", aItem.Id));
-            }
-
-            public void ItemOpen(string aId, string aValue)
-            {
-                iStringLookup.Add(aId, aValue);
-            }
-
-            public void ItemUpdate(string aId, string aValue, string aPrevious)
-            {
-                iStringLookup[aId] = aValue;
-            }
-
-            public void ItemClose(string aId, string aValue)
-            {
-                // key pair removed in UnorderedRemove
+                foreach (ITopology4Source s in aValue)
+                {
+                    Console.WriteLine(string.Format("Removed: {0}: Name={1}, Type={2}, Visible={3}", s.Index, s.Name, s.Type, s.Visible));
+                }
             }
 
             private MockableScriptRunner iRunner;
-            private Dictionary<string, string> iStringLookup;
         }
 
-        class RoomWatcher : IUnorderedWatcher<ITopology3Room>, IDisposable
+        class RoomWatcher : IUnorderedWatcher<ITopology4Room>, IDisposable
         {
             public RoomWatcher(MockableScriptRunner aRunner)
             {
                 iRunner = aRunner;
 
-                iWatcher = new GroupWatcher(aRunner);
+                iWatcher = new SourceWatcher(aRunner);
 
                 iList = new List<ITopology3Room>();
             }
@@ -96,7 +73,7 @@ namespace TestTopology3
             public void Dispose()
             {
                 iWatcher.Dispose();
-            }            
+            }
 
             public void UnorderedOpen()
             {
@@ -110,22 +87,22 @@ namespace TestTopology3
             {
             }
 
-            public void UnorderedAdd(ITopology3Room aItem)
+            public void UnorderedAdd(ITopology4Room aItem)
             {
-                aItem.Groups.AddWatcher(iWatcher);
+                aItem.Sources.AddWatcher(iWatcher);
 
                 Console.WriteLine("Room Added " + aItem.Name);
             }
 
-            public void UnorderedRemove(ITopology3Room aItem)
+            public void UnorderedRemove(ITopology4Room aItem)
             {
-                aItem.Groups.RemoveWatcher(iWatcher);
+                aItem.Sources.RemoveWatcher(iWatcher);
 
                 Console.WriteLine("Room Removed " + aItem.Name);
             }
 
             private MockableScriptRunner iRunner;
-            private GroupWatcher iWatcher;
+            private SourceWatcher iWatcher;
             private List<ITopology3Room> iList;
         }
 
@@ -133,7 +110,7 @@ namespace TestTopology3
         {
             if (args.Length != 1)
             {
-                Console.WriteLine("Usage: TestTopology3.exe <testscript>");
+                Console.WriteLine("Usage: TestTopology4.exe <testscript>");
                 return 1;
             }
 
@@ -148,11 +125,12 @@ namespace TestTopology3
             Topology1 topology1 = new Topology1(thread, network);
             Topology2 topology2 = new Topology2(thread, topology1);
             Topology3 topology3 = new Topology3(thread, topology2);
+            Topology4 topology4 = new Topology4(thread, topology3);
 
             MockableScriptRunner runner = new MockableScriptRunner();
 
             RoomWatcher watcher = new RoomWatcher(runner);
-            topology3.Rooms.AddWatcher(watcher);
+            topology4.Rooms.AddWatcher(watcher);
 
             thread.WaitComplete();
             thread.WaitComplete();
@@ -170,8 +148,10 @@ namespace TestTopology3
                 return 1;
             }
 
-            topology3.Rooms.RemoveWatcher(watcher);
+            topology4.Rooms.RemoveWatcher(watcher);
             watcher.Dispose();
+
+            topology4.Dispose();
 
             topology3.Dispose();
 

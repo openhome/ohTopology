@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -52,6 +53,7 @@
     <Compile Include="Topology1.cs" />
     <Compile Include="Topology2.cs" />
     <Compile Include="Topology3.cs" />
+    <Compile Include="Topology4.cs" />
     <Compile Include="WatchableDevice.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgProduct1.cs" />
   </ItemGroup>

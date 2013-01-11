@@ -74,6 +74,7 @@ namespace OpenHome.Av
         {
             lock (iLock)
             {
+                iOffDevices.Remove(aDevice.Udn);
                 iOnDevices.Add(aDevice.Udn, aDevice);
                 iMocker.Add(aDevice.Udn, aDevice);
 

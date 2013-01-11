@@ -34,13 +34,13 @@ namespace TestTopology2
                 iRunner.Result(string.Format("{0}. {1} {2} {3}", aId, aValue.Name, aValue.Type, aValue.Visible));
             }
 
-            public void ItemClose(string aId, ITopology2Source aValue)
-            {
-            }
-
             public void ItemUpdate(string aId, ITopology2Source aValue, ITopology2Source aPrevious)
             {
                 iRunner.Result(string.Format("{0}. {1} {2} {3} -> {4} {5} {6}", aId, aPrevious.Name, aPrevious.Type, aPrevious.Visible, aValue.Name, aValue.Type, aValue.Visible));
+            }
+
+            public void ItemClose(string aId, ITopology2Source aValue)
+            {
             }
 
             private MockableScriptRunner iRunner;
@@ -79,17 +79,16 @@ namespace TestTopology2
             {
             }
 
-            public void UnorderedClose()
+            public void UnorderedInitialised()
             {
             }
 
-            public void UnorderedInitialised()
+            public void UnorderedClose()
             {
             }
 
             public void UnorderedAdd(ITopology2Group aItem)
             {
-
                 aItem.Room.AddWatcher(this);
                 aItem.Name.AddWatcher(this);
                 aItem.SourceIndex.AddWatcher(this);
@@ -115,6 +114,11 @@ namespace TestTopology2
                 aItem.Standby.RemoveWatcher(this);
                 iList.Remove(aItem);
 
+                foreach (IWatchable<ITopology2Source> s in aItem.Sources)
+                {
+                    s.RemoveWatcher(iWatcher);
+                }
+
                 iRunner.Result(string.Format("Group Removed\t\t{0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
                 iStringLookup.Remove(string.Format("Room({0})", aItem.Id));
                 iStringLookup.Remove(string.Format("Name({0})", aItem.Id));
@@ -125,11 +129,6 @@ namespace TestTopology2
                 iStringLookup.Add(aId, aValue);
             }
 
-            public void ItemClose(string aId, string aValue)
-            {
-                // key pair removed in CollectionRemove
-            }
-
             public void ItemUpdate(string aId, string aValue, string aPrevious)
             {
                 iStringLookup[aId] = aValue;
@@ -137,11 +136,12 @@ namespace TestTopology2
                 iRunner.Result(string.Format("{0} changed from {1} to {2}", aId, aPrevious, aValue));
             }
 
-            public void ItemOpen(string aId, uint aValue)
+            public void ItemClose(string aId, string aValue)
             {
+                // key pair removed in UnorderedRemove
             }
 
-            public void ItemClose(string aId, uint aValue)
+            public void ItemOpen(string aId, uint aValue)
             {
             }
 
@@ -150,17 +150,21 @@ namespace TestTopology2
                 iRunner.Result(string.Format("{0} changed from {1} to {2}", aId, aPrevious, aValue));
             }
 
-            public void ItemOpen(string aId, bool aValue)
+            public void ItemClose(string aId, uint aValue)
             {
             }
 
-            public void ItemClose(string aId, bool aValue)
+            public void ItemOpen(string aId, bool aValue)
             {
             }
 
             public void ItemUpdate(string aId, bool aValue, bool aPrevious)
             {
                 iRunner.Result(string.Format("{0} changed from {1} to {2}", aId, aPrevious, aValue));
+            }
+
+            public void ItemClose(string aId, bool aValue)
+            {
             }
 
             private MockableScriptRunner iRunner;
@@ -206,6 +210,7 @@ namespace TestTopology2
             }
 
             topology2.Groups.RemoveWatcher(watcher);
+            watcher.Dispose();
 
             topology2.Dispose();
 
