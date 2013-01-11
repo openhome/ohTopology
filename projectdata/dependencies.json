@@ -5,8 +5,8 @@
         "version": "1.0.522",
         "archive-suffix": "-${debugmode}",
         "configure-args": [
-            "--ohnet-lib-dir", "${dest}${name}-${platform}-${debugmode}-dev/lib",
-            "--ohnet-include-dir", "${dest}${name}-${platform}-${debugmode}-dev/include/ohnet"
+            "--ohnet-lib-dir", "${dest}${name}-${platform}-${debugmode}/lib",
+            "--ohnet-include-dir", "${dest}${name}-${platform}-${debugmode}/include/ohnet"
         ],
         "_comment": [
             "See ohos for more examples, and ohdevtools/dependencies.py for details",
@@ -16,8 +16,8 @@
 	{   "name": "ohNet-AnyPlatform",
         "type": "openhome",
         "platform-specific": true,
-        "version": "1.0.433",
-        "archive-suffix": "-dev-release",
+        "version": "1.0.522",
+        "archive-suffix": "-Release",
 		"archive-directory": "${binary-repo}/ohNet/",
         "archive-filename": "${archive-prefix}ohNet-${version}-${archive-platform}${archive-suffix}${archive-extension}",
         "dest": "dependencies/AnyPlatform/ohNet",
