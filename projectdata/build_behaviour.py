@@ -188,6 +188,8 @@ def test(context):
     python("waf", "test")
     cli(['build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/TestTopology1.exe', 'build/ohTopology/AnyPlatform/' + context.options.debugmode.title()+ '/bin/Topology1TestScript.txt'])
     cli(['build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/TestTopology2.exe', 'build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/Topology2TestScript.txt'])
+    cli(['build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/TestTopology3.exe', 'build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/Topology3TestScript.txt'])
+    cli(['build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/TestTopology4.exe', 'build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/Topology4TestScript.txt'])
 
 @build_step("publish", optional=True, default=False)
 def publish(context):
