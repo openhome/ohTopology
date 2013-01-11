@@ -81,26 +81,26 @@ void OpenHome::TestFramework::Runner::Main(TInt aArgc, TChar* aArgv[], Initialis
         aInitParams->SetMsearchTime(mx.Value());
     }
     
-    UpnpLibrary::Initialise(aInitParams);
-    std::vector<NetworkAdapter*>* subnetList = UpnpLibrary::CreateSubnetList();
+    Library* lib = new Library(aInitParams);
+    std::vector<NetworkAdapter*>* subnetList = lib->CreateSubnetList();
     TIpAddress subnet = (*subnetList)[0]->Subnet();
-    UpnpLibrary::DestroySubnetList(subnetList);
-    UpnpLibrary::StartCp(subnet);
+    Library::DestroySubnetList(subnetList);
+    CpStack* cpStack = lib->StartCp(subnet);
 
     // Debug::SetLevel(Debug::kTopology);
     // Debug::SetLevel(Debug::kAll);
 
     TopologyLogger logger;
 
-    CpTopology1* topology = new CpTopology1(logger);
+    CpTopology1* topology = new CpTopology1(*cpStack, logger);
 
     if (topology != NULL) {
-        Blocker* blocker = new Blocker;
+        Blocker* blocker = new Blocker(lib->Env());
         blocker->Wait(aInitParams->MsearchTimeSecs());
         delete blocker;
     }
     if (refresh.Value()) {
-        Blocker* blocker = new Blocker;
+        Blocker* blocker = new Blocker(lib->Env());
         blocker->Wait(mx.Value());
         Print("\nRefreshing...\n\n");
         topology->Refresh();
@@ -110,5 +110,5 @@ void OpenHome::TestFramework::Runner::Main(TInt aArgc, TChar* aArgv[], Initialis
     
     delete topology;
 
-    UpnpLibrary::Close();
+    delete lib;
 }

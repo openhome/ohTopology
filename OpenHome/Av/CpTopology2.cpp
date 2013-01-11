@@ -519,7 +519,7 @@ void CpTopology2Job::Execute()
 
 // CpTopology2
 
-CpTopology2::CpTopology2(ICpTopology2Handler& aHandler)
+CpTopology2::CpTopology2(Net::CpStack& aCpStack, ICpTopology2Handler& aHandler)
     : iFree(kMaxJobCount)
     , iReady(kMaxJobCount)
 {
@@ -527,7 +527,7 @@ CpTopology2::CpTopology2(ICpTopology2Handler& aHandler)
         iFree.Write(new CpTopology2Job(aHandler));
     }
     
-    iTopology1 = new CpTopology1(*this);
+    iTopology1 = new CpTopology1(aCpStack, *this);
     
     iThread = new ThreadFunctor("TOP2", MakeFunctor(*this, &CpTopology2::Run));
     iThread->Start();

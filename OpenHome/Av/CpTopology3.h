@@ -12,6 +12,9 @@
 #include "CpTopology2.h"
 
 namespace OpenHome {
+    namespace Net {
+        class CpStack;
+    } // namespace Net
 namespace Av {
 
 class CpTopology3Group;
@@ -124,7 +127,7 @@ class CpTopology3 : public ICpTopology2Handler, public ICpTopology3Handler, priv
     static const TUint kMaxJobCount = 20;
     
 public:
-    CpTopology3(ICpTopology3Handler& aHandler);
+    CpTopology3(Net::CpStack& aCpStack, ICpTopology3Handler& aHandler);
     
     void Refresh();
     

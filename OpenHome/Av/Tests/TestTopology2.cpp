@@ -114,15 +114,15 @@ void OpenHome::TestFramework::Runner::Main(TInt aArgc, TChar* aArgv[], Initialis
         return;
     }
 
-    UpnpLibrary::Initialise(aInitParams);
-    std::vector<NetworkAdapter*>* ifs = Os::NetworkListAdapters(InitialisationParams::ELoopbackExclude, "TestTopology2");
+    Library* lib = new Library(aInitParams);
+    std::vector<NetworkAdapter*>* ifs = Os::NetworkListAdapters(lib->Env(), InitialisationParams::ELoopbackExclude, "TestTopology2");
     ASSERT(ifs->size() > 0 && adapter.Value() < ifs->size());
     TIpAddress subnet = (*ifs)[adapter.Value()]->Subnet();
     for (TUint i=0; i<ifs->size(); i++) {
         (*ifs)[i]->RemoveRef("TestTopology2");
     }
     delete ifs;
-    UpnpLibrary::StartCp(subnet);
+    CpStack* cpStack = lib->StartCp(subnet);
     
     Endpoint endpt(0, subnet);
     Endpoint::AddressBuf buf;
@@ -134,15 +134,15 @@ void OpenHome::TestFramework::Runner::Main(TInt aArgc, TChar* aArgv[], Initialis
 
     TopologyLogger logger;
 
-    CpTopology2* topology = new CpTopology2(logger);
+    CpTopology2* topology = new CpTopology2(*cpStack, logger);
 
     if (topology != NULL) {
-        Blocker* blocker = new Blocker;
+        Blocker* blocker = new Blocker(lib->Env());
         blocker->Wait(duration.Value());
         delete blocker;
     }
 
     delete topology;
 
-    UpnpLibrary::Close();
+    delete lib;
 }

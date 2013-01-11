@@ -12,6 +12,9 @@
 #include "CpTopology3.h"
 
 namespace OpenHome {
+    namespace Net {
+        class CpStack;
+    } // namespace Net
 namespace Av {
 
 class CpTopology4Room;
@@ -206,7 +209,7 @@ private:
 class CpTopology4 : public ICpTopology3Handler, public ICpTopology4Handler, private INonCopyable
 {
 public:
-    CpTopology4(ICpTopology4Handler& aHandler);
+    CpTopology4(Net::CpStack& aCpStack, ICpTopology4Handler& aHandler);
     CpTopology4(ICpTopology4Handler& aHandler, ICpTopology3Handler** aTestInterface);
     void Refresh();
     virtual ~CpTopology4();
