@@ -35,7 +35,7 @@ void CpTopology1Job::Execute()
 
 // CpTopology1
 
-CpTopology1::CpTopology1(ICpTopology1Handler& aHandler)
+CpTopology1::CpTopology1(Net::CpStack& aCpStack, ICpTopology1Handler& aHandler)
     : iFree(kMaxJobCount)
     , iReady(kMaxJobCount)
 {
@@ -46,7 +46,7 @@ CpTopology1::CpTopology1(ICpTopology1Handler& aHandler)
     FunctorCpDevice productAdded = MakeFunctorCpDevice(*this, &CpTopology1::ProductAdded);
     FunctorCpDevice productRemoved = MakeFunctorCpDevice(*this, &CpTopology1::ProductRemoved);
     
-    iDeviceListProduct = new CpDeviceListUpnpServiceType(Brn("av.openhome.org"), Brn("Product"), 1, productAdded, productRemoved);
+    iDeviceListProduct = new CpDeviceListUpnpServiceType(aCpStack, Brn("av.openhome.org"), Brn("Product"), 1, productAdded, productRemoved);
 
     iThread = new ThreadFunctor("TOP1", MakeFunctor(*this, &CpTopology1::Run));
     iThread->Start();

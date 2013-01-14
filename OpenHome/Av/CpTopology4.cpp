@@ -913,10 +913,10 @@ CpTopology4Room::EStandby CpTopology4Room::Standby() const
 
 // CpTopology4
 
-CpTopology4::CpTopology4(ICpTopology4Handler& aHandler)
+CpTopology4::CpTopology4(Net::CpStack& aCpStack, ICpTopology4Handler& aHandler)
     : iHandler(aHandler)
 {
-    iTopology3 = new CpTopology3(*this);
+    iTopology3 = new CpTopology3(aCpStack, *this);
 }
 
 CpTopology4::CpTopology4(ICpTopology4Handler& aHandler, ICpTopology3Handler** aTestInterface)

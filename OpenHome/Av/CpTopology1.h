@@ -8,6 +8,9 @@
 #include <OpenHome/Net/Core/FunctorCpDevice.h>
 
 namespace OpenHome {
+    namespace Net {
+        class CpStack;
+    } // namespace Net
 namespace Av {
 
 class ICpTopology1Handler
@@ -32,13 +35,12 @@ private:
     ICpTopology1HandlerFunction iFunction;
 };
 
-
 class CpTopology1
 {
     static const TUint kMaxJobCount = 20;
     
 public:
-    CpTopology1(ICpTopology1Handler& aHandler);
+    CpTopology1(Net::CpStack& aCpStack, ICpTopology1Handler& aHandler);
     
     void Refresh();
     

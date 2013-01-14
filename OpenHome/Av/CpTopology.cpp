@@ -202,7 +202,7 @@ void* CpTopologyRoom::UserData() const
 class CpTopology : public IHouse, ICpTopology4Handler
 {
 public:
-    CpTopology(IHouseHandler& aHandler);
+    CpTopology(Net::CpStack& aCpStack, IHouseHandler& aHandler);
     ~CpTopology();
 private:
     // IHouse
@@ -230,11 +230,11 @@ private:
 
 // CpTopology
 
-CpTopology::CpTopology(IHouseHandler& aHandler)
+CpTopology::CpTopology(Net::CpStack& aCpStack, IHouseHandler& aHandler)
     : iHandler(aHandler)
 {
     LOG(kTopology, "CpTopology::CpTopology\n");
-    iTopology = new CpTopology4(*this);
+    iTopology = new CpTopology4(aCpStack, *this);
     LOG(kTopology, "CpTopology::CpTopology created layer 4\n");
 }
 
@@ -301,9 +301,9 @@ void CpTopology::RoomVolumeLimitChanged(CpTopology4Room& aRoom)
 
 // House
 
-House::House(IHouseHandler& aHandler)
+House::House(Net::CpStack& aCpStack, IHouseHandler& aHandler)
 {
-    iHouse = new CpTopology(aHandler);
+    iHouse = new CpTopology(aCpStack, aHandler);
 }
 
 void House::Refresh()

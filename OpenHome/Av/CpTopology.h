@@ -11,6 +11,9 @@
 #include <list>
 
 namespace OpenHome {
+    namespace Net {
+        class CpStack;
+    } // namespace Net
 namespace Av {
 
 class IHouse : private INonCopyable
@@ -82,7 +85,7 @@ public:
 class House : private INonCopyable
 {
 public:
-    House(IHouseHandler& aHandler);
+    House(Net::CpStack& aCpStack, IHouseHandler& aHandler);
     void Refresh();
     ~House();
 private:
