@@ -446,12 +446,14 @@ namespace OpenHome.Av
             }
             else
             {
-                group.SetParent(null);
+                // unhook group from group tree
+                group.Parent.RemoveChild(group);
             }
 
             // check for orphaned groups
             foreach (Topology4Group g in iGroups)
             {
+                // if group has no parent and it is not a root group - promote it to a root
                 if (g.Parent != null && !iRoots.Contains(g))
                 {
                     iRoots.Add(g);
