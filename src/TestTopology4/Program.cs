@@ -138,10 +138,8 @@ namespace TestTopology4
 
             try
             {
-                //runner.Run(thread, new StringReader(File.ReadAllText(args[0])), mocker);
-                runner.Run(thread, Console.In, mocker);
-                //MockableStream stream = new MockableStream(Console.In, mocker);
-                //stream.Start();
+                runner.Run(thread, new StringReader(File.ReadAllText(args[0])), mocker);
+                //runner.Run(thread, Console.In, mocker);
             }
             catch (MockableScriptRunner.AssertError)
             {

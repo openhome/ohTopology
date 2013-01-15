@@ -122,6 +122,7 @@ namespace OpenHome.Av
             iSources.Clear();
             iSources = null;
 
+            iGroup.Name.RemoveWatcher(this);
             iGroup = null;
         }
 
@@ -280,29 +281,6 @@ namespace OpenHome.Av
         private Dictionary<string, ITopology2Source> iSources;
     }
 
-    public class WatchableTopology4GroupUnordered : WatchableUnordered<ITopology4Group>
-    {
-        public WatchableTopology4GroupUnordered(IWatchableThread aThread)
-            : base(aThread)
-        {
-            iList = new List<ITopology4Group>();
-        }
-
-        public new void Add(ITopology4Group aValue)
-        {
-            iList.Add(aValue);
-            base.Add(aValue);
-        }
-
-        public new void Remove(ITopology4Group aValue)
-        {
-            iList.Remove(aValue);
-            base.Remove(aValue);
-        }
-
-        private List<ITopology4Group> iList;
-    }
-
     public interface ITopology4Room
     {
         string Name { get; }
@@ -324,8 +302,8 @@ namespace OpenHome.Av
             iWatchableSources = new Watchable<IEnumerable<ITopology4Source>>(iThread, "Topology4Sources", new List<ITopology4Source>());
 
             iCurrent = null;
-            iGroups = new List<Topology4Group>();
-            iRoots = new List<Topology4Group>();
+            iGroups = new List<ITopology4Group>();
+            iRoots = new List<ITopology4Group>();
             iGroupLookup = new Dictionary<ITopology2Group, Topology4Group>();
 
             iRoom.Groups.AddWatcher(this);
@@ -392,43 +370,7 @@ namespace OpenHome.Av
             Topology4Group group = new Topology4Group(iThread, aItem);
             iGroupLookup.Add(aItem, group);
 
-            // if group is the first group found
-            if (iCurrent == null)
-            {
-                iCurrent = group;
-                iGroups.Add(group);
-                iRoots.Add(group);
-
-                EvaluateSources();
-
-                return;
-            }
-
-            // check for an existing parent
-            foreach (Topology4Group g in iGroups)
-            {
-                if (g.AddIfIsChild(group))
-                {
-                    iGroups.Add(group);
-                    
-                    EvaluateSources();
-
-                    return;
-                }
-            }
-
-            // check for parent of an existing root
-            foreach (Topology4Group g in iRoots)
-            {
-                if (group.AddIfIsChild(g))
-                {
-                    iRoots.Remove(g);
-                    break;
-                }
-            }
-
-            iGroups.Add(group);
-            iRoots.Add(group);
+            AddGroup(group);
 
             EvaluateSources();
         }
@@ -437,17 +379,62 @@ namespace OpenHome.Av
         {
             Topology4Group group = iGroupLookup[aItem];
 
-            iGroups.Remove(group);
             iGroupLookup.Remove(aItem);
 
-            if (iRoots.Contains(group))
+            RemoveGroup(group);
+
+            EvaluateSources();
+        }
+
+        private void AddGroup(ITopology4Group aGroup)
+        {
+            // if group is the first group found
+            if (iCurrent == null)
             {
-                iRoots.Remove(group);
+                iCurrent = aGroup;
+                iGroups.Add(aGroup);
+                iRoots.Add(aGroup);
+
+                return;
+            }
+
+            // check for an existing parent
+            foreach (Topology4Group g in iGroups)
+            {
+                if (g.AddIfIsChild(aGroup))
+                {
+                    iGroups.Add(aGroup);
+
+                    return;
+                }
+            }
+
+            // check for parent of an existing root
+            foreach (Topology4Group g in iRoots)
+            {
+                if (aGroup.AddIfIsChild(g))
+                {
+                    iRoots.Remove(g);
+                    break;
+                }
+            }
+
+            iGroups.Add(aGroup);
+            iRoots.Add(aGroup);
+        }
+
+        private void RemoveGroup(ITopology4Group aGroup)
+        {
+            iGroups.Remove(aGroup);
+
+            if (iRoots.Contains(aGroup))
+            {
+                iRoots.Remove(aGroup);
             }
             else
             {
                 // unhook group from group tree
-                group.Parent.RemoveChild(group);
+                aGroup.Parent.RemoveChild(aGroup);
             }
 
             // check for orphaned groups
@@ -459,8 +446,6 @@ namespace OpenHome.Av
                     iRoots.Add(g);
                 }
             }
-
-            EvaluateSources();
         }
 
         private void EvaluateSources()
@@ -484,9 +469,9 @@ namespace OpenHome.Av
         private IEnumerable<ITopology4Source> iSources;
         private Watchable<IEnumerable<ITopology4Source>> iWatchableSources;
 
-        private Topology4Group iCurrent;
-        private List<Topology4Group> iGroups;
-        private List<Topology4Group> iRoots;
+        private ITopology4Group iCurrent;
+        private List<ITopology4Group> iGroups;
+        private List<ITopology4Group> iRoots;
         private Dictionary<ITopology2Group, Topology4Group> iGroupLookup;
     }
 
