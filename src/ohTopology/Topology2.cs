@@ -234,7 +234,7 @@ namespace OpenHome.Av
 
                 if (aInitial)
                 {
-                    iSources.Add(new Watchable<ITopology2Source>(iThread, index.ToString(), new Topology2Source(index, name, type, visible)));
+                    iSources.Add(new Watchable<ITopology2Source>(iThread, string.Format("{0}({1})", iId, index.ToString()), new Topology2Source(index, name, type, visible)));
                 }
                 else
                 {
