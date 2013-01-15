@@ -180,16 +180,28 @@ namespace OpenHome.Av
                 Topology3Room room;
                 if (iRoomLookup.TryGetValue(aPrevious, out room))
                 {
-                    room.Remove(group);
+                    if (room.Remove(group))
+                    {
+                        iRooms.Remove(room);
+                        iRoomLookup.Remove(room.Name);
+
+                        // schedule the disposale for the room for after all watchers of the room collection have been notified
+                        iThread.Schedule(() =>
+                        {
+                            room.Dispose();
+                        });
+                    }
                 }
 
-                if (!iRoomLookup.TryGetValue(aValue, out room))
+                Topology3Room newRoom;
+                if (!iRoomLookup.TryGetValue(aValue, out newRoom))
                 {
-                    room = new Topology3Room(aValue, iThread);
-                    iRoomLookup.Add(aValue, room);
+                    newRoom = new Topology3Room(aValue, iThread);
+                    iRoomLookup.Add(aValue, newRoom);
+                    iRooms.Add(newRoom);
                 }
 
-                room.Add(group);
+                newRoom.Add(group);
             }
         }
 

@@ -1,1 +1,37 @@
-﻿exit
+﻿// test network is populated with 4 devices
+expect Room Added Kitchen
+expect Room Added Sitting Room
+expect Room Added Bedroom
+expect Room Added Dining Room
+expect Group Added Kitchen:Sneaky Music DS
+expect Group Added Sitting Room:Klimax DSM
+expect Group Added Bedroom:Kiko DSM
+expect Group Added Dining Room:Majik DS
+empty
+
+// test room and group is added when ds appears on network
+mock network add ds 67
+expect Room Added Main Room
+expect Group Added Main Room:Mock DS
+empty
+
+// test group moves room when room name changes
+mock network update ds 67 product room Bathroom
+expect Group Removed Bathroom:Mock DS
+expect Room Removed Main Room
+expect Room Added Bathroom
+expect Group Added Bathroom:Mock DS
+empty
+
+// test group is added to existing room and no new room is created
+mock network add ds 68
+expect Room Added Main Room
+expect Group Added Main Room:Mock DS
+empty
+mock network update ds 68 product room Bathroom
+expect Group Removed Bathroom:Mock DS
+expect Room Removed Main Room
+expect Group Added Bathroom:Mock DS
+empty
+
+exit

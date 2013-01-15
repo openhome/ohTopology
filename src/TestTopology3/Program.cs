@@ -49,7 +49,7 @@ namespace TestTopology3
                 aItem.Room.AddWatcher(this);
                 aItem.Name.AddWatcher(this);
 
-                Console.WriteLine(string.Format("Group Added {0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
+                iRunner.Result(string.Format("Group Added {0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
             }
 
             public void UnorderedRemove(ITopology2Group aItem)
@@ -57,7 +57,7 @@ namespace TestTopology3
                 aItem.Room.RemoveWatcher(this);
                 aItem.Name.RemoveWatcher(this);
 
-                Console.WriteLine(string.Format("Group Removed {0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
+                iRunner.Result(string.Format("Group Removed {0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
 
                 iStringLookup.Remove(string.Format("Room({0})", aItem.Id));
                 iStringLookup.Remove(string.Format("Name({0})", aItem.Id));
@@ -120,7 +120,7 @@ namespace TestTopology3
                 iList.Add(aItem);
                 aItem.Groups.AddWatcher(iWatcher);
 
-                Console.WriteLine("Room Added " + aItem.Name);
+                iRunner.Result("Room Added " + aItem.Name);
             }
 
             public void UnorderedRemove(ITopology3Room aItem)
@@ -128,7 +128,7 @@ namespace TestTopology3
                 iList.Remove(aItem);
                 aItem.Groups.RemoveWatcher(iWatcher);
 
-                Console.WriteLine("Room Removed " + aItem.Name);
+                iRunner.Result("Room Removed " + aItem.Name);
             }
 
             private MockableScriptRunner iRunner;
@@ -168,6 +168,7 @@ namespace TestTopology3
             try
             {
                 runner.Run(thread, new StreamReader(args[0]), mocker);
+                //runner.Run(thread, Console.In, mocker);
             }
             catch (MockableScriptRunner.AssertError)
             {
