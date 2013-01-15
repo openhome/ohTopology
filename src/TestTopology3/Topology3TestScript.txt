@@ -17,7 +17,7 @@ empty
 
 // test group moves room when room name changes
 mock network update ds 67 product room Bathroom
-expect Group Removed Bathroom:Mock DS
+expect Group Removed Main Room:Mock DS
 expect Room Removed Main Room
 expect Room Added Bathroom
 expect Group Added Bathroom:Mock DS
@@ -29,7 +29,7 @@ expect Room Added Main Room
 expect Group Added Main Room:Mock DS
 empty
 mock network update ds 68 product room Bathroom
-expect Group Removed Bathroom:Mock DS
+expect Group Removed Main Room:Mock DS
 expect Room Removed Main Room
 expect Group Added Bathroom:Mock DS
 empty

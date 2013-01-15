@@ -70,7 +70,7 @@ namespace TestTopology3
 
             public void ItemUpdate(string aId, string aValue, string aPrevious)
             {
-                iStringLookup[aId] = aValue;
+                // ignore name changes
             }
 
             public void ItemClose(string aId, string aValue)
