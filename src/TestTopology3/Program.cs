@@ -95,6 +95,11 @@ namespace TestTopology3
 
             public void Dispose()
             {
+                foreach (ITopology3Room r in iList)
+                {
+                    r.Groups.RemoveWatcher(iWatcher);
+                }
+
                 iWatcher.Dispose();
             }            
 
@@ -112,6 +117,7 @@ namespace TestTopology3
 
             public void UnorderedAdd(ITopology3Room aItem)
             {
+                iList.Add(aItem);
                 aItem.Groups.AddWatcher(iWatcher);
 
                 Console.WriteLine("Room Added " + aItem.Name);
@@ -119,6 +125,7 @@ namespace TestTopology3
 
             public void UnorderedRemove(ITopology3Room aItem)
             {
+                iList.Remove(aItem);
                 aItem.Groups.RemoveWatcher(iWatcher);
 
                 Console.WriteLine("Room Removed " + aItem.Name);
@@ -160,10 +167,7 @@ namespace TestTopology3
 
             try
             {
-                //runner.Run(thread, new StringReader(File.ReadAllText(args[0])), mocker);
-                runner.Run(thread, Console.In, mocker);
-                //MockableStream stream = new MockableStream(Console.In, mocker);
-                //stream.Start();
+                runner.Run(thread, new StreamReader(args[0]), mocker);
             }
             catch (MockableScriptRunner.AssertError)
             {
