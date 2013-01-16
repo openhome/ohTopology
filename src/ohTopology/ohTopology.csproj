@@ -55,6 +55,7 @@
     <Compile Include="Topology2.cs" />
     <Compile Include="Topology3.cs" />
     <Compile Include="Topology4.cs" />
+    <Compile Include="Topology5.cs" />
     <Compile Include="WatchableDevice.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgProduct1.cs" />
   </ItemGroup>

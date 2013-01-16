@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestTopology3", "TestTopolo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestTopology4", "TestTopology4\TestTopology4.csproj", "{568BA31E-AD8F-4E37-9EB2-B1D831D23AE9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestTopology5", "TestTopology5\TestTopology5.csproj", "{2EF4E076-7CB6-4A94-A6DE-6CAB2B93E7FE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,10 @@ Global
 		{568BA31E-AD8F-4E37-9EB2-B1D831D23AE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{568BA31E-AD8F-4E37-9EB2-B1D831D23AE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{568BA31E-AD8F-4E37-9EB2-B1D831D23AE9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2EF4E076-7CB6-4A94-A6DE-6CAB2B93E7FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2EF4E076-7CB6-4A94-A6DE-6CAB2B93E7FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2EF4E076-7CB6-4A94-A6DE-6CAB2B93E7FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2EF4E076-7CB6-4A94-A6DE-6CAB2B93E7FE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
