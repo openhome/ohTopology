@@ -117,18 +117,18 @@ namespace TestTopology3
 
             public void UnorderedAdd(ITopology3Room aItem)
             {
+                iRunner.Result("Room Added " + aItem.Name);
+
                 iList.Add(aItem);
                 aItem.Groups.AddWatcher(iWatcher);
-
-                iRunner.Result("Room Added " + aItem.Name);
             }
 
             public void UnorderedRemove(ITopology3Room aItem)
             {
+                iRunner.Result("Room Removed " + aItem.Name);
+
                 iList.Remove(aItem);
                 aItem.Groups.RemoveWatcher(iWatcher);
-
-                iRunner.Result("Room Removed " + aItem.Name);
             }
 
             private MockableScriptRunner iRunner;

@@ -23,13 +23,10 @@ namespace TestTopology4
             public SourceWatcher(MockableScriptRunner aRunner)
             {
                 iRunner = aRunner;
-
-                //iStringLookup = new Dictionary<string, string>();
             }
 
             public void Dispose()
             {
-                //iStringLookup = null;
             }            
 
             public void ItemOpen(string aId, IEnumerable<ITopology4Source> aValue)
@@ -37,7 +34,6 @@ namespace TestTopology4
                 foreach (ITopology4Source s in aValue)
                 {
                     iRunner.Result(string.Format("Added: {0}: Name={1}, Type={2}, Visible={3}", s.Index, s.Name, s.Type, s.Visible));
-                    Console.WriteLine(string.Format("Added: {0}: Name={1}, Type={2}, Visible={3}", s.Index, s.Name, s.Type, s.Visible));
                 }
             }
 
@@ -46,7 +42,6 @@ namespace TestTopology4
                 foreach (ITopology4Source s in aValue)
                 {
                     iRunner.Result(string.Format("Updated: {0}: Name={1}, Type={2}, Visible={3}", s.Index, s.Name, s.Type, s.Visible));
-                    Console.WriteLine(string.Format("Updated: {0}: Name={1}, Type={2}, Visible={3}", s.Index, s.Name, s.Type, s.Visible));
                 }
             }
 
@@ -55,20 +50,17 @@ namespace TestTopology4
                 foreach (ITopology4Source s in aValue)
                 {
                     iRunner.Result(string.Format("Removed: {0}: Name={1}, Type={2}, Visible={3}", s.Index, s.Name, s.Type, s.Visible));
-                    Console.WriteLine(string.Format("Removed: {0}: Name={1}, Type={2}, Visible={3}", s.Index, s.Name, s.Type, s.Visible));
                 }
             }
 
             public void ItemOpen(string aId, EStandby aValue)
             {
                 iRunner.Result(string.Format("{0}: {1}", aId, aValue));
-                Console.WriteLine(string.Format("{0}: {1}", aId, aValue));
             }
 
             public void ItemUpdate(string aId, EStandby aValue, EStandby aPrevious)
             {
                 iRunner.Result(string.Format("{0}: {1} -> {2}", aId, aPrevious, aValue));
-                Console.WriteLine(string.Format("{0}: {1} -> {2}", aId, aPrevious, aValue));
             }
 
             public void ItemClose(string aId, EStandby aValue)
@@ -116,7 +108,6 @@ namespace TestTopology4
             public void UnorderedAdd(ITopology4Room aItem)
             {
                 iRunner.Result("Room Added " + aItem.Name);
-                Console.WriteLine("Room Added " + aItem.Name);
 
                 iList.Add(aItem);
                 aItem.Standby.AddWatcher(iWatcher);
@@ -126,7 +117,6 @@ namespace TestTopology4
             public void UnorderedRemove(ITopology4Room aItem)
             {
                 iRunner.Result("Room Removed " + aItem.Name);
-                Console.WriteLine("Room Removed " + aItem.Name);
 
                 iList.Remove(aItem);
                 aItem.Standby.RemoveWatcher(iWatcher);
@@ -170,8 +160,8 @@ namespace TestTopology4
 
             try
             {
-                //runner.Run(thread, new StringReader(File.ReadAllText(args[0])), mocker);
-                runner.Run(thread, Console.In, mocker);
+                runner.Run(thread, new StringReader(File.ReadAllText(args[0])), mocker);
+                //runner.Run(thread, Console.In, mocker);
             }
             catch (MockableScriptRunner.AssertError)
             {
