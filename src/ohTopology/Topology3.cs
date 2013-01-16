@@ -127,6 +127,9 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("Topology3.Dispose");
             }
 
+            iTopology2.Groups.RemoveWatcher(this);
+            iTopology2 = null;
+
             foreach (ITopology2Group g in iGroupLookup.Values)
             {
                 g.Name.RemoveWatcher(this);
@@ -143,9 +146,6 @@ namespace OpenHome.Av
 
             iRooms.Dispose();
             iRooms = null;
-
-            iTopology2.Groups.RemoveWatcher(this);
-            iTopology2 = null;
         }
 
         public IWatchableUnordered<ITopology3Room> Rooms

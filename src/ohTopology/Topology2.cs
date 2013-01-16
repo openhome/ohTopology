@@ -321,6 +321,9 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("Topology2.Dispose");
             }
 
+            iTopology1.Products.RemoveWatcher(this);
+            iTopology1 = null;
+
             iGroups.Dispose();
             iGroups = null;
 
@@ -329,9 +332,6 @@ namespace OpenHome.Av
                 g.Dispose();
             }
             iGroupLookup = null;
-
-            iTopology1.Products.RemoveWatcher(this);
-            iTopology1 = null;
 
             iDisposed = true;
         }

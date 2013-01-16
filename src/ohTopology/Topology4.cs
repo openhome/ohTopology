@@ -116,7 +116,9 @@ namespace OpenHome.Av
 
             iGroup.Name.AddWatcher(this);
 
-            iSources = new List<ITopology2Source>();
+            iSources = new List<Topology4Source>();
+            iSource2Lookup = new Dictionary<ITopology2Source, Topology4Source>();
+
             foreach (IWatchable<ITopology2Source> s in iGroup.Sources)
             {
                 s.AddWatcher(this);
@@ -131,6 +133,9 @@ namespace OpenHome.Av
             }
             iSources.Clear();
             iSources = null;
+
+            iSource2Lookup.Clear();
+            iSource2Lookup = null;
 
             iGroup.Name.RemoveWatcher(this);
             iGroup = null;
@@ -162,18 +167,27 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, ITopology2Source aValue)
         {
-            iSources.Add(aValue);
+            Topology4Source source = new Topology4Source(this, aValue);
+            iSources.Add(source);
+            iSource2Lookup.Add(aValue, source);
         }
 
         public void ItemUpdate(string aId, ITopology2Source aValue, ITopology2Source aPrevious)
         {
-            int index = iSources.IndexOf(aPrevious);
-            iSources[index] = aValue;
+            Topology4Source oldSource = iSource2Lookup[aPrevious];
+            iSource2Lookup.Remove(aPrevious);
+
+            int index = iSources.IndexOf(oldSource);
+            Topology4Source newSource = new Topology4Source(this, aValue);
+            iSources[index] = newSource;
+            iSource2Lookup.Add(aValue, newSource);
         }
 
         public void ItemClose(string aId, ITopology2Source aValue)
         {
-            iSources.Remove(aValue);
+            Topology4Source source = iSource2Lookup[aValue];
+            iSources.Remove(source);
+            iSource2Lookup.Remove(aValue);
         }
 
         public void ItemOpen(string aId, string aValue)
@@ -215,7 +229,7 @@ namespace OpenHome.Av
 
         public bool AddIfIsChild(ITopology4Group aGroup)
         {
-            foreach (ITopology2Source s in iSources)
+            foreach (ITopology4Source s in iSources)
             {
                 if (aGroup.Name == s.Name)
                 {
@@ -249,7 +263,7 @@ namespace OpenHome.Av
         {
             List<ITopology4Source> sources = new List<ITopology4Source>();
 
-            foreach (ITopology2Source s in iSources)
+            foreach (ITopology4Source s in iSources)
             {
                 // only include if source is visible
                 if (s.Visible)
@@ -267,7 +281,7 @@ namespace OpenHome.Av
 
                     if (!expanded)
                     {
-                        sources.Add(new Topology4Source(this, s));
+                        sources.Add(s);
                     }
                 }
             }
@@ -307,7 +321,8 @@ namespace OpenHome.Av
         private ITopology4Group iParent;
         private List<ITopology4Group> iChildren;
 
-        private List<ITopology2Source> iSources;
+        private List<Topology4Source> iSources;
+        private Dictionary<ITopology2Source, Topology4Source> iSource2Lookup;
     }
 
     public interface ITopology4Room
@@ -541,23 +556,17 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, ITopology2Source aValue, ITopology2Source aPrevious)
         {
-            if (aValue.Name != aPrevious.Name ||
-                aValue.Visible != aPrevious.Visible || 
-                aValue.Index != aPrevious.Index ||
-                aValue.Type != aPrevious.Type)
+            Topology4Group group;
+            if (iSource2Lookup.TryGetValue(aId, out group))
             {
-                Topology4Group group;
-                if (iSource2Lookup.TryGetValue(aId, out group))
+                // only need to check tree structure if we have more than one group
+                if (iGroups.Count > 1)
                 {
-                    // only need to check tree structure if we have more than one group
-                    if (iGroups.Count > 1)
-                    {
-                        RemoveGroup(group);
-                        AddGroup(group);
-                    }
-
-                    EvaluateSources();
+                    RemoveGroup(group);
+                    AddGroup(group);
                 }
+
+                EvaluateSources();
             }
         }
 
@@ -762,6 +771,9 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("Topology3.Dispose");
             }
 
+            iTopology3.Rooms.RemoveWatcher(this);
+            iTopology3 = null;
+
             foreach (Topology4Room r in iRoomLookup.Values)
             {
                 r.Dispose();
@@ -771,9 +783,6 @@ namespace OpenHome.Av
 
             iRooms.Dispose();
             iRooms = null;
-
-            iTopology3.Rooms.RemoveWatcher(this);
-            iTopology3 = null;
         }
 
         public IWatchableUnordered<ITopology4Room> Rooms
