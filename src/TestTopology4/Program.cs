@@ -33,7 +33,7 @@ namespace TestTopology4
             {
                 foreach (ITopology4Source s in aValue)
                 {
-                    iRunner.Result(string.Format("Added: {0}: Name={1}, Type={2}, Visible={3}", s.Index, s.Name, s.Type, s.Visible));
+                    iRunner.Result(string.Format("Added: {0}: Group={1}, Name={2}, Type={3}, Visible={4}", s.Index, s.Group, s.Name, s.Type, s.Visible));
                 }
             }
 
@@ -41,7 +41,7 @@ namespace TestTopology4
             {
                 foreach (ITopology4Source s in aValue)
                 {
-                    iRunner.Result(string.Format("Updated: {0}: Name={1}, Type={2}, Visible={3}", s.Index, s.Name, s.Type, s.Visible));
+                    iRunner.Result(string.Format("Updated: {0}: Group={1}, Name={2}, Type={3}, Visible={4}", s.Index, s.Group, s.Name, s.Type, s.Visible));
                 }
             }
 
@@ -49,7 +49,7 @@ namespace TestTopology4
             {
                 foreach (ITopology4Source s in aValue)
                 {
-                    iRunner.Result(string.Format("Removed: {0}: Name={1}, Type={2}, Visible={3}", s.Index, s.Name, s.Type, s.Visible));
+                    iRunner.Result(string.Format("Removed: {0}: Group={1}, Name={2}, Type={3}, Visible={4}", s.Index, s.Group, s.Name, s.Type, s.Visible));
                 }
             }
 

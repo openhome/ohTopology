@@ -10,6 +10,7 @@ namespace OpenHome.Av
     {
         uint Index { get; }
         string Name { get; }
+        string Group { get; }
         string Type { get; }
         bool Visible { get; }
 
@@ -42,6 +43,14 @@ namespace OpenHome.Av
             get
             {
                 return iName;
+            }
+        }
+
+        public string Group
+        {
+            get
+            {
+                return iGroup.Name;
             }
         }
 
@@ -158,8 +167,8 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, ITopology2Source aValue, ITopology2Source aPrevious)
         {
-            iSources.Remove(aPrevious);
-            iSources.Add(aValue);
+            int index = iSources.IndexOf(aPrevious);
+            iSources[index] = aValue;
         }
 
         public void ItemClose(string aId, ITopology2Source aValue)
