@@ -5,27 +5,32 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public interface ITopology3Room
+    public interface ITopology3Room : IRefCount
     {
         string Name { get; }
         IWatchableUnordered<ITopology2Group> Groups { get; }
+
+        void SetStandby(bool aValue);
     }
 
-    public class Topology3Room : ITopology3Room, IDisposable
+    public class Topology3Room : RefCount, ITopology3Room
     {
-        public Topology3Room(string aName, IWatchableThread aThread)
+        public Topology3Room(IWatchableThread aThread, string aName, ITopology2Group aGroup)
         {
             iName = aName;
-            iGroupCount = 0;
-            iGroups = new WatchableUnordered<ITopology2Group>(aThread);
+            iGroups = new List<ITopology2Group>(); ;
+            iWatchableGroups = new WatchableUnordered<ITopology2Group>(aThread);
+
+            Add(aGroup);
         }
 
-        public void Dispose()
+        protected override void CleanUp()
         {
-            iGroups.Dispose();
-            iGroups = null;
+            iWatchableGroups.Dispose();
+            iWatchableGroups = null;
 
-            iGroupCount = 0;
+            iGroups.Clear();
+            iGroups = null;
         }
 
         public string Name
@@ -40,27 +45,35 @@ namespace OpenHome.Av
         {
             get
             {
-                return iGroups;
+                return iWatchableGroups;
+            }
+        }
+
+        public void SetStandby(bool aValue)
+        {
+            foreach (ITopology2Group g in iGroups)
+            {
+                g.SetStandby(aValue);
             }
         }
 
         public void Add(ITopology2Group aGroup)
         {
+            iWatchableGroups.Add(aGroup);
             iGroups.Add(aGroup);
-            ++iGroupCount;
         }
 
         public bool Remove(ITopology2Group aGroup)
         {
+            iWatchableGroups.Remove(aGroup);
             iGroups.Remove(aGroup);
-            --iGroupCount;
 
-            return (iGroupCount == 0);
+            return (iGroups.Count == 0);
         }
 
         private string iName;
-        private uint iGroupCount;
-        private WatchableUnordered<ITopology2Group> iGroups;
+        private List<ITopology2Group> iGroups;
+        private WatchableUnordered<ITopology2Group> iWatchableGroups;
     }
 
     public class WatchableTopology3RoomUnordered : WatchableUnordered<ITopology3Room>
@@ -123,7 +136,7 @@ namespace OpenHome.Av
 
             foreach (Topology3Room r in iRoomLookup.Values)
             {
-                r.Dispose();
+                r.RemoveRef();
             }
             iRoomLookup.Clear();
             iRoomLookup = null;
@@ -157,17 +170,19 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, string aValue)
         {
-            Topology3Room room = null;
-            if (!iRoomLookup.TryGetValue(aValue, out room))
-            {
-                room = new Topology3Room(aValue, iThread);
-                iRoomLookup.Add(aValue, room);
-                iRooms.Add(room);
-            }
-
             ITopology2Group group;
             if (iGroupLookup.TryGetValue(aId, out group))
             {
+                Topology3Room room = null;
+                if (!iRoomLookup.TryGetValue(aValue, out room))
+                {
+                    room = new Topology3Room(iThread, aValue, group);
+                    iRoomLookup.Add(aValue, room);
+                    iRooms.Add(room);
+
+                    return;
+                }
+
                 room.Add(group);
             }
         }
@@ -184,21 +199,18 @@ namespace OpenHome.Av
                     {
                         iRooms.Remove(room);
                         iRoomLookup.Remove(room.Name);
-
-                        // schedule the disposale for the room for after all watchers of the room collection have been notified
-                        iThread.Schedule(() =>
-                        {
-                            room.Dispose();
-                        });
+                        room.RemoveRef();
                     }
                 }
 
                 Topology3Room newRoom;
                 if (!iRoomLookup.TryGetValue(aValue, out newRoom))
                 {
-                    newRoom = new Topology3Room(aValue, iThread);
+                    newRoom = new Topology3Room(iThread, aValue, group);
                     iRoomLookup.Add(aValue, newRoom);
                     iRooms.Add(newRoom);
+
+                    return;
                 }
 
                 newRoom.Add(group);
@@ -217,12 +229,7 @@ namespace OpenHome.Av
                     {
                         iRooms.Remove(room);
                         iRoomLookup.Remove(room.Name);
-
-                        // schedule the disposale for the room for after all watchers of the room collection have been notified
-                        iThread.Schedule(() =>
-                        {
-                            room.Dispose();
-                        });
+                        room.RemoveRef();
                     }
                 }
             }

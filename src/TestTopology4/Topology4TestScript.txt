@@ -1,1 +1,55 @@
-﻿exit
+﻿// test network is populated with 4 devices
+expect Room Added Kitchen
+expect Standby(Kitchen): eOn
+expect Added: 0: Name=Playlist, Type=Playlist, Visible=True
+expect Added: 1: Name=Radio, Type=Radio, Visible=True
+expect Added: 3: Name=Songcast, Type=Receiver, Visible=True
+expect Room Added Sitting Room
+expect Standby(Sitting Room): eOn
+expect Added: 0: Name=Playlist, Type=Playlist, Visible=True
+expect Added: 1: Name=Radio, Type=Radio, Visible=True
+expect Added: 3: Name=Songcast, Type=Receiver, Visible=True
+expect Added: 5: Name=Analog1, Type=Analog, Visible=True
+expect Added: 6: Name=Analog2, Type=Analog, Visible=True
+expect Added: 7: Name=Phono, Type=Analog, Visible=True
+expect Added: 8: Name=SPDIF1, Type=Digital, Visible=True
+expect Added: 9: Name=SPDIF2, Type=Digital, Visible=True
+expect Added: 10: Name=TOSLINK1, Type=Digital, Visible=True
+expect Added: 11: Name=TOSLINK2, Type=Digital, Visible=True
+expect Room Added Bedroom
+expect Standby(Bedroom): eOn
+expect Added: 0: Name=Playlist, Type=Playlist, Visible=True
+expect Added: 1: Name=Radio, Type=Radio, Visible=True
+expect Added: 3: Name=Songcast, Type=Receiver, Visible=True
+expect Added: 5: Name=Analog1, Type=Analog, Visible=True
+expect Added: 6: Name=Analog2, Type=Analog, Visible=True
+expect Added: 7: Name=Phono, Type=Analog, Visible=True
+expect Added: 8: Name=SPDIF1, Type=Digital, Visible=True
+expect Added: 9: Name=SPDIF2, Type=Digital, Visible=True
+expect Added: 10: Name=TOSLINK1, Type=Digital, Visible=True
+expect Added: 11: Name=TOSLINK2, Type=Digital, Visible=True
+expect Room Added Dining Room
+expect Standby(Dining Room): eOn
+expect Added: 0: Name=Playlist, Type=Playlist, Visible=True
+expect Added: 1: Name=Radio, Type=Radio, Visible=True
+expect Added: 3: Name=Songcast, Type=Receiver, Visible=True
+empty
+
+// test sources are add when ds appears on the network
+mock network add ds 67
+expect Room Added Main Room
+expect Standby(Main Room): eOn
+expect Added: 0: Name=Playlist, Type=Playlist, Visible=True
+expect Added: 1: Name=Radio, Type=Radio, Visible=True
+expect Added: 3: Name=Songcast, Type=Receiver, Visible=True
+empty
+
+// test source are removed when ds disappears on the network
+mock network remove ds 67
+expect Room Removed Main Room
+expect Removed: 0: Name=Playlist, Type=Playlist, Visible=True
+expect Removed: 1: Name=Radio, Type=Radio, Visible=True
+expect Removed: 3: Name=Songcast, Type=Receiver, Visible=True
+empty
+
+exit

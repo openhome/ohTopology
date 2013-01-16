@@ -84,7 +84,8 @@ namespace OpenHome.Av
             iId = aId;
 
             iDisposed = false;
-            iSources = new List<Watchable<ITopology2Source>>();
+            iSources = new List<ITopology2Source>();
+            iWatchableSources = new List<Watchable<ITopology2Source>>();
 
             iProduct = aProduct;
             iRoom = iProduct.Room;
@@ -167,7 +168,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return iSources;
+                return iWatchableSources;
             }
         }
 
@@ -232,13 +233,24 @@ namespace OpenHome.Av
                     }
                 }
 
+                ITopology2Source source = new Topology2Source(index, name, type, visible);
+
                 if (aInitial)
                 {
-                    iSources.Add(new Watchable<ITopology2Source>(iThread, string.Format("{0}({1})", iId, index.ToString()), new Topology2Source(index, name, type, visible)));
+                    iSources.Add(source);
+                    iWatchableSources.Add(new Watchable<ITopology2Source>(iThread, string.Format("{0}({1})", iId, index.ToString()), source));
                 }
                 else
                 {
-                    iSources[(int)index].Update(new Topology2Source(index, name, type, visible));
+                    ITopology2Source oldSource = iSources[(int)index];
+                    if (oldSource.Name != source.Name ||
+                        oldSource.Visible != source.Visible ||
+                        oldSource.Index != source.Index ||
+                        oldSource.Type != source.Type)
+                    {
+                        iSources[(int)index] = source;
+                        iWatchableSources[(int)index].Update(source);
+                    }
                 }
 
                 ++index;
@@ -254,7 +266,8 @@ namespace OpenHome.Av
         private IWatchable<bool> iStandby;
         private IWatchable<uint> iSourceIndex;
         private IWatchableThread iThread;
-        private List<Watchable<ITopology2Source>> iSources;
+        private List<ITopology2Source> iSources;
+        private List<Watchable<ITopology2Source>> iWatchableSources;
     }
 
     public class WatchableTopology2GroupUnordered : WatchableUnordered<ITopology2Group>

@@ -34,4 +34,12 @@ expect Room Removed Main Room
 expect Group Added Bathroom:Mock DS
 empty
 
+// test room is remove when last group is removed
+mock network remove ds 67
+expect Group Removed Bathroom:Mock DS
+mock network remove ds 68
+expect Group Removed Bathroom:Mock DS
+expect Room Removed Bathroom
+empty
+
 exit
