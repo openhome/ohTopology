@@ -31,12 +31,12 @@ namespace TestTopology2
 
             public void ItemOpen(string aId, ITopology2Source aValue)
             {
-                iRunner.Result(string.Format("{0}. {1} {2} {3}", aId, aValue.Name, aValue.Type, aValue.Visible));
+                iRunner.Result(string.Format("{0}. {1} {2} {3}", aValue.Index, aValue.Name, aValue.Type, aValue.Visible));
             }
 
             public void ItemUpdate(string aId, ITopology2Source aValue, ITopology2Source aPrevious)
             {
-                iRunner.Result(string.Format("{0}. {1} {2} {3} -> {4} {5} {6}", aId, aPrevious.Name, aPrevious.Type, aPrevious.Visible, aValue.Name, aValue.Type, aValue.Visible));
+                iRunner.Result(string.Format("{0}. {1} {2} {3} -> {4} {5} {6}", aValue.Index, aPrevious.Name, aPrevious.Type, aPrevious.Visible, aValue.Name, aValue.Type, aValue.Visible));
             }
 
             public void ItemClose(string aId, ITopology2Source aValue)

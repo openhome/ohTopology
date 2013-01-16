@@ -82,18 +82,10 @@ empty
 // test group source name changes
 mock network update ds 67 product source 0 name My Playlist
 expect 0. Playlist Playlist True -> My Playlist Playlist True
-expect 1. Radio Radio True -> Radio Radio True
-expect 2. UPnP AV UpnpAv False -> UPnP AV UpnpAv False
-expect 3. Songcast Receiver True -> Songcast Receiver True
-expect 4. Net Aux NetAux False -> Net Aux NetAux False
 empty
 
 // test group source visible changes
 mock network update ds 67 product source 4 visible true
-expect 0. My Playlist Playlist True -> My Playlist Playlist True
-expect 1. Radio Radio True -> Radio Radio True
-expect 2. UPnP AV UpnpAv False -> UPnP AV UpnpAv False
-expect 3. Songcast Receiver True -> Songcast Receiver True
 expect 4. Net Aux NetAux False -> Net Aux NetAux True
 empty
 
