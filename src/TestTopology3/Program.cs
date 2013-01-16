@@ -120,6 +120,7 @@ namespace TestTopology3
                 iRunner.Result("Room Added " + aItem.Name);
 
                 iList.Add(aItem);
+                aItem.AddRef();
                 aItem.Groups.AddWatcher(iWatcher);
             }
 
@@ -129,6 +130,7 @@ namespace TestTopology3
 
                 iList.Remove(aItem);
                 aItem.Groups.RemoveWatcher(iWatcher);
+                aItem.RemoveRef();
             }
 
             private MockableScriptRunner iRunner;
