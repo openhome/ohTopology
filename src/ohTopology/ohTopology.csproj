@@ -36,6 +36,9 @@
     <Reference Include="CpAvOpenhomeOrgProduct1.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgProduct1.net.dll</HintPath>
     </Reference>
+    <Reference Include="CpAvOpenhomeOrgVolume1.net">
+      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgVolume1.net.dll</HintPath>
+    </Reference>
     <Reference Include="ohNet.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\ohNet.net.dll</HintPath>
     </Reference>
@@ -56,8 +59,10 @@
     <Compile Include="Topology3.cs" />
     <Compile Include="Topology4.cs" />
     <Compile Include="Topology5.cs" />
+    <Compile Include="Topology6.cs" />
     <Compile Include="WatchableDevice.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgProduct1.cs" />
+    <Compile Include="WatchableServiceOpenHomeOrgVolume1.cs" />
   </ItemGroup>
   <Import Project="..\SharedSettings.targets" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -88,6 +88,7 @@ namespace OpenHome.Av
             iWatchableSources = new List<Watchable<ITopology2Source>>();
 
             iProduct = aProduct;
+            iDevice = aProduct.Device;
             iRoom = iProduct.Room;
             iName = iProduct.Name;
             iStandby = iProduct.Standby;
@@ -115,6 +116,14 @@ namespace OpenHome.Av
             get
             {
                 return iId;
+            }
+        }
+
+        public IWatchableDevice Device
+        {
+            get
+            {
+                return iDevice;
             }
         }
 
@@ -261,6 +270,7 @@ namespace OpenHome.Av
 
         private string iId;
         private Product iProduct;
+        private IWatchableDevice iDevice;
         private IWatchable<string> iRoom;
         private IWatchable<string> iName;
         private IWatchable<bool> iStandby;
@@ -358,7 +368,6 @@ namespace OpenHome.Av
 
         public void UnorderedAdd(Product aItem)
         {
-
             Topology2Group group = new Topology2Group(iThread, aItem.Id, aItem);
 
             iGroupLookup.Add(aItem, group);

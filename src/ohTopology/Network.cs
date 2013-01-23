@@ -232,10 +232,10 @@ namespace OpenHome.Av
         public FourDsMockNetwork(IWatchableThread aThread, Mockable aMocker)
             : base(aThread, aMocker)
         {
-            AddDevice(new MockWatchableDs(aThread, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS"));
-            AddDevice(new MockWatchableDsm(aThread, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM"));
-            AddDevice(new MockWatchableDsm(aThread, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM"));
-            AddDevice(new MockWatchableDs(aThread, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS"));
+            AddDevice(new MockWatchableDs(aThread, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));
+            AddDevice(new MockWatchableDsm(aThread, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
+            AddDevice(new MockWatchableDsm(aThread, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
+            AddDevice(new MockWatchableDs(aThread, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
         }
     }
 }

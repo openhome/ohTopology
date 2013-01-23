@@ -57,8 +57,15 @@ namespace OpenHome.Av
             iFactories = new Dictionary<Type, IWatchableServiceFactory>();
 
             // add a factory for each type of watchable service
-            IWatchableServiceFactory factory = new WatchableProductFactory(aThread);
+            IWatchableServiceFactory factory;
+
+            // product service
+            factory = new WatchableProductFactory(aThread);
             iFactories.Add(typeof(Product), factory);
+            
+            // volume service
+            factory = new WatchableVolumeFactory(aThread);
+            iFactories.Add(typeof(Volume), factory);
 
             iServices = new Dictionary<Type, IWatchableService>();
             iServiceRefCount = new Dictionary<Type, uint>();
@@ -291,14 +298,14 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("Songcast", "Receiver", true));
             sources.Add(new SourceXml.Source("Net Aux", "NetAux", false));
             SourceXml xml = new SourceXml(sources.ToArray());
-            MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, "Main Room", "Mock DS", 0, xml, true, "",
+            MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, this, "Main Room", "Mock DS", 0, xml, true, "Info Time Volume Sender",
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DS", "",
                 "", "Linn High Fidelity System Component", "");
             Add<Product>(product);
         }
 
-        public MockWatchableDs(IWatchableThread aThread, string aUdn, string aRoom, string aName)
+        public MockWatchableDs(IWatchableThread aThread, string aUdn, string aRoom, string aName, string aAttributes)
             : base(aThread, aUdn)
         {
             // add a mock product service
@@ -309,7 +316,7 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("Songcast", "Receiver", true));
             sources.Add(new SourceXml.Source("Net Aux", "NetAux", false));
             SourceXml xml = new SourceXml(sources.ToArray());
-            MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, aRoom, aName, 0, xml, true, "",
+            MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, this, aRoom, aName, 0, xml, true, aAttributes,
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DS", "",
                 "", "Linn High Fidelity System Component", "");
@@ -359,14 +366,14 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("SPDIF2", "Digital", true));
             sources.Add(new SourceXml.Source("TOSLINK1", "Digital", true));
             SourceXml xml = new SourceXml(sources.ToArray());
-            MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, "Main Room", "Mock DS", 0, xml, true, "Info Time Sender",
+            MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, this, "Main Room", "Mock DS", 0, xml, true, "Info Time Volume Sender",
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DS", "",
                 "", "Linn High Fidelity System Component", "");
             Add<Product>(product);
         }
 
-        public MockWatchableDsm(IWatchableThread aThread, string aUdn, string aRoom, string aName)
+        public MockWatchableDsm(IWatchableThread aThread, string aUdn, string aRoom, string aName, string aAttributes)
             : base(aThread, aUdn)
         {
             // add a mock product service
@@ -384,7 +391,7 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("TOSLINK1", "Digital", true));
             sources.Add(new SourceXml.Source("TOSLINK2", "Digital", true));
             SourceXml xml = new SourceXml(sources.ToArray());
-            MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, aRoom, aName, 0, xml, true, "Info Time Volume Sender",
+            MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, this, aRoom, aName, 0, xml, true, aAttributes,
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DSM", "",
                 "", "Linn High Fidelity System Component", "");

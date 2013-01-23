@@ -18,7 +18,100 @@ namespace TestTopology4
             }
         }
 
-        class SourceWatcher : IWatcher<IEnumerable<ITopology4Source>>, IWatcher<EStandby>, IDisposable
+        class RootWatcher : IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IDisposable
+        {
+            public RootWatcher(MockableScriptRunner aRunner)
+            {
+                iRunner = aRunner;
+            }
+
+            public void Dispose()
+            {
+            }
+
+            public void ItemOpen(string aId, IEnumerable<ITopology4Group> aValue)
+            {
+                foreach (ITopology4Group g in aValue)
+                {
+                    g.Source.AddWatcher(this);
+                }
+            }
+
+            public void ItemUpdate(string aId, IEnumerable<ITopology4Group> aValue, IEnumerable<ITopology4Group> aPrevious)
+            {
+                List<ITopology4Group> removed = new List<ITopology4Group>();
+                foreach (ITopology4Group g1 in aPrevious)
+                {
+                    bool found = false;
+                    foreach (ITopology4Group g2 in aValue)
+                    {
+                        if (g1 == g2)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        removed.Add(g1);
+                    }
+                }
+
+                List<ITopology4Group> added = new List<ITopology4Group>();
+                foreach (ITopology4Group g1 in aValue)
+                {
+                    bool found = false;
+                    foreach (ITopology4Group g2 in aPrevious)
+                    {
+                        if (g1 == g2)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        added.Add(g1);
+                    }
+                }
+
+                foreach (ITopology4Group g in removed)
+                {
+                    g.Source.RemoveWatcher(this);
+                }
+
+                foreach (ITopology4Group g in added)
+                {
+                    g.Source.AddWatcher(this);
+                }
+            }
+
+            public void ItemClose(string aId, IEnumerable<ITopology4Group> aValue)
+            {
+                foreach (ITopology4Group g in aValue)
+                {
+                    g.Source.RemoveWatcher(this);
+                }
+            }
+
+            public void ItemOpen(string aId, ITopology4Source aValue)
+            {
+                iRunner.Result(string.Format("Current: {0}: Group={1}, Name={2}, Type={3}, Visible={4}", aValue.Index, aValue.Group, aValue.Name, aValue.Type, aValue.Visible));
+            }
+
+            public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
+            {
+                iRunner.Result(string.Format("Current Updated: {0}: Group={1}, Name={2}, Type={3}, Visible={4}", aValue.Index, aValue.Group, aValue.Name, aValue.Type, aValue.Visible));
+            }
+
+            public void ItemClose(string aId, ITopology4Source aValue)
+            {
+            }
+
+            private MockableScriptRunner iRunner;
+        }
+
+        class SourceWatcher : IWatcher<IEnumerable<ITopology4Source>>, IDisposable
         {
             public SourceWatcher(MockableScriptRunner aRunner)
             {
@@ -53,31 +146,18 @@ namespace TestTopology4
                 }
             }
 
-            public void ItemOpen(string aId, EStandby aValue)
-            {
-                iRunner.Result(string.Format("{0}: {1}", aId, aValue));
-            }
-
-            public void ItemUpdate(string aId, EStandby aValue, EStandby aPrevious)
-            {
-                iRunner.Result(string.Format("{0}: {1} -> {2}", aId, aPrevious, aValue));
-            }
-
-            public void ItemClose(string aId, EStandby aValue)
-            {
-            }
-
             private MockableScriptRunner iRunner;
 
         }
 
-        class RoomWatcher : IUnorderedWatcher<ITopology4Room>, IDisposable
+        class RoomWatcher : IUnorderedWatcher<ITopology4Room>, IWatcher<EStandby>, IDisposable
         {
             public RoomWatcher(MockableScriptRunner aRunner)
             {
                 iRunner = aRunner;
 
-                iWatcher = new SourceWatcher(aRunner);
+                iSourceWatcher = new SourceWatcher(aRunner);
+                iRootWatcher = new RootWatcher(aRunner);
 
                 iList = new List<ITopology4Room>();
             }
@@ -86,11 +166,13 @@ namespace TestTopology4
             {
                 foreach (ITopology4Room r in iList)
                 {
-                    r.Standby.RemoveWatcher(iWatcher);
-                    r.Sources.RemoveWatcher(iWatcher);
+                    r.Standby.RemoveWatcher(this);
+                    r.Sources.RemoveWatcher(iSourceWatcher);
+                    r.Roots.RemoveWatcher(iRootWatcher);
                 }
 
-                iWatcher.Dispose();
+                iSourceWatcher.Dispose();
+                iRootWatcher.Dispose();
             }
 
             public void UnorderedOpen()
@@ -110,8 +192,9 @@ namespace TestTopology4
                 iRunner.Result("Room Added " + aItem.Name);
 
                 iList.Add(aItem);
-                aItem.Standby.AddWatcher(iWatcher);
-                aItem.Sources.AddWatcher(iWatcher);
+                aItem.Standby.AddWatcher(this);
+                aItem.Sources.AddWatcher(iSourceWatcher);
+                aItem.Roots.AddWatcher(iRootWatcher);
             }
 
             public void UnorderedRemove(ITopology4Room aItem)
@@ -119,12 +202,28 @@ namespace TestTopology4
                 iRunner.Result("Room Removed " + aItem.Name);
 
                 iList.Remove(aItem);
-                aItem.Standby.RemoveWatcher(iWatcher);
-                aItem.Sources.RemoveWatcher(iWatcher);
+                aItem.Standby.RemoveWatcher(this);
+                aItem.Sources.RemoveWatcher(iSourceWatcher);
+                aItem.Roots.RemoveWatcher(iRootWatcher);
+            }
+
+            public void ItemOpen(string aId, EStandby aValue)
+            {
+                iRunner.Result(string.Format("{0}: {1}", aId, aValue));
+            }
+
+            public void ItemUpdate(string aId, EStandby aValue, EStandby aPrevious)
+            {
+                iRunner.Result(string.Format("{0}: {1} -> {2}", aId, aPrevious, aValue));
+            }
+
+            public void ItemClose(string aId, EStandby aValue)
+            {
             }
 
             private MockableScriptRunner iRunner;
-            private SourceWatcher iWatcher;
+            private SourceWatcher iSourceWatcher;
+            private RootWatcher iRootWatcher;
             private List<ITopology4Room> iList;
         }
 

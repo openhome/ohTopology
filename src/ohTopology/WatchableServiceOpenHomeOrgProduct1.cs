@@ -31,6 +31,8 @@ namespace OpenHome.Av
     public interface IProduct : IServiceOpenHomeOrgProduct1
     {
         string Id { get; }
+        IWatchableDevice Device { get; }
+
         string Attributes { get; }
         string ManufacturerImageUri { get; }
         string ManufacturerInfo { get; }
@@ -47,9 +49,10 @@ namespace OpenHome.Av
 
     public abstract class Product : IWatchableService, IProduct, IDisposable
     {
-        protected Product(string aId, IServiceOpenHomeOrgProduct1 aService)
+        protected Product(string aId, IWatchableDevice aDevice, IServiceOpenHomeOrgProduct1 aService)
         {
             iId = aId;
+            iDevice = aDevice;
             iService = aService;
         }
 
@@ -123,6 +126,14 @@ namespace OpenHome.Av
             get
             {
                 return iId;
+            }
+        }
+
+        public IWatchableDevice Device
+        {
+            get
+            {
+                return iDevice;
             }
         }
 
@@ -223,6 +234,7 @@ namespace OpenHome.Av
         }
 
         private string iId;
+        private IWatchableDevice iDevice;
 
         protected string iAttributes;
         protected string iManufacturerImageUri;
@@ -284,15 +296,7 @@ namespace OpenHome.Av
         {
             get
             {
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("ServiceOpenHomeOrgProduct1.Room");
-                    }
-
-                    return iRoom;
-                }
+                return iRoom;
             }
         }
 
@@ -300,15 +304,7 @@ namespace OpenHome.Av
         {
             get
             {
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("ServiceOpenHomeOrgProduct1.Name");
-                    }
-
-                    return iName;
-                }
+                return iName;
             }
         }
 
@@ -566,7 +562,7 @@ namespace OpenHome.Av
                 {
                     iThread.Schedule(() =>
                     {
-                        iService = new WatchableProduct(iThread, string.Format("Product({0})", aDevice.Udn), iPendingService);
+                        iService = new WatchableProduct(iThread, string.Format("Product({0})", aDevice.Udn), aDevice, iPendingService);
                         iPendingService = null;
                         aCallback(iService);
                     });
@@ -597,8 +593,8 @@ namespace OpenHome.Av
 
     public class WatchableProduct : Product
     {
-        public WatchableProduct(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgProduct1 aService)
-            : base(aId, new ServiceOpenHomeOrgProduct1(aThread, aId, aService))
+        public WatchableProduct(IWatchableThread aThread, string aId, IWatchableDevice aDevice, CpProxyAvOpenhomeOrgProduct1 aService)
+            : base(aId, aDevice, new ServiceOpenHomeOrgProduct1(aThread, aId, aService))
         {
             iCpService = aService;
 
@@ -871,10 +867,10 @@ namespace OpenHome.Av
 
     public class MockWatchableProduct : Product, IMockable
     {
-        public MockWatchableProduct(IWatchableThread aThread, string aId, string aRoom, string aName, uint aSourceIndex, SourceXml aSourceXmlFactory, bool aStandby, string aAttributes,
-            string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl, string aModelImageUri, string aModelInfo, string aModelName,
+        public MockWatchableProduct(IWatchableThread aThread, string aId, IWatchableDevice aDevice, string aRoom, string aName, uint aSourceIndex, SourceXml aSourceXmlFactory, bool aStandby,
+            string aAttributes, string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl, string aModelImageUri, string aModelInfo, string aModelName,
             string aModelUrl, string aProductImageUri, string aProductInfo, string aProductUrl)
-            : base(aId, new MockServiceOpenHomeOrgProduct1(aThread, aId, aRoom, aName, aSourceIndex, aSourceXmlFactory, aStandby))
+            : base(aId, aDevice, new MockServiceOpenHomeOrgProduct1(aThread, aId, aRoom, aName, aSourceIndex, aSourceXmlFactory, aStandby))
         {
             iAttributes = aAttributes;
             iManufacturerImageUri = aManufacturerImageUri;

@@ -36,7 +36,6 @@ namespace OpenHome.Av
         IWatchableUnordered<ITopology4Source> Sources { get; }
 
         void SetStandby(bool aValue);
-        void SetSourceIndex(uint aIndex);
     }
 
     public class Topology5Room : ITopology5Room, IWatcher<IEnumerable<ITopology4Source>>, IDisposable
@@ -92,14 +91,6 @@ namespace OpenHome.Av
             if (iRoom != null)
             {
                 iRoom.SetStandby(aValue);
-            }
-        }
-
-        public void SetSourceIndex(uint aIndex)
-        {
-            if (iRoom != null)
-            {
-                iRoom.SetSourceIndex(aIndex);
             }
         }
 

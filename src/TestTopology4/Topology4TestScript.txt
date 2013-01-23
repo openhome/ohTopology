@@ -4,6 +4,7 @@ expect Standby(Kitchen): eOn
 expect Added: 0: Group=Sneaky Music DS, Name=Playlist, Type=Playlist, Visible=True
 expect Added: 1: Group=Sneaky Music DS, Name=Radio, Type=Radio, Visible=True
 expect Added: 3: Group=Sneaky Music DS, Name=Songcast, Type=Receiver, Visible=True
+expect Current: 0: Group=Sneaky Music DS, Name=Playlist, Type=Playlist, Visible=True
 expect Room Added Sitting Room
 expect Standby(Sitting Room): eOn
 expect Added: 0: Group=Klimax DSM, Name=Playlist, Type=Playlist, Visible=True
@@ -16,6 +17,7 @@ expect Added: 8: Group=Klimax DSM, Name=SPDIF1, Type=Digital, Visible=True
 expect Added: 9: Group=Klimax DSM, Name=SPDIF2, Type=Digital, Visible=True
 expect Added: 10: Group=Klimax DSM, Name=TOSLINK1, Type=Digital, Visible=True
 expect Added: 11: Group=Klimax DSM, Name=TOSLINK2, Type=Digital, Visible=True
+expect Current: 0: Group=Klimax DSM, Name=Playlist, Type=Playlist, Visible=True
 expect Room Added Bedroom
 expect Standby(Bedroom): eOn
 expect Added: 0: Group=Kiko DSM, Name=Playlist, Type=Playlist, Visible=True
@@ -28,11 +30,13 @@ expect Added: 8: Group=Kiko DSM, Name=SPDIF1, Type=Digital, Visible=True
 expect Added: 9: Group=Kiko DSM, Name=SPDIF2, Type=Digital, Visible=True
 expect Added: 10: Group=Kiko DSM, Name=TOSLINK1, Type=Digital, Visible=True
 expect Added: 11: Group=Kiko DSM, Name=TOSLINK2, Type=Digital, Visible=True
+expect Current: 0: Group=Kiko DSM, Name=Playlist, Type=Playlist, Visible=True
 expect Room Added Dining Room
 expect Standby(Dining Room): eOn
 expect Added: 0: Group=Majik DS, Name=Playlist, Type=Playlist, Visible=True
 expect Added: 1: Group=Majik DS, Name=Radio, Type=Radio, Visible=True
 expect Added: 3: Group=Majik DS, Name=Songcast, Type=Receiver, Visible=True
+expect Current: 0: Group=Majik DS, Name=Playlist, Type=Playlist, Visible=True
 empty
 
 // test sources are add when ds appears on the network
@@ -42,14 +46,12 @@ expect Standby(Main Room): eOn
 expect Added: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True
 expect Added: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True
 expect Added: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
+expect Current: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True
 empty
 
 // test source are removed when ds disappears on the network
 mock network remove ds 67
 expect Room Removed Main Room
-expect Removed: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True
-expect Removed: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True
-expect Removed: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
 empty
 
 // test changing standby state for a single product in a room
@@ -59,6 +61,7 @@ expect Standby(Main Room): eOn
 expect Added: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True
 expect Added: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True
 expect Added: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
+expect Current: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True
 empty
 mock network update ds 67 product standby false
 expect Standby(Main Room): eOn -> eOff
@@ -75,6 +78,7 @@ expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
 expect Updated: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
+expect Current: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True
 empty
 mock network update ds 67 product standby false
 expect Standby(Main Room): eOn -> eMixed
@@ -90,10 +94,19 @@ expect Standby(Main Room): eMixed -> eOn
 empty
 
 // test adding linking ds 68 to ds 67
-mock network update ds 67 product source 0 name Mock DS
+mock network update ds 68 product name Test
 expect Updated: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
+expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True
+expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True
+expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True
+expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True
+mock network update ds 67 product source 0 name Test
+expect Current Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True
+expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True
+expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True
+expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
 empty
@@ -104,21 +117,48 @@ expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
 empty
 mock network update ds 67 product source 0 visible true
-expect Updated: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True
-expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True
-expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
+expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True
+expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True
+expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
 empty
 
+// change ds 68's selected source
+mock network update ds 68 product sourceindex 1
+expect Current Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True
+empty
+mock network update ds 68 product sourceindex 2
+expect Current Updated: 2: Group=Test, Name=UPnP AV, Type=UpnpAv, Visible=False
+empty
+mock network update ds 68 product sourceindex 3
+expect Current Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True
+empty
+
+// change ds 67's selected source
+mock network update ds 67 product sourceindex 1
+expect Current Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True
+empty
+mock network update ds 67 product sourceindex 2
+expect Current Updated: 2: Group=Mock DS, Name=UPnP AV, Type=UpnpAv, Visible=False
+empty
+mock network update ds 67 product sourceindex 3
+expect Current Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
+empty
+
+// test current source is not updated when changing ds 68's source index when ds 67's source index has not been expanded by ds 68's sources
+mock network update ds 68 product sourceindex 0
+empty
+
 // test breaking link by changing ds 68's name
 mock network update ds 68 product name My DS
-expect Updated: 0: Group=Mock DS, Name=Mock DS, Type=Playlist, Visible=True
+expect Updated: 0: Group=Mock DS, Name=Test, Type=Playlist, Visible=True
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
 expect Updated: 0: Group=My DS, Name=Playlist, Type=Playlist, Visible=True
 expect Updated: 1: Group=My DS, Name=Radio, Type=Radio, Visible=True
 expect Updated: 3: Group=My DS, Name=Songcast, Type=Receiver, Visible=True
+expect Current: 0: Group=My DS, Name=Playlist, Type=Playlist, Visible=True
 empty
 
 exit
