@@ -7,7 +7,7 @@ namespace OpenHome.Av
 {
     public interface IHouse
     {
-        IWatchableCollection<IRoom> Rooms { get; }
+        IWatchableUnordered<IRoom> Rooms { get; }
 
         void Refresh();
     }
@@ -65,9 +65,9 @@ namespace OpenHome.Av
         IWatchable<ISource> Current { get; }
         IWatchable<ITime> Time { get; }
         IWatchable<IInfo> Info { get; }
-        IWatchableCollection<IWatchableSource> Sources { get; }
+        IWatchableUnordered<IWatchableSource> Sources { get; }
         IWatchable<IZone> Zone { get; }
-        IWatchableCollection<IRoom> Listeners { get; } 
+        IWatchableUnordered<IRoom> Listeners { get; } 
 
         void SetStandby(uint aIndex, bool aValue);
         void SetMute(bool aValue);
