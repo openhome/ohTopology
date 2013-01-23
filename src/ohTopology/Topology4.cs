@@ -151,6 +151,7 @@ namespace OpenHome.Av
             {
                 iGroup.Source.RemoveWatcher(this);
                 iGroup = null;
+                iHandler = null;
             }
 
             public ITopology4Source Source
