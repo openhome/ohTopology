@@ -168,8 +168,11 @@ namespace OpenHome.Av
                 iHandler.SourceChanged(iGroup, aValue);
             }
 
-            public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
+            public void ItemUpdate (string aId, ITopology4Source aValue, ITopology4Source aPrevious)
             {
+                if (iHandler == null) {
+                    Console.WriteLine(iHandler);
+                }
                 iSource = aValue;
                 iHandler.SourceChanged(iGroup, aValue);
             }
@@ -448,7 +451,11 @@ namespace OpenHome.Av
 
             Group4Watcher watcher = iGroup4WatcherLookup[aGroup];
             iGroup4WatcherLookup.Remove(aGroup);
-            watcher.Dispose();
+
+            iThread.Schedule(() =>
+            {
+                watcher.Dispose();
+            });
         }
 
         public void SetParent(Topology4Group aGroup)
