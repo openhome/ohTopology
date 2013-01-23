@@ -165,7 +165,7 @@ namespace OpenHome.Av
         {
             if (!aExpression)
             {
-                Console.WriteLine("Failed");
+                //Console.WriteLine("Failed");
                 throw new AssertError();
             }
             else

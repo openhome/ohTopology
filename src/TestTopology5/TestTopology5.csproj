@@ -12,49 +12,50 @@
     <AssemblyName>TestTopology5</AssemblyName>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <DebugSymbols>True</DebugSymbols>
-        <DebugType>full</DebugType>
-        <Optimize>False</Optimize>
-        <OutputPath>..\..\build\ohTopology\AnyPlatform\Debug\bin\</OutputPath>
-        <IntermediateOutputPath>..\..\build\ohTopology\AnyPlatform\Debug\obj\</IntermediateOutputPath>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-        <PlatformTarget>x86</PlatformTarget>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <DebugType>pdbonly</DebugType>
-        <Optimize>True</Optimize>
-        <OutputPath>..\..\build\ohTopology\AnyPlatform\Release\bin\</OutputPath>
-        <IntermediateOutputPath>..\..\build\ohTopology\AnyPlatform\Release\obj\</IntermediateOutputPath>
-        <DefineConstants>TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
-    <ItemGroup>
-        <Reference Include="System" />
-        <Reference Include="ohOs.App.V1">
-            <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
-        </Reference>
-    </ItemGroup>
-    <ItemGroup>
-        <Compile Include="Program.cs" />
-        <Compile Include="Properties\AssemblyInfo.cs" />
-    </ItemGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\ohTopology\ohTopology.csproj">
-            <Project>{B6F3BF75-F35B-4A83-A3F9-2812B97ACA28}</Project>
-            <Name>ohTopology</Name>
-        </ProjectReference>
-    </ItemGroup>
-    <ItemGroup>
-        <Content Include="Topology5TestScript.txt">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-    <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>False</Optimize>
+    <OutputPath>..\..\build\ohTopology\AnyPlatform\Debug\bin\</OutputPath>
+    <IntermediateOutputPath>..\..\build\ohTopology\AnyPlatform\Debug\obj\</IntermediateOutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <Commandlineparameters>Topology5TestScript.txt</Commandlineparameters>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>True</Optimize>
+    <OutputPath>..\..\build\ohTopology\AnyPlatform\Release\bin\</OutputPath>
+    <IntermediateOutputPath>..\..\build\ohTopology\AnyPlatform\Release\obj\</IntermediateOutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="ohOs.App.V1">
+      <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ohTopology\ohTopology.csproj">
+      <Project>{B6F3BF75-F35B-4A83-A3F9-2812B97ACA28}</Project>
+      <Name>ohTopology</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Topology5TestScript.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
