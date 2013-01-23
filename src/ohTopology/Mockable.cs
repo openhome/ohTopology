@@ -145,7 +145,7 @@ namespace OpenHome.Av
         public void Result(string aValue)
         {
             iResultQueue.Enqueue(aValue);
-            Console.WriteLine(aValue);
+            //Console.WriteLine(aValue);
         }
 
         private void Assert(string aActual, string aExpected)
@@ -165,7 +165,7 @@ namespace OpenHome.Av
         {
             if (!aExpression)
             {
-                //Console.WriteLine("Failed");
+                Console.WriteLine("Failed");
                 throw new AssertError();
             }
             else
