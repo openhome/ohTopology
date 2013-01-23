@@ -193,12 +193,12 @@ namespace TestTopology2
             Topology1 topology1 = new Topology1(thread, network);
             Topology2 topology2 = new Topology2(thread, topology1);
 
-            thread.WaitComplete();
-
             MockableScriptRunner runner = new MockableScriptRunner();
 
             GroupWatcher watcher = new GroupWatcher(runner);
             topology2.Groups.AddWatcher(watcher);
+
+            thread.WaitComplete();
 
             try
             {

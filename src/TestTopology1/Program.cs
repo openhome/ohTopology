@@ -70,12 +70,12 @@ namespace TestTopology
 
             Topology1 topology = new Topology1 (thread, network);
 
-            thread.WaitComplete ();
-
             MockableScriptRunner runner = new MockableScriptRunner ();
 
             ProductWatcher watcher = new ProductWatcher (runner);
             topology.Products.AddWatcher (watcher);
+
+            thread.WaitComplete();
 
             try {
                 runner.Run (thread, new StreamReader (args [0]), mocker);

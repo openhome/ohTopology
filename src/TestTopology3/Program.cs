@@ -164,8 +164,6 @@ namespace TestTopology3
             topology3.Rooms.AddWatcher(watcher);
 
             thread.WaitComplete();
-            thread.WaitComplete();
-            thread.WaitComplete();
 
             try
             {
