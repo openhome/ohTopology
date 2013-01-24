@@ -67,6 +67,14 @@ namespace OpenHome.Av
             factory = new WatchableVolumeFactory(aThread);
             iFactories.Add(typeof(Volume), factory);
 
+            // info service
+            factory = new WatchableInfoFactory(aThread);
+            iFactories.Add(typeof(Info), factory);
+
+            // time service
+            factory = new WatchableTimeFactory(aThread);
+            iFactories.Add(typeof(Time), factory);
+
             iServices = new Dictionary<Type, IWatchableService>();
             iServiceRefCount = new Dictionary<Type, uint>();
 
@@ -298,11 +306,25 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("Songcast", "Receiver", true));
             sources.Add(new SourceXml.Source("Net Aux", "NetAux", false));
             SourceXml xml = new SourceXml(sources.ToArray());
+            
+            // product service
             MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, this, "Main Room", "Mock DS", 0, xml, true, "Info Time Volume Sender",
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DS", "",
                 "", "Linn High Fidelity System Component", "");
             Add<Product>(product);
+
+            // volume service
+            MockWatchableVolume volume = new MockWatchableVolume(aThread, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80);
+            Add<Volume>(volume);
+
+            // info service
+            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, 0, 0, string.Empty, 0, false, string.Empty, string.Empty, 0, string.Empty);
+            Add<Info>(info);
+
+            // time service
+            MockWatchableTime time = new MockWatchableTime(aThread, aUdn, 0, 0);
+            Add<Time>(time);
         }
 
         public MockWatchableDs(IWatchableThread aThread, string aUdn, string aRoom, string aName, string aAttributes)
@@ -316,11 +338,25 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("Songcast", "Receiver", true));
             sources.Add(new SourceXml.Source("Net Aux", "NetAux", false));
             SourceXml xml = new SourceXml(sources.ToArray());
+
+            // product service
             MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, this, aRoom, aName, 0, xml, true, aAttributes,
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DS", "",
                 "", "Linn High Fidelity System Component", "");
             Add<Product>(product);
+
+            // volume service
+            MockWatchableVolume volume = new MockWatchableVolume(aThread, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80);
+            Add<Volume>(volume);
+
+            // info service
+            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, 0, 0, string.Empty, 0, false, string.Empty, string.Empty, 0, string.Empty);
+            Add<Info>(info);
+
+            // time service
+            MockWatchableTime time = new MockWatchableTime(aThread, aUdn, 0, 0);
+            Add<Time>(time);
         }
 
         public override void Execute(IEnumerable<string> aValue)
@@ -366,11 +402,25 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("SPDIF2", "Digital", true));
             sources.Add(new SourceXml.Source("TOSLINK1", "Digital", true));
             SourceXml xml = new SourceXml(sources.ToArray());
+
+            // product service
             MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, this, "Main Room", "Mock DS", 0, xml, true, "Info Time Volume Sender",
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DS", "",
                 "", "Linn High Fidelity System Component", "");
             Add<Product>(product);
+
+            // volume service
+            MockWatchableVolume volume = new MockWatchableVolume(aThread, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80);
+            Add<Volume>(volume);
+
+            // info service
+            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, 0, 0, string.Empty, 0, false, string.Empty, string.Empty, 0, string.Empty);
+            Add<Info>(info);
+
+            // time service
+            MockWatchableTime time = new MockWatchableTime(aThread, aUdn, 0, 0);
+            Add<Time>(time);
         }
 
         public MockWatchableDsm(IWatchableThread aThread, string aUdn, string aRoom, string aName, string aAttributes)
@@ -391,11 +441,25 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("TOSLINK1", "Digital", true));
             sources.Add(new SourceXml.Source("TOSLINK2", "Digital", true));
             SourceXml xml = new SourceXml(sources.ToArray());
+
+            // product service
             MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, this, aRoom, aName, 0, xml, true, aAttributes,
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DSM", "",
                 "", "Linn High Fidelity System Component", "");
             Add<Product>(product);
+
+            // volume service
+            MockWatchableVolume volume = new MockWatchableVolume(aThread, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80);
+            Add<Volume>(volume);
+
+            // info service
+            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, 0, 0, string.Empty, 0, false, string.Empty, string.Empty, 0, string.Empty);
+            Add<Info>(info);
+
+            // time service
+            MockWatchableTime time = new MockWatchableTime(aThread, aUdn, 0, 0);
+            Add<Time>(time);
         }
 
         public override void Execute(IEnumerable<string> aValue)
