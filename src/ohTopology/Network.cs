@@ -157,7 +157,7 @@ namespace OpenHome.Av
             {
                 IEnumerable<string> value = aValue.Skip(1);
                 string type = value.First();
-                if (type == "ds" || type == "dsm")
+                if (type == "ds" || type == "dsm" || type == "mediaserver")
                 {
                     value = value.Skip(1);
                     string udn = value.First();
