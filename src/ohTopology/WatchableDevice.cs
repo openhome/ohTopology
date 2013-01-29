@@ -75,6 +75,10 @@ namespace OpenHome.Av
             factory = new WatchableTimeFactory(aThread);
             iFactories.Add(typeof(Time), factory);
 
+            // content directory service
+            factory = new WatchableContentDirectoryFactory(aThread);
+            iFactories.Add(typeof(ContentDirectory), factory);
+
             iServices = new Dictionary<Type, IWatchableService>();
             iServiceRefCount = new Dictionary<Type, uint>();
 
@@ -291,6 +295,40 @@ namespace OpenHome.Av
 
         private IWatchableThread iThread;
         private string iUdn;
+    }
+
+    public class MockWatchableMediaServer : MockWatchableDevice
+    {
+        public MockWatchableMediaServer(IWatchableThread aThread, string aUdn)
+            : base(aThread, aUdn)
+        {
+            // content directory service
+            MockWatchableContentDirectory contentDirectory = new MockWatchableContentDirectory(aThread, aUdn, 0, "");
+            Add<ContentDirectory>(contentDirectory);
+        }
+
+        public override void Execute(IEnumerable<string> aValue)
+        {
+            base.Execute(aValue);
+
+            Type key = typeof(Product);
+            string command = aValue.First().ToLowerInvariant();
+            if (command == "contentdirectory")
+            {
+                foreach (KeyValuePair<Type, IWatchableService> s in iServices)
+                {
+                    if (s.Key == key)
+                    {
+                        MockWatchableContentDirectory p = s.Value as MockWatchableContentDirectory;
+                        p.Execute(aValue.Skip(1));
+                    }
+                }
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
+        }
     }
 
     public class MockWatchableDs : MockWatchableDevice

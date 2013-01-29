@@ -45,6 +45,9 @@
     <Reference Include="CpAvOpenhomeOrgVolume1.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgVolume1.net.dll</HintPath>
     </Reference>
+    <Reference Include="CpUpnpOrgContentDirectory1.net">
+      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpUpnpOrgContentDirectory1.net.dll</HintPath>
+    </Reference>
     <Reference Include="ohNet.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\ohNet.net.dll</HintPath>
     </Reference>
@@ -71,6 +74,7 @@
     <Compile Include="WatchableServiceOpenHomeOrgProduct1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgTime1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgVolume1.cs" />
+    <Compile Include="WatchableServiceUpnpOrgContentDirectory1.cs" />
   </ItemGroup>
   <Import Project="..\SharedSettings.targets" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

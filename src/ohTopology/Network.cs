@@ -21,6 +21,7 @@ namespace OpenHome.Av
 
             // add device lists for each type of watchable service
             iDeviceCollections.Add(typeof(Product), new ServiceWatchableDeviceCollection(aThread, "av.openhome.org", "Product", 1));
+            iDeviceCollections.Add(typeof(ContentDirectory), new ServiceWatchableDeviceCollection(aThread, "upnp.org", "ContentDirectory", 1));
         }
 
         public void Dispose()
@@ -173,9 +174,17 @@ namespace OpenHome.Av
                     {
                         AddDevice(new MockWatchableDs(iThread, udn));
                     }
-                    else
+                    else if(type == "dsm")
                     {
                         AddDevice(new MockWatchableDsm(iThread, udn));
+                    }
+                    else if (type == "mediaserver")
+                    {
+                        AddDevice(new MockWatchableMediaServer(iThread, udn));
+                    }
+                    else
+                    {
+                        throw new NotSupportedException();
                     }
                 }
             }
@@ -183,10 +192,14 @@ namespace OpenHome.Av
             {
                 IEnumerable<string> value = aValue.Skip(1);
                 string type = value.First();
-                if (type == "ds")
+                if (type == "ds" || type == "dsm" || type == "mediaserver")
                 {
                     value = value.Skip(1);
                     RemoveDevice(value.First());
+                }
+                else
+                {
+                    throw new NotSupportedException();
                 }
             }
             else if (command == "update")
