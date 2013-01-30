@@ -26,7 +26,7 @@
     {   "name": "ohOs2",
         "type": "openhome",
         "platform-specific": false,
-        "version": "0.0.148",
+        "version": "0.0.151",
         "archive-suffix": "-Release",
         "dest": "dependencies/AnyPlatform/ohOs2",
         "strip-archive-dirs":1
@@ -34,7 +34,7 @@
 	{   "name": "ohOs.App.V1",
         "type": "openhome",
         "platform-specific": false,
-        "version": "0.0.146",
+        "version": "0.0.151",
         "archive-suffix": "-Release",
         "dest": "dependencies/AnyPlatform/ohOs.App.V1",
         "strip-archive-dirs":1
