@@ -66,6 +66,9 @@ namespace OpenHome.Av
     public interface ITopology2Group
     {
         string Id { get; }
+        string Attributes { get; }
+        IWatchableDevice Device { get; }
+
         IWatchable<string> Room { get; }
         IWatchable<string> Name { get; }
         IWatchable<bool> Standby { get; }
@@ -89,6 +92,7 @@ namespace OpenHome.Av
 
             iProduct = aProduct;
             iDevice = aProduct.Device;
+            iAttributes = aProduct.Attributes;
             iRoom = iProduct.Room;
             iName = iProduct.Name;
             iStandby = iProduct.Standby;
@@ -116,6 +120,14 @@ namespace OpenHome.Av
             get
             {
                 return iId;
+            }
+        }
+
+        public string Attributes
+        {
+            get
+            {
+                return iAttributes;
             }
         }
 
@@ -269,6 +281,7 @@ namespace OpenHome.Av
         private bool iDisposed;
 
         private string iId;
+        private string iAttributes;
         private Product iProduct;
         private IWatchableDevice iDevice;
         private IWatchable<string> iRoom;
