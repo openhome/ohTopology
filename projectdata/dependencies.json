@@ -23,10 +23,18 @@
         "dest": "dependencies/AnyPlatform/ohNet",
         "strip-archive-dirs":1
     },
+    {   "name": "ohOs2",
+        "type": "openhome",
+        "platform-specific": false,
+        "version": "0.0.148",
+        "archive-suffix": "-Release",
+        "dest": "dependencies/AnyPlatform/ohOs2",
+        "strip-archive-dirs":1
+    },
 	{   "name": "ohOs.App.V1",
         "type": "openhome",
         "platform-specific": false,
-        "version": "0.0.133",
+        "version": "0.0.146",
         "archive-suffix": "-Release",
         "dest": "dependencies/AnyPlatform/ohOs.App.V1",
         "strip-archive-dirs":1

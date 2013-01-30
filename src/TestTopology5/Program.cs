@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 
+using OpenHome.Os;
 using OpenHome.Av;
 using OpenHome.Os.App;
 
@@ -90,7 +91,7 @@ namespace TestTopology5
             private MockableScriptRunner iRunner;
         }
 
-        class RoomWatcher : IUnorderedWatcher<ITopology5Room>, IWatcher<EStandby>, IDisposable
+        class RoomWatcher : IUnorderedWatcher<ContentDirectory>, IUnorderedWatcher<ITopology5Room>, IWatcher<EStandby>, IDisposable
         {
             public RoomWatcher(MockableScriptRunner aRunner)
             {
@@ -146,6 +147,16 @@ namespace TestTopology5
                 aItem.Sources.RemoveWatcher(iSourceWatcher);
             }
 
+            public void UnorderedAdd(ContentDirectory aItem)
+            {
+                iRunner.Result("MediaServer Added " + aItem.Id);
+            }
+
+            public void UnorderedRemove(ContentDirectory aItem)
+            {
+                iRunner.Result("MediaServer Removed " + aItem.Id);
+            }
+
             public void ItemOpen(string aId, EStandby aValue)
             {
                 iRunner.Result(string.Format("{0}: {1}", aId, aValue));
@@ -188,10 +199,14 @@ namespace TestTopology5
             Topology4 topology4 = new Topology4(thread, topology3);
             Topology5 topology5 = new Topology5(thread, topology4);
 
+            Library library = new Library(thread, network);
+
             MockableScriptRunner runner = new MockableScriptRunner();
 
             RoomWatcher watcher = new RoomWatcher(runner);
             topology5.Rooms.AddWatcher(watcher);
+
+            library.ContentDirectories.AddWatcher(watcher);
 
             thread.WaitComplete();
 
@@ -204,6 +219,8 @@ namespace TestTopology5
             {
                 return 1;
             }
+
+            library.ContentDirectories.RemoveWatcher(watcher);
 
             topology5.Rooms.RemoveWatcher(watcher);
             watcher.Dispose();

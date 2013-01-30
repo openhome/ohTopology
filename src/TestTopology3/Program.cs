@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 
+using OpenHome.Os;
 using OpenHome.Av;
 using OpenHome.Os.App;
 
