@@ -74,8 +74,8 @@ solutions = [
 # Command-line options. See documentation for Python's optparse module.
 add_option("-t", "--target", help="Target platform. One of Windows-x86, Windows-x64, Linux-x86, Linux-x64, Linux-ARM.")
 add_option("-a", "--artifacts", help="Build artifacts directory. Used to fetch dependencies.")
-add_option("--debug", action="store_const", const="debug", dest="debugmode", default="Debug", help="Build debug version.")
-add_option("--release", action="store_const", const="release", dest="debugmode", help="Build release version.")
+add_option("--debug", action="store_const", const="debug", dest="debugmode", help="Build debug version.")
+add_option("--release", action="store_const", const="release", dest="debugmode", default="release", help="Build release version.")
 add_option("--steps", default="default", help="Steps to run, comma separated. (all,default,fetch,configure,build,tests,publish)")
 add_option("--publish-version", action="store", help="Specify version string.")
 add_option("--fetch-only", action="store_const", const="fetch", dest="steps", help="Fetch dependencies only.")
@@ -102,7 +102,8 @@ def choose_platform(context):
             }[context.env["PLATFORM"]]
     else:
         context.env["OH_PLATFORM"] = default_platform()
-    context.env.update(MSBUILDCONFIGURATION="Release" if context.options.debugmode=="release" else "Debug")
+
+    context.env.update(MSBUILDCONFIGURATION=context.options.debugmode.title())
 
 # Universal build configuration.
 @build_step()
@@ -112,13 +113,13 @@ def setup_universal(context):
         OHNET_ARTIFACTS=context.options.artifacts or 'http://www.openhome.org/releases/artifacts',
         OH_PUBLISHDIR="releases@www.openhome.org:/home/releases/www/artifacts",
         OH_PROJECT="ohTopology",
-        OH_DEBUG=context.options.debugmode,
+        OH_DEBUG=context.options.debugmode.title(),
         BUILDDIR='buildhudson',
         WAFLOCK='.lock-wafbuildhudson',
         OH_VERSION=context.options.publish_version or context.env.get('RELEASE_VERSION', 'UNKNOWN'))
-    context.configure_args = get_dependency_args(env={'debugmode':context.env['OH_DEBUG']})
+    context.configure_args = get_dependency_args(env={'debugmode':context.options.debugmode})
     context.configure_args += ["--dest-platform", env["OH_PLATFORM"]]
-    context.configure_args += ["--" + context.options.debugmode.lower()]
+    context.configure_args += ["--" + context.options.debugmode]
 
 # Extra Windows build configuration.
 @build_step()
@@ -164,7 +165,7 @@ def setup_mac(context):
 # Principal build steps.
 @build_step("fetch", optional=True)
 def fetch(context):
-    fetch_dependencies(env={'debugmode':context.env['OH_DEBUG'],
+    fetch_dependencies(env={'debugmode':context.options.debugmode,
                      'titlecase-debugmode':context.options.debugmode.title()})
 
 @build_step("configure", optional=True)
