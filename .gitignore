@@ -1,9 +1,12 @@
 *.swp
 *.pyc
+*.suo
 
 /build*/
 /dependencies/
 /waf-*/
 /.waf-*/
 /.lock-*
+
+obj/
 
