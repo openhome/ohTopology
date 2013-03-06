@@ -209,7 +209,7 @@ def publish(context):
 
     # only publish the .net binaries from one CI platform, Windows-x86
     if context.env['OH_PLATFORM'] == 'Windows-x86':
-        targetpath    = "{OH_PUBLISHDIR}/{OH_PROJECT}/{OH_PROJECT_NET}-{OH_VERSION}-{OH_PLATFORM}-{OH_DEBUG}.tar.gz".format(**context.env)
+        targetpath    = "{OH_PUBLISHDIR}/{OH_PROJECT}/{OH_PROJECT_NET}-{OH_VERSION}-AnyPlatform-{OH_DEBUG}.tar.gz".format(**context.env)
         sourcepath    = "{BUILDDIR_NET}/{OH_PROJECT_NET}-AnyPlatform-{OH_DEBUG}.tar.gz".format(**context.env)
         scp(sourcepath,    targetpath)
     
