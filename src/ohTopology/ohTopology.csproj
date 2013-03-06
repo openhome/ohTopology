@@ -16,17 +16,13 @@
     <DebugSymbols>True</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
-    <OutputPath>..\..\build\ohTopology\AnyPlatform\Debug\bin\</OutputPath>
-    <IntermediateOutputPath>..\..\build\ohTopology\AnyPlatform\Debug\obj\</IntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>none</DebugType>
     <Optimize>True</Optimize>
-    <OutputPath>..\..\build\ohTopology\AnyPlatform\Release\bin\</OutputPath>
-    <IntermediateOutputPath>..\..\build\ohTopology\AnyPlatform\Release\obj\</IntermediateOutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -79,8 +75,8 @@
   <Import Project="..\SharedSettings.targets" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PackageName>ohTopology-AnyPlatform-$(Configuration)</PackageName>
-    <PackageFilePatterns>ohTopology.dll ohTopology.*db</PackageFilePatterns>
+    <PackageName>ohTopology.net-AnyPlatform-$(Configuration)</PackageName>
+    <PackageFilePatterns>ohTopology.net.dll ohTopology.net.*db</PackageFilePatterns>
   </PropertyGroup>
   <PropertyGroup>
   </PropertyGroup>

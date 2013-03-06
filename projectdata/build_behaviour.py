@@ -113,8 +113,10 @@ def setup_universal(context):
         OHNET_ARTIFACTS=context.options.artifacts or 'http://www.openhome.org/releases/artifacts',
         OH_PUBLISHDIR="releases@www.openhome.org:/home/releases/www/artifacts",
         OH_PROJECT="ohTopology",
+        OH_PROJECT_NET="ohTopology.net",
         OH_DEBUG=context.options.debugmode.title(),
         BUILDDIR='buildhudson',
+        BUILDDIR_NET='build/packages',
         WAFLOCK='.lock-wafbuildhudson',
         OH_VERSION=context.options.publish_version or context.env.get('RELEASE_VERSION', 'UNKNOWN'))
     context.configure_args = get_dependency_args(env={'debugmode':context.options.debugmode})
@@ -187,15 +189,26 @@ def build(context):
 @build_step("test", optional=True)
 def test(context):
     python("waf", "test")
-    cli(['build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/TestTopology1.exe', 'build/ohTopology/AnyPlatform/' + context.options.debugmode.title()+ '/bin/Topology1TestScript.txt'])
-    cli(['build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/TestTopology2.exe', 'build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/Topology2TestScript.txt'])
-    cli(['build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/TestTopology3.exe', 'build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/Topology3TestScript.txt'])
-    cli(['build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/TestTopology4.exe', 'build/ohTopology/AnyPlatform/' + context.options.debugmode.title() + '/bin/Topology4TestScript.txt'])
+
+    def run_test(num):
+        prog = 'build/TestTopology%(num)d/bin/%(debugmode)s/TestTopology%(num)d.exe'
+        scrp = 'build/TestTopology%(num)d/bin/%(debugmode)s/Topology%(num)dTestScript.txt'
+        fmt = { 'num' : num, 'debugmode' : context.options.debugmode.title() }
+        cli([prog % fmt, scrp % fmt])
+    run_test(1)
+    run_test(2)
+    run_test(3)
+    run_test(4)
+
 
 @build_step("publish", optional=True, default=False)
 def publish(context):
     targetpath    = "{OH_PUBLISHDIR}/{OH_PROJECT}/{OH_PROJECT}-{OH_VERSION}-{OH_PLATFORM}-{OH_DEBUG}.tar.gz".format(**context.env)
     sourcepath    = "{BUILDDIR}/{OH_PROJECT}.tar.gz".format(**context.env)
+    scp(sourcepath,    targetpath)
+
+    targetpath    = "{OH_PUBLISHDIR}/{OH_PROJECT}/{OH_PROJECT_NET}-{OH_VERSION}-{OH_PLATFORM}-{OH_DEBUG}.tar.gz".format(**context.env)
+    sourcepath    = "{BUILDDIR_NET}/{OH_PROJECT_NET}-{OH_PLATFORM}-{OH_DEBUG}.tar.gz".format(**context.env)
     scp(sourcepath,    targetpath)
     
 def do_build(context, solution, target):
