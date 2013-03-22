@@ -1,6 +1,7 @@
 *.swp
 *.pyc
 *.suo
+*.user
 
 /build*/
 /dependencies/
