@@ -124,15 +124,13 @@ namespace OpenHome.Av
     public interface ITopology4Group
     {
         string Name { get; }
+
         IWatchableDevice VolumeDevice { get; }
         IWatchableDevice InfoDevice { get; }
         bool HasTime { get; }
-        IWatchable<bool> Standby { get; }
+
         IWatchable<ITopology4Source> Source { get; }
-
         IEnumerable<ITopology4Source> Sources { get; }
-
-        void SetStandby(bool aValue);
     }
 
     internal interface IGroup4WatcherHandler
@@ -202,8 +200,6 @@ namespace OpenHome.Av
             iInfoDevice = iGroup.Attributes.Contains("Info") ? iGroup.Device : null;
             iHasTime = (iGroup.Attributes.Contains("Time") && iInfoDevice != null);
             iDevice = iGroup.Device;
-
-            iStandby = iGroup.Standby;
 
             iChildren = new List<Topology4Group>();
 
@@ -284,14 +280,6 @@ namespace OpenHome.Av
             get
             {
                 return iDevice;
-            }
-        }
-
-        public IWatchable<bool> Standby
-        {
-            get
-            {
-                return iStandby;
             }
         }
 
@@ -495,14 +483,6 @@ namespace OpenHome.Av
             iParentSourceIndex = aIndex;
         }
 
-        public void SetStandby(bool aValue)
-        {
-            if (iGroup != null)
-            {
-                iGroup.SetStandby(aValue);
-            }
-        }
-
         public void SetSourceIndex(uint aValue)
         {
             if (iGroup != null)
@@ -563,7 +543,6 @@ namespace OpenHome.Av
 
         private IWatchableDevice iDevice;
 
-        private IWatchable<bool> iStandby;
         private Watchable<ITopology4Source> iWatchableSource;
 
         private IWatchableThread iThread;
