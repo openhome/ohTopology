@@ -199,6 +199,7 @@ def test(context):
     run_test(2)
     run_test(3)
     run_test(4)
+    run_test(5)
 
 
 @build_step("publish", optional=True, default=False)

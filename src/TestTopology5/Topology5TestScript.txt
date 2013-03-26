@@ -1,1 +1,64 @@
-﻿exit
+﻿
+// test network is populated with 4 devices
+expect Room Added: Kitchen
+expect Standby(Kitchen): eOn
+expect Root Added: Name=Sneaky Music DS
+expect Current: 0: Group=Sneaky Music DS, Name=Playlist, Type=Playlist, Visible=True
+expect Source Added: 0: Group=Sneaky Music DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1111-ef000004013f, Volume=4c494e4e-0026-0f99-1111-ef000004013f 
+expect Source Added: 1: Group=Sneaky Music DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1111-ef000004013f, Volume=4c494e4e-0026-0f99-1111-ef000004013f 
+expect Source Added: 3: Group=Sneaky Music DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1111-ef000004013f, Volume=4c494e4e-0026-0f99-1111-ef000004013f 
+
+expect Room Added: Sitting Room
+expect Standby(Sitting Room): eOn
+expect Root Added: Name=Klimax DSM
+expect Current: 0: Group=Klimax DSM, Name=Playlist, Type=Playlist, Visible=True
+expect Source Added: 0: Group=Klimax DSM, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1112-ef000004013f, Volume=4c494e4e-0026-0f99-1112-ef000004013f 
+expect Source Added: 1: Group=Klimax DSM, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1112-ef000004013f, Volume=4c494e4e-0026-0f99-1112-ef000004013f 
+expect Source Added: 3: Group=Klimax DSM, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1112-ef000004013f, Volume=4c494e4e-0026-0f99-1112-ef000004013f 
+expect Source Added: 5: Group=Klimax DSM, Name=Analog1, Type=Analog, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1112-ef000004013f, Volume=4c494e4e-0026-0f99-1112-ef000004013f 
+expect Source Added: 6: Group=Klimax DSM, Name=Analog2, Type=Analog, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1112-ef000004013f, Volume=4c494e4e-0026-0f99-1112-ef000004013f 
+expect Source Added: 7: Group=Klimax DSM, Name=Phono, Type=Analog, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1112-ef000004013f, Volume=4c494e4e-0026-0f99-1112-ef000004013f 
+expect Source Added: 8: Group=Klimax DSM, Name=SPDIF1, Type=Digital, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1112-ef000004013f, Volume=4c494e4e-0026-0f99-1112-ef000004013f 
+expect Source Added: 9: Group=Klimax DSM, Name=SPDIF2, Type=Digital, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1112-ef000004013f, Volume=4c494e4e-0026-0f99-1112-ef000004013f 
+expect Source Added: 10: Group=Klimax DSM, Name=TOSLINK1, Type=Digital, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1112-ef000004013f, Volume=4c494e4e-0026-0f99-1112-ef000004013f 
+expect Source Added: 11: Group=Klimax DSM, Name=TOSLINK2, Type=Digital, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1112-ef000004013f, Volume=4c494e4e-0026-0f99-1112-ef000004013f 
+
+expect Room Added: Bedroom
+expect Standby(Bedroom): eOn
+expect Root Added: Name=Kiko DSM
+expect Current: 0: Group=Kiko DSM, Name=Playlist, Type=Playlist, Visible=True
+expect Source Added: 0: Group=Kiko DSM, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1113-ef000004013f, Volume=4c494e4e-0026-0f99-1113-ef000004013f 
+expect Source Added: 1: Group=Kiko DSM, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1113-ef000004013f, Volume=4c494e4e-0026-0f99-1113-ef000004013f 
+expect Source Added: 3: Group=Kiko DSM, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1113-ef000004013f, Volume=4c494e4e-0026-0f99-1113-ef000004013f 
+expect Source Added: 5: Group=Kiko DSM, Name=Analog1, Type=Analog, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1113-ef000004013f, Volume=4c494e4e-0026-0f99-1113-ef000004013f 
+expect Source Added: 6: Group=Kiko DSM, Name=Analog2, Type=Analog, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1113-ef000004013f, Volume=4c494e4e-0026-0f99-1113-ef000004013f 
+expect Source Added: 7: Group=Kiko DSM, Name=Phono, Type=Analog, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1113-ef000004013f, Volume=4c494e4e-0026-0f99-1113-ef000004013f 
+expect Source Added: 8: Group=Kiko DSM, Name=SPDIF1, Type=Digital, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1113-ef000004013f, Volume=4c494e4e-0026-0f99-1113-ef000004013f 
+expect Source Added: 9: Group=Kiko DSM, Name=SPDIF2, Type=Digital, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1113-ef000004013f, Volume=4c494e4e-0026-0f99-1113-ef000004013f 
+expect Source Added: 10: Group=Kiko DSM, Name=TOSLINK1, Type=Digital, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1113-ef000004013f, Volume=4c494e4e-0026-0f99-1113-ef000004013f 
+expect Source Added: 11: Group=Kiko DSM, Name=TOSLINK2, Type=Digital, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1113-ef000004013f, Volume=4c494e4e-0026-0f99-1113-ef000004013f 
+
+expect Room Added: Dining Room
+expect Standby(Dining Room): eOn
+expect Root Added: Name=Majik DS
+expect Current: 0: Group=Majik DS, Name=Playlist, Type=Playlist, Visible=True
+expect Source Added: 0: Group=Majik DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1114-ef000004013f, Volume=4c494e4e-0026-0f99-1114-ef000004013f 
+expect Source Added: 1: Group=Majik DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1114-ef000004013f, Volume=4c494e4e-0026-0f99-1114-ef000004013f 
+expect Source Added: 3: Group=Majik DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1114-ef000004013f, Volume=4c494e4e-0026-0f99-1114-ef000004013f 
+empty
+
+// test adding a new room
+mock network add ds 67
+expect Room Added: Main Room
+expect Standby(Main Room): eOn
+expect Root Added: Name=Mock DS
+expect Current: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True
+expect Source Added: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+expect Source Added: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+expect Source Added: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+empty
+
+exit
+
+
+
