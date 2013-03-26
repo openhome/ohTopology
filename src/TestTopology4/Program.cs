@@ -127,7 +127,7 @@ namespace TestTopology4
             {
                 foreach (ITopology4Source s in aValue)
                 {
-                    iRunner.Result(string.Format("Added: {0}: Group={1}, Name={2}, Type={3}, Visible={4}", s.Index, s.Group, s.Name, s.Type, s.Visible));
+                    iRunner.Result(string.Format("Added: {0}", SourceInfo(s)));
                 }
             }
 
@@ -135,7 +135,7 @@ namespace TestTopology4
             {
                 foreach (ITopology4Source s in aValue)
                 {
-                    iRunner.Result(string.Format("Updated: {0}: Group={1}, Name={2}, Type={3}, Visible={4}", s.Index, s.Group, s.Name, s.Type, s.Visible));
+                    iRunner.Result(string.Format("Updated: {0}", SourceInfo(s)));
                 }
             }
 
@@ -143,8 +143,21 @@ namespace TestTopology4
             {
                 foreach (ITopology4Source s in aValue)
                 {
-                    iRunner.Result(string.Format("Removed: {0}: Group={1}, Name={2}, Type={3}, Visible={4}", s.Index, s.Group, s.Name, s.Type, s.Visible));
+                    iRunner.Result(string.Format("Removed: {0}", SourceInfo(s)));
                 }
+            }
+
+            private string SourceInfo(ITopology4Source aSource)
+            {
+                string info = string.Format("{0}: Group={1}, Name={2}, Type={3}, Visible={4}, HasInfo={5}, HasTime={6}, Device={7}, Volume=",
+                                            aSource.Index, aSource.Group, aSource.Name, aSource.Type, aSource.Visible, aSource.HasInfo, aSource.HasTime, aSource.Device.Udn);
+
+                foreach (IWatchableDevice d in aSource.VolumeDevices)
+                {
+                    info += d.Udn + " ";
+                }
+
+                return info;
             }
 
             private MockableScriptRunner iRunner;

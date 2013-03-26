@@ -13,29 +13,47 @@ namespace OpenHome.Av
         string Group { get; }
         string Type { get; }
         bool Visible { get; }
-        IWatchable<IEnumerable<IWatchableDevice>> VolumeDevices { get; }
-        IWatchable<IWatchableDevice> InfoDevice { get; }
-        IWatchable<bool> HasTime { get; }
+
+        IEnumerable<IWatchableDevice> VolumeDevices { get; }
+        IWatchableDevice Device { get; }
+        bool HasInfo { get; }
+        bool HasTime { get; }
 
         void Select();
     }
 
+    public class Topology4SourceComparer
+    {
+        public static bool Equals(ITopology4Source aSource1, ITopology4Source aSource2)
+        {
+            return (aSource1.Index == aSource2.Index
+                 && aSource1.Name == aSource2.Name
+                 && aSource1.Group == aSource2.Group
+                 && aSource1.Type == aSource2.Type
+                 && aSource1.Visible == aSource2.Visible
+                 && aSource1.VolumeDevices == aSource2.VolumeDevices
+                 && aSource1.Device == aSource2.Device
+                 && aSource1.HasInfo == aSource2.HasInfo
+                 && aSource1.HasTime == aSource2.HasTime);
+        }
+    }
+
     public class Topology4Source : ITopology4Source
     {
-        public Topology4Source(IWatchableThread aThread, Topology4Group aGroup, ITopology2Source aSource)
+        public Topology4Source(Topology4Group aGroup, ITopology2Source aSource, IEnumerable<IWatchableDevice> aVolumeDevices, IWatchableDevice aDevice, bool aHasInfo, bool aHasTime)
         {
             iGroup = aGroup;
-            iSource = aSource;
 
             iGroupName = iGroup.Name;
-            iIndex = iSource.Index;
-            iName = iSource.Name;
-            iType = iSource.Type;
-            iVisible = iSource.Visible;
+            iIndex = aSource.Index;
+            iName = aSource.Name;
+            iType = aSource.Type;
+            iVisible = aSource.Visible;
 
-//            iVolumeDevices = new Watchable<IEnumerable<IWatchableDevice>>(aThread, string.Format("VolumeDevices({0})", iGroupName), new List<IWatchableDevice>());
-//            iInfoDevice = new Watchable<IWatchableDevice>(aThread, string.Format("InfoDevice({0})", iGroupName), iGroup.InfoDevice);
-//            iHasTime = new Watchable<bool>(aThread, string.Format("HasTime({0})", iGroupName), iGroup.HasTime);
+            iVolumeDevices = aVolumeDevices;
+            iDevice = aDevice;
+            iHasInfo = aHasInfo;
+            iHasTime = aHasTime;
         }
 
         public uint Index
@@ -78,28 +96,24 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<IEnumerable<IWatchableDevice>> VolumeDevices
+        public IEnumerable<IWatchableDevice> VolumeDevices
         {
-            get
-            {
-                return null;// iVolumeDevices;
-            }
+            get { return iVolumeDevices; }
         }
 
-        public IWatchable<IWatchableDevice> InfoDevice
+        public IWatchableDevice Device
         {
-            get
-            {
-                return null;// iInfoDevice;
-            }
+            get { return iDevice; }
         }
 
-        public IWatchable<bool> HasTime
+        public bool HasInfo
         {
-            get
-            {
-                return null;// iHasTime;
-            }
+            get { return iHasInfo; }
+        }
+
+        public bool HasTime
+        {
+            get { return iHasTime; }
         }
 
         public void Select()
@@ -108,7 +122,6 @@ namespace OpenHome.Av
         }
 
         private Topology4Group iGroup;
-        private ITopology2Source iSource;
 
         private string iGroupName;
         private uint iIndex;
@@ -116,9 +129,10 @@ namespace OpenHome.Av
         private string iType;
         private bool iVisible;
 
-//        private Watchable<IEnumerable<IWatchableDevice>> iVolumeDevices;
-//        private Watchable<IWatchableDevice> iInfoDevice;
-//        private Watchable<bool> iHasTime;
+        private IEnumerable<IWatchableDevice> iVolumeDevices;
+        private IWatchableDevice iDevice;
+        private bool iHasInfo;
+        private bool iHasTime;
     }
 
     public interface ITopology4Group
@@ -191,10 +205,6 @@ namespace OpenHome.Av
             iThread = aThread;
             iName = aName;
             iGroup = aGroup;
-
-            //iVolumeDevice = iGroup.Attributes.Contains("Volume") ? iGroup.Device : null;
-            //iInfoDevice = iGroup.Attributes.Contains("Info") ? iGroup.Device : null;
-            //iHasTime = (iGroup.Attributes.Contains("Time") && iInfoDevice != null);
 
             iSource2s = new List<ITopology2Source>();
             iSource4s = new List<ITopology4Source>();
@@ -291,7 +301,7 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, ITopology2Source aValue)
         {
-            Topology4Source source = new Topology4Source(iThread, this, aValue);
+            ITopology4Source source = CreateSource(aValue);
             iSource2s.Add(aValue);
             iSource4s.Add(source);
         }
@@ -301,7 +311,7 @@ namespace OpenHome.Av
             int index = iSource2s.IndexOf(aPrevious);
 
             ITopology4Source oldSource = iSource4s[index];
-            ITopology4Source newSource = new Topology4Source(iThread, this, aValue);
+            ITopology4Source newSource = CreateSource(aValue);
 
             iSource2s[index] = aValue;
             iSource4s[index] = newSource;
@@ -317,6 +327,32 @@ namespace OpenHome.Av
             int index = iSource2s.IndexOf(aValue);
             iSource2s.RemoveAt(index);
             iSource4s.RemoveAt(index);
+        }
+
+        private ITopology4Source CreateSource(ITopology2Source aSource2)
+        {
+            IWatchableDevice device = iGroup.Device;
+            bool hasInfo = iGroup.Attributes.Contains("Info");
+            bool hasTime = iGroup.Attributes.Contains("Time") && hasInfo;
+
+            // get list of all volume devices
+            List<IWatchableDevice> volDevices = new List<IWatchableDevice>();
+
+            Topology4Group group = this;
+
+            while (group != null)
+            {
+                IWatchableDevice volDevice = group.iGroup.Attributes.Contains("Volume") ? group.iGroup.Device : null;
+
+                if (volDevice != null)
+                {
+                    volDevices.Insert(0, volDevice);
+                }
+
+                group = group.Parent;
+            }
+
+            return new Topology4Source(this, aSource2, volDevices, device, hasInfo, hasTime);
         }
 
         // IWatcher<uint>
@@ -461,6 +497,12 @@ namespace OpenHome.Av
         private void SetParent(Topology4Group aGroup)
         {
             iParent = aGroup;
+
+            // parent has changed - volume controls for sources potentially change as well
+            for (int i = 0; i < iSource2s.Count; i++)
+            {
+                iSource4s[i] = CreateSource(iSource2s[i]);
+            }
         }
 
         private void SetParent(Topology4Group aGroup, uint aIndex)
@@ -469,42 +511,6 @@ namespace OpenHome.Av
             iParentSourceIndex = aIndex;
         }
 
-/*
-        private void EvaluateInfoGroup()
-        {
-            Topology4Group group = this;
-            IWatchableDevice device = InfoDevice;
-
-            while (group != null && device == null)
-            {
-                group = group.Parent;
-                device = group.InfoDevice;
-            }
-
-            iCurrentInfoDevice = group.InfoDevice;
-            iCurrentHasTime = group.HasTime;
-        }
-
-        private void EvaluateVolumeDevices()
-        {
-            List<IWatchableDevice> volumeDevices = new List<IWatchableDevice>();
-            Topology4Group group = this;
-            IWatchableDevice device = VolumeDevice;
-
-            while (group != null)
-            {
-                if (device != null)
-                {
-                    volumeDevices.Insert(0, device);
-                }
-
-                group = group.Parent;
-                device = group.VolumeDevice;
-            }
-
-            iCurrentVolumeDevices = volumeDevices.ToArray();
-        }
-*/
         private IWatchableThread iThread;
         private ITopology2Group iGroup;
         private string iName;
@@ -936,11 +942,8 @@ namespace OpenHome.Av
                 {
                     ITopology4Source oldSource = iSources.ElementAt(i);
                     ITopology4Source newSource = sources[i];
-                    if (oldSource.Group != newSource.Group ||
-                        oldSource.Name != newSource.Name ||
-                        oldSource.Visible != newSource.Visible ||
-                        oldSource.Index != newSource.Index ||       // linn products cannot change a source's index
-                        oldSource.Type != newSource.Type)           // linn products cannot change a source's type
+
+                    if (!Topology4SourceComparer.Equals(oldSource, newSource))
                     {
                         iSources = sources;
                         iWatchableSources.Update(sources);
