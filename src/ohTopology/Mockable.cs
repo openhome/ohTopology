@@ -134,6 +134,12 @@ namespace OpenHome.Av
 					{
 						Assert(iResultQueue.Count == 0);
 					}
+                    else if (command == "break")
+                    {
+                        // dummy command to allow adding break points - add a VS break point to the line below and add a "break" line
+                        // in the test script
+                        string cmd = command;
+                    }
                     else
                     {
                         throw new NotSupportedException();
