@@ -6,57 +6,122 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public class WatchableTopology4SourceUnordered : WatchableUnordered<ITopology4Source>
+    public class WatchableRelay<T> : IWatchable<T>, IWatcher<T>, IDisposable
     {
-        public WatchableTopology4SourceUnordered(IWatchableThread aThread)
-            : base(aThread)
+        public WatchableRelay(IWatchable<T> aWatchable)
         {
-            iList = new List<ITopology4Source>();
+            iWatchable = aWatchable;
+            aWatchable.AddWatcher(this);
         }
 
-        public new void Add(ITopology4Source aValue)
+        public void Detach()
         {
-            iList.Add(aValue);
-            base.Add(aValue);
+            iWatchable.RemoveWatcher(this);
         }
 
-        public new void Remove(ITopology4Source aValue)
+        public void Dispose()
         {
-            iList.Remove(aValue);
-            base.Remove(aValue);
+            iRelay.Dispose();
+            iRelay = null;
         }
 
-        private List<ITopology4Source> iList;
+        // IWatchable<T>
+
+        public string Id
+        {
+            get { return iRelay.Id; }
+        }
+
+        public void AddWatcher(IWatcher<T> aWatcher)
+        {
+            iRelay.AddWatcher(aWatcher);
+        }
+
+        public void RemoveWatcher(IWatcher<T> aWatcher)
+        {
+            iRelay.RemoveWatcher(aWatcher);
+        }
+
+        // IWatcher<T>
+
+        public void ItemOpen(string aId, T aValue)
+        {
+            iRelay = new Watchable<T>(iWatchable.WatchableThread, iWatchable.Id + "(Relay)", aValue);
+        }
+
+        public void ItemUpdate(string aId, T aValue, T aPrevious)
+        {
+            iRelay.Update(aValue);
+        }
+
+        public void ItemClose(string aId, T aValue)
+        {
+        }
+
+        public IWatchableThread WatchableThread
+        {
+            get
+            {
+                return iRelay.WatchableThread;
+            }
+        }
+
+        private IWatchable<T> iWatchable;
+        private Watchable<T> iRelay;
     }
 
-    public class WatchableTopology4GroupUnordered : WatchableUnordered<ITopology4Group>
+    public interface ITopology5Group
     {
-        public WatchableTopology4GroupUnordered(IWatchableThread aThread)
-            : base(aThread)
+        string Name { get; }
+        IWatchable<ITopology4Source> Source { get; }
+    }
+
+    public class Topology5Group : ITopology5Group, IDisposable
+    {
+        public Topology5Group(ITopology4Group aGroup)
         {
-            iList = new List<ITopology4Group>();
+            iGroup = aGroup;
+            iName = aGroup.Name;
+            iSource = new WatchableRelay<ITopology4Source>(aGroup.Source);
         }
 
-        public new void Add(ITopology4Group aValue)
+        public void Detach()
         {
-            iList.Add(aValue);
-            base.Add(aValue);
+            iSource.Detach();
         }
 
-        public new void Remove(ITopology4Group aValue)
+        public void Dispose()
         {
-            iList.Remove(aValue);
-            base.Remove(aValue);
+            iSource.Dispose();
+            iSource = null;
         }
 
-        private List<ITopology4Group> iList;
+        public string Name
+        {
+            get
+            {
+                return iName;
+            }
+        }
+
+        public IWatchable<ITopology4Source> Source
+        {
+            get
+            {
+                return iSource;
+            }
+        }
+
+        private ITopology4Group iGroup;
+        private string iName;
+        private WatchableRelay<ITopology4Source> iSource;
     }
 
     public interface ITopology5Room
     {
         string Name { get; }
         IWatchable<EStandby> Standby { get; }
-        IWatchableUnordered<ITopology4Group> Roots { get; }
+        IWatchableUnordered<ITopology5Group> Roots { get; }
         IWatchableUnordered<ITopology4Source> Sources { get; }
 
         void SetStandby(bool aValue);
@@ -68,20 +133,43 @@ namespace OpenHome.Av
         {
             iThread = aThread;
             iRoom = aRoom;
-
             iName = iRoom.Name;
-            iStandby = iRoom.Standby;
+
+            iStandby = new WatchableRelay<EStandby>(iRoom.Standby);
+            iRoots = new WatchableUnordered<ITopology5Group>(iThread);
+            iSources = new WatchableUnordered<ITopology4Source>(iThread);
+            iRootLookup = new Dictionary<ITopology4Group, Topology5Group>();
 
             iRoom.Roots.AddWatcher(this);
             iRoom.Sources.AddWatcher(this);
         }
 
-        public void Dispose()
+        public void Detach()
         {
+            iStandby.Detach();
             iRoom.Roots.RemoveWatcher(this);
             iRoom.Sources.RemoveWatcher(this);
             iRoom = null;
         }
+
+        public void Dispose()
+        {
+            foreach (Topology5Group root in iRootLookup.Values)
+            {
+                root.Detach();
+                root.Dispose();
+            }
+
+            iStandby.Dispose();
+            iRoots.Dispose();
+            iSources.Dispose();
+
+            iStandby = null;
+            iRoots = null;
+            iSources = null;
+        }
+
+        // ITopology5Room
 
         public string Name
         {
@@ -95,11 +183,11 @@ namespace OpenHome.Av
         {
             get
             {
-                return iRoom.Standby;
+                return iStandby;
             }
         }
 
-        public IWatchableUnordered<ITopology4Group> Roots
+        public IWatchableUnordered<ITopology5Group> Roots
         {
             get
             {
@@ -123,62 +211,44 @@ namespace OpenHome.Av
             }
         }
 
+        // IWatcher<IEnumerable<ITopology4Group>>
+
         public void ItemOpen(string aId, IEnumerable<ITopology4Group> aValue)
         {
-            iRoots = new WatchableTopology4GroupUnordered(iThread);
-
             foreach (ITopology4Group g in aValue)
             {
-                iRoots.Add(g);
+                AddRoot(g);
             }
         }
 
         public void ItemUpdate(string aId, IEnumerable<ITopology4Group> aValue, IEnumerable<ITopology4Group> aPrevious)
         {
             List<ITopology4Group> removed = new List<ITopology4Group>();
-            foreach (ITopology4Group g1 in aPrevious)
+            foreach (ITopology4Group g in aPrevious)
             {
-                bool found = false;
-                foreach (ITopology4Group g2 in aValue)
+                if (!aValue.Contains(g))
                 {
-                    if (g1 == g2)
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                {
-                    removed.Add(g1);
+                    removed.Add(g);
                 }
             }
 
             List<ITopology4Group> added = new List<ITopology4Group>();
-            foreach (ITopology4Group g1 in aValue)
+            foreach (ITopology4Group g in aValue)
             {
-                bool found = false;
-                foreach (ITopology4Group g2 in aPrevious)
+                if (!aPrevious.Contains(g))
                 {
-                    if (g1 == g2)
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                {
-                    added.Add(g1);
+                    added.Add(g);
                 }
             }
 
             foreach (ITopology4Group g in removed)
             {
-                iRoots.Remove(g);
+                RemoveRoot(g);
             }
 
             foreach (ITopology4Group g in added)
             {
-                iRoots.Add(g);
+                AddRoot(g);
             }
         }
 
@@ -186,16 +256,35 @@ namespace OpenHome.Av
         {
             foreach (ITopology4Group g in aValue)
             {
-                iRoots.Remove(g);
+                RemoveRoot(g);
             }
-            iRoots.Dispose();
-            iRoots = null;
         }
+
+        private void AddRoot(ITopology4Group aRoot)
+        {
+            Topology5Group root = new Topology5Group(aRoot);
+            iRoots.Add(root);
+            iRootLookup.Add(aRoot, root);
+        }
+
+        private void RemoveRoot(ITopology4Group aRoot)
+        {
+            Topology5Group root = iRootLookup[aRoot];
+            iRootLookup.Remove(aRoot);
+            iRoots.Remove(root);
+
+            root.Detach();
+
+            iThread.Schedule(() =>
+            {
+                root.Dispose();
+            });
+        }
+
+        // IWatcher<IEnumerable<ITopology4Source>>
 
         public void ItemOpen(string aId, IEnumerable<ITopology4Source> aValue)
         {
-            iSources = new WatchableTopology4SourceUnordered(iThread);
-
             foreach (ITopology4Source s in aValue)
             {
                 iSources.Add(s);
@@ -205,38 +294,20 @@ namespace OpenHome.Av
         public void ItemUpdate(string aId, IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
         {
             List<ITopology4Source> removed = new List<ITopology4Source>();
-            foreach (ITopology4Source s1 in aPrevious)
+            foreach (ITopology4Source s in aPrevious)
             {
-                bool found = false;
-                foreach (ITopology4Source s2 in aValue)
+                if (!aValue.Contains(s))
                 {
-                    if (s1 == s2)
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                {
-                    removed.Add(s1);
+                    removed.Add(s);
                 }
             }
 
             List<ITopology4Source> added = new List<ITopology4Source>();
-            foreach (ITopology4Source s1 in aValue)
+            foreach (ITopology4Source s in aValue)
             {
-                bool found = false;
-                foreach (ITopology4Source s2 in aPrevious)
+                if (!aPrevious.Contains(s))
                 {
-                    if (s1 == s2)
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                {
-                    added.Add(s1);
+                    added.Add(s);
                 }
             }
 
@@ -257,41 +328,15 @@ namespace OpenHome.Av
             {
                 iSources.Remove(s);
             }
-
-            iSources.Dispose();
-            iSources = null;
         }
 
         private IWatchableThread iThread;
         private ITopology4Room iRoom;
-
         private string iName;
-        private IWatchable<EStandby> iStandby;
-        private WatchableTopology4GroupUnordered iRoots;
-        private WatchableTopology4SourceUnordered iSources;
-    }
-
-    public class WatchableTopology5RoomUnordered : WatchableUnordered<ITopology5Room>
-    {
-        public WatchableTopology5RoomUnordered(IWatchableThread aThread)
-            : base(aThread)
-        {
-            iList = new List<ITopology5Room>();
-        }
-
-        public new void Add(ITopology5Room aValue)
-        {
-            iList.Add(aValue);
-            base.Add(aValue);
-        }
-
-        public new void Remove(ITopology5Room aValue)
-        {
-            iList.Remove(aValue);
-            base.Remove(aValue);
-        }
-
-        private List<ITopology5Room> iList;
+        private WatchableRelay<EStandby> iStandby;
+        private WatchableUnordered<ITopology5Group> iRoots;
+        private WatchableUnordered<ITopology4Source> iSources;
+        private Dictionary<ITopology4Group, Topology5Group> iRootLookup;
     }
 
     public interface ITopology5
@@ -303,11 +348,10 @@ namespace OpenHome.Av
     {
         public Topology5(IWatchableThread aThread, ITopology4 aTopology4)
         {
-            iDisposed = false;
             iThread = aThread;
             iTopology4 = aTopology4;
 
-            iRooms = new WatchableTopology5RoomUnordered(iThread);
+            iRooms = new WatchableUnordered<ITopology5Room>(iThread);
             iRoomLookup = new Dictionary<ITopology4Room, Topology5Room>();
 
             iTopology4.Rooms.AddWatcher(this);
@@ -315,7 +359,7 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            if (iDisposed)
+            if (iTopology4 == null)
             {
                 throw new ObjectDisposedException("Topology5.Dispose");
             }
@@ -325,16 +369,18 @@ namespace OpenHome.Av
 
             foreach (Topology5Room r in iRoomLookup.Values)
             {
+                r.Detach();
                 r.Dispose();
             }
+
             iRoomLookup.Clear();
             iRoomLookup = null;
 
             iRooms.Dispose();
             iRooms = null;
-
-            iDisposed = true;
         }
+
+        // ITopology5 
 
         public IWatchableUnordered<ITopology5Room> Rooms
         {
@@ -343,6 +389,8 @@ namespace OpenHome.Av
                 return iRooms;
             }
         }
+
+        // IUnorderedWatcher<ITopology4Room>
 
         public void UnorderedOpen()
         {
@@ -370,17 +418,17 @@ namespace OpenHome.Av
             iRooms.Remove(room);
             iRoomLookup.Remove(aItem);
 
+            room.Detach();
+
             iThread.Schedule(() =>
             {
                 room.Dispose();
             });
         }
 
-        private bool iDisposed;
         private IWatchableThread iThread;
         private ITopology4 iTopology4;
-
-        private WatchableTopology5RoomUnordered iRooms;
+        private WatchableUnordered<ITopology5Room> iRooms;
         private Dictionary<ITopology4Room, Topology5Room> iRoomLookup;
     }
 }

@@ -673,6 +673,9 @@ namespace OpenHome.Av
 
             iRoots.Clear();
             iRoots = null;
+
+            iWatchableRoots.Dispose();
+            iWatchableStandby.Dispose();
         }
 
         public string Name

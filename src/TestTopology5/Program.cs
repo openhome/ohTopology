@@ -68,17 +68,17 @@ namespace TestTopology5
             private MockableScriptRunner iRunner;
         }
 
-        class RootWatcher : IUnorderedWatcher<ITopology4Group>, IWatcher<ITopology4Source>, IDisposable
+        class RootWatcher : IUnorderedWatcher<ITopology5Group>, IWatcher<ITopology4Source>, IDisposable
         {
             public RootWatcher(MockableScriptRunner aRunner)
             {
                 iRunner = aRunner;
-                iRoots = new List<ITopology4Group>();
+                iRoots = new List<ITopology5Group>();
             }
 
             public void Dispose()
             {
-                foreach (ITopology4Group g in iRoots)
+                foreach (ITopology5Group g in iRoots)
                 {
                     g.Source.RemoveWatcher(this);
                 }
@@ -96,7 +96,7 @@ namespace TestTopology5
             {
             }
 
-            public void UnorderedAdd(ITopology4Group aItem)
+            public void UnorderedAdd(ITopology5Group aItem)
             {
                 iRunner.Result(string.Format("Root Added: Name={0}", aItem.Name));
 
@@ -104,7 +104,7 @@ namespace TestTopology5
                 aItem.Source.AddWatcher(this);
             }
 
-            public void UnorderedRemove(ITopology4Group aItem)
+            public void UnorderedRemove(ITopology5Group aItem)
             {
                 iRunner.Result(string.Format("Root Removed: Name={0}", aItem.Name));
 
@@ -127,7 +127,7 @@ namespace TestTopology5
             }
 
             private MockableScriptRunner iRunner;
-            private List<ITopology4Group> iRoots;
+            private List<ITopology5Group> iRoots;
         }
 
         class RoomWatcher : IUnorderedWatcher<ITopology5Room>, IWatcher<EStandby>, IDisposable
