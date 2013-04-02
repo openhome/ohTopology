@@ -44,26 +44,44 @@ namespace TestTopology5
 
             public void UnorderedAdd(ITopology4Source aItem)
             {
-                iRunner.Result(string.Format("Added: {0}: Group={1}, Name={2}, Type={3}, Visible={4}", aItem.Index, aItem.Group, aItem.Name, aItem.Type, aItem.Visible));
+                iRunner.Result(string.Format("Source Added: {0}", SourceInfo(aItem)));
             }
 
             public void UnorderedRemove(ITopology4Source aItem)
             {
-                iRunner.Result(string.Format("Removed: {0}: Group={1}, Name={2}, Type={3}, Visible={4}", aItem.Index, aItem.Group, aItem.Name, aItem.Type, aItem.Visible));
+                iRunner.Result(string.Format("Source Removed: {0}", SourceInfo(aItem)));
+            }
+
+            private string SourceInfo(ITopology4Source aSource)
+            {
+                string info = string.Format("{0}: Group={1}, Name={2}, Type={3}, Visible={4}, HasInfo={5}, HasTime={6}, Device={7}, Volume=",
+                                            aSource.Index, aSource.Group, aSource.Name, aSource.Type, aSource.Visible, aSource.HasInfo, aSource.HasTime, aSource.Device.Udn);
+
+                foreach (IWatchableDevice d in aSource.VolumeDevices)
+                {
+                    info += d.Udn + " ";
+                }
+
+                return info;
             }
 
             private MockableScriptRunner iRunner;
         }
 
-        class RootWatcher : IUnorderedWatcher<ITopology4Group>, IDisposable
+        class RootWatcher : IUnorderedWatcher<ITopology5Group>, IWatcher<ITopology4Source>, IDisposable
         {
             public RootWatcher(MockableScriptRunner aRunner)
             {
                 iRunner = aRunner;
+                iRoots = new List<ITopology5Group>();
             }
 
             public void Dispose()
             {
+                foreach (ITopology5Group g in iRoots)
+                {
+                    g.Source.RemoveWatcher(this);
+                }
             }
 
             public void UnorderedOpen()
@@ -78,20 +96,41 @@ namespace TestTopology5
             {
             }
 
-            public void UnorderedAdd(ITopology4Group aItem)
+            public void UnorderedAdd(ITopology5Group aItem)
             {
                 iRunner.Result(string.Format("Root Added: Name={0}", aItem.Name));
+
+                iRoots.Add(aItem);
+                aItem.Source.AddWatcher(this);
             }
 
-            public void UnorderedRemove(ITopology4Group aItem)
+            public void UnorderedRemove(ITopology5Group aItem)
             {
                 iRunner.Result(string.Format("Root Removed: Name={0}", aItem.Name));
+
+                iRoots.Remove(aItem);
+                aItem.Source.RemoveWatcher(this);
+            }
+
+            public void ItemOpen(string aId, ITopology4Source aValue)
+            {
+                iRunner.Result(string.Format("Current: {0}: Group={1}, Name={2}, Type={3}, Visible={4}", aValue.Index, aValue.Group, aValue.Name, aValue.Type, aValue.Visible));
+            }
+
+            public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
+            {
+                iRunner.Result(string.Format("Current Updated: {0}: Group={1}, Name={2}, Type={3}, Visible={4}", aValue.Index, aValue.Group, aValue.Name, aValue.Type, aValue.Visible));
+            }
+
+            public void ItemClose(string aId, ITopology4Source aValue)
+            {
             }
 
             private MockableScriptRunner iRunner;
+            private List<ITopology5Group> iRoots;
         }
 
-        class RoomWatcher : IUnorderedWatcher<ContentDirectory>, IUnorderedWatcher<ITopology5Room>, IWatcher<EStandby>, IDisposable
+        class RoomWatcher : IUnorderedWatcher<ITopology5Room>, IWatcher<EStandby>, IDisposable
         {
             public RoomWatcher(MockableScriptRunner aRunner)
             {
@@ -112,6 +151,7 @@ namespace TestTopology5
                     r.Sources.RemoveWatcher(iSourceWatcher);
                 }
 
+                iRootWatcher.Dispose();
                 iSourceWatcher.Dispose();
             }
 
@@ -129,7 +169,7 @@ namespace TestTopology5
 
             public void UnorderedAdd(ITopology5Room aItem)
             {
-                iRunner.Result("Room Added " + aItem.Name);
+                iRunner.Result("Room Added: " + aItem.Name);
 
                 iList.Add(aItem);
                 aItem.Standby.AddWatcher(this);
@@ -139,22 +179,12 @@ namespace TestTopology5
 
             public void UnorderedRemove(ITopology5Room aItem)
             {
-                iRunner.Result("Room Removed " + aItem.Name);
+                iRunner.Result("Room Removed: " + aItem.Name);
 
                 iList.Remove(aItem);
                 aItem.Standby.RemoveWatcher(this);
                 aItem.Roots.RemoveWatcher(iRootWatcher);
                 aItem.Sources.RemoveWatcher(iSourceWatcher);
-            }
-
-            public void UnorderedAdd(ContentDirectory aItem)
-            {
-                iRunner.Result("MediaServer Added " + aItem.Id);
-            }
-
-            public void UnorderedRemove(ContentDirectory aItem)
-            {
-                iRunner.Result("MediaServer Removed " + aItem.Id);
             }
 
             public void ItemOpen(string aId, EStandby aValue)
@@ -199,28 +229,22 @@ namespace TestTopology5
             Topology4 topology4 = new Topology4(thread, topology3);
             Topology5 topology5 = new Topology5(thread, topology4);
 
-            Library library = new Library(thread, network);
-
             MockableScriptRunner runner = new MockableScriptRunner();
 
             RoomWatcher watcher = new RoomWatcher(runner);
             topology5.Rooms.AddWatcher(watcher);
 
-            library.ContentDirectories.AddWatcher(watcher);
-
             thread.WaitComplete();
 
             try
             {
-                //runner.Run(thread, new StringReader(File.ReadAllText(args[0])), mocker);
-                runner.Run(thread, Console.In, mocker);
+                runner.Run(thread, new StringReader(File.ReadAllText(args[0])), mocker);
+                //runner.Run(thread, Console.In, mocker);
             }
             catch (MockableScriptRunner.AssertError)
             {
                 return 1;
             }
-
-            library.ContentDirectories.RemoveWatcher(watcher);
 
             topology5.Rooms.RemoveWatcher(watcher);
             watcher.Dispose();

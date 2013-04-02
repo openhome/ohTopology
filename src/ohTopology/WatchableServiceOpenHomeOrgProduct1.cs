@@ -799,7 +799,7 @@ namespace OpenHome.Av
             else if (command == "attributes")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-                iAttributes = value.First();
+                iAttributes = string.Join(" ", value);
             }
             else if (command == "manufacturerimageuri")
             {
