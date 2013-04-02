@@ -19,48 +19,35 @@ namespace OpenHome.Av
     {
         public Topology2Source(uint aIndex, string aName, string aType, bool aVisible)
         {
-            iIndex = aIndex;
-            iName = aName;
-            iType = aType;
-            iVisible = aVisible;
+            Index = aIndex;
+            Name = aName;
+            Type = aType;
+            Visible = aVisible;
         }
 
         public uint Index
         {
-            get
-            {
-                return iIndex;
-            }
+            get;
+            private set;
         }
 
         public string Name
         {
-            get
-            {
-                return iName;
-            }
+            get;
+            private set;
         }
 
         public string Type
         {
-            get 
-            {
-                return iType;
-            }
+            get;
+            private set;
         }
 
         public bool Visible
         {
-            get 
-            {
-                return iVisible;
-            }
+            get;
+            private set;
         }
-
-        private string iName;
-        private string iType;
-        private bool iVisible;
-        private uint iIndex;
     }
 
     public interface ITopology2Group
@@ -83,22 +70,36 @@ namespace OpenHome.Av
     {
         public Topology2Group(IWatchableThread aThread, string aId, Product aProduct)
         {
-            iThread = aThread;
-            iId = aId;
-
             iDisposed = false;
+            iThread = aThread;
+
+            iId = aId;
+            iProduct = aProduct;
+            iAttributes = aProduct.Attributes;
+            iDevice = aProduct.Device;
+
+            // create proxies for watchables that are to be passed straight through this layer
+            iRoom = new WatchableProxy<string>(iProduct.Room);
+            iName = new WatchableProxy<string>(iProduct.Name);
+            iStandby = new WatchableProxy<bool>(iProduct.Standby);
+            iSourceIndex = new WatchableProxy<uint>(iProduct.SourceIndex);
+
             iSources = new List<ITopology2Source>();
             iWatchableSources = new List<Watchable<ITopology2Source>>();
 
-            iProduct = aProduct;
-            iDevice = aProduct.Device;
-            iAttributes = aProduct.Attributes;
-            iRoom = iProduct.Room;
-            iName = iProduct.Name;
-            iStandby = iProduct.Standby;
-            iSourceIndex = iProduct.SourceIndex;
-
             iProduct.SourceXml.AddWatcher(this);
+        }
+
+        public void Detach()
+        {
+            // detach all watchers from the L1 watchables
+            iRoom.Detach();
+            iName.Detach();
+            iStandby.Detach();
+            iSourceIndex.Detach();
+
+            iProduct.SourceXml.RemoveWatcher(this);
+            iProduct = null;
         }
 
         public void Dispose()
@@ -108,9 +109,16 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("Topology2Group.Dispose");
             }
 
-            iProduct.SourceXml.RemoveWatcher(this);
-            iProduct.Dispose();
-            iProduct = null;
+            // dispose of all created watchables
+            iRoom.Dispose();
+            iName.Dispose();
+            iStandby.Dispose();
+            iSourceIndex.Dispose();
+
+            foreach (Watchable<ITopology2Source> s in iWatchableSources)
+            {
+                s.Dispose();
+            }
 
             iDisposed = true;
         }
@@ -279,41 +287,17 @@ namespace OpenHome.Av
         }
 
         private bool iDisposed;
-
-        private string iId;
-        private string iAttributes;
-        private Product iProduct;
-        private IWatchableDevice iDevice;
-        private IWatchable<string> iRoom;
-        private IWatchable<string> iName;
-        private IWatchable<bool> iStandby;
-        private IWatchable<uint> iSourceIndex;
         private IWatchableThread iThread;
+        private string iId;
+        private Product iProduct;
+        private string iAttributes;
+        private IWatchableDevice iDevice;
+        private WatchableProxy<string> iRoom;
+        private WatchableProxy<string> iName;
+        private WatchableProxy<bool> iStandby;
+        private WatchableProxy<uint> iSourceIndex;
         private List<ITopology2Source> iSources;
         private List<Watchable<ITopology2Source>> iWatchableSources;
-    }
-
-    public class WatchableTopology2GroupUnordered : WatchableUnordered<ITopology2Group>
-    {
-        public WatchableTopology2GroupUnordered(IWatchableThread aThread)
-            : base(aThread)
-        {
-            iList = new List<ITopology2Group>();
-        }
-
-        public new void Add(ITopology2Group aValue)
-        {
-            iList.Add(aValue); 
-            base.Add(aValue);
-        }
-
-        public new void Remove(ITopology2Group aValue)
-        {
-            iList.Remove(aValue);
-            base.Remove(aValue);
-        }
-
-        private List<ITopology2Group> iList;
     }
 
     public interface ITopology2
@@ -330,7 +314,7 @@ namespace OpenHome.Av
             iThread = aThread;
             iTopology1 = aTopology1;
 
-            iGroups = new WatchableTopology2GroupUnordered(aThread);
+            iGroups = new WatchableUnordered<ITopology2Group>(aThread);
 
             iGroupLookup = new Dictionary<Product, Topology2Group>();
 
@@ -352,6 +336,7 @@ namespace OpenHome.Av
 
             foreach (Topology2Group g in iGroupLookup.Values)
             {
+                g.Detach();
                 g.Dispose();
             }
             iGroupLookup = null;
@@ -382,9 +367,7 @@ namespace OpenHome.Av
         public void UnorderedAdd(Product aItem)
         {
             Topology2Group group = new Topology2Group(iThread, aItem.Id, aItem);
-
             iGroupLookup.Add(aItem, group);
-
             iGroups.Add(group);
         }
 
@@ -393,11 +376,14 @@ namespace OpenHome.Av
             Topology2Group group;
             if (iGroupLookup.TryGetValue(aItem, out group))
             {
+                // schedule higher layer notification
                 iGroups.Remove(group);
-
                 iGroupLookup.Remove(aItem);
 
-                // schedule the disposale for the group for after all watchers of the group collection have been notified
+                // immediately detach Topology2Group from L1 since the Product object is about to be disposed
+                group.Detach();
+
+                // schedule Topology2Group disposal
                 iThread.Schedule(() =>
                 {
                     group.Dispose();
@@ -410,6 +396,6 @@ namespace OpenHome.Av
         private IWatchableThread iThread;
         private ITopology1 iTopology1;
         private Dictionary<Product, Topology2Group> iGroupLookup;
-        private WatchableTopology2GroupUnordered iGroups;
+        private WatchableUnordered<ITopology2Group> iGroups;
     }
 }
