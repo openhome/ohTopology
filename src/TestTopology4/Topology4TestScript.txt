@@ -160,5 +160,3 @@ expect Updated: 1: Group=My DS, Name=Radio, Type=Radio, Visible=True
 expect Updated: 3: Group=My DS, Name=Songcast, Type=Receiver, Visible=True
 expect Current: 0: Group=My DS, Name=Playlist, Type=Playlist, Visible=True
 empty
-
-exit

@@ -19,7 +19,7 @@ namespace OpenHome.Av
         IWatchable<string> Uri { get; }
     }
 
-    public abstract class Info : IWatchableService, IServiceOpenHomeOrgInfo1, IDisposable
+    public abstract class Info : IWatchableService, IServiceOpenHomeOrgInfo1
     {
         protected Info(string aId, IServiceOpenHomeOrgInfo1 aService)
         {
@@ -34,14 +34,6 @@ namespace OpenHome.Av
             get
             {
                 return iId;
-            }
-        }
-
-        public string Type
-        {
-            get
-            {
-                return "AvOpenHomeInfo1";
             }
         }
 

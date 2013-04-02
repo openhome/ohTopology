@@ -29,8 +29,9 @@ namespace OpenHome.Av
         void VolumeInc();
     }
 
-    public abstract class Volume : IWatchableService, IServiceOpenHomeOrgVolume1, IDisposable
+    public abstract class Volume : IWatchableService, IServiceOpenHomeOrgVolume1
     {
+
         protected Volume(string aId, IServiceOpenHomeOrgVolume1 aService)
         {
             iId = aId;
@@ -44,14 +45,6 @@ namespace OpenHome.Av
             get
             {
                 return iId;
-            }
-        }
-
-        public string Type
-        {
-            get
-            {
-                return "AvOpenHomeVolume1";
             }
         }
 

@@ -30,7 +30,8 @@ namespace OpenHome.Av
             {
                 c.Dispose();
             }
-            iDeviceCollections = null;
+
+            iDeviceCollections.Clear();
         }
 
         public void Refresh()
@@ -47,6 +48,101 @@ namespace OpenHome.Av
         }
 
         private Dictionary<Type, ServiceWatchableDeviceCollection> iDeviceCollections;
+    }
+
+    public class ServiceWatchableDeviceCollection : WatchableDeviceUnordered
+    {
+        public ServiceWatchableDeviceCollection(IWatchableThread aThread, string aDomainName, string aServiceType, uint aVersion)
+            : base(aThread)
+        {
+            iDisposed = false;
+            iLock = new object();
+            iCpDeviceList = new CpDeviceListUpnpServiceType(aDomainName, aServiceType, aVersion, Added, Removed);
+            iCpDeviceLookup = new Dictionary<string, DisposableWatchableDevice>();
+        }
+
+        public new void Dispose()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceWatchableDeviceCollection.Dispose");
+                }
+
+                base.Dispose();
+
+                iCpDeviceList.Dispose();
+                iCpDeviceList = null;
+
+                foreach (DisposableWatchableDevice device in iCpDeviceLookup.Values)
+                {
+                    device.Dispose();
+                }
+
+                iCpDeviceLookup = null;
+
+                iDisposed = true;
+            }
+        }
+
+        public void Refresh()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceWatchableDeviceCollection.Refresh");
+                }
+
+                iCpDeviceList.Refresh();
+            }
+        }
+
+        private void Added(CpDeviceList aList, CpDevice aDevice)
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    return;
+                }
+
+                DisposableWatchableDevice device = new DisposableWatchableDevice(WatchableThread, aDevice);
+
+                iCpDeviceLookup.Add(aDevice.Udn(), device);
+
+                Add(device);
+            }
+        }
+
+        private void Removed(CpDeviceList aList, CpDevice aDevice)
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    return;
+                }
+
+                DisposableWatchableDevice device;
+
+                if (iCpDeviceLookup.TryGetValue(aDevice.Udn(), out device))
+                {
+                    iCpDeviceLookup.Remove(aDevice.Udn());
+
+                    Remove(device);
+
+                    device.Dispose();
+                }
+            }
+        }
+
+        private object iLock;
+        private bool iDisposed;
+
+        private CpDeviceList iCpDeviceList;
+        private Dictionary<string, DisposableWatchableDevice> iCpDeviceLookup;
     }
 
     public class MockNetwork : INetwork, IMockable, IDisposable
@@ -97,6 +193,7 @@ namespace OpenHome.Av
             lock (iLock)
             {
                 MockWatchableDevice device;
+
                 if(iOnDevices.TryGetValue(aUdn, out device))
                 {
                     RemoveDevice(device);
@@ -127,8 +224,9 @@ namespace OpenHome.Av
 
         public WatchableDeviceUnordered GetWatchableDeviceCollection<T>() where T : IWatchableService
         {
-            WatchableDeviceUnordered list = new WatchableDeviceUnordered(iThread);
             Type key = typeof(T);
+
+            WatchableDeviceUnordered list = new WatchableDeviceUnordered(iThread);
 
             if (iDeviceLists.ContainsKey(key))
             {
@@ -153,16 +251,21 @@ namespace OpenHome.Av
         public void Execute(IEnumerable<string> aValue)
         {
             string command = aValue.First().ToLowerInvariant();
+
             if (command == "add")
             {
                 IEnumerable<string> value = aValue.Skip(1);
+
                 string type = value.First();
+
                 if (type == "ds" || type == "dsm" || type == "mediaserver")
                 {
                     value = value.Skip(1);
+
                     string udn = value.First();
 
                     MockWatchableDevice device;
+
                     if (iOffDevices.TryGetValue(udn, out device))
                     {
                         AddDevice(device);
@@ -191,7 +294,9 @@ namespace OpenHome.Av
             else if (command == "remove")
             {
                 IEnumerable<string> value = aValue.Skip(1);
+
                 string type = value.First();
+
                 if (type == "ds" || type == "dsm" || type == "mediaserver")
                 {
                     value = value.Skip(1);
@@ -205,14 +310,19 @@ namespace OpenHome.Av
             else if (command == "update")
             {
                 IEnumerable<string> value = aValue.Skip(1);
+
                 string type = value.First();
+
                 if (type == "ds")
                 {
                     value = value.Skip(1);
+
                     lock (iLock)
                     {
                         string udn = value.First();
+
                         MockWatchableDevice device;
+
                         if (iOnDevices.TryGetValue(udn, out device))
                         {
                             device.Execute(value.Skip(1));
@@ -233,6 +343,7 @@ namespace OpenHome.Av
         private object iLock;
 
         private IWatchableThread iThread;
+
         private Mockable iMocker;
 
         private Dictionary<string, MockWatchableDevice> iOnDevices;

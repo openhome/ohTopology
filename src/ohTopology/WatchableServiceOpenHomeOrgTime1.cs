@@ -12,7 +12,7 @@ namespace OpenHome.Av
         IWatchable<uint> Seconds { get; }
     }
 
-    public abstract class Time : IWatchableService, IServiceOpenHomeOrgTime1, IDisposable
+    public abstract class Time : IWatchableService, IServiceOpenHomeOrgTime1
     {
         protected Time(string aId, IServiceOpenHomeOrgTime1 aService)
         {
@@ -27,14 +27,6 @@ namespace OpenHome.Av
             get
             {
                 return iId;
-            }
-        }
-
-        public string Type
-        {
-            get
-            {
-                return "AvOpenHomeTime1";
             }
         }
 

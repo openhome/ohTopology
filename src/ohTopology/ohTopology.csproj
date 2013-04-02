@@ -31,6 +31,9 @@
     <Reference Include="CpAvOpenhomeOrgInfo1.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgInfo1.net.dll</HintPath>
     </Reference>
+    <Reference Include="CpAvOpenhomeOrgMediaServer1.net">
+      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgMediaServer1.net.dll</HintPath>
+    </Reference>
     <Reference Include="CpAvOpenhomeOrgProduct1.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgProduct1.net.dll</HintPath>
     </Reference>
@@ -53,6 +56,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="WatchableServiceMediaServer.cs" />
+    <Compile Include="WatchableDeviceMediaServer.cs" />
+    <Compile Include="WatchableDeviceDsm.cs" />
+    <Compile Include="WatchableDeviceDs.cs" />
     <Compile Include="Library.cs" />
     <Compile Include="Mockable.cs" />
     <Compile Include="Network.cs" />
@@ -70,7 +77,6 @@
     <Compile Include="WatchableServiceOpenHomeOrgProduct1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgTime1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgVolume1.cs" />
-    <Compile Include="WatchableServiceUpnpOrgContentDirectory1.cs" />
   </ItemGroup>
   <Import Project="..\SharedSettings.targets" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -12,7 +12,6 @@ namespace OpenHome.Av
 {
     public interface IWatchableService : IDisposable
     {
-        string Type { get; }
     }
 
     public interface IServiceOpenHomeOrgProduct1
@@ -47,7 +46,7 @@ namespace OpenHome.Av
         string ProductUrl { get; }
     }
 
-    public abstract class Product : IWatchableService, IProduct, IDisposable
+    public abstract class Product : IWatchableService, IProduct
     {
         protected Product(string aId, IWatchableDevice aDevice, IServiceOpenHomeOrgProduct1 aService)
         {
@@ -57,14 +56,6 @@ namespace OpenHome.Av
         }
 
         public abstract void Dispose();
-
-        public string Type
-        {
-            get
-            {
-                return "AvOpenHomeProduct1";
-            }
-        }
 
         public IWatchable<string> Room
         {
@@ -449,99 +440,6 @@ namespace OpenHome.Av
         private Watchable<uint> iSourceIndex;
         private Watchable<string> iSourceXml;
         private Watchable<bool> iStandby;
-    }
-
-    public class ServiceWatchableDeviceCollection : WatchableDeviceUnordered
-    {
-        public ServiceWatchableDeviceCollection(IWatchableThread aThread, string aDomainName, string aServiceType, uint aVersion)
-            : base(aThread)
-        {
-            iLock = new object();
-            iDisposed = false;
-
-            iCpDeviceList = new CpDeviceListUpnpServiceType(aDomainName, aServiceType, aVersion, Added, Removed);//"av.openhome.org", "Product", 1, Added, Removed);
-            iCpDeviceLookup = new Dictionary<string, DisposableWatchableDevice>();
-        }
-
-        public new void Dispose()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("ServiceWatchableDeviceCollection.Dispose");
-                }
-
-                base.Dispose();
-
-                iCpDeviceList.Dispose();
-                iCpDeviceList = null;
-
-                foreach (DisposableWatchableDevice device in iCpDeviceLookup.Values)
-                {
-                    device.Dispose();
-                }
-                iCpDeviceLookup = null;
-
-                iDisposed = true;
-            }
-        }
-
-        public void Refresh()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("ServiceWatchableDeviceCollection.Refresh");
-                }
-
-                iCpDeviceList.Refresh();
-            }
-        }
-
-        private void Added(CpDeviceList aList, CpDevice aDevice)
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                DisposableWatchableDevice device = new DisposableWatchableDevice(WatchableThread, aDevice);
-                iCpDeviceLookup.Add(aDevice.Udn(), device);
-
-                Add(device);
-            }
-        }
-
-        private void Removed(CpDeviceList aList, CpDevice aDevice)
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                DisposableWatchableDevice device;
-                if (iCpDeviceLookup.TryGetValue(aDevice.Udn(), out device))
-                {
-                    iCpDeviceLookup.Remove(aDevice.Udn());
-
-                    Remove(device);
-
-                    device.Dispose();
-                }
-            }
-        }
-
-        private object iLock;
-        private bool iDisposed;
-
-        private CpDeviceList iCpDeviceList;
-        private Dictionary<string, DisposableWatchableDevice> iCpDeviceLookup;
     }
 
     public class WatchableProductFactory : IWatchableServiceFactory
