@@ -66,7 +66,7 @@ namespace OpenHome.Av
         void SetSourceIndex(uint aValue);
     }
 
-    public class Topology2Group : ITopology2Group, IWatcher<string>, IDisposable
+    public class Topology2Group : ITopology2Group, IWatcher<string>, ITopologyObject
     {
         public Topology2Group(IWatchableThread aThread, string aId, Product aProduct)
         {

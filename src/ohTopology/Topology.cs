@@ -5,6 +5,17 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
+    // Interface for objects that are passed through the topology layers. Implements the
+    // IDisposable interface - the Dispose() method should dispose of all watchables created
+    // for this object. At the point that this method is called, the upper layers should
+    // have been notified that this object is about to be removed.
+    public interface ITopologyObject : IDisposable
+    {
+        // This method is intended to detach the object from its lower layer dependencies
+        // which will primarily involve removing watchers from the lower layer's watchables
+        void Detach();
+    }
+
     // This class should be used to proxy a watchable in a lower layer up to a higher layer.
     // For example, if a L2 object has a Watchable that is not directly required in L3 but
     // needs to be passed up to L4, the a WatchableProxy should be used in L3 to achieve this,
