@@ -6,83 +6,18 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public class WatchableRelay<T> : IWatchable<T>, IWatcher<T>, IDisposable
-    {
-        public WatchableRelay(IWatchable<T> aWatchable)
-        {
-            iWatchable = aWatchable;
-            aWatchable.AddWatcher(this);
-        }
-
-        public void Detach()
-        {
-            iWatchable.RemoveWatcher(this);
-        }
-
-        public void Dispose()
-        {
-            iRelay.Dispose();
-            iRelay = null;
-        }
-
-        // IWatchable<T>
-
-        public string Id
-        {
-            get { return iRelay.Id; }
-        }
-
-        public void AddWatcher(IWatcher<T> aWatcher)
-        {
-            iRelay.AddWatcher(aWatcher);
-        }
-
-        public void RemoveWatcher(IWatcher<T> aWatcher)
-        {
-            iRelay.RemoveWatcher(aWatcher);
-        }
-
-        // IWatcher<T>
-
-        public void ItemOpen(string aId, T aValue)
-        {
-            iRelay = new Watchable<T>(iWatchable.WatchableThread, iWatchable.Id + "(Relay)", aValue);
-        }
-
-        public void ItemUpdate(string aId, T aValue, T aPrevious)
-        {
-            iRelay.Update(aValue);
-        }
-
-        public void ItemClose(string aId, T aValue)
-        {
-        }
-
-        public IWatchableThread WatchableThread
-        {
-            get
-            {
-                return iRelay.WatchableThread;
-            }
-        }
-
-        private IWatchable<T> iWatchable;
-        private Watchable<T> iRelay;
-    }
-
     public interface ITopology5Group
     {
         string Name { get; }
         IWatchable<ITopology4Source> Source { get; }
     }
 
-    public class Topology5Group : ITopology5Group, IDisposable
+    public class Topology5Group : ITopology5Group, ITopologyObject
     {
         public Topology5Group(ITopology4Group aGroup)
         {
-            iGroup = aGroup;
             iName = aGroup.Name;
-            iSource = new WatchableRelay<ITopology4Source>(aGroup.Source);
+            iSource = new WatchableProxy<ITopology4Source>(aGroup.Source);
         }
 
         public void Detach()
@@ -112,9 +47,8 @@ namespace OpenHome.Av
             }
         }
 
-        private ITopology4Group iGroup;
         private string iName;
-        private WatchableRelay<ITopology4Source> iSource;
+        private WatchableProxy<ITopology4Source> iSource;
     }
 
     public interface ITopology5Room
@@ -127,7 +61,7 @@ namespace OpenHome.Av
         void SetStandby(bool aValue);
     }
 
-    public class Topology5Room : ITopology5Room, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<IEnumerable<ITopology4Source>>, IDisposable
+    public class Topology5Room : ITopology5Room, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<IEnumerable<ITopology4Source>>, ITopologyObject
     {
         public Topology5Room(IWatchableThread aThread, ITopology4Room aRoom)
         {
@@ -135,7 +69,7 @@ namespace OpenHome.Av
             iRoom = aRoom;
             iName = iRoom.Name;
 
-            iStandby = new WatchableRelay<EStandby>(iRoom.Standby);
+            iStandby = new WatchableProxy<EStandby>(iRoom.Standby);
             iRoots = new WatchableUnordered<ITopology5Group>(iThread);
             iSources = new WatchableUnordered<ITopology4Source>(iThread);
             iRootLookup = new Dictionary<ITopology4Group, Topology5Group>();
@@ -147,6 +81,8 @@ namespace OpenHome.Av
         public void Detach()
         {
             iStandby.Detach();
+
+            // removing the roots watcher will cause all L5 roots to be detached and scheduled for disposal
             iRoom.Roots.RemoveWatcher(this);
             iRoom.Sources.RemoveWatcher(this);
             iRoom = null;
@@ -154,12 +90,6 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            foreach (Topology5Group root in iRootLookup.Values)
-            {
-                root.Detach();
-                root.Dispose();
-            }
-
             iStandby.Dispose();
             iRoots.Dispose();
             iSources.Dispose();
@@ -269,12 +199,15 @@ namespace OpenHome.Av
 
         private void RemoveRoot(ITopology4Group aRoot)
         {
+            // schedule removal the root
             Topology5Group root = iRootLookup[aRoot];
             iRootLookup.Remove(aRoot);
             iRoots.Remove(root);
 
+            // detach root from L4
             root.Detach();
 
+            // schedule disposal of root
             iThread.Schedule(() =>
             {
                 root.Dispose();
@@ -333,7 +266,7 @@ namespace OpenHome.Av
         private IWatchableThread iThread;
         private ITopology4Room iRoom;
         private string iName;
-        private WatchableRelay<EStandby> iStandby;
+        private WatchableProxy<EStandby> iStandby;
         private WatchableUnordered<ITopology5Group> iRoots;
         private WatchableUnordered<ITopology4Source> iSources;
         private Dictionary<ITopology4Group, Topology5Group> iRootLookup;
@@ -413,13 +346,15 @@ namespace OpenHome.Av
 
         public void UnorderedRemove(ITopology4Room aItem)
         {
+            // schedule the removal of the L5 room
             Topology5Room room = iRoomLookup[aItem];
-
             iRooms.Remove(room);
             iRoomLookup.Remove(aItem);
 
+            // detach the L5 from L4
             room.Detach();
 
+            // schedule the disposal of L5 room
             iThread.Schedule(() =>
             {
                 room.Dispose();
