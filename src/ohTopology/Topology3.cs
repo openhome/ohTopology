@@ -277,7 +277,7 @@ namespace OpenHome.Av
             iTopology2.Groups.RemoveWatcher(this);
             iTopology2 = null;
 
-            // removing these watchers should cause all rooms to be disposed
+            // removing these watchers should cause all rooms to be detached and disposed
             foreach (Topology3Group group in iGroup2ToGroup3Lookup.Values)
             {
                 group.Room.RemoveWatcher(this);
@@ -417,6 +417,9 @@ namespace OpenHome.Av
                     // no more groups in room - remove it
                     iRooms.Remove(room);
                     iRoomNameToRoom3Lookup.Remove(aRoom);
+
+                    // detach the room from L2
+                    room.Detach();
 
                     // schedule disposal of the room
                     iThread.Schedule(() =>

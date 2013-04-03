@@ -799,20 +799,13 @@ namespace OpenHome.Av
             iProductInfo = aProductInfo;
             iProductUrl = aProductUrl;
 
-            iDisposed = false;
             iService = new MockServiceOpenHomeOrgProduct1(aThread, aId, aRoom, aName, aSourceIndex, aSourceXmlFactory, aStandby);
         }
 
         public override void Dispose()
         {
-            if (iDisposed)
-            {
-                throw new ObjectDisposedException("MockWatchableProduct.Dispose");
-            }
-
-            iService.Dispose();
-
-            iDisposed = true;
+            // dispose does nothing because these objects are reused by the mock network to simulate a device
+            // going off the network and maintaining its state when it comes back
         }
 
         public void Execute(IEnumerable<string> aValue)
@@ -858,7 +851,6 @@ namespace OpenHome.Av
             get { return iService; }
         }
 
-        private bool iDisposed;
         private MockServiceOpenHomeOrgProduct1 iService;
     }
 }
