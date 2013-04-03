@@ -631,7 +631,7 @@ namespace OpenHome.Av
             iThread = aThread;
 
             iRoom = aRoom;
-            iRoom.AddRef();
+//            iRoom.AddRef();
 
             iName = iRoom.Name;
             iStandbyCount = 0;
@@ -645,7 +645,7 @@ namespace OpenHome.Av
             iRoots = new List<ITopology4Group>();
             iGroup2WatcherLookup = new Dictionary<ITopology2Group, Group2Watcher>();
 
-            iRoom.Groups.AddWatcher(this);
+//            iRoom.Groups.AddWatcher(this);
         }
 
         public void Dispose()
@@ -667,8 +667,8 @@ namespace OpenHome.Av
             iWatchableSources.Dispose();
             iSources = null;
 
-            iRoom.Groups.RemoveWatcher(this);
-            iRoom.RemoveRef();
+//            iRoom.Groups.RemoveWatcher(this);
+//            iRoom.RemoveRef();
             iRoom = null;
 
             iRoots.Clear();

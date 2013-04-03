@@ -19,17 +19,23 @@ namespace TestTopology3
             }
         }
 
-        class GroupWatcher : IUnorderedWatcher<ITopology2Group>, IWatcher<string>, IDisposable
+        class GroupWatcher : IUnorderedWatcher<ITopology3Group>, IWatcher<string>, IDisposable
         {
             public GroupWatcher(MockableScriptRunner aRunner)
             {
                 iRunner = aRunner;
-
                 iStringLookup = new Dictionary<string, string>();
+                iGroups = new List<ITopology3Group>();
             }
 
             public void Dispose()
             {
+                foreach (ITopology3Group group in iGroups)
+                {
+                    group.Room.RemoveWatcher(this);
+                    group.Name.RemoveWatcher(this);
+                }
+
                 iStringLookup = null;
             }
 
@@ -45,23 +51,25 @@ namespace TestTopology3
             {
             }
 
-            public void UnorderedAdd(ITopology2Group aItem)
+            public void UnorderedAdd(ITopology3Group aItem)
             {
+                iGroups.Add(aItem);
                 aItem.Room.AddWatcher(this);
                 aItem.Name.AddWatcher(this);
 
-                iRunner.Result(string.Format("Group Added {0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
+                iRunner.Result(string.Format("Group Added {0}:{1}", iStringLookup[aItem.Room.Id], iStringLookup[aItem.Name.Id]));
             }
 
-            public void UnorderedRemove(ITopology2Group aItem)
+            public void UnorderedRemove(ITopology3Group aItem)
             {
+                iGroups.Remove(aItem);
                 aItem.Room.RemoveWatcher(this);
                 aItem.Name.RemoveWatcher(this);
 
-                iRunner.Result(string.Format("Group Removed {0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
+                iRunner.Result(string.Format("Group Removed {0}:{1}", iStringLookup[aItem.Room.Id], iStringLookup[aItem.Name.Id]));
 
-                iStringLookup.Remove(string.Format("Room({0})", aItem.Id));
-                iStringLookup.Remove(string.Format("Name({0})", aItem.Id));
+                iStringLookup.Remove(aItem.Room.Id);
+                iStringLookup.Remove(aItem.Name.Id);
             }
 
             public void ItemOpen(string aId, string aValue)
@@ -81,6 +89,7 @@ namespace TestTopology3
 
             private MockableScriptRunner iRunner;
             private Dictionary<string, string> iStringLookup;
+            private List<ITopology3Group> iGroups;
         }
 
         class RoomWatcher : IUnorderedWatcher<ITopology3Room>, IDisposable
@@ -121,7 +130,6 @@ namespace TestTopology3
                 iRunner.Result("Room Added " + aItem.Name);
 
                 iList.Add(aItem);
-                aItem.AddRef();
                 aItem.Groups.AddWatcher(iWatcher);
             }
 
@@ -131,7 +139,6 @@ namespace TestTopology3
 
                 iList.Remove(aItem);
                 aItem.Groups.RemoveWatcher(iWatcher);
-                aItem.RemoveRef();
             }
 
             private MockableScriptRunner iRunner;
