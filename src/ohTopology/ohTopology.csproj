@@ -67,7 +67,6 @@
     <Compile Include="Mockable.cs" />
     <Compile Include="Network.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RefCount.cs" />
     <Compile Include="Topology.cs" />
     <Compile Include="Topology1.cs" />
     <Compile Include="Topology2.cs" />

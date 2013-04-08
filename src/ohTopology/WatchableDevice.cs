@@ -8,6 +8,11 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
+    public interface IWatchableService : IDisposable
+    {
+        string Type { get; }
+    }
+
     public interface IWatchableServiceFactory
     {
         void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback);

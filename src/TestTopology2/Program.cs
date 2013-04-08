@@ -70,6 +70,8 @@ namespace TestTopology2
 
                     g.Room.RemoveWatcher(this);
                     g.Name.RemoveWatcher(this);
+                    g.SourceIndex.RemoveWatcher(this);
+                    g.Standby.RemoveWatcher(this);
                 }
                 iList = null;
 
@@ -96,7 +98,7 @@ namespace TestTopology2
                 aItem.Standby.AddWatcher(this);
                 iList.Add(aItem);
 
-                iRunner.Result(string.Format("Group Added\t\t{0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
+                iRunner.Result(string.Format("Group Added\t\t{0}:{1}", iStringLookup[aItem.Room.Id], iStringLookup[aItem.Name.Id]));
                 iRunner.Result("===============================================");
 
                 foreach (IWatchable<ITopology2Source> s in aItem.Sources)
@@ -120,9 +122,9 @@ namespace TestTopology2
                     s.RemoveWatcher(iWatcher);
                 }
 
-                iRunner.Result(string.Format("Group Removed\t\t{0}:{1}", iStringLookup[string.Format("Room({0})", aItem.Id)], iStringLookup[string.Format("Name({0})", aItem.Id)]));
-                iStringLookup.Remove(string.Format("Room({0})", aItem.Id));
-                iStringLookup.Remove(string.Format("Name({0})", aItem.Id));
+                iRunner.Result(string.Format("Group Removed\t\t{0}:{1}", iStringLookup[aItem.Room.Id], iStringLookup[aItem.Name.Id]));
+                iStringLookup.Remove(aItem.Room.Id);
+                iStringLookup.Remove(aItem.Name.Id);
             }
 
             public void ItemOpen(string aId, string aValue)

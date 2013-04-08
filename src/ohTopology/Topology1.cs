@@ -7,31 +7,6 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public class WatchableProductUnordered : WatchableUnordered<Product>
-    {
-        public WatchableProductUnordered(IWatchableThread aThread)
-            : base(aThread)
-        {
-            iList = new List<Product>();
-        }
-
-        public new void Add(Product aValue)
-        {
-            iList.Add(aValue);
-
-            base.Add(aValue);
-        }
-
-        public new void Remove(Product aValue)
-        {
-            iList.Remove(aValue);
-
-            base.Remove(aValue);
-        }
-
-        private List<Product> iList;
-    }
-
     public interface ITopology1
     {
         IWatchableUnordered<Product> Products { get; }
@@ -44,10 +19,11 @@ namespace OpenHome.Av
             iDisposed = false;
 
             iNetwork = aNetwork;
+            iThread = aThread;
 
             iPendingSubscriptions = new List<IWatchableDevice>();
             iProductLookup = new Dictionary<IWatchableDevice, Product>();
-            iProducts = new WatchableProductUnordered(aThread);
+            iProducts = new WatchableUnordered<Product>(aThread);
 
             iDevices = iNetwork.GetWatchableDeviceCollection<Product>();
             iDevices.AddWatcher(this);
@@ -112,8 +88,15 @@ namespace OpenHome.Av
             Product product;
             if (iProductLookup.TryGetValue(aItem, out product))
             {
+                // schedule higher layer notification
                 iProducts.Remove(product);
                 iProductLookup.Remove(aItem);
+
+                // schedule Product disposal
+                iThread.Schedule(() =>
+                {
+                    product.Dispose();
+                });
             }
         }
 
@@ -127,10 +110,11 @@ namespace OpenHome.Av
         private bool iDisposed;
 
         private INetwork iNetwork;
+        private IWatchableThread iThread;
 
         private List<IWatchableDevice> iPendingSubscriptions;
         private Dictionary<IWatchableDevice, Product> iProductLookup;
-        private WatchableProductUnordered iProducts;
+        private WatchableUnordered<Product> iProducts;
         
         private WatchableDeviceUnordered iDevices;
     }
