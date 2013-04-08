@@ -5,13 +5,10 @@ using System.Linq;
 using OpenHome.Os.App;
 using OpenHome.Net.ControlPoint;
 using OpenHome.Net.ControlPoint.Proxies;
+using OpenHome.MediaServer;
 
 namespace OpenHome.Av
 {
-    public interface IServiceMediaServerBrowseResult
-    {
-    }
-
     public interface ISessionValue
     {
         string Value { get; }
@@ -23,40 +20,34 @@ namespace OpenHome.Av
         string Id { get; }
         bool IsContainer { get; }
         ISessionValue this[ITag aTag] { get; }
-        ITag Tag { get; }
+        ITag PrimaryTag { get; }
     }
 
     public interface ISessionContents
     {
         uint Index { get; }
+        IEnumerable<ISessionDatum> Data { get; }
     }
 
-    public interface ISessionContainer
+    public interface IMediaServerContainer
     {
-        uint Count { get; }
-        IEnumerable<uint> Alpha { get; }
-        IEnumerable<string> Location { get; }
-        void Fetch(uint aIndex, uint aCount, Action<ISessionContainer, ISessionContents> aCallback);
+
+        uint Total { get; }
+        IEnumerable<uint> Alpha { get; } // null if no alpha map
+        IEnumerable<string> Path { get; } // ordered list of container titles
+        IEnumerable<string> Location { get; } // ordered list of container ids
+        void Fetch(uint aIndex, uint aCount, Action<IMediaServerContainer, ISessionContents> aCallback);
     }
 
-    public interface ISessionStatus
+    public interface IMediaServerSession : IDisposable
     {
-        ISessionContainer Container { get; }
-        Watchable<IEnumerable<string>> Location { get; }
-    }
-
-    public interface ISessionMediaServer
-    {
-        void Home();
-        void Up(uint aLevels);
-        void Down(string aId);
-        void Refresh();
-        Watchable<ISessionStatus> Status { get; }
+        void Open(IEnumerable<string> aPath); // ordered list of container id's, empty for root
+        Watchable<IMediaServerContainer> Container { get; }
     }
 
     public interface IServiceMediaServer : IWatchableService
     {
-        ISessionMediaServer CreateSession();
+        IMediaServerSession CreateSession();
     }
 
     public class ServiceAvOpenHomeOrgMediaServer1 : IServiceMediaServer

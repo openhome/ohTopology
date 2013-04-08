@@ -46,6 +46,9 @@
     <Reference Include="CpUpnpOrgContentDirectory1.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpUpnpOrgContentDirectory1.net.dll</HintPath>
     </Reference>
+    <Reference Include="ohMediaServer.Shared">
+      <HintPath>..\..\dependencies\AnyPlatform\ohMediaServer\ohMediaServer.Shared.dll</HintPath>
+    </Reference>
     <Reference Include="ohNet.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\ohNet.net.dll</HintPath>
     </Reference>
