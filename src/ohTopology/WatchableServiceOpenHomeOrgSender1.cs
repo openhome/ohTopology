@@ -333,8 +333,8 @@ namespace OpenHome.Av
 
     public class MockWatchableSender : Sender, IMockable
     {
-        public MockWatchableSender(IWatchableThread aThread, string aId, string aAttributes, bool aAudio, string aMetadata, string aPresentationUrl, string aUri)
-            : base(aId, new MockServiceOpenHomeOrgSender1(aThread, aId, aAudio, aMetadata, aUri))
+        public MockWatchableSender(IWatchableThread aThread, string aId, string aAttributes, bool aAudio, string aMetadata, string aPresentationUrl, string aStatus)
+            : base(aId, new MockServiceOpenHomeOrgSender1(aThread, aId, aAudio, aMetadata, aStatus))
         {
             iAttributes = aAttributes;
             iPresentationUrl = aPresentationUrl;
