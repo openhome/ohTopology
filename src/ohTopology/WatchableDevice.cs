@@ -368,6 +368,14 @@ namespace OpenHome.Av
             // time service
             MockWatchableTime time = new MockWatchableTime(aThread, aUdn, 0, 0);
             Add<Time>(time);
+
+            // receiver service
+            MockWatchableReceiver receiver = new MockWatchableReceiver(aThread, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty);
+            Add<Receiver>(receiver);
+
+            // sender service
+            MockWatchableSender sender = new MockWatchableSender(aThread, aUdn, "Info Time", false, string.Empty, string.Empty, "Enabled");
+            Add<Sender>(sender);
         }
 
         public MockWatchableDs(IWatchableThread aThread, string aUdn, string aRoom, string aName, string aAttributes)
@@ -400,6 +408,14 @@ namespace OpenHome.Av
             // time service
             MockWatchableTime time = new MockWatchableTime(aThread, aUdn, 0, 0);
             Add<Time>(time);
+
+            // receiver service
+            MockWatchableReceiver receiver = new MockWatchableReceiver(aThread, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty);
+            Add<Receiver>(receiver);
+
+            // sender service
+            MockWatchableSender sender = new MockWatchableSender(aThread, aUdn, string.Empty, false, string.Empty, string.Empty, "Enabled");
+            Add<Sender>(sender);
         }
 
         public override void Execute(IEnumerable<string> aValue)
@@ -464,6 +480,14 @@ namespace OpenHome.Av
             // time service
             MockWatchableTime time = new MockWatchableTime(aThread, aUdn, 0, 0);
             Add<Time>(time);
+
+            // receiver service
+            MockWatchableReceiver receiver = new MockWatchableReceiver(aThread, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty);
+            Add<Receiver>(receiver);
+
+            // sender service
+            MockWatchableSender sender = new MockWatchableSender(aThread, aUdn, "Info Time", false, string.Empty, string.Empty, "Enabled");
+            Add<Sender>(sender);
         }
 
         public MockWatchableDsm(IWatchableThread aThread, string aUdn, string aRoom, string aName, string aAttributes)
@@ -503,6 +527,14 @@ namespace OpenHome.Av
             // time service
             MockWatchableTime time = new MockWatchableTime(aThread, aUdn, 0, 0);
             Add<Time>(time);
+
+            // receiver service
+            MockWatchableReceiver receiver = new MockWatchableReceiver(aThread, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty);
+            Add<Receiver>(receiver);
+
+            // sender service
+            MockWatchableSender sender = new MockWatchableSender(aThread, aUdn, string.Empty, false, string.Empty, string.Empty, "Enabled");
+            Add<Sender>(sender);
         }
 
         public override void Execute(IEnumerable<string> aValue)
