@@ -229,7 +229,16 @@ namespace OpenHome.Av
             List<ITopology4Source> removed = new List<ITopology4Source>();
             foreach (ITopology4Source s in aPrevious)
             {
-                if (!aValue.Contains(s))
+                bool found = false;
+                foreach (ITopology4Source t in aValue)
+                {
+                    if (Topology4SourceComparer.Equals(s, t))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
                 {
                     removed.Add(s);
                 }
@@ -238,13 +247,22 @@ namespace OpenHome.Av
             List<ITopology4Source> added = new List<ITopology4Source>();
             foreach (ITopology4Source s in aValue)
             {
-                if (!aPrevious.Contains(s))
+                bool found = false;
+                foreach (ITopology4Source t in aPrevious)
+                {
+                    if (Topology4SourceComparer.Equals(s, t))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
                 {
                     added.Add(s);
                 }
             }
 
-            foreach(ITopology4Source s in removed)
+            foreach (ITopology4Source s in removed)
             {
                 iSources.Remove(s);
             }
