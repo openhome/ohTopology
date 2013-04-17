@@ -34,6 +34,12 @@
     <Reference Include="CpAvOpenhomeOrgProduct1.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgProduct1.net.dll</HintPath>
     </Reference>
+    <Reference Include="CpAvOpenhomeOrgReceiver1.net">
+      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgReceiver1.net.dll</HintPath>
+    </Reference>
+    <Reference Include="CpAvOpenhomeOrgSender1.net">
+      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgSender1.net.dll</HintPath>
+    </Reference>
     <Reference Include="CpAvOpenhomeOrgTime1.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgTime1.net.dll</HintPath>
     </Reference>
@@ -67,6 +73,8 @@
     <Compile Include="WatchableDevice.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgInfo1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgProduct1.cs" />
+    <Compile Include="WatchableServiceOpenHomeOrgReceiver1.cs" />
+    <Compile Include="WatchableServiceOpenHomeOrgSender1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgTime1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgVolume1.cs" />
     <Compile Include="WatchableServiceUpnpOrgContentDirectory1.cs" />
