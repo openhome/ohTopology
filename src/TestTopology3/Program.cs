@@ -171,6 +171,8 @@ namespace TestTopology3
             RoomWatcher watcher = new RoomWatcher(runner);
             topology3.Rooms.AddWatcher(watcher);
 
+            network.Start();
+
             thread.WaitComplete();
 
             try
@@ -192,6 +194,7 @@ namespace TestTopology3
 
             topology1.Dispose();
 
+            network.Stop();
             network.Dispose();
 
             thread.Dispose();

@@ -140,7 +140,7 @@ namespace TestLinnHouse
 
             public void OrderedAdd(IStandardRoom aItem, uint aIndex)
             {
-                iRunner.Result("Room Added: " + aItem.Name);
+                iRunner.Result(string.Format("Room Added: {0} at {1}", aItem.Name, aIndex));
 
                 iList.Insert(aIndex, aItem);
                 aItem.Standby.AddWatcher(this);
@@ -155,7 +155,7 @@ namespace TestLinnHouse
 
             public void OrderedMove(IStandardRoom aItem, uint aFrom, uint aTo)
             {
-                iRunner.Result("Room Moved: " + aItem.Name);
+                iRunner.Result(string.Format("Room Moved: {0} from {1} to {2}", aItem.Name, aFrom, aTo));
 
                 iList.Remove(aItem);
                 iList.Insert(aTo, aItem);
@@ -163,7 +163,7 @@ namespace TestLinnHouse
 
             public void OrderedRemove(IStandardRoom aItem, uint aIndex)
             {
-                iRunner.Result("Room Removed: " + aItem.Name);
+                iRunner.Result(string.Format("Room Removed: {0} at {1}", aItem.Name, aIndex));
 
                 iList.Remove(aItem);
                 aItem.Standby.RemoveWatcher(this);
@@ -197,7 +197,7 @@ namespace TestLinnHouse
 
             public void ItemUpdate(string aId, RoomDetails aValue, RoomDetails aPrevious)
             {
-                iRunner.Result(string.Format("{0}: Active={1}, BitDepth={2}, BitRate={3}, CodeName={4}, Duration={5}, Lossless={6}, SampleRate={7}",
+                iRunner.Result(string.Format("{0} Updated: Active={1}, BitDepth={2}, BitRate={3}, CodeName={4}, Duration={5}, Lossless={6}, SampleRate={7}",
                     aId, aValue.Enabled, aValue.BitDepth, aValue.BitRate, aValue.CodecName, aValue.Duration, aValue.Lossless, aValue.SampleRate));
             }
 
@@ -212,7 +212,7 @@ namespace TestLinnHouse
 
             public void ItemUpdate(string aId, RoomMetadata aValue, RoomMetadata aPrevious)
             {
-                iRunner.Result(string.Format("{0}: Active={1}, Metadata={2}, Uri={3}", aId, aValue.Enabled, aValue.Metadata, aValue.Uri));
+                iRunner.Result(string.Format("{0} Updated: Active={1}, Metadata={2}, Uri={3}", aId, aValue.Enabled, aValue.Metadata, aValue.Uri));
             }
 
             public void ItemClose(string aId, RoomMetadata aValue)
@@ -226,7 +226,7 @@ namespace TestLinnHouse
 
             public void ItemUpdate(string aId, RoomMetatext aValue, RoomMetatext aPrevious)
             {
-                iRunner.Result(string.Format("{0}: Active={1}, Metatext={2}", aId, aValue.Enabled, aValue.Metatext));
+                iRunner.Result(string.Format("{0} Updated: Active={1}, Metatext={2}", aId, aValue.Enabled, aValue.Metatext));
             }
 
             public void ItemClose(string aId, RoomMetatext aValue)
@@ -268,6 +268,8 @@ namespace TestLinnHouse
             RoomWatcher watcher = new RoomWatcher(runner);
             house.Rooms.AddWatcher(watcher);
 
+            network.Start();
+
             thread.WaitComplete();
 
             try
@@ -293,6 +295,7 @@ namespace TestLinnHouse
 
             topology1.Dispose();
 
+            network.Stop();
             network.Dispose();
 
             thread.Dispose();

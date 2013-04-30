@@ -280,6 +280,8 @@ namespace TestTopology4
             RoomWatcher watcher = new RoomWatcher(runner);
             topology4.Rooms.AddWatcher(watcher);
 
+            network.Start();
+
             thread.WaitComplete();
 
             try
@@ -303,6 +305,7 @@ namespace TestTopology4
 
             topology1.Dispose();
 
+            network.Stop();
             network.Dispose();
 
             thread.Dispose();

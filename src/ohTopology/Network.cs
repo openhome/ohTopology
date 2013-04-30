@@ -9,6 +9,8 @@ namespace OpenHome.Av
 {
     public interface INetwork
     {
+        void Start();
+        void Stop();
         void Refresh();
         WatchableDeviceUnordered GetWatchableDeviceCollection<T>() where T : IWatchableService;
     }
@@ -115,11 +117,8 @@ namespace OpenHome.Av
     {
         public Network(IWatchableThread aThread)
         {
+            iThread = aThread;
             iDeviceCollections = new Dictionary<Type, ServiceWatchableDeviceCollection>();
-
-            // add device lists for each type of watchable service
-            iDeviceCollections.Add(typeof(Product), new ServiceWatchableDeviceCollection(aThread, "av.openhome.org", "Product", 1));
-            iDeviceCollections.Add(typeof(ContentDirectory), new ServiceWatchableDeviceCollection(aThread, "upnp.org", "ContentDirectory", 1));
         }
 
         public void Dispose()
@@ -129,6 +128,22 @@ namespace OpenHome.Av
                 c.Dispose();
             }
             iDeviceCollections = null;
+        }
+
+        public void Start()
+        {
+            // add device lists for each type of watchable service
+            iDeviceCollections.Add(typeof(Product), new ServiceWatchableDeviceCollection(iThread, "av.openhome.org", "Product", 1));
+            iDeviceCollections.Add(typeof(ContentDirectory), new ServiceWatchableDeviceCollection(iThread, "upnp.org", "ContentDirectory", 1));
+        }
+
+        public void Stop()
+        {
+            foreach (ServiceWatchableDeviceCollection c in iDeviceCollections.Values)
+            {
+                c.Dispose();
+            }
+            iDeviceCollections.Clear();
         }
 
         public void Refresh()
@@ -144,6 +159,7 @@ namespace OpenHome.Av
             return iDeviceCollections[typeof(T)];
         }
 
+        private IWatchableThread iThread;
         private Dictionary<Type, ServiceWatchableDeviceCollection> iDeviceCollections;
     }
 
@@ -163,6 +179,43 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
+            foreach (MockWatchableDevice d in iOnDevices.Values)
+            {
+                d.Dispose();
+            }
+            iOnDevices.Clear();
+            iOnDevices = null;
+
+            foreach (MockWatchableDevice d in iOffDevices.Values)
+            {
+                d.Dispose();
+            }
+            iOffDevices.Clear();
+            iOffDevices = null;
+
+            iDeviceLists.Clear();
+            iDeviceLists = null;
+        }
+
+        public virtual void Start()
+        {
+        }
+
+        public virtual void Stop()
+        {
+            foreach (MockWatchableDevice d in iOnDevices.Values)
+            {
+                d.Dispose();
+            }
+            iOnDevices.Clear();
+
+            foreach (MockWatchableDevice d in iOffDevices.Values)
+            {
+                d.Dispose();
+            }
+            iOffDevices.Clear();
+
+            iDeviceLists.Clear();
         }
 
         public void Refresh()
@@ -337,7 +390,7 @@ namespace OpenHome.Av
 
         private object iLock;
 
-        private IWatchableThread iThread;
+        protected IWatchableThread iThread;
         private Mockable iMocker;
 
         private Dictionary<string, MockWatchableDevice> iOnDevices;
@@ -350,10 +403,16 @@ namespace OpenHome.Av
         public FourDsMockNetwork(IWatchableThread aThread, Mockable aMocker)
             : base(aThread, aMocker)
         {
-            AddDevice(new MockWatchableDs(aThread, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));
-            AddDevice(new MockWatchableDsm(aThread, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
-            AddDevice(new MockWatchableDsm(aThread, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
-            AddDevice(new MockWatchableDs(aThread, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
+        }
+
+        public override void Start()
+        {
+            base.Start();
+
+            AddDevice(new MockWatchableDs(iThread, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));
+            AddDevice(new MockWatchableDsm(iThread, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
+            AddDevice(new MockWatchableDsm(iThread, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
+            AddDevice(new MockWatchableDs(iThread, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
         }
     }
 }

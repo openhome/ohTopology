@@ -76,6 +76,8 @@ namespace TestTopology
             ProductWatcher watcher = new ProductWatcher (runner);
             topology.Products.AddWatcher (watcher);
 
+            network.Start();
+
             thread.WaitComplete();
 
             try {
@@ -88,6 +90,7 @@ namespace TestTopology
 
             topology.Dispose ();
 
+            network.Stop();
             network.Dispose ();
 
             thread.Dispose ();

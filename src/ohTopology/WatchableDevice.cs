@@ -58,6 +58,7 @@ namespace OpenHome.Av
         {
             iLock = new object();
             iDisposed = false;
+            iThread = aThread;
 
             iFactories = new Dictionary<Type, IWatchableServiceFactory>();
 
@@ -131,7 +132,10 @@ namespace OpenHome.Av
 
                     Task task = new Task(new Action(delegate
                     {
-                        aCallback(this, (T)service);
+                        iThread.Schedule(() =>
+                        {
+                            aCallback(this, (T)service);
+                        });
                     }));
                     task.Start();
                 }
@@ -146,7 +150,10 @@ namespace OpenHome.Av
                             iServiceRefCount.Add(typeof(T), 1);
                         }
 
-                        aCallback(this, (T)aService);
+                        iThread.Schedule(() =>
+                        {
+                            aCallback(this, (T)aService);
+                        });
                     });
                 }
             }
@@ -196,6 +203,7 @@ namespace OpenHome.Av
 
         protected object iLock;
         protected bool iDisposed;
+        private IWatchableThread iThread;
 
         protected CpDevice iDevice;
 
@@ -229,13 +237,23 @@ namespace OpenHome.Av
         }
     }
 
-    public class MockWatchableDevice : IWatchableDevice, IMockable
+    public class MockWatchableDevice : IWatchableDevice, IMockable, IDisposable
     {
         public MockWatchableDevice(IWatchableThread aThread, string aUdn)
         {
             iThread = aThread;
             iUdn = aUdn;
             iServices = new Dictionary<Type, IWatchableService>();
+        }
+
+        public void Dispose()
+        {
+            foreach (IWatchableService s in iServices.Values)
+            {
+                s.Dispose();
+            }
+            iServices.Clear();
+            iServices = null;
         }
 
         public string Udn
@@ -260,9 +278,14 @@ namespace OpenHome.Av
             IWatchableService service;
             if (iServices.TryGetValue(typeof(T), out service))
             {
-                iThread.Schedule(() => { 
-                    aCallback(this, (T)service);
-                });
+                //Task task = new Task(new Action(delegate
+                //{
+                    iThread.Schedule(() =>
+                    {
+                        aCallback(this, (T)service);
+                    });
+                //}));
+                //task.Start();
 
                 return;
             }

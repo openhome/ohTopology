@@ -1,27 +1,7 @@
 // test network is populated with 4 devices
-expect Room Added: Bedroom
-expect Standby(Bedroom)(Proxy): eOn
-expect Details(Bedroom): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Bedroom): Active=False, Metadata=, Uri=
-expect Metatext(Bedroom): Active=False, Metatext=
-expect Active(Bedroom): True
-expect HasVolume(Bedroom): False
-expect Mute(Bedroom): False
-expect Volume(Bedroom): 0
-
-expect Room Added: Dining Room
-expect Standby(Dining Room)(Proxy): eOn
-expect Details(Dining Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Dining Room): Active=False, Metadata=, Uri=
-expect Metatext(Dining Room): Active=False, Metatext=
-expect Active(Dining Room): True
-expect HasVolume(Dining Room): False
-expect Mute(Dining Room): False
-expect Volume(Dining Room): 0
-
-expect Room Added: Kitchen
+expect Room Added: Kitchen at 0
 expect Standby(Kitchen)(Proxy): eOn
-expect Details(Kitchen): Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
+expect Details(Kitchen): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Kitchen): Active=False, Metadata=, Uri=
 expect Metatext(Kitchen): Active=False, Metatext=
 expect Active(Kitchen): True
@@ -29,7 +9,11 @@ expect HasVolume(Kitchen): False
 expect Mute(Kitchen): False
 expect Volume(Kitchen): 0
 
-expect Room Added: Sitting Room
+expect Details(Kitchen) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
+expect Metadata(Kitchen) Updated: Active=True, Metadata=, Uri=
+expect Metatext(Kitchen) Updated: Active=True, Metatext=
+
+expect Room Added: Sitting Room at 1
 expect Standby(Sitting Room)(Proxy): eOn
 expect Details(Sitting Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Sitting Room): Active=False, Metadata=, Uri=
@@ -39,30 +23,54 @@ expect HasVolume(Sitting Room): False
 expect Mute(Sitting Room): False
 expect Volume(Sitting Room): 0
 
-expect Metadata(Kitchen): Active=True, Metadata=, Uri=
-expect Metatext(Kitchen): Active=True, Metatext=
-expect Details(Sitting Room): Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Sitting Room): Active=True, Metadata=, Uri=
-expect Metatext(Sitting Room): Active=True, Metatext=
-expect Details(Bedroom): Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Bedroom): Active=True, Metadata=, Uri=
-expect Metatext(Bedroom): Active=True, Metatext=
-expect Details(Dining Room): Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Dining Room): Active=True, Metadata=, Uri=
-expect Metatext(Dining Room): Active=True, Metatext=
-expect Volume(Bedroom): 0 -> 50
-expect HasVolume(Bedroom): False -> True
-expect Volume(Dining Room): 0 -> 50
-expect HasVolume(Dining Room): False -> True
+expect Room Added: Bedroom at 0
+expect Standby(Bedroom)(Proxy): eOn
+expect Details(Bedroom): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
+expect Metadata(Bedroom): Active=False, Metadata=, Uri=
+expect Metatext(Bedroom): Active=False, Metatext=
+expect Active(Bedroom): True
+expect HasVolume(Bedroom): False
+expect Mute(Bedroom): False
+expect Volume(Bedroom): 0
+
+expect Room Added: Dining Room at 1
+expect Standby(Dining Room)(Proxy): eOn
+expect Details(Dining Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
+expect Metadata(Dining Room): Active=False, Metadata=, Uri=
+expect Metatext(Dining Room): Active=False, Metatext=
+expect Active(Dining Room): True
+expect HasVolume(Dining Room): False
+expect Mute(Dining Room): False
+expect Volume(Dining Room): 0
+
 expect Volume(Kitchen): 0 -> 50
 expect HasVolume(Kitchen): False -> True
+
+expect Details(Sitting Room) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
+expect Metadata(Sitting Room) Updated: Active=True, Metadata=, Uri=
+expect Metatext(Sitting Room) Updated: Active=True, Metatext=
+
+expect Details(Bedroom) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
+expect Metadata(Bedroom) Updated: Active=True, Metadata=, Uri=
+expect Metatext(Bedroom) Updated: Active=True, Metatext=
+
+expect Details(Dining Room) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
+expect Metadata(Dining Room) Updated: Active=True, Metadata=, Uri=
+expect Metatext(Dining Room) Updated: Active=True, Metatext=
+
 expect Volume(Sitting Room): 0 -> 50
 expect HasVolume(Sitting Room): False -> True
+
+expect Volume(Bedroom): 0 -> 50
+expect HasVolume(Bedroom): False -> True
+
+expect Volume(Dining Room): 0 -> 50
+expect HasVolume(Dining Room): False -> True
 empty
 
 // test adding a new room
 mock network add ds 67
-expect Room Added: Main Room
+expect Room Added: Main Room at 3
 expect Standby(Main Room)(Proxy): eOn
 expect Details(Main Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Main Room): Active=False, Metadata=, Uri=
@@ -72,41 +80,41 @@ expect HasVolume(Main Room): False
 expect Mute(Main Room): False
 expect Volume(Main Room): 0
 
-expect Details(Main Room): Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Main Room): Active=True, Metadata=, Uri=
-expect Metatext(Main Room): Active=True, Metatext=
+expect Details(Main Room) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
+expect Metadata(Main Room) Updated: Active=True, Metadata=, Uri=
+expect Metatext(Main Room) Updated: Active=True, Metatext=
 expect Volume(Main Room): 0 -> 50
 expect HasVolume(Main Room): False -> True
 empty
 
 // test changing details
 mock network update ds 67 info details 50 100 flac 500 true 44000
-expect Details(Main Room): Active=True, BitDepth=50, BitRate=100, CodeName=flac, Duration=500, Lossless=True, SampleRate=44000
+expect Details(Main Room) Updated: Active=True, BitDepth=50, BitRate=100, CodeName=flac, Duration=500, Lossless=True, SampleRate=44000
 empty
 
 // test changing metadata
 mock network update ds 67 info metadata blah http://blah
-expect Metadata(Main Room): Active=True, Metadata=blah, Uri=http://blah
+expect Metadata(Main Room) Updated: Active=True, Metadata=blah, Uri=http://blah
 empty
 
 // test changing metatext
 mock network update ds 67 info metatext testing
-expect Metatext(Main Room): Active=True, Metatext=testing
+expect Metatext(Main Room) Updated: Active=True, Metatext=testing
 empty
 
 // test room controller active flag
 mock network remove ds 67
-expect Room Removed: Main Room
-expect Details(Main Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Main Room): Active=False, Metadata=, Uri=
-expect Metatext(Main Room): Active=False, Metatext=
+expect Room Removed: Main Room at 3
+expect Details(Main Room) Updated: Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
+expect Metadata(Main Room) Updated: Active=False, Metadata=, Uri=
+expect Metatext(Main Room) Updated: Active=False, Metatext=
 expect Active(Main Room): True -> False
 expect HasVolume(Main Room): True -> False
 empty
 
 // re-add ds 67
 mock network add ds 67
-expect Room Added: Main Room
+expect Room Added: Main Room at 3
 expect Standby(Main Room)(Proxy): eOn
 expect Details(Main Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Main Room): Active=False, Metadata=, Uri=
@@ -116,9 +124,9 @@ expect HasVolume(Main Room): False
 expect Mute(Main Room): False
 expect Volume(Main Room): 0
 
-expect Details(Main Room): Active=True, BitDepth=50, BitRate=100, CodeName=flac, Duration=500, Lossless=True, SampleRate=44000
-expect Metadata(Main Room): Active=True, Metadata=blah, Uri=http://blah
-expect Metatext(Main Room): Active=True, Metatext=testing
+expect Details(Main Room) Updated: Active=True, BitDepth=50, BitRate=100, CodeName=flac, Duration=500, Lossless=True, SampleRate=44000
+expect Metadata(Main Room) Updated: Active=True, Metadata=blah, Uri=http://blah
+expect Metatext(Main Room) Updated: Active=True, Metatext=testing
 expect Volume(Main Room): 0 -> 50
 expect HasVolume(Main Room): False -> True
 empty
@@ -137,12 +145,12 @@ empty
 mock network update ds 67 product source 0 name Test
 empty
 mock network update ds 68 product name Test
-expect Details(Main Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Main Room): Active=False, Metadata=, Uri=
-expect Metatext(Main Room): Active=False, Metatext=
-expect Details(Main Room): Active=True, BitDepth=1, BitRate=2, CodeName=mp3, Duration=3, Lossless=False, SampleRate=4
-expect Metadata(Main Room): Active=True, Metadata=Ds68, Uri=http://Ds68
-expect Metatext(Main Room): Active=True, Metatext=Ds68
+expect Details(Main Room) Updated: Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
+expect Metadata(Main Room) Updated: Active=False, Metadata=, Uri=
+expect Metatext(Main Room) Updated: Active=False, Metatext=
+expect Details(Main Room) Updated: Active=True, BitDepth=1, BitRate=2, CodeName=mp3, Duration=3, Lossless=False, SampleRate=4
+expect Metadata(Main Room) Updated: Active=True, Metadata=Ds68, Uri=http://Ds68
+expect Metatext(Main Room) Updated: Active=True, Metatext=Ds68
 empty
 
 exit

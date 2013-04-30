@@ -201,6 +201,8 @@ namespace TestTopology2
             GroupWatcher watcher = new GroupWatcher(runner);
             topology2.Groups.AddWatcher(watcher);
 
+            network.Start();
+
             thread.WaitComplete();
 
             try
@@ -219,6 +221,7 @@ namespace TestTopology2
 
             topology1.Dispose();
 
+            network.Stop();
             network.Dispose();
 
             thread.Dispose();
