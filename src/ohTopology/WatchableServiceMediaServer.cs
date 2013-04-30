@@ -1,116 +1,77 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using OpenHome.Os.App;
 using OpenHome.Net.ControlPoint;
 using OpenHome.Net.ControlPoint.Proxies;
 using OpenHome.MediaServer;
 
+
 namespace OpenHome.Av
 {
-    public interface ISessionValue
+    public interface IMediaServerValue
     {
         string Value { get; }
         IEnumerable<string> Values { get; }
     }
 
-    public interface ISessionDatum
+    public interface IMediaServerDatum
     {
-        string Id { get; }
-        bool IsContainer { get; }
-        ISessionValue this[ITag aTag] { get; }
-        ITag PrimaryTag { get; }
+        IEnumerable<ITag> Type { get; }
+        IMediaServerValue this[ITag aTag] { get; }
     }
 
-    public interface ISessionContents
+    public interface IMediaServerFragment
     {
         uint Index { get; }
-        IEnumerable<ISessionDatum> Data { get; }
+        uint Sequence { get; }
+        IEnumerable<IMediaServerDatum> Data { get; }
+    }
+
+    public interface IMediaServerSnapshot
+    {
+        uint Total { get; }
+        uint Sequence { get; }
+        IEnumerable<uint> AlphaMap { get; } // null if no alpha map
+        Task<IMediaServerFragment> Read(uint aIndex, uint aCount);
     }
 
     public interface IMediaServerContainer
     {
-
-        uint Total { get; }
-        IEnumerable<uint> Alpha { get; } // null if no alpha map
-        IEnumerable<string> Path { get; } // ordered list of container titles
-        IEnumerable<string> Location { get; } // ordered list of container ids
-        void Fetch(uint aIndex, uint aCount, Action<IMediaServerContainer, ISessionContents> aCallback);
+        IWatchable<IMediaServerSnapshot> Snapshot { get; }
     }
 
     public interface IMediaServerSession : IDisposable
     {
-        void Open(IEnumerable<string> aPath); // ordered list of container id's, empty for root
-        Watchable<IMediaServerContainer> Container { get; }
+        bool SupportsQuery { get; }
+        bool SupportsBrowse { get; }
+        Task<IMediaServerContainer> Query(string aValue);
+        Task<IMediaServerContainer> Browse(IMediaServerDatum aDatum); // null = home
     }
 
     public interface IServiceMediaServer : IWatchableService
     {
-        IMediaServerSession CreateSession();
+        Task<IMediaServerSession> CreateSession();
     }
 
     public class ServiceAvOpenHomeOrgMediaServer1 : IServiceMediaServer
     {
-        public ServiceAvOpenHomeOrgMediaServer1(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgMediaServer1 aService)
+        private readonly IWatchableThread iWatchableThread;
+        private readonly CpProxyAvOpenhomeOrgMediaServer1 iService;
+
+        public ServiceAvOpenHomeOrgMediaServer1(IWatchableThread aWatchableThread, CpProxyAvOpenhomeOrgMediaServer1 aService)
         {
-            iLock = new object();
-            iDisposed = false;
-
+            iWatchableThread = aWatchableThread;
             iService = aService;
-
-            iService.SetPropertyUpdateCountChanged(HandleUpdateCountChanged);
-
-            iUpdateCount = new Watchable<uint>(aThread, string.Format("UpdateCount({0})", aId), iService.PropertyUpdateCount());
+            iService.Subscribe();
         }        
 
         public void Dispose()
         {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("ServiceUpnpOrgContentDirectory1.Dispose");
-                }
-
-                iService = null;
-
-                iDisposed = true;
-            }
+            iService.Dispose();
         }
-
-        public IWatchable<uint> UpdateCount
-        {
-            get
-            {
-                return iUpdateCount;
-            }
-        }
-
-        public void Browse(string aId, Action<IServiceMediaServerBrowseResult> aCallback)
-        {
-            aCallback(null);
-        }
-
-        private void HandleUpdateCountChanged()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iUpdateCount.Update(iService.PropertyUpdateCount());
-            }
-        }
-
-        private object iLock;
-        private bool iDisposed;
-
-        private CpProxyAvOpenhomeOrgMediaServer1 iService;
-
-        private Watchable<uint> iUpdateCount;
     }
 
     public class ServiceUpnpOrgContentDirectory1 : IServiceMediaServer

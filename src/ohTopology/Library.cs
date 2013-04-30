@@ -6,6 +6,7 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
+    /*
     public class WatchableContentDirectoryUnordered : WatchableUnordered<ContentDirectory>
     {
         public WatchableContentDirectoryUnordered(IWatchableThread aThread)
@@ -133,4 +134,5 @@ namespace OpenHome.Av
         
         private WatchableDeviceUnordered iDevices;
     }
+     */
 }
