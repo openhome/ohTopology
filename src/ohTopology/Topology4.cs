@@ -26,12 +26,27 @@ namespace OpenHome.Av
     {
         public static bool Equals(ITopology4Source aSource1, ITopology4Source aSource2)
         {
+            bool volume = false;
+            if (aSource1.VolumeDevices.Count() == aSource2.VolumeDevices.Count())
+            {
+                volume = true;
+                int count = aSource1.VolumeDevices.Count();
+                for (int i = 0; i < count; ++i)
+                {
+                    if (aSource1.VolumeDevices.ElementAt(i) != aSource2.VolumeDevices.ElementAt(i))
+                    {
+                        volume = false;
+                        break;
+                    }
+                }
+            }
+
             return (aSource1.Index == aSource2.Index
                  && aSource1.Name == aSource2.Name
                  && aSource1.Group == aSource2.Group
                  && aSource1.Type == aSource2.Type
                  && aSource1.Visible == aSource2.Visible
-                 && aSource1.VolumeDevices == aSource2.VolumeDevices
+                 && volume
                  && aSource1.Device == aSource2.Device
                  && aSource1.HasInfo == aSource2.HasInfo
                  && aSource1.HasTime == aSource2.HasTime);
