@@ -190,16 +190,16 @@ def build(context):
 def test(context):
     python("waf", "test")
 
-    def run_test(num):
-        prog = 'build/TestTopology%(num)d/bin/%(debugmode)s/TestTopology%(num)d.exe'
-        scrp = 'build/TestTopology%(num)d/bin/%(debugmode)s/Topology%(num)dTestScript.txt'
-        fmt = { 'num' : num, 'debugmode' : context.options.debugmode.title() }
+    def run_test(test):
+        prog = 'build/%(test)s/bin/%(debugmode)s/%(test)s.exe'
+        scrp = 'build/%(test)s/bin/%(debugmode)s/%(test)sTestScript.txt'
+        fmt = { 'test' : test, 'debugmode' : context.options.debugmode.title() }
         cli([prog % fmt, scrp % fmt])
-    run_test(1)
-    run_test(2)
-    run_test(3)
-    run_test(4)
-    run_test(5)
+    run_test('TestTopology1')
+    run_test('TestTopology2')
+    run_test('TestTopology3')
+    run_test('TestTopology4')
+    run_test('TestStandardHouse')
 
 
 @build_step("publish", optional=True, default=False)

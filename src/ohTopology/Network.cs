@@ -312,7 +312,14 @@ namespace OpenHome.Av
                         }
                         else
                         {
-                            throw new KeyNotFoundException();
+                            if (iOffDevices.TryGetValue(udn, out device))
+                            {
+                                device.Execute(value.Skip(1));
+                            }
+                            else
+                            {
+                                throw new KeyNotFoundException();
+                            }
                         }
                     }
                 }

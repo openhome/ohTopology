@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Library.cs" />
+    <Compile Include="StandardBrowser.cs" />
     <Compile Include="Mockable.cs" />
     <Compile Include="Network.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -68,8 +69,6 @@
     <Compile Include="Topology2.cs" />
     <Compile Include="Topology3.cs" />
     <Compile Include="Topology4.cs" />
-    <Compile Include="Topology5.cs" />
-    <Compile Include="Topology6.cs" />
     <Compile Include="WatchableDevice.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgInfo1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgProduct1.cs" />

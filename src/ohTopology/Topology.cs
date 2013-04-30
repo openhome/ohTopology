@@ -119,26 +119,8 @@ namespace OpenHome.Av
         uint TrackCount { get; }
     }
 
-    public interface IInfo
-    {
-        bool Enabled { get; }
-        uint Bitdepth { get; }
-        uint Bitrate { get; }
-        string CodecName { get; }
-        uint DetailsCount { get; }
-        uint Duration { get; }
-        bool Lossless { get; }
-        string Metadata { get; }
-        string Metatext { get; }
-        uint MetatextCount { get; }
-        uint SampleRate { get; }
-        uint TrackCount { get; }
-        string Uri { get; }
-    }
-
     public interface IZone
     {
-        bool Enabled { get; }
         IRoom Room { get; }
     }
 
@@ -149,16 +131,21 @@ namespace OpenHome.Av
         IWatchable<IVolume> Volume { get; }
         IWatchable<ISource> Current { get; }
         IWatchable<ITime> Time { get; }
-        IWatchable<IInfo> Info { get; }
+        //IWatchable<IInfo> Info { get; }
         IWatchableUnordered<IWatchableSource> Sources { get; }
+
+        IWatchable<bool> HasSender { get; }
+        IWatchable<bool> HasReceiver { get; }
         IWatchable<IZone> Zone { get; }
-        IWatchableUnordered<IRoom> Listeners { get; } 
+        IWatchableUnordered<IRoom> Listeners { get; }
 
         void SetStandby(uint aIndex, bool aValue);
         void SetMute(bool aValue);
         void SetVolume(uint Value);
         void VolumeInc();
         void VolumeDec();
+
+        void SetSender(IRoom aRoom);
     }
 
     public interface IWatchableSource : IWatchable<ISource>

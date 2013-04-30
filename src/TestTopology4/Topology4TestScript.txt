@@ -4,7 +4,7 @@ expect Standby(Kitchen): eOn
 expect Added: 0: Group=Sneaky Music DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1111-ef000004013f, Volume=4c494e4e-0026-0f99-1111-ef000004013f 
 expect Added: 1: Group=Sneaky Music DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1111-ef000004013f, Volume=4c494e4e-0026-0f99-1111-ef000004013f 
 expect Added: 3: Group=Sneaky Music DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1111-ef000004013f, Volume=4c494e4e-0026-0f99-1111-ef000004013f 
-expect Current: 0: Group=Sneaky Music DS, Name=Playlist, Type=Playlist, Visible=True
+expect Current: 0: Group=Sneaky Music DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1111-ef000004013f, Volume=4c494e4e-0026-0f99-1111-ef000004013f 
 expect Room Added Sitting Room
 expect Standby(Sitting Room): eOn
 expect Added: 0: Group=Klimax DSM, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1112-ef000004013f, Volume=4c494e4e-0026-0f99-1112-ef000004013f 
@@ -17,7 +17,7 @@ expect Added: 8: Group=Klimax DSM, Name=SPDIF1, Type=Digital, Visible=True, HasI
 expect Added: 9: Group=Klimax DSM, Name=SPDIF2, Type=Digital, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1112-ef000004013f, Volume=4c494e4e-0026-0f99-1112-ef000004013f 
 expect Added: 10: Group=Klimax DSM, Name=TOSLINK1, Type=Digital, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1112-ef000004013f, Volume=4c494e4e-0026-0f99-1112-ef000004013f 
 expect Added: 11: Group=Klimax DSM, Name=TOSLINK2, Type=Digital, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1112-ef000004013f, Volume=4c494e4e-0026-0f99-1112-ef000004013f 
-expect Current: 0: Group=Klimax DSM, Name=Playlist, Type=Playlist, Visible=True
+expect Current: 0: Group=Klimax DSM, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1112-ef000004013f, Volume=4c494e4e-0026-0f99-1112-ef000004013f 
 expect Room Added Bedroom
 expect Standby(Bedroom): eOn
 expect Added: 0: Group=Kiko DSM, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1113-ef000004013f, Volume=4c494e4e-0026-0f99-1113-ef000004013f 
@@ -30,13 +30,13 @@ expect Added: 8: Group=Kiko DSM, Name=SPDIF1, Type=Digital, Visible=True, HasInf
 expect Added: 9: Group=Kiko DSM, Name=SPDIF2, Type=Digital, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1113-ef000004013f, Volume=4c494e4e-0026-0f99-1113-ef000004013f 
 expect Added: 10: Group=Kiko DSM, Name=TOSLINK1, Type=Digital, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1113-ef000004013f, Volume=4c494e4e-0026-0f99-1113-ef000004013f 
 expect Added: 11: Group=Kiko DSM, Name=TOSLINK2, Type=Digital, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1113-ef000004013f, Volume=4c494e4e-0026-0f99-1113-ef000004013f 
-expect Current: 0: Group=Kiko DSM, Name=Playlist, Type=Playlist, Visible=True
+expect Current: 0: Group=Kiko DSM, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1113-ef000004013f, Volume=4c494e4e-0026-0f99-1113-ef000004013f 
 expect Room Added Dining Room
 expect Standby(Dining Room): eOn
 expect Added: 0: Group=Majik DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1114-ef000004013f, Volume=4c494e4e-0026-0f99-1114-ef000004013f 
 expect Added: 1: Group=Majik DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1114-ef000004013f, Volume=4c494e4e-0026-0f99-1114-ef000004013f 
 expect Added: 3: Group=Majik DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1114-ef000004013f, Volume=4c494e4e-0026-0f99-1114-ef000004013f 
-expect Current: 0: Group=Majik DS, Name=Playlist, Type=Playlist, Visible=True
+expect Current: 0: Group=Majik DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1114-ef000004013f, Volume=4c494e4e-0026-0f99-1114-ef000004013f 
 empty
 
 // test sources are add when ds appears on the network
@@ -46,7 +46,7 @@ expect Standby(Main Room): eOn
 expect Added: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Added: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Added: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
-expect Current: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True
+expect Current: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 empty
 
 // test source are removed when ds disappears on the network
@@ -61,7 +61,7 @@ expect Standby(Main Room): eOn
 expect Added: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Added: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Added: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
-expect Current: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True
+expect Current: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 empty
 mock network update ds 67 product standby false
 expect Standby(Main Room): eOn -> eOff
@@ -72,13 +72,14 @@ empty
 
 // test changing standby state for a two products in a room
 mock network add ds 68
+expect Current: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+expect Current: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
-expect Current: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True
 empty
 mock network update ds 67 product standby false
 expect Standby(Main Room): eOn -> eMixed
@@ -93,17 +94,18 @@ mock network update ds 67 product standby true
 expect Standby(Main Room): eMixed -> eOn
 empty
 
-// test adding linking ds 68 to ds 67
+// test linking ds 68 to ds 67
 mock network update ds 68 product name Test
+expect Current: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
-expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True
 mock network update ds 67 product source 0 name Test
-expect Current Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True
+expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
@@ -113,10 +115,32 @@ empty
 
 // test toggling Mock DS source visibility
 mock network update ds 67 product source 0 visible false
+expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
+expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
+expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
+expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 empty
 mock network update ds 67 product source 0 visible true
+expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
+expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
+expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
+expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
+expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+empty
+
+// test toggling Test source visibility
+mock network update ds 68 product source 1 visible false
+expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
+expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
+expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
+expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+empty
+mock network update ds 68 product source 1 visible true
+expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
@@ -126,24 +150,24 @@ empty
 
 // change ds 68's selected source
 mock network update ds 68 product sourceindex 1
-expect Current Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True
+expect Current Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 empty
 mock network update ds 68 product sourceindex 2
-expect Current Updated: 2: Group=Test, Name=UPnP AV, Type=UpnpAv, Visible=False
+expect Current Updated: 2: Group=Test, Name=UPnP AV, Type=UpnpAv, Visible=False, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 empty
 mock network update ds 68 product sourceindex 3
-expect Current Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True
+expect Current Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 empty
 
 // change ds 67's selected source
 mock network update ds 67 product sourceindex 1
-expect Current Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True
+expect Current Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 empty
 mock network update ds 67 product sourceindex 2
-expect Current Updated: 2: Group=Mock DS, Name=UPnP AV, Type=UpnpAv, Visible=False
+expect Current Updated: 2: Group=Mock DS, Name=UPnP AV, Type=UpnpAv, Visible=False, HasInfo=True, HasTime=True, Device=67, Volume=67 
 empty
 mock network update ds 67 product sourceindex 3
-expect Current Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
+expect Current Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 empty
 
 // test current source is not updated when changing ds 68's source index when ds 67's source index has not been expanded by ds 68's sources
@@ -152,18 +176,20 @@ empty
 
 // test breaking link by changing ds 68's name
 mock network update ds 68 product name My DS
+expect Current: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+expect Current: 0: Group=My DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 0: Group=Mock DS, Name=Test, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 0: Group=My DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 1: Group=My DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 3: Group=My DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
-expect Current: 0: Group=My DS, Name=Playlist, Type=Playlist, Visible=True
 empty
 
 // test reforming the link by changing ds 68's name - note that the Current source of the root is not updated
 // because this change causes there to be 1 root (ds 67) and its source index is not expanded
 mock network update ds 68 product name Test
+expect Current: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
@@ -173,133 +199,139 @@ empty
 
 // test breaking the link by changing ds 67's source name
 mock network update ds 67 product source 0 name Playlist
-expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
-expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
-expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
+expect Current: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
-expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True
+expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
+expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
+expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 empty
 
 // reform link of 67 and 68
 mock network update ds 67 product source 0 name Test
+expect Current: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+empty
+
+mock network remove ds 67
+expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
+expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
+expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
+expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 empty
 
 // remove Time service for 67
 mock network update ds 67 product attributes Info Volume Sender
 empty
 
-mock network remove ds 67
-expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
-expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
-expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
-expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True
-empty
-
 mock network add ds 67
+expect Current: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=False, Device=67, Volume=67 
 expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=False, Device=67, Volume=67 
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=False, Device=67, Volume=67 
-expect Current: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
-empty
-
-// re-add Time service and remove Info service from 67
-mock network update ds 67 product attributes Time Volume Sender
 empty
 
 mock network remove ds 67
+expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
-expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True
+empty
+
+// remove Info service from 67
+mock network update ds 67 product attributes Volume Sender
 empty
 
 mock network add ds 67
+expect Current: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=False, HasTime=False, Device=67, Volume=67 
 expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=False, HasTime=False, Device=67, Volume=67 
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=False, HasTime=False, Device=67, Volume=67 
-expect Current: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
-empty
-
-// re-add Info service and remove Volume service from 67
-mock network update ds 67 product attributes Info Time Sender
 empty
 
 mock network remove ds 67
+expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
-expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True
+empty
+
+// re-add Info and Time services and remove Volume service from 67
+mock network update ds 67 product attributes Info Time Sender
 empty
 
 mock network add ds 67
+expect Current: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=
 expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=
-expect Current: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
+empty
+
+mock network remove ds 68
+expect Current: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=
+expect Updated: 0: Group=Mock DS, Name=Test, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=
+expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=
+expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=
 empty
 
 // remove Volume service from 68
 mock network update ds 68 product attributes Info Time Sender
 empty
 
-mock network remove ds 68
-expect Updated: 0: Group=Mock DS, Name=Test, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=
-expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=
-expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=
-empty
-
 mock network add ds 68
+expect Current: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=
 expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=
 expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=
 expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=
+empty
+
+mock network remove ds 67
+expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=
+expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=
+expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=
+expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=
 empty
 
 // add Volume service to 67
 mock network update ds 67 product attributes Info Time Volume Sender
 empty
 
-mock network remove ds 67
-expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=
-expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=
-expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=
-expect Current: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True
-empty
-
 mock network add ds 67
+expect Current: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 
 expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 
 expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
-expect Current: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True
+empty
+
+mock network remove ds 68
+expect Current: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+expect Updated: 0: Group=Mock DS, Name=Test, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 empty
 
 // add Volume service to 68
 mock network update ds 68 product attributes Info Time Volume Sender
 empty
 
-mock network remove ds 68
-expect Updated: 0: Group=Mock DS, Name=Test, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
-expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
-expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
-empty
-
 mock network add ds 68
+expect Current: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 0: Group=Test, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 1: Group=Test, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
 expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=67 68 
@@ -308,3 +340,5 @@ expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, Ha
 empty
 
 exit
+
+

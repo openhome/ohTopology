@@ -362,7 +362,7 @@ namespace OpenHome.Av
             Add<Volume>(volume);
 
             // info service
-            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, 0, 0, string.Empty, 0, false, string.Empty, string.Empty, 0, string.Empty);
+            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty));
             Add<Info>(info);
 
             // time service
@@ -402,7 +402,7 @@ namespace OpenHome.Av
             Add<Volume>(volume);
 
             // info service
-            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, 0, 0, string.Empty, 0, false, string.Empty, string.Empty, 0, string.Empty);
+            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty));
             Add<Info>(info);
 
             // time service
@@ -422,16 +422,28 @@ namespace OpenHome.Av
         {
             base.Execute(aValue);
 
-            Type key = typeof(Product);
             string command = aValue.First().ToLowerInvariant();
             if (command == "product")
             {
+                Type key = typeof(Product);
                 foreach (KeyValuePair<Type, IWatchableService> s in iServices)
                 {
                     if (s.Key == key)
                     {
                         MockWatchableProduct p = s.Value as MockWatchableProduct;
                         p.Execute(aValue.Skip(1));
+                    }
+                }
+            }
+            else if (command == "info")
+            {
+                Type key = typeof(Info);
+                foreach (KeyValuePair<Type, IWatchableService> s in iServices)
+                {
+                    if (s.Key == key)
+                    {
+                        MockWatchableInfo i = s.Value as MockWatchableInfo;
+                        i.Execute(aValue.Skip(1));
                     }
                 }
             }
@@ -474,7 +486,7 @@ namespace OpenHome.Av
             Add<Volume>(volume);
 
             // info service
-            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, 0, 0, string.Empty, 0, false, string.Empty, string.Empty, 0, string.Empty);
+            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty));
             Add<Info>(info);
 
             // time service
@@ -521,7 +533,7 @@ namespace OpenHome.Av
             Add<Volume>(volume);
 
             // info service
-            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, 0, 0, string.Empty, 0, false, string.Empty, string.Empty, 0, string.Empty);
+            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty));
             Add<Info>(info);
 
             // time service

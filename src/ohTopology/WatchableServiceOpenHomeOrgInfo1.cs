@@ -7,17 +7,146 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
+    public interface IInfoDetails
+    {
+        uint BitDepth { get; }
+        uint BitRate { get; }
+        string CodecName { get; }
+        uint Duration { get; }
+        bool Lossless { get; }
+        uint SampleRate { get; }
+    }
+
+    public interface IInfoMetadata
+    {
+        string Metadata { get; }
+        string Uri { get; }
+    }
+
+    public interface IInfoMetatext
+    {
+        string Metatext { get; }
+    }
+
     public interface IServiceOpenHomeOrgInfo1
     {
-        IWatchable<uint> BitDepth { get; }
-        IWatchable<uint> BitRate { get; }
-        IWatchable<string> CodecName { get; }
-        IWatchable<uint> Duration { get; }
-        IWatchable<bool> Lossless { get; }
-        IWatchable<string> Metadata { get; }
-        IWatchable<string> Metatext { get; }
-        IWatchable<uint> SampleRate { get; }
-        IWatchable<string> Uri { get; }
+        IWatchable<IInfoDetails> Details { get; }
+        IWatchable<IInfoMetadata> Metadata { get; }
+        IWatchable<IInfoMetatext> Metatext { get; }
+    }
+
+    public class InfoDetails : IInfoDetails
+    {
+        public InfoDetails(uint aBitDepth, uint aBitRate, string aCodecName, uint aDuration, bool aLossless, uint aSampleRate)
+        {
+            iBitDepth = aBitDepth;
+            iBitRate = aBitRate;
+            iCodecName = aCodecName;
+            iDuration = aDuration;
+            iLossless = aLossless;
+            iSampleRate = aSampleRate;
+        }
+
+        public uint BitDepth
+        {
+            get
+            {
+                return iBitDepth;
+            }
+        }
+
+        public uint BitRate
+        {
+            get
+            {
+                return iBitRate;
+            }
+        }
+
+        public string CodecName
+        {
+            get
+            {
+                return iCodecName;
+            }
+        }
+
+        public uint Duration
+        {
+            get
+            {
+                return iDuration;
+            }
+        }
+
+        public bool Lossless
+        {
+            get
+            {
+                return iLossless;
+            }
+        }
+
+        public uint SampleRate
+        {
+            get
+            {
+                return iSampleRate;
+            }
+        }
+
+        private uint iBitDepth;
+        private uint iBitRate;
+        private string iCodecName;
+        private uint iDuration;
+        private bool iLossless;
+        private uint iSampleRate;
+    }
+
+    public class InfoMetadata : IInfoMetadata
+    {
+        public InfoMetadata(string aMetadata, string aUri)
+        {
+            iMetadata = aMetadata;
+            iUri = aUri;
+        }
+
+        public string Metadata
+        {
+            get
+            {
+                return iMetadata;
+            }
+        }
+
+        public string Uri
+        {
+            get
+            {
+                return iUri;
+            }
+        }
+
+        private string iMetadata;
+        private string iUri;
+    }
+
+    public class InfoMetatext : IInfoMetatext
+    {
+        public InfoMetatext(string aMetatext)
+        {
+            iMetatext = aMetatext;
+        }
+
+        public string Metatext
+        {
+            get
+            {
+                return iMetatext;
+            }
+        }
+
+        private string iMetatext;
     }
 
     public abstract class Info : IWatchableService, IServiceOpenHomeOrgInfo1, IDisposable
@@ -46,47 +175,15 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<uint> BitDepth
+        public IWatchable<IInfoDetails> Details
         {
             get
             {
-                return iService.BitDepth;
+                return iService.Details;
             }
         }
 
-        public IWatchable<uint> BitRate
-        {
-            get
-            {
-                return iService.BitRate;
-            }
-        }
-
-        public IWatchable<string> CodecName
-        {
-            get
-            {
-                return iService.CodecName;
-            }
-        }
-
-        public IWatchable<uint> Duration
-        {
-            get
-            {
-                return iService.Duration;
-            }
-        }
-
-        public IWatchable<bool> Lossless
-        {
-            get
-            {
-                return iService.Lossless;
-            }
-        }
-
-        public IWatchable<string> Metadata
+        public IWatchable<IInfoMetadata> Metadata
         {
             get
             {
@@ -94,27 +191,11 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<string> Metatext
+        public IWatchable<IInfoMetatext> Metatext
         {
             get
             {
                 return iService.Metatext;
-            }
-        }
-
-        public IWatchable<uint> SampleRate
-        {
-            get
-            {
-                return iService.SampleRate;
-            }
-        }
-
-        public IWatchable<string> Uri
-        {
-            get
-            {
-                return iService.Uri;
             }
         }
 
@@ -133,25 +214,18 @@ namespace OpenHome.Av
             {
                 iService = aService;
 
-                iService.SetPropertyBitDepthChanged(HandleBitDepthChanged);
-                iService.SetPropertyBitRateChanged(HandleBitRateChanged);
-                iService.SetPropertyCodecNameChanged(HandleBitCodecNameChanged);
-                iService.SetPropertyDurationChanged(HandleDurationChanged);
-                iService.SetPropertyLosslessChanged(HandleLosslessChanged);
+                iService.SetPropertyBitDepthChanged(HandleDetailsChanged);
                 iService.SetPropertyMetadataChanged(HandleMetadataChanged);
                 iService.SetPropertyMetatextChanged(HandleMetatextChanged);
-                iService.SetPropertySampleRateChanged(HandleSampleRateChanged);
-                iService.SetPropertyUriChanged(HandleUriChanged);
 
-                iBitDepth = new Watchable<uint>(aThread, string.Format("BitDepth({0})", aId), iService.PropertyBitDepth());
-                iBitRate = new Watchable<uint>(aThread, string.Format("BitRate({0})", aId), iService.PropertyBitRate());
-                iCodecName = new Watchable<string>(aThread, string.Format("CodecName({0})", aId), iService.PropertyCodecName());
-                iDuration = new Watchable<uint>(aThread, string.Format("Duration({0})", aId), iService.PropertyDuration());
-                iLossless = new Watchable<bool>(aThread, string.Format("Lossless({0})", aId), iService.PropertyLossless());
-                iMetadata = new Watchable<string>(aThread, string.Format("Metadata({0})", aId), iService.PropertyMetadata());
-                iMetatext = new Watchable<string>(aThread, string.Format("Metatext({0})", aId), iService.PropertyMetatext());
-                iSampleRate = new Watchable<uint>(aThread, string.Format("SampleRate({0})", aId), iService.PropertySampleRate());
-                iUri = new Watchable<string>(aThread, string.Format("Uri({0})", aId), iService.PropertyUri());
+                IInfoDetails details = new InfoDetails(iService.PropertyBitDepth(), iService.PropertyBitRate(), iService.PropertyCodecName(),
+                    iService.PropertyDuration(), iService.PropertyLossless(), iService.PropertySampleRate());
+                IInfoMetadata metadata = new InfoMetadata(iService.PropertyMetadata(), iService.PropertyUri());
+                IInfoMetatext metatext = new InfoMetatext(iService.PropertyMetatext());
+
+                iDetails = new Watchable<IInfoDetails>(aThread, string.Format("Details({0})", aId), details);
+                iMetadata = new Watchable<IInfoMetadata>(aThread, string.Format("Metadata({0})", aId), metadata);
+                iMetatext = new Watchable<IInfoMetatext>(aThread, string.Format("Metatext({0})", aId), metatext);
             }
         }
         
@@ -164,53 +238,30 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgInfo1.Dispose");
                 }
 
+                iDetails.Dispose();
+                iDetails = null;
+
+                iMetadata.Dispose();
+                iMetadata = null;
+
+                iMetatext.Dispose();
+                iMetatext = null;
+
                 iService = null;
 
                 iDisposed = true;
             }
         }
 
-        public IWatchable<uint> BitDepth
+        public IWatchable<IInfoDetails> Details
         {
             get
             {
-                return iBitDepth;
+                return iDetails;
             }
         }
 
-        public IWatchable<uint> BitRate
-        {
-            get 
-            {
-                return iBitRate;
-            }
-        }
-
-        public IWatchable<string> CodecName
-        {
-            get
-            {
-                return iCodecName;
-            }
-        }
-
-        public IWatchable<uint> Duration
-        {
-            get
-            {
-                return iDuration;
-            }
-        }
-
-        public IWatchable<bool> Lossless
-        {
-            get
-            {
-                return iLossless;
-            }
-        }
-
-        public IWatchable<string> Metadata
+        public IWatchable<IInfoMetadata> Metadata
         {
             get
             {
@@ -218,7 +269,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<string> Metatext
+        public IWatchable<IInfoMetatext> Metatext
         {
             get
             {
@@ -226,23 +277,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<uint> SampleRate
-        {
-            get
-            {
-                return iSampleRate;
-            }
-        }
-
-        public IWatchable<string> Uri
-        {
-            get
-            {
-                return iUri;
-            }
-        }
-
-        private void HandleBitDepthChanged()
+        private void HandleDetailsChanged()
         {
             lock (iLock)
             {
@@ -251,59 +286,15 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iBitDepth.Update(iService.PropertyBitDepth());
-            }
-        }
-
-        private void HandleBitRateChanged()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iBitRate.Update(iService.PropertyBitRate());
-            }
-        }
-
-        private void HandleBitCodecNameChanged()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iCodecName.Update(iService.PropertyCodecName());
-            }
-        }
-
-        private void HandleDurationChanged()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iDuration.Update(iService.PropertyDuration());
-            }
-        }
-
-        private void HandleLosslessChanged()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iLossless.Update(iService.PropertyLossless());
+                iDetails.Update(
+                    new InfoDetails(
+                        iService.PropertyBitDepth(),
+                        iService.PropertyBitRate(),
+                        iService.PropertyCodecName(),
+                        iService.PropertyDuration(),
+                        iService.PropertyLossless(),
+                        iService.PropertySampleRate()
+                    ));
             }
         }
 
@@ -316,7 +307,11 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iMetadata.Update(iService.PropertyMetadata());
+                iMetadata.Update(
+                    new InfoMetadata(
+                        iService.PropertyMetadata(),
+                        iService.PropertyUri()
+                    ));
             }
         }
 
@@ -329,33 +324,7 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iMetatext.Update(iService.PropertyMetatext());
-            }
-        }
-
-        private void HandleSampleRateChanged()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iSampleRate.Update(iService.PropertySampleRate());
-            }
-        }
-
-        private void HandleUriChanged()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iUri.Update(iService.PropertyUri());
+                iMetatext.Update(new InfoMetatext(iService.PropertyMetatext()));
             }
         }
 
@@ -364,78 +333,41 @@ namespace OpenHome.Av
 
         private CpProxyAvOpenhomeOrgInfo1 iService;
 
-        private Watchable<uint> iBitDepth;
-        private Watchable<uint> iBitRate;
-        private Watchable<string> iCodecName;
-        private Watchable<uint> iDuration;
-        private Watchable<bool> iLossless;
-        private Watchable<string> iMetadata;
-        private Watchable<string> iMetatext;
-        private Watchable<uint> iSampleRate;
-        private Watchable<string> iUri;
+        private Watchable<IInfoDetails> iDetails;
+        private Watchable<IInfoMetadata> iMetadata;
+        private Watchable<IInfoMetatext> iMetatext;
     }
 
     public class MockServiceOpenHomeOrgInfo1 : IServiceOpenHomeOrgInfo1, IMockable, IDisposable
     {
-        public MockServiceOpenHomeOrgInfo1(IWatchableThread aThread, string aId, uint aBitDepth, uint aBitRate, string aCodecName, uint aDuration, bool aLossless, string aMetadata, string aMetatext,
-            uint aSampleRate, string aUri)
+        public MockServiceOpenHomeOrgInfo1(IWatchableThread aThread, string aId, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
         {
-            iBitDepth = new Watchable<uint>(aThread, string.Format("BitDepth({0})", aId), aBitDepth);
-            iBitRate = new Watchable<uint>(aThread, string.Format("BitRate({0})", aId), aBitRate);
-            iCodecName = new Watchable<string>(aThread, string.Format("CodecName({0})", aId), aCodecName);
-            iDuration = new Watchable<uint>(aThread, string.Format("Duration({0})", aId), aDuration);
-            iLossless = new Watchable<bool>(aThread, string.Format("Lossless({0})", aId), aLossless);
-            iMetadata = new Watchable<string>(aThread, string.Format("Metadata({0})", aId), aMetadata);
-            iMetatext = new Watchable<string>(aThread, string.Format("Metatext({0})", aId), aMetatext);
-            iSampleRate = new Watchable<uint>(aThread, string.Format("SampleRate({0})", aId), aSampleRate);
-            iUri = new Watchable<string>(aThread, string.Format("Uri({0})", aId), aUri);
+            iDetails = new Watchable<IInfoDetails>(aThread, string.Format("Details({0})", aId), aDetails);
+            iMetadata = new Watchable<IInfoMetadata>(aThread, string.Format("Metadata({0})", aId), aMetadata);
+            iMetatext = new Watchable<IInfoMetatext>(aThread, string.Format("Metatext({0})", aId), aMetatext);
         }
 
         public void Dispose()
         {
+            iDetails.Dispose();
+            iDetails = null;
+
+            iMetadata.Dispose();
+            iMetadata = null;
+
+            iMetatext.Dispose();
+            iMetatext = null;
         }
 
-        public IWatchable<uint> BitDepth
+        public IWatchable<IInfoDetails> Details
         {
             get
             {
-                return iBitDepth;
+                return iDetails;
             }
         }
 
-        public IWatchable<uint> BitRate
-        {
-            get
-            {
-                return iBitRate;
-            }
-        }
-
-        public IWatchable<string> CodecName
-        {
-            get
-            {
-                return iCodecName;
-            }
-        }
-
-        public IWatchable<uint> Duration
-        {
-            get
-            {
-                return iDuration;
-            }
-        }
-
-        public IWatchable<bool> Lossless
-        {
-            get
-            {
-                return iLossless;
-            }
-        }
-
-        public IWatchable<string> Metadata
+        public IWatchable<IInfoMetadata> Metadata
         {
             get
             {
@@ -443,7 +375,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<string> Metatext
+        public IWatchable<IInfoMetatext> Metatext
         {
             get
             {
@@ -451,68 +383,54 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<uint> SampleRate
-        {
-            get
-            {
-                return iSampleRate;
-            }
-        }
-
-        public IWatchable<string> Uri
-        {
-            get
-            {
-                return iUri;
-            }
-        }
-
         public void Execute(IEnumerable<string> aValue)
         {
-            /*string command = aValue.First().ToLowerInvariant();
-            if (command == "balance")
+            string command = aValue.First().ToLowerInvariant();
+            if (command == "details")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-                iBalance.Update(int.Parse(value.First()));
+                if (value.Count() != 6)
+                {
+                    throw new NotSupportedException();
+                }
+                IInfoDetails details = new InfoDetails(
+                    uint.Parse(value.ElementAt(0)),
+                    uint.Parse(value.ElementAt(1)),
+                    value.ElementAt(2),
+                    uint.Parse(value.ElementAt(3)),
+                    bool.Parse(value.ElementAt(4)),
+                    uint.Parse(value.ElementAt(5)));
+                iDetails.Update(details);
             }
-            else if (command == "fade")
+            else if (command == "metadata")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-                iFade.Update(int.Parse(value.First()));
+                if (value.Count() != 2)
+                {
+                    throw new NotSupportedException();
+                }
+                IInfoMetadata metadata = new InfoMetadata(value.ElementAt(0), value.ElementAt(1));
+                iMetadata.Update(metadata);
             }
-            else if (command == "mute")
+            else if (command == "metatext")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-                iMute.Update(bool.Parse(value.First()));
-            }
-            else if (command == "volume")
-            {
-                IEnumerable<string> value = aValue.Skip(1);
-                iVolume.Update(uint.Parse(value.First()));
-            }
-            else if (command == "volumeinc")
-            {
-                VolumeInc();
-            }
-            else if (command == "volumedec")
-            {
-                VolumeDec();
+                if (value.Count() != 1)
+                {
+                    throw new NotSupportedException();
+                }
+                IInfoMetatext metatext = new InfoMetatext(value.ElementAt(0));
+                iMetatext.Update(metatext);
             }
             else
-            {*/
+            {
                 throw new NotSupportedException();
-            //}
+            }
         }
 
-        private Watchable<uint> iBitDepth;
-        private Watchable<uint> iBitRate;
-        private Watchable<string> iCodecName;
-        private Watchable<uint> iDuration;
-        private Watchable<bool> iLossless;
-        private Watchable<string> iMetadata;
-        private Watchable<string> iMetatext;
-        private Watchable<uint> iSampleRate;
-        private Watchable<string> iUri;
+        private Watchable<IInfoDetails> iDetails;
+        private Watchable<IInfoMetadata> iMetadata;
+        private Watchable<IInfoMetatext> iMetatext;
     }
 
     public class WatchableInfoFactory : IWatchableServiceFactory
@@ -576,6 +494,9 @@ namespace OpenHome.Av
             {
                 iCpService.Dispose();
             }
+
+            ServiceOpenHomeOrgInfo1 service = iService as ServiceOpenHomeOrgInfo1;
+            service.Dispose();
         }
 
         private CpProxyAvOpenhomeOrgInfo1 iCpService;
@@ -583,14 +504,16 @@ namespace OpenHome.Av
 
     public class MockWatchableInfo : Info, IMockable
     {
-        public MockWatchableInfo(IWatchableThread aThread, string aId, uint aBitDepth, uint aBitRate, string aCodecName, uint aDuration, bool aLossless, string aMetadata, string aMetatext,
-            uint aSampleRate, string aUri)
-            : base(aId, new MockServiceOpenHomeOrgInfo1(aThread, aId, aBitDepth, aBitRate, aCodecName, aDuration, aLossless, aMetadata, aMetatext, aSampleRate, aUri))
+        public MockWatchableInfo(IWatchableThread aThread, string aId, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
+            : base(aId, new MockServiceOpenHomeOrgInfo1(aThread, aId, aDetails, aMetadata, aMetatext))
         {
         }
 
         public override void Dispose()
         {
+            // we cannot do this until mock services are created in a factory and not used as a singleton for a device
+            //MockServiceOpenHomeOrgInfo1 service = iService as MockServiceOpenHomeOrgInfo1;
+            //service.Dispose();
         }
 
         public void Execute(IEnumerable<string> aValue)

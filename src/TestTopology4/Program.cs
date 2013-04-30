@@ -19,7 +19,7 @@ namespace TestTopology4
             }
         }
 
-        class RootWatcher : IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IDisposable
+        class RootWatcher : IWatcher<IEnumerable<ITopology4Root>>, IWatcher<ITopology4Source>, IDisposable
         {
             public RootWatcher(MockableScriptRunner aRunner)
             {
@@ -30,23 +30,23 @@ namespace TestTopology4
             {
             }
 
-            public void ItemOpen(string aId, IEnumerable<ITopology4Group> aValue)
+            public void ItemOpen(string aId, IEnumerable<ITopology4Root> aValue)
             {
-                foreach (ITopology4Group g in aValue)
+                foreach (ITopology4Root g in aValue)
                 {
                     g.Source.AddWatcher(this);
                 }
             }
 
-            public void ItemUpdate(string aId, IEnumerable<ITopology4Group> aValue, IEnumerable<ITopology4Group> aPrevious)
+            public void ItemUpdate(string aId, IEnumerable<ITopology4Root> aValue, IEnumerable<ITopology4Root> aPrevious)
             {
-                List<ITopology4Group> removed = new List<ITopology4Group>();
-                foreach (ITopology4Group g1 in aPrevious)
+                List<ITopology4Root> removed = new List<ITopology4Root>();
+                foreach (ITopology4Root r1 in aPrevious)
                 {
                     bool found = false;
-                    foreach (ITopology4Group g2 in aValue)
+                    foreach (ITopology4Root r2 in aValue)
                     {
-                        if (g1 == g2)
+                        if (r1 == r2)
                         {
                             found = true;
                             break;
@@ -54,17 +54,17 @@ namespace TestTopology4
                     }
                     if (!found)
                     {
-                        removed.Add(g1);
+                        removed.Add(r1);
                     }
                 }
 
-                List<ITopology4Group> added = new List<ITopology4Group>();
-                foreach (ITopology4Group g1 in aValue)
+                List<ITopology4Root> added = new List<ITopology4Root>();
+                foreach (ITopology4Root r1 in aValue)
                 {
                     bool found = false;
-                    foreach (ITopology4Group g2 in aPrevious)
+                    foreach (ITopology4Root r2 in aPrevious)
                     {
-                        if (g1 == g2)
+                        if (r1 == r2)
                         {
                             found = true;
                             break;
@@ -72,41 +72,54 @@ namespace TestTopology4
                     }
                     if (!found)
                     {
-                        added.Add(g1);
+                        added.Add(r1);
                     }
                 }
 
-                foreach (ITopology4Group g in removed)
+                foreach (ITopology4Root r in removed)
                 {
-                    g.Source.RemoveWatcher(this);
+                    r.Source.RemoveWatcher(this);
                 }
 
-                foreach (ITopology4Group g in added)
+                foreach (ITopology4Root r in added)
                 {
-                    g.Source.AddWatcher(this);
+                    r.Source.AddWatcher(this);
                 }
             }
 
-            public void ItemClose(string aId, IEnumerable<ITopology4Group> aValue)
+            public void ItemClose(string aId, IEnumerable<ITopology4Root> aValue)
             {
-                foreach (ITopology4Group g in aValue)
+                foreach (ITopology4Root r in aValue)
                 {
-                    g.Source.RemoveWatcher(this);
+                    r.Source.RemoveWatcher(this);
                 }
             }
 
             public void ItemOpen(string aId, ITopology4Source aValue)
             {
-                iRunner.Result(string.Format("Current: {0}: Group={1}, Name={2}, Type={3}, Visible={4}", aValue.Index, aValue.Group, aValue.Name, aValue.Type, aValue.Visible));
+                iRunner.Result(string.Format("Current: {0}", SourceInfo(aValue)));
             }
 
             public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
             {
-                iRunner.Result(string.Format("Current Updated: {0}: Group={1}, Name={2}, Type={3}, Visible={4}", aValue.Index, aValue.Group, aValue.Name, aValue.Type, aValue.Visible));
+                iRunner.Result(string.Format("Current Updated: {0}", SourceInfo(aValue)));
             }
 
             public void ItemClose(string aId, ITopology4Source aValue)
             {
+            }
+
+            private string SourceInfo(ITopology4Source aSource)
+            {
+                string info = string.Format("{0}: Group={1}, Name={2}, Type={3}, Visible={4}, HasInfo={5}, HasTime={6}, Device={7}, Volume=",
+                                            aSource.Index, aSource.Group, aSource.Name, aSource.Type, aSource.Visible, aSource.HasInfo, aSource.HasTime, aSource.Device.Udn);
+
+                foreach (IWatchableDevice d in aSource.VolumeDevices)
+                {
+                    info += d.Udn + " ";
+                }
+
+                return info;
             }
 
             private MockableScriptRunner iRunner;
