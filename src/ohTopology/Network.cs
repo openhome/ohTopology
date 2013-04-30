@@ -74,7 +74,10 @@ namespace OpenHome.Av
                 DisposableWatchableDevice device = new DisposableWatchableDevice(WatchableThread, aDevice);
                 iCpDeviceLookup.Add(aDevice.Udn(), device);
 
-                Add(device);
+                WatchableThread.Schedule(() =>
+                {
+                    Add(device);
+                });
             }
         }
 
@@ -92,9 +95,11 @@ namespace OpenHome.Av
                 {
                     iCpDeviceLookup.Remove(aDevice.Udn());
 
-                    Remove(device);
-
-                    device.Dispose();
+                    WatchableThread.Schedule(() =>
+                    {
+                        Remove(device);
+                        device.Dispose();
+                    });
                 }
             }
         }

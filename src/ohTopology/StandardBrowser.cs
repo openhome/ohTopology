@@ -128,10 +128,7 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, bool aValue)
         {
-            if (iMute.Value != aValue)
-            {
-                iMute.Update(aValue);
-            }
+            iMute.Update(aValue);
         }
 
         public void ItemUpdate(string aId, bool aValue, bool aPrevious)
@@ -145,10 +142,7 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, uint aValue)
         {
-            if (iValue.Value != aValue)
-            {
-                iValue.Update(aValue);
-            }
+            iValue.Update(aValue);
         }
 
         public void ItemUpdate(string aId, uint aValue, uint aPrevious)
@@ -194,6 +188,8 @@ namespace OpenHome.Av
         {
             iRoom = aRoom;
 
+            iLock = new object();
+            iIsActive = true;
             iActive = new Watchable<bool>(aThread, string.Format("Active({0})", aRoom.Name), true);
 
             iStandby = new WatchableProxy<EStandby>(aRoom.Standby);
@@ -209,9 +205,15 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            if (iActive.Value)
+            lock (iLock)
             {
-                SetInactive();
+                if (iIsActive)
+                {
+                    iStandby.Detach();
+
+                    iRoom.Source.RemoveWatcher(this);
+                    iRoom.RemoveController(this);
+                }
             }
 
             iRoom = null;
@@ -252,12 +254,17 @@ namespace OpenHome.Av
 
         internal void SetInactive()
         {
-            iActive.Update(false);
+            lock (iLock)
+            {
+                iIsActive = false;
 
-            iStandby.Detach();
+                iActive.Update(false);
 
-            iRoom.Source.RemoveWatcher(this);
-            iRoom.RemoveController(this);
+                iStandby.Detach();
+
+                iRoom.Source.RemoveWatcher(this);
+                iRoom.RemoveController(this);
+            }
         }
 
         public IWatchable<bool> Active
@@ -286,10 +293,13 @@ namespace OpenHome.Av
 
         public void SetStandby(bool aValue)
         {
-            if (iActive.Value)
+            iActive.Locked(active =>
             {
-                iRoom.SetStandby(aValue);
-            }
+                if (active)
+                {
+                    iRoom.SetStandby(aValue);
+                }
+            });
         }
 
         public IWatchable<IInfoNext> InfoNext
@@ -318,26 +328,35 @@ namespace OpenHome.Av
 
         public void Play()
         {
-            if (iActive.Value)
+            iActive.Locked(active =>
             {
-                iSourceController.Play();
-            }
+                if (active)
+                {
+                    iSourceController.Play();
+                }
+            });
         }
 
         public void Pause()
         {
-            if (iActive.Value)
+            iActive.Locked(active =>
             {
-                iSourceController.Pause();
-            }
+                if (active)
+                {
+                    iSourceController.Pause();
+                }
+            });
         }
 
         public void Stop()
         {
-            if (iActive.Value)
+            iActive.Locked(active =>
             {
-                iSourceController.Stop();
-            }
+                if (active)
+                {
+                    iSourceController.Stop();
+                }
+            });
         }
 
         public IWatchable<bool> CanSkip
@@ -350,18 +369,24 @@ namespace OpenHome.Av
 
         public void Previous()
         {
-            if (iActive.Value)
+            iActive.Locked(active =>
             {
-                iSourceController.Previous();
-            }
+                if (active)
+                {
+                    iSourceController.Previous();
+                }
+            });
         }
 
         public void Next()
         {
-            if (iActive.Value)
+            iActive.Locked(active =>
             {
-                iSourceController.Next();
-            }
+                if (active)
+                {
+                    iSourceController.Next();
+                }
+            });
         }
 
         public IWatchable<bool> CanSeek
@@ -374,10 +399,13 @@ namespace OpenHome.Av
 
         public void Seek(uint aSeconds)
         {
-            if (iActive.Value)
+            iActive.Locked(active =>
             {
-                iSourceController.Seek(aSeconds);
-            }
+                if (active)
+                {
+                    iSourceController.Seek(aSeconds);
+                }
+            });
         }
 
         public IWatchable<bool> HasVolume
@@ -405,43 +433,64 @@ namespace OpenHome.Av
 
         public void SetMute(bool aMute)
         {
-            if (iActive.Value)
+            iActive.Locked(active =>
             {
-                iVolumeController.SetMute(aMute);
-            }
+                if (active)
+                {
+                    iVolumeController.SetMute(aMute);
+                }
+            });
         }
 
         public void SetVolume(uint aVolume)
         {
-            if (iActive.Value)
+            iActive.Locked(active =>
             {
-                if (iHasVolume.Value)
+                if (active)
                 {
-                    iVolumeController.SetVolume(aVolume);
+                    iHasVolume.Locked(volume =>
+                    {
+                        if (volume)
+                        {
+                            iVolumeController.SetVolume(aVolume);
+                        }
+                    });
                 }
-            }
+            });
         }
 
         public void VolumeInc()
         {
-            if (iActive.Value)
+            iActive.Locked(active =>
             {
-                if (iHasVolume.Value)
+                if (active)
                 {
-                    iVolumeController.VolumeInc();
+                    iHasVolume.Locked(volume =>
+                    {
+                        if (volume)
+                        {
+                            iVolumeController.VolumeInc();
+                        }
+                    });
                 }
-            }
+            });
         }
 
         public void VolumeDec()
         {
-            if (iActive.Value)
+            iActive.Locked(active =>
             {
-                if (iHasVolume.Value)
+                if (active)
                 {
-                    iVolumeController.VolumeDec();
+                    iHasVolume.Locked(volume =>
+                    {
+                        if (volume)
+                        {
+                            iVolumeController.VolumeDec();
+                        }
+                    });
                 }
-            }
+            });
         }
 
         public void ItemOpen(string aId, ITopology4Source aValue)
@@ -458,7 +507,7 @@ namespace OpenHome.Av
             if (aValue.VolumeDevices.Count() > 0)
             {
                 IWatchableDevice device = aValue.VolumeDevices.ElementAt(0);
-                if (iHasVolume.Value)
+                if (iVolumeController != null)
                 {
                     if (device != iVolumeController.Device)
                     {
@@ -473,7 +522,7 @@ namespace OpenHome.Av
             }
             else
             {
-                if (iHasVolume.Value)
+                if (iVolumeController != null)
                 {
                     iVolumeController.Dispose();
                     iVolumeController = null;
@@ -483,7 +532,7 @@ namespace OpenHome.Av
 
         public void ItemClose(string aId, ITopology4Source aValue)
         {
-            if (iHasVolume.Value)
+            if (iVolumeController != null)
             {
                 iVolumeController.Dispose();
                 iVolumeController = null;
@@ -491,6 +540,8 @@ namespace OpenHome.Av
         }
 
         private StandardRoom iRoom;
+        private object iLock;
+        private bool iIsActive;
         private Watchable<bool> iActive;
         private WatchableProxy<EStandby> iStandby;
 

@@ -297,10 +297,7 @@ namespace OpenHome.Av
             }
 
             ITopology4Source source = EvaluateSource();
-            if (source != iWatchableSource.Value)
-            {
-                iWatchableSource.Update(source);
-            }
+            iWatchableSource.Update(source);
         }
 
         public IEnumerable<ITopology4Source> Sources
@@ -393,10 +390,7 @@ namespace OpenHome.Av
 
 
             ITopology4Source source = EvaluateSource();
-            if (source != iWatchableSource.Value)
-            {
-                iWatchableSource.Update(source);
-            }
+            iWatchableSource.Update(source);
         }
 
         public void SetSourceIndex(uint aValue)
