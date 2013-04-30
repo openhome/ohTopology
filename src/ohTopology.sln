@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ohTopology", "ohTopology\ohTopology.csproj", "{B6F3BF75-F35B-4A83-A3F9-2812B97ACA28}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestTopology1", "TestTopology1\TestTopology1.csproj", "{C01F51D1-9DBB-4A46-852A-A64CC3921329}"
