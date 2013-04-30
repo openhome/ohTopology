@@ -191,15 +191,15 @@ def test(context):
     python("waf", "test")
 
     def run_test(test):
-        prog = 'build/%(test)s/bin/%(debugmode)s/%(test)s.exe'
-        scrp = 'build/%(test)s/bin/%(debugmode)s/%(test)sTestScript.txt'
+        prog = 'build/Test%(test)s/bin/%(debugmode)s/Test%(test)s.exe'
+        scrp = 'build/Test%(test)s/bin/%(debugmode)s/%(test)sTestScript.txt'
         fmt = { 'test' : test, 'debugmode' : context.options.debugmode.title() }
         cli([prog % fmt, scrp % fmt])
-    run_test('TestTopology1')
-    run_test('TestTopology2')
-    run_test('TestTopology3')
-    run_test('TestTopology4')
-    run_test('TestStandardHouse')
+    run_test('Topology1')
+    run_test('Topology2')
+    run_test('Topology3')
+    run_test('Topology4')
+    run_test('StandardHouse')
 
 
 @build_step("publish", optional=True, default=False)
