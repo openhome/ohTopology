@@ -14,8 +14,8 @@ namespace OpenHome.Av
             : base(aThread, aUdn)
         {
             // content directory service
-            MockWatchableContentDirectory contentDirectory = new MockWatchableContentDirectory(aThread, aUdn, 0, "");
-            Add<ContentDirectory>(contentDirectory);
+            //MockWatchableContentDirectory contentDirectory = new MockWatchableContentDirectory(aThread, aUdn, 0, "");
+            //Add<ContentDirectory>(contentDirectory);
         }
 
         public override void Execute(IEnumerable<string> aValue)
@@ -23,7 +23,10 @@ namespace OpenHome.Av
             base.Execute(aValue);
 
             Type key = typeof(Product);
+
+            /*
             string command = aValue.First().ToLowerInvariant();
+
             if (command == "contentdirectory")
             {
                 foreach (KeyValuePair<Type, IWatchableService> s in iServices)
@@ -39,6 +42,9 @@ namespace OpenHome.Av
             {
                 throw new NotSupportedException();
             }
+            */
+
+            throw new NotSupportedException();
         }
     }
 }

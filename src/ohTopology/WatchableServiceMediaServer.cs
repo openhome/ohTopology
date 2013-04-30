@@ -56,6 +56,7 @@ namespace OpenHome.Av
         Task<IMediaServerSession> CreateSession();
     }
 
+    /*
     public class ServiceAvOpenHomeOrgMediaServer1 : IServiceMediaServer
     {
         private readonly IWatchableThread iWatchableThread;
@@ -73,7 +74,9 @@ namespace OpenHome.Av
             iService.Dispose();
         }
     }
+    */
 
+    /*
     public class ServiceUpnpOrgContentDirectory1 : IServiceMediaServer
     {
         private class BrowseAsyncHandler
@@ -166,7 +169,9 @@ namespace OpenHome.Av
 
         private Watchable<uint> iUpdateCount;
     }
+    */
 
+    /*
     public class MockServiceMediaServer : IServiceMediaServer, IMockable
     {
         public MockServiceMediaServer(IWatchableThread aThread, string aId, uint aUpdateCount)
@@ -197,7 +202,9 @@ namespace OpenHome.Av
 
         public void Execute(IEnumerable<string> aValue)
         {
-            /*string command = aValue.First().ToLowerInvariant();
+            
+            string command = aValue.First().ToLowerInvariant();
+            
             if (command == "balance")
             {
                 IEnumerable<string> value = aValue.Skip(1);
@@ -227,15 +234,16 @@ namespace OpenHome.Av
                 VolumeDec();
             }
             else
-            {*/
-            throw new NotSupportedException();
-            //}
+            {
+                throw new NotSupportedException();
+            }
         }
 
         private IWatchableThread iThread;
 
         private Watchable<uint> iUpdateCount;
     }
+    */
 
     /*
     public class WatchableContentDirectoryFactory : IWatchableServiceFactory

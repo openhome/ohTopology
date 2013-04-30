@@ -10,7 +10,6 @@ namespace OpenHome.Av
 {
     public interface IWatchableService : IDisposable
     {
-        string Type { get; }
     }
 
     public interface IWatchableServiceFactory
@@ -67,7 +66,7 @@ namespace OpenHome.Av
             iFactories.Add(typeof(Volume), new WatchableVolumeFactory(aThread));
             iFactories.Add(typeof(Info), new WatchableInfoFactory(aThread));
             iFactories.Add(typeof(Time), new WatchableTimeFactory(aThread));
-            iFactories.Add(typeof(ContentDirectory), new WatchableContentDirectoryFactory(aThread));
+            //iFactories.Add(typeof(ContentDirectory), new WatchableContentDirectoryFactory(aThread));
 
             iServices = new Dictionary<Type, IWatchableService>();
             iServiceRefCount = new Dictionary<Type, uint>();
