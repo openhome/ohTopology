@@ -52,6 +52,9 @@ empty
 // test source are removed when ds disappears on the network
 mock network remove ds 67
 expect Room Removed Main Room
+expect Removed: 0: Group=Mock DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+expect Removed: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
+expect Removed: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 empty
 
 // test changing standby state for a single product in a room
