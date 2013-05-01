@@ -1,4 +1,3 @@
-﻿
 // test network is populated with 4 devices
 expect Room Added: Kitchen
 expect Standby(Kitchen)(Proxy): eOn
@@ -122,8 +121,3 @@ empty
 mock network update ds 68 product source 1 visible True
 expect Source Added: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=68, Volume=68 
 empty
-
-exit
-
-
-

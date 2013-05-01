@@ -20,9 +20,9 @@ namespace OpenHome.Av
             iMockables = new Dictionary<string, IMockable>();
         }
 
-        public void Add(string aId, IMockable aValue)
+        public void Add(string aId, IMockable aMockable)
         {
-            iMockables.Add(aId, aValue);
+            iMockables.Add(aId, aMockable);
         }
 
         public void Remove(string aId)
@@ -51,17 +51,17 @@ namespace OpenHome.Av
             while (true)
             {
                 string line = iTextReader.ReadLine();
-                IEnumerable<string> commandLine = line.Trim().Split(' ');
 
-                string command = commandLine.First().ToLowerInvariant();
-                if (command == "exit")
+                if (line == null)
                 {
                     break;
                 }
 
-                if (commandLine.First() != string.Empty)
+                var commands = Tokeniser.Parse(line);
+
+                if (commands.Any())
                 {
-                    iMockable.Execute(commandLine);
+                    iMockable.Execute(commands);
                 }
             }
         }
@@ -85,29 +85,34 @@ namespace OpenHome.Av
         public void Run(IWatchableThread aThread, TextReader aStream, IMockable aMockable)
         {
             bool wait = true;
+
             while (true)
             {
                 string line = aStream.ReadLine();
-                
-                if (line == "exit")
+            
+                if (line == null)
                 {
-                    Console.WriteLine("");
                     break;
                 }
 
-                if (!string.IsNullOrEmpty(line) && !line.StartsWith("//"))
+                if (line.StartsWith("//"))
                 {
-                    IEnumerable<string> commandLine = line.Trim().Split(' ');
+                    continue;
+                }
 
-                    string command = commandLine.First().ToLowerInvariant();
+                var commands = Tokeniser.Parse(line);
+
+                if (commands.Any())
+                {
+                    string command = commands.First().ToLowerInvariant();
+
                     if (command == "mock")
                     {
                         //Console.WriteLine(line);
-                        IEnumerable<string> value = commandLine.Skip(1);
 
                         aThread.Schedule(() =>
                         {
-                            aMockable.Execute(value);
+                            aMockable.Execute(commands.Skip(1));
                         });
 
                         wait = true;

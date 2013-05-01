@@ -1,130 +1,101 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using OpenHome.Os.App;
 using OpenHome.Net.ControlPoint;
 using OpenHome.Net.ControlPoint.Proxies;
+using OpenHome.MediaServer;
+
 
 namespace OpenHome.Av
 {
-    public interface IContentDirectoryBrowseResult
+    public interface IMediaServerValue
     {
-        string Result { get; }
-        uint NumberReturned { get; }
-        uint TotalMatches { get; }
-        uint UpdateId { get; }
+        string Value { get; }
+        IEnumerable<string> Values { get; }
     }
 
-    public interface IServiceUpnpOrgContentDirectory1
+    public interface IMediaServerDatum
     {
-        IWatchable<uint> SystemUpdateId { get; }
-        IWatchable<string> ContainerUpdateIds { get; }
-
-        void Browse(string aObjectId, string aBrowseFlag, string aFilter, uint aStartingIndex, uint aRequestedCount, string aSortCriteria, Action<IContentDirectoryBrowseResult> aCallback);
+        IEnumerable<ITag> Type { get; }
+        IMediaServerValue this[ITag aTag] { get; }
     }
 
-    public class ContentDirectoryBrowseResult : IContentDirectoryBrowseResult
+    public interface IMediaServerFragment
     {
-        public ContentDirectoryBrowseResult(string aResult, uint aNumberReturned, uint aTotalMatches, uint aUpdateId)
-        {
-            iResult = aResult;
-            iNumberReturned = aNumberReturned;
-            iTotalMatches = aTotalMatches;
-            iUpdateId = aUpdateId;
-        }
-
-        // IBrowseResult
-
-        public string Result
-        {
-            get
-            {
-                return iResult;
-            }
-        }
-
-        public uint NumberReturned
-        {
-            get
-            {
-                return iNumberReturned;
-            }
-        }
-
-        public uint TotalMatches
-        {
-            get
-            {
-                return iTotalMatches;
-            }
-        }
-
-        public uint UpdateId
-        {
-            get
-            {
-                return iUpdateId;
-            }
-        }
-
-        private string iResult;
-        private uint iNumberReturned;
-        private uint iTotalMatches;
-        private uint iUpdateId;
+        uint Index { get; }
+        uint Sequence { get; }
+        IEnumerable<IMediaServerDatum> Data { get; }
     }
 
-    public abstract class ContentDirectory : IWatchableService, IServiceUpnpOrgContentDirectory1
+    public interface IMediaServerSnapshot
     {
-        public const string kBrowseMetadata = "BrowseMetadata";
-        public const string kBrowseDirectChildren = "BrowseDirectChildren";
+        uint Total { get; }
+        uint Sequence { get; }
+        IEnumerable<uint> AlphaMap { get; } // null if no alpha map
+        Task<IMediaServerFragment> Read(uint aIndex, uint aCount);
+    }
 
-        protected ContentDirectory(string aId, IServiceUpnpOrgContentDirectory1 aService)
+    public interface IMediaServerContainer
+    {
+        IWatchable<IMediaServerSnapshot> Snapshot { get; }
+    }
+
+    public interface IMediaServerSession : IDisposable
+    {
+        Task<IMediaServerContainer> Query(string aValue);
+        Task<IMediaServerContainer> Browse(IMediaServerDatum aDatum); // null = home
+    }
+
+    public interface IMediaServer
+    {
+        string Name { get; }
+        string Attributes { get; }
+        string ManufacturerImageUri { get; }
+        string ManufacturerInfo { get; }
+        string ManufacturerName { get; }
+        string ManufacturerUrl { get; }
+        string ModelImageUri { get; }
+        string ModelInfo { get; }
+        string ModelName { get; }
+        string ModelUrl { get; }
+        string ProductImageUri { get; }
+        string ProductInfo { get; }
+        string ProductName { get; }
+        string ProductUrl { get; }
+        bool SupportsQuery { get; }
+        bool SupportsBrowse { get; }
+        Task<IMediaServerSession> CreateSession();
+    }
+
+    /*
+    public class ServiceAvOpenHomeOrgMediaServer1 : IServiceMediaServer
+    {
+        private readonly IWatchableThread iWatchableThread;
+        private readonly CpProxyAvOpenhomeOrgMediaServer1 iService;
+
+        public ServiceAvOpenHomeOrgMediaServer1(IWatchableThread aWatchableThread, CpProxyAvOpenhomeOrgMediaServer1 aService)
         {
-            iId = aId;
+            iWatchableThread = aWatchableThread;
             iService = aService;
-        }
+            iService.Subscribe();
+        }        
 
-        public abstract void Dispose();
-
-        public string Id
+        public void Dispose()
         {
-            get
-            {
-                return iId;
-            }
+            iService.Dispose();
         }
-
-        public IWatchable<uint> SystemUpdateId
-        {
-            get
-            {
-                return iService.SystemUpdateId;
-            }
-        }
-
-        public IWatchable<string> ContainerUpdateIds
-        {
-            get
-            {
-                return iService.ContainerUpdateIds;
-            }
-        }
-
-        public void Browse(string aObjectId, string aBrowseFlag, string aFilter, uint aStartingIndex, uint aRequestedCount, string aSortCriteria, Action<IContentDirectoryBrowseResult> aCallback)
-        {
-            iService.Browse(aObjectId, aBrowseFlag, aFilter, aStartingIndex, aRequestedCount, aSortCriteria, aCallback);
-        }
-
-        private string iId;
-        protected IServiceUpnpOrgContentDirectory1 iService;
     }
+    */
 
-    public class ServiceUpnpOrgContentDirectory1 : IServiceUpnpOrgContentDirectory1, IDisposable
+    /*
+    public class ServiceUpnpOrgContentDirectory1 : IServiceMediaServer
     {
         private class BrowseAsyncHandler
         {
-            public BrowseAsyncHandler(CpProxyUpnpOrgContentDirectory1 aService, Action<IContentDirectoryBrowseResult> aCallback)
+            public BrowseAsyncHandler(CpProxyUpnpOrgContentDirectory1 aService, Action<IServiceMediaServerBrowseResult> aCallback)
             {
                 iService = aService;
                 iCallback = aCallback;
@@ -144,11 +115,11 @@ namespace OpenHome.Av
 
                 iService.EndBrowse(aAsyncHandle, out result, out numberReturned, out totalMatches, out updateId);
 
-                iCallback(new ContentDirectoryBrowseResult(result, numberReturned, totalMatches, updateId));
+                iCallback(null); // TODO
             }
 
             private CpProxyUpnpOrgContentDirectory1 iService;
-            private Action<IContentDirectoryBrowseResult> iCallback;
+            private Action<IServiceMediaServerBrowseResult> iCallback;
         }
 
         public ServiceUpnpOrgContentDirectory1(IWatchableThread aThread, string aId, CpProxyUpnpOrgContentDirectory1 aService)
@@ -159,11 +130,9 @@ namespace OpenHome.Av
             iService = aService;
 
             iService.SetPropertySystemUpdateIDChanged(HandleSystemUpdateIDChanged);
-            iService.SetPropertyContainerUpdateIDsChanged(HandleContainerUpdateIDsChanged);
 
-            iSystemUpdateId = new Watchable<uint>(aThread, string.Format("SystemUpdateId({0})", aId), iService.PropertySystemUpdateID());
-            iContainerUpdateIds = new Watchable<string>(aThread, string.Format("ContainerUpdateId({0})", aId), iService.PropertyContainerUpdateIDs());
-        }        
+            iUpdateCount = new Watchable<uint>(aThread, string.Format("UpdateCount({0})", aId), iService.PropertySystemUpdateID());
+        }
 
         public void Dispose()
         {
@@ -180,26 +149,18 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<uint> SystemUpdateId
+        public IWatchable<uint> UpdateCount
         {
             get
             {
-                return iSystemUpdateId;
+                return iUpdateCount;
             }
         }
 
-        public IWatchable<string> ContainerUpdateIds
+        public void Browse(string aId, Action<IServiceMediaServerBrowseResult> aCallback)
         {
-            get
-            {
-                return iContainerUpdateIds;
-            }
-        }
-
-        public void Browse(string aObjectId, string aBrowseFlag, string aFilter, uint aStartingIndex, uint aRequestedCount, string aSortCriteria, Action<IContentDirectoryBrowseResult> aHandler)
-        {
-            BrowseAsyncHandler handler = new BrowseAsyncHandler(iService, aHandler);
-            handler.Browse(aObjectId, aBrowseFlag, aFilter, aStartingIndex, aRequestedCount, aSortCriteria);
+            BrowseAsyncHandler handler = new BrowseAsyncHandler(iService, aCallback);
+            handler.Browse(aId);
         }
 
         private void HandleSystemUpdateIDChanged()
@@ -211,20 +172,7 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iSystemUpdateId.Update(iService.PropertySystemUpdateID());
-            }
-        }
-
-        private void HandleContainerUpdateIDsChanged()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iContainerUpdateIds.Update(iService.PropertyContainerUpdateIDs());
+                iUpdateCount.Update(iService.PropertySystemUpdateID());
             }
         }
 
@@ -233,51 +181,44 @@ namespace OpenHome.Av
 
         private CpProxyUpnpOrgContentDirectory1 iService;
 
-        private Watchable<uint> iSystemUpdateId;
-        private Watchable<string> iContainerUpdateIds;
+        private Watchable<uint> iUpdateCount;
     }
+    */
 
-    public class MockServiceUpnpOrgContentDirectory1 : IServiceUpnpOrgContentDirectory1, IMockable, IDisposable
+    /*
+    public class MockServiceMediaServer : IServiceMediaServer, IMockable
     {
-        public MockServiceUpnpOrgContentDirectory1(IWatchableThread aThread, string aId, uint aSystemUpdateId, string aContainerUpdateIds)
+        public MockServiceMediaServer(IWatchableThread aThread, string aId, uint aUpdateCount)
         {
             iThread = aThread;
-
-            iSystemUpdateId = new Watchable<uint>(aThread, string.Format("SystemUpdateId({0})", aId), aSystemUpdateId);
-            iContainerUpdateIds = new Watchable<string>(aThread, string.Format("ContainerUpdateIds({0})", aId), aContainerUpdateIds);
+            iUpdateCount = new Watchable<uint>(aThread, string.Format("UpdateCount({0})", aId), aUpdateCount);
         }
 
         public void Dispose()
         {
         }
 
-        public IWatchable<uint> SystemUpdateId
+        public IWatchable<uint> UpdateCount
         {
             get
             {
-                return iSystemUpdateId;
+                return iUpdateCount;
             }
         }
 
-        public IWatchable<string> ContainerUpdateIds
-        {
-            get
-            {
-                return iContainerUpdateIds;
-            }
-        }
-
-        public void Browse(string aObjectId, string aBrowseFlag, string aFilter, uint aStartingIndex, uint aRequestedCount, string aSortCriteria, Action<IContentDirectoryBrowseResult> aHandler)
+        public void Browse(string aId, Action<IServiceMediaServerBrowseResult> aCallback)
         {
             iThread.Schedule(() =>
             {
-                aHandler(new ContentDirectoryBrowseResult("", 0, 0, 0));
+                aCallback(null);
             });
         }
 
         public void Execute(IEnumerable<string> aValue)
         {
-            /*string command = aValue.First().ToLowerInvariant();
+            
+            string command = aValue.First().ToLowerInvariant();
+            
             if (command == "balance")
             {
                 IEnumerable<string> value = aValue.Skip(1);
@@ -307,17 +248,18 @@ namespace OpenHome.Av
                 VolumeDec();
             }
             else
-            {*/
-            throw new NotSupportedException();
-            //}
+            {
+                throw new NotSupportedException();
+            }
         }
 
         private IWatchableThread iThread;
 
-        private Watchable<uint> iSystemUpdateId;
-        private Watchable<string> iContainerUpdateIds;
+        private Watchable<uint> iUpdateCount;
     }
+    */
 
+    /*
     public class WatchableContentDirectoryFactory : IWatchableServiceFactory
     {
         public WatchableContentDirectoryFactory(IWatchableThread aThread)
@@ -332,8 +274,7 @@ namespace OpenHome.Av
             if (iService == null && iPendingService == null)
             {
                 iPendingService = new CpProxyUpnpOrgContentDirectory1(aDevice.Device);
-
-                iPendingService.SetPropertyInitialEvent(() =>
+                iPendingService.SetPropertyInitialEvent(delegate
                 {
                     iThread.Schedule(() =>
                     {
@@ -342,7 +283,6 @@ namespace OpenHome.Av
                         aCallback(iService);
                     });
                 });
-                
                 iPendingService.Subscribe();
             }
         }
@@ -408,4 +348,5 @@ namespace OpenHome.Av
             i.Execute(aValue);
         }
     }
+    */
 }

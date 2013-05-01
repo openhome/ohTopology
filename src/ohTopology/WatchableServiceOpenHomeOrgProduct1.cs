@@ -35,16 +35,6 @@ namespace OpenHome.Av
 
         public abstract void Dispose();
 
-        // IWatchableService methods
-
-        public string Type
-        {
-            get
-            {
-                return "AvOpenHomeProduct1";
-            }
-        }
-
         // IServiceOpenHomeOrgProduct1 methods
 
         public IWatchable<string> Room

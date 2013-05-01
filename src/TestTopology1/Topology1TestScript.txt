@@ -1,24 +1,16 @@
 ﻿// test network is populated with 4 devices
-expect Product Added
-expect     udn = 4c494e4e-0026-0f99-1111-ef000004013f
-expect Product Added
-expect     udn = 4c494e4e-0026-0f99-1112-ef000004013f
-expect Product Added
-expect     udn = 4c494e4e-0026-0f99-1113-ef000004013f
-expect Product Added
-expect     udn = 4c494e4e-0026-0f99-1114-ef000004013f
+expect product added 4c494e4e-0026-0f99-1111-ef000004013f
+expect product added 4c494e4e-0026-0f99-1112-ef000004013f
+expect product added 4c494e4e-0026-0f99-1113-ef000004013f
+expect product added 4c494e4e-0026-0f99-1114-ef000004013f
 empty
 
 // test product is added when ds appears on network
 mock network add ds 67
-expect Product Added
-expect     udn = 67
+expect product added 67
 empty
 
 // test product is removed when ds disappears from network
 mock network remove ds 67
-expect Product Removed
-expect     udn = 67
+expect product removed 67
 empty
-
-exit

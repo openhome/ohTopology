@@ -127,14 +127,15 @@ namespace OpenHome.Av
             {
                 c.Dispose();
             }
-            iDeviceCollections = null;
+
+            iDeviceCollections.Clear();
         }
 
         public void Start()
         {
             // add device lists for each type of watchable service
             iDeviceCollections.Add(typeof(Product), new ServiceWatchableDeviceCollection(iThread, "av.openhome.org", "Product", 1));
-            iDeviceCollections.Add(typeof(ContentDirectory), new ServiceWatchableDeviceCollection(iThread, "upnp.org", "ContentDirectory", 1));
+            //iDeviceCollections.Add(typeof(ContentDirectory), new ServiceWatchableDeviceCollection(iThread, "upnp.org", "ContentDirectory", 1));
         }
 
         public void Stop()
@@ -251,6 +252,7 @@ namespace OpenHome.Av
             lock (iLock)
             {
                 MockWatchableDevice device;
+
                 if(iOnDevices.TryGetValue(aUdn, out device))
                 {
                     RemoveDevice(device);
@@ -284,8 +286,9 @@ namespace OpenHome.Av
 
         public WatchableDeviceUnordered GetWatchableDeviceCollection<T>() where T : IWatchableService
         {
-            WatchableDeviceUnordered list = new WatchableDeviceUnordered(iThread);
             Type key = typeof(T);
+
+            WatchableDeviceUnordered list = new WatchableDeviceUnordered(iThread);
 
             if (iDeviceLists.ContainsKey(key))
             {
@@ -314,16 +317,21 @@ namespace OpenHome.Av
         public void Execute(IEnumerable<string> aValue)
         {
             string command = aValue.First().ToLowerInvariant();
+
             if (command == "add")
             {
                 IEnumerable<string> value = aValue.Skip(1);
+
                 string type = value.First();
-                if (type == "ds" || type == "dsm" || type == "mediaserver")
+
+                if (type == "ds" || type == "dsm" /*|| type == "mediaserver" */)
                 {
                     value = value.Skip(1);
+
                     string udn = value.First();
 
                     MockWatchableDevice device;
+
                     if (iOffDevices.TryGetValue(udn, out device))
                     {
                         AddDevice(device);
@@ -339,10 +347,12 @@ namespace OpenHome.Av
                     {
                         AddDevice(new MockWatchableDsm(iThread, udn));
                     }
+                    /*
                     else if (type == "mediaserver")
                     {
                         AddDevice(new MockWatchableMediaServer(iThread, udn));
                     }
+                    */
                     else
                     {
                         throw new NotSupportedException();
@@ -352,7 +362,9 @@ namespace OpenHome.Av
             else if (command == "remove")
             {
                 IEnumerable<string> value = aValue.Skip(1);
+
                 string type = value.First();
+
                 if (type == "ds" || type == "dsm" || type == "mediaserver")
                 {
                     value = value.Skip(1);
@@ -366,14 +378,19 @@ namespace OpenHome.Av
             else if (command == "update")
             {
                 IEnumerable<string> value = aValue.Skip(1);
+
                 string type = value.First();
+
                 if (type == "ds")
                 {
                     value = value.Skip(1);
+
                     lock (iLock)
                     {
                         string udn = value.First();
+
                         MockWatchableDevice device;
+
                         if (iOnDevices.TryGetValue(udn, out device))
                         {
                             device.Execute(value.Skip(1));
@@ -401,6 +418,7 @@ namespace OpenHome.Av
         private object iLock;
 
         protected IWatchableThread iThread;
+
         private Mockable iMocker;
 
         private Dictionary<string, MockWatchableDevice> iOnDevices;

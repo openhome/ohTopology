@@ -93,5 +93,3 @@ empty
 mock network remove ds 67
 expect Group Removed		Bathroom:Majik DS
 empty
-
-exit

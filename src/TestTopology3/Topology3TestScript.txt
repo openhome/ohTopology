@@ -41,5 +41,3 @@ mock network remove ds 68
 expect Group Removed Bathroom:Mock DS
 expect Room Removed Bathroom
 empty
-
-exit

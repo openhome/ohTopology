@@ -40,14 +40,12 @@ namespace TestTopology
 
             public void UnorderedAdd(Product aItem)
             {
-                iRunner.Result("Product Added");
-                iRunner.Result("    udn = " + aItem.Id);
+                iRunner.Result("product added " + aItem.Id);
             }
 
             public void UnorderedRemove(Product aItem)
             {
-                iRunner.Result("Product Removed");
-                iRunner.Result("    udn = " + aItem.Id);
+                iRunner.Result("product removed " + aItem.Id);
             }
 
             private MockableScriptRunner iRunner;

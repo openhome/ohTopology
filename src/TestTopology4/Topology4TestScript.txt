@@ -341,7 +341,3 @@ expect Updated: 3: Group=Test, Name=Songcast, Type=Receiver, Visible=True, HasIn
 expect Updated: 1: Group=Mock DS, Name=Radio, Type=Radio, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 expect Updated: 3: Group=Mock DS, Name=Songcast, Type=Receiver, Visible=True, HasInfo=True, HasTime=True, Device=67, Volume=67 
 empty
-
-exit
-
-

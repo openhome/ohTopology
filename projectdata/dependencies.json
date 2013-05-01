@@ -33,6 +33,11 @@
         "dest": "dependencies/AnyPlatform/ohOs.App.V1",
         "strip-archive-dirs":1
     },
+	{   "name": "ohMediaServer",
+        "archive-path": "http://openhome.org/releases/artifacts/ohMediaServer/ohMediaServer-0.0.114-AnyPlatform-Release.tar.gz",
+        "dest": "dependencies/AnyPlatform/ohMediaServer",
+        "strip-archive-dirs":1
+    },
     {   "name": "ohWafHelpers",
         "type": "openhome",
         "platform-specific": false,
