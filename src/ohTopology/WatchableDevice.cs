@@ -278,14 +278,13 @@ namespace OpenHome.Av
             IWatchableService service;
             if (iServices.TryGetValue(typeof(T), out service))
             {
-                //Task task = new Task(new Action(delegate
-                //{
+                iThread.Schedule(() =>
+                {
                     iThread.Schedule(() =>
                     {
                         aCallback(this, (T)service);
                     });
-                //}));
-                //task.Start();
+                });
 
                 return;
             }

@@ -9,10 +9,6 @@ expect HasVolume(Kitchen): False
 expect Mute(Kitchen): False
 expect Volume(Kitchen): 0
 
-expect Details(Kitchen) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Kitchen) Updated: Active=True, Metadata=, Uri=
-expect Metatext(Kitchen) Updated: Active=True, Metatext=
-
 expect Room Added: Sitting Room at 1
 expect Standby(Sitting Room)(Proxy): eOn
 expect Details(Sitting Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
@@ -42,6 +38,10 @@ expect Active(Dining Room): True
 expect HasVolume(Dining Room): False
 expect Mute(Dining Room): False
 expect Volume(Dining Room): 0
+
+expect Details(Kitchen) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
+expect Metadata(Kitchen) Updated: Active=True, Metadata=, Uri=
+expect Metatext(Kitchen) Updated: Active=True, Metatext=
 
 expect Volume(Kitchen): 0 -> 50
 expect HasVolume(Kitchen): False -> True
