@@ -32,6 +32,10 @@
     <Reference Include="ohOs">
       <HintPath>..\..\dependencies\AnyPlatform\ohOs2\ohOs.dll</HintPath>
     </Reference>
+    <Reference Include="ohOs.App.V1, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
@@ -39,10 +43,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\ohOs2\src\ohOs.App.V1\ohOs.App.V1.csproj">
-      <Project>{994aac2c-148b-4921-8d46-73cf6c32c11b}</Project>
-      <Name>ohOs.App.V1</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ohTopology\ohTopology.csproj">
       <Project>{B6F3BF75-F35B-4A83-A3F9-2812B97ACA28}</Project>
       <Name>ohTopology</Name>
