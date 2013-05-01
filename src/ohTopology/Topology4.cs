@@ -834,7 +834,10 @@ namespace OpenHome.Av
 
             iRoomLookup = new Dictionary<ITopology3Room, Topology4Room>();
 
-            iTopology3.Rooms.AddWatcher(this);
+            iThread.Schedule(() =>
+            {
+                iTopology3.Rooms.AddWatcher(this);
+            });
         }
 
         public void Dispose()
@@ -844,12 +847,19 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("Topology3.Dispose");
             }
 
-            iTopology3.Rooms.RemoveWatcher(this);
+            iThread.Wait(() =>
+            {
+                iTopology3.Rooms.RemoveWatcher(this);
+
+                foreach (Topology4Room r in iRoomLookup.Values)
+                {
+                    r.Detach();
+                }
+            });
             iTopology3 = null;
 
             foreach (Topology4Room r in iRoomLookup.Values)
             {
-                r.Detach();
                 r.Dispose();
             }
             iRoomLookup.Clear();

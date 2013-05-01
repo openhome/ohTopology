@@ -278,11 +278,12 @@ namespace TestTopology4
             MockableScriptRunner runner = new MockableScriptRunner();
 
             RoomWatcher watcher = new RoomWatcher(runner);
-            topology4.Rooms.AddWatcher(watcher);
+            thread.Schedule(() =>
+            {
+                topology4.Rooms.AddWatcher(watcher);
+            });
 
             network.Start();
-
-            thread.WaitComplete();
 
             try
             {
@@ -294,8 +295,11 @@ namespace TestTopology4
                 return 1;
             }
 
-            topology4.Rooms.RemoveWatcher(watcher);
-            watcher.Dispose();
+            thread.Wait(() =>
+            {
+                topology4.Rooms.RemoveWatcher(watcher);
+                watcher.Dispose();
+            });
 
             topology4.Dispose();
 

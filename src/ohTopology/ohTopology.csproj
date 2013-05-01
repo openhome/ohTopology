@@ -52,10 +52,6 @@
     <Reference Include="ohNet.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\ohNet.net.dll</HintPath>
     </Reference>
-    <Reference Include="ohOs.App.V1, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -78,6 +74,12 @@
     <Compile Include="WatchableServiceOpenHomeOrgTime1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgVolume1.cs" />
     <Compile Include="WatchableServiceUpnpOrgContentDirectory1.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\ohOs2\src\ohOs.App.V1\ohOs.App.V1.csproj">
+      <Project>{994aac2c-148b-4921-8d46-73cf6c32c11b}</Project>
+      <Name>ohOs.App.V1</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="..\SharedSettings.targets" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

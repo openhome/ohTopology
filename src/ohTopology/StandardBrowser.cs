@@ -186,6 +186,7 @@ namespace OpenHome.Av
     {
         internal StandardRoomController(IWatchableThread aThread, StandardRoom aRoom)
         {
+            iThread = aThread;
             iRoom = aRoom;
 
             iLock = new object();
@@ -293,9 +294,9 @@ namespace OpenHome.Av
 
         public void SetStandby(bool aValue)
         {
-            iActive.Locked(active =>
+            iThread.Schedule(() =>
             {
-                if (active)
+                if (iActive.Value)
                 {
                     iRoom.SetStandby(aValue);
                 }
@@ -328,9 +329,9 @@ namespace OpenHome.Av
 
         public void Play()
         {
-            iActive.Locked(active =>
+            iThread.Schedule(() =>
             {
-                if (active)
+                if (iActive.Value)
                 {
                     iSourceController.Play();
                 }
@@ -339,9 +340,9 @@ namespace OpenHome.Av
 
         public void Pause()
         {
-            iActive.Locked(active =>
+            iThread.Schedule(() =>
             {
-                if (active)
+                if (iActive.Value)
                 {
                     iSourceController.Pause();
                 }
@@ -350,9 +351,9 @@ namespace OpenHome.Av
 
         public void Stop()
         {
-            iActive.Locked(active =>
+            iThread.Schedule(() =>
             {
-                if (active)
+                if (iActive.Value)
                 {
                     iSourceController.Stop();
                 }
@@ -369,9 +370,9 @@ namespace OpenHome.Av
 
         public void Previous()
         {
-            iActive.Locked(active =>
+            iThread.Schedule(() =>
             {
-                if (active)
+                if (iActive.Value)
                 {
                     iSourceController.Previous();
                 }
@@ -380,9 +381,9 @@ namespace OpenHome.Av
 
         public void Next()
         {
-            iActive.Locked(active =>
+            iThread.Schedule(() =>
             {
-                if (active)
+                if (iActive.Value)
                 {
                     iSourceController.Next();
                 }
@@ -399,9 +400,9 @@ namespace OpenHome.Av
 
         public void Seek(uint aSeconds)
         {
-            iActive.Locked(active =>
+            iThread.Schedule(() =>
             {
-                if (active)
+                if (iActive.Value)
                 {
                     iSourceController.Seek(aSeconds);
                 }
@@ -433,9 +434,9 @@ namespace OpenHome.Av
 
         public void SetMute(bool aMute)
         {
-            iActive.Locked(active =>
+            iThread.Schedule(() =>
             {
-                if (active)
+                if (iActive.Value)
                 {
                     iVolumeController.SetMute(aMute);
                 }
@@ -444,51 +445,42 @@ namespace OpenHome.Av
 
         public void SetVolume(uint aVolume)
         {
-            iActive.Locked(active =>
+            iThread.Schedule(() =>
             {
-                if (active)
+                if (iActive.Value)
                 {
-                    iHasVolume.Locked(volume =>
+                    if(iHasVolume.Value)
                     {
-                        if (volume)
-                        {
-                            iVolumeController.SetVolume(aVolume);
-                        }
-                    });
+                        iVolumeController.SetVolume(aVolume);
+                    }
                 }
             });
         }
 
         public void VolumeInc()
         {
-            iActive.Locked(active =>
+            iThread.Schedule(() =>
             {
-                if (active)
+                if (iActive.Value)
                 {
-                    iHasVolume.Locked(volume =>
+                    if(iHasVolume.Value)
                     {
-                        if (volume)
-                        {
-                            iVolumeController.VolumeInc();
-                        }
-                    });
+                        iVolumeController.VolumeInc();
+                    }
                 }
             });
         }
 
         public void VolumeDec()
         {
-            iActive.Locked(active =>
+            iThread.Schedule(() =>
             {
-                if (active)
+                if (iActive.Value)
                 {
-                    iHasVolume.Locked(volume =>
+                    if(iHasVolume.Value)
                     {
-                        if (volume)
-                        {
-                            iVolumeController.VolumeDec();
-                        }
-                    });
+                        iVolumeController.VolumeDec();
+                    }
                 }
             });
         }
@@ -539,7 +531,9 @@ namespace OpenHome.Av
             }
         }
 
+        private IWatchableThread iThread;
         private StandardRoom iRoom;
+
         private object iLock;
         private bool iIsActive;
         private Watchable<bool> iActive;
@@ -1123,7 +1117,10 @@ namespace OpenHome.Av
             iRooms = new List<StandardRoom>();
             iRoomLookup = new Dictionary<ITopology4Room, StandardRoom>();
 
-            iTopology4.Rooms.AddWatcher(this);
+            iThread.Schedule(() =>
+            {
+                iTopology4.Rooms.AddWatcher(this);
+            });
         }
 
         public void Dispose()
@@ -1133,17 +1130,22 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("LinnHouse.Dispose");
             }
 
-            iTopology4.Rooms.RemoveWatcher(this);
+            iThread.Wait(() =>
+            {
+                iTopology4.Rooms.RemoveWatcher(this);
 
+                foreach (StandardRoom room in iRooms)
+                {
+                    room.Detach();
+                }
+            });
             iWatchableRooms.Dispose();
             iWatchableRooms = null;
 
             foreach (StandardRoom room in iRooms)
             {
-                room.Detach();
                 room.Dispose();
             }
-
             iRoomLookup.Clear();
             iRoomLookup = null;
 

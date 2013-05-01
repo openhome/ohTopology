@@ -266,11 +266,12 @@ namespace TestLinnHouse
             MockableScriptRunner runner = new MockableScriptRunner();
 
             RoomWatcher watcher = new RoomWatcher(runner);
-            house.Rooms.AddWatcher(watcher);
+            thread.Schedule(() =>
+            {
+                house.Rooms.AddWatcher(watcher);
+            });
 
             network.Start();
-
-            thread.WaitComplete();
 
             try
             {
@@ -282,8 +283,11 @@ namespace TestLinnHouse
                 return 1;
             }
 
-            house.Rooms.RemoveWatcher(watcher);
-            watcher.Dispose();
+            thread.Wait(() =>
+            {
+                house.Rooms.RemoveWatcher(watcher);
+                watcher.Dispose();
+            });
 
             house.Dispose();
 

@@ -264,7 +264,10 @@ namespace OpenHome.Av
             iGroup2ToGroup3Lookup = new Dictionary<ITopology2Group,Topology3Group>();
             iRoomNameToRoom3Lookup = new Dictionary<string,Topology3Room>();
 
-            iTopology2.Groups.AddWatcher(this);
+            iThread.Schedule(() =>
+            {
+                iTopology2.Groups.AddWatcher(this);
+            });
         }
 
         public void Dispose()
@@ -274,19 +277,26 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("Topology3.Dispose");
             }
 
-            iTopology2.Groups.RemoveWatcher(this);
+            iThread.Wait(() =>
+            {
+                iTopology2.Groups.RemoveWatcher(this);
+
+                // removing these watchers should cause all rooms to be detached and disposed
+                foreach (Topology3Group group in iGroup2ToGroup3Lookup.Values)
+                {
+                    group.Room.RemoveWatcher(this);
+                }
+
+                // any created L3 groups must be disposed
+                foreach (Topology3Group group in iGroup2ToGroup3Lookup.Values)
+                {
+                    group.Detach();
+                }
+            });
             iTopology2 = null;
 
-            // removing these watchers should cause all rooms to be detached and disposed
             foreach (Topology3Group group in iGroup2ToGroup3Lookup.Values)
             {
-                group.Room.RemoveWatcher(this);
-            }
-
-            // any created L3 groups must be disposed
-            foreach (Topology3Group group in iGroup2ToGroup3Lookup.Values)
-            {
-                group.Detach();
                 group.Dispose();
             }
 

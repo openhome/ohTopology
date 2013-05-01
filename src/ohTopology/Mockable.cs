@@ -84,7 +84,7 @@ namespace OpenHome.Av
 
         public void Run(IWatchableThread aThread, TextReader aStream, IMockable aMockable)
         {
-            bool wait = false;
+            bool wait = true;
             while (true)
             {
                 string line = aStream.ReadLine();
@@ -104,8 +104,11 @@ namespace OpenHome.Av
                     {
                         //Console.WriteLine(line);
                         IEnumerable<string> value = commandLine.Skip(1);
-                        
-                        aMockable.Execute(value);
+
+                        aThread.Schedule(() =>
+                        {
+                            aMockable.Execute(value);
+                        });
 
                         wait = true;
                     }
@@ -113,7 +116,7 @@ namespace OpenHome.Av
                     {
                         if (wait)
                         {
-                            aThread.WaitComplete();
+                            aThread.WaitAll();
                             wait = false;
                         }
 

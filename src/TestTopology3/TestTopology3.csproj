@@ -33,15 +33,16 @@
       <HintPath>..\..\dependencies\AnyPlatform\ohOs2\ohOs.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="ohOs.App.V1">
-      <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\ohOs2\src\ohOs.App.V1\ohOs.App.V1.csproj">
+      <Project>{994aac2c-148b-4921-8d46-73cf6c32c11b}</Project>
+      <Name>ohOs.App.V1</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ohTopology\ohTopology.csproj">
       <Project>{B6F3BF75-F35B-4A83-A3F9-2812B97ACA28}</Project>
       <Name>ohTopology</Name>

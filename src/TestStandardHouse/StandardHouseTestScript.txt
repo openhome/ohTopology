@@ -50,19 +50,19 @@ expect Details(Sitting Room) Updated: Active=True, BitDepth=0, BitRate=0, CodeNa
 expect Metadata(Sitting Room) Updated: Active=True, Metadata=, Uri=
 expect Metatext(Sitting Room) Updated: Active=True, Metatext=
 
+expect Volume(Sitting Room): 0 -> 50
+expect HasVolume(Sitting Room): False -> True
+
 expect Details(Bedroom) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Bedroom) Updated: Active=True, Metadata=, Uri=
 expect Metatext(Bedroom) Updated: Active=True, Metatext=
 
+expect Volume(Bedroom): 0 -> 50
+expect HasVolume(Bedroom): False -> True
+
 expect Details(Dining Room) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Dining Room) Updated: Active=True, Metadata=, Uri=
 expect Metatext(Dining Room) Updated: Active=True, Metatext=
-
-expect Volume(Sitting Room): 0 -> 50
-expect HasVolume(Sitting Room): False -> True
-
-expect Volume(Bedroom): 0 -> 50
-expect HasVolume(Bedroom): False -> True
 
 expect Volume(Dining Room): 0 -> 50
 expect HasVolume(Dining Room): False -> True
@@ -105,11 +105,6 @@ empty
 // test room controller active flag
 mock network remove ds 67
 expect Room Removed: Main Room at 3
-expect Details(Main Room) Updated: Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Main Room) Updated: Active=False, Metadata=, Uri=
-expect Metatext(Main Room) Updated: Active=False, Metatext=
-expect Active(Main Room): True -> False
-expect HasVolume(Main Room): True -> False
 empty
 
 // re-add ds 67

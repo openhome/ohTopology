@@ -169,11 +169,12 @@ namespace TestTopology3
             MockableScriptRunner runner = new MockableScriptRunner();
 
             RoomWatcher watcher = new RoomWatcher(runner);
-            topology3.Rooms.AddWatcher(watcher);
+            thread.Schedule(() =>
+            {
+                topology3.Rooms.AddWatcher(watcher);
+            });
 
             network.Start();
-
-            thread.WaitComplete();
 
             try
             {
@@ -185,8 +186,11 @@ namespace TestTopology3
                 return 1;
             }
 
-            topology3.Rooms.RemoveWatcher(watcher);
-            watcher.Dispose();
+            thread.Wait(() =>
+            {
+                topology3.Rooms.RemoveWatcher(watcher);
+                watcher.Dispose();
+            });
 
             topology3.Dispose();
 

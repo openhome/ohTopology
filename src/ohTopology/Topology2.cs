@@ -318,7 +318,10 @@ namespace OpenHome.Av
 
             iGroupLookup = new Dictionary<Product, Topology2Group>();
 
-            iTopology1.Products.AddWatcher(this);
+            iThread.Schedule(() =>
+            {
+                iTopology1.Products.AddWatcher(this);
+            });
         }
 
         public void Dispose()
@@ -328,18 +331,25 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("Topology2.Dispose");
             }
 
-            iTopology1.Products.RemoveWatcher(this);
+            iThread.Wait(() =>
+            {
+                iTopology1.Products.RemoveWatcher(this);
+                
+                foreach (Topology2Group g in iGroupLookup.Values)
+                {
+                    g.Detach();
+                }
+            });
             iTopology1 = null;
-
-            iGroups.Dispose();
-            iGroups = null;
 
             foreach (Topology2Group g in iGroupLookup.Values)
             {
-                g.Detach();
                 g.Dispose();
             }
             iGroupLookup = null;
+
+            iGroups.Dispose();
+            iGroups = null;
 
             iDisposed = true;
         }

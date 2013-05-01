@@ -26,7 +26,10 @@ namespace OpenHome.Av
             iProducts = new WatchableUnordered<Product>(aThread);
 
             iDevices = iNetwork.GetWatchableDeviceCollection<Product>();
-            iDevices.AddWatcher(this);
+            iThread.Schedule(() =>
+            {
+                iDevices.AddWatcher(this);
+            });
         }
 
         public void Dispose()
@@ -36,7 +39,10 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("Topology1.Dispose");
             }
 
-            iDevices.RemoveWatcher(this);
+            iThread.Wait(() =>
+            {
+                iDevices.RemoveWatcher(this);
+            });
             iDevices.Dispose();
             iDevices = null;
 

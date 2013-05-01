@@ -199,11 +199,12 @@ namespace TestTopology2
             MockableScriptRunner runner = new MockableScriptRunner();
 
             GroupWatcher watcher = new GroupWatcher(runner);
-            topology2.Groups.AddWatcher(watcher);
+            thread.Schedule(() =>
+            {
+                topology2.Groups.AddWatcher(watcher);
+            });
 
             network.Start();
-
-            thread.WaitComplete();
 
             try
             {
@@ -214,8 +215,11 @@ namespace TestTopology2
                 return 1;
             }
 
-            topology2.Groups.RemoveWatcher(watcher);
-            watcher.Dispose();
+            thread.Wait(() =>
+            {
+                topology2.Groups.RemoveWatcher(watcher);
+                watcher.Dispose();
+            });
 
             topology2.Dispose();
 

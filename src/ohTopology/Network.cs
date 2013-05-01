@@ -236,7 +236,10 @@ namespace OpenHome.Av
                     {
                         foreach (WatchableDeviceUnordered c in k.Value)
                         {
-                            c.Add(aDevice);
+                            iThread.Schedule(() =>
+                            {
+                                c.Add(aDevice);
+                            });
                         }
                     }
                 }
@@ -269,7 +272,10 @@ namespace OpenHome.Av
                     {
                         foreach (WatchableDeviceUnordered c in k.Value)
                         {
-                            c.Remove(aDevice);
+                            iThread.Schedule(() =>
+                            {
+                                c.Remove(aDevice);
+                            });
                         }
                     }
                 }
@@ -293,7 +299,11 @@ namespace OpenHome.Av
                 {
                     if (d.HasService(key))
                     {
-                        list.Add(d);
+                        iThread.Schedule(() =>
+                        {
+                            list.Add(d);
+                        });
+
                     }
                 }
             }
