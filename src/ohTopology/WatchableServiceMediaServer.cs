@@ -45,14 +45,28 @@ namespace OpenHome.Av
 
     public interface IMediaServerSession : IDisposable
     {
-        bool SupportsQuery { get; }
-        bool SupportsBrowse { get; }
         Task<IMediaServerContainer> Query(string aValue);
         Task<IMediaServerContainer> Browse(IMediaServerDatum aDatum); // null = home
     }
 
-    public interface IServiceMediaServer : IWatchableService
+    public interface IMediaServer
     {
+        string Name { get; }
+        string Attributes { get; }
+        string ManufacturerImageUri { get; }
+        string ManufacturerInfo { get; }
+        string ManufacturerName { get; }
+        string ManufacturerUrl { get; }
+        string ModelImageUri { get; }
+        string ModelInfo { get; }
+        string ModelName { get; }
+        string ModelUrl { get; }
+        string ProductImageUri { get; }
+        string ProductInfo { get; }
+        string ProductName { get; }
+        string ProductUrl { get; }
+        bool SupportsQuery { get; }
+        bool SupportsBrowse { get; }
         Task<IMediaServerSession> CreateSession();
     }
 
