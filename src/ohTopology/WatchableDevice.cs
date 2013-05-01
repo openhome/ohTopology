@@ -130,14 +130,10 @@ namespace OpenHome.Av
                 {
                     ++iServiceRefCount[typeof(T)];
 
-                    Task task = new Task(new Action(delegate
+                    iThread.Schedule(() =>
                     {
-                        iThread.Schedule(() =>
-                        {
-                            aCallback(this, (T)service);
-                        });
-                    }));
-                    task.Start();
+                        aCallback(this, (T)service);
+                    });
                 }
                 else
                 {
@@ -280,10 +276,7 @@ namespace OpenHome.Av
             {
                 iThread.Schedule(() =>
                 {
-                    iThread.Schedule(() =>
-                    {
-                        aCallback(this, (T)service);
-                    });
+                    aCallback(this, (T)service);
                 });
 
                 return;

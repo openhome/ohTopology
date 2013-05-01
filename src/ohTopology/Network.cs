@@ -419,10 +419,13 @@ namespace OpenHome.Av
         {
             base.Start();
 
-            AddDevice(new MockWatchableDs(iThread, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));
-            AddDevice(new MockWatchableDsm(iThread, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
-            AddDevice(new MockWatchableDsm(iThread, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
-            AddDevice(new MockWatchableDs(iThread, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
+            iThread.Schedule(() =>
+            {
+                AddDevice(new MockWatchableDs(iThread, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));
+                AddDevice(new MockWatchableDsm(iThread, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
+                AddDevice(new MockWatchableDsm(iThread, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
+                AddDevice(new MockWatchableDs(iThread, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
+            });
         }
     }
 }
