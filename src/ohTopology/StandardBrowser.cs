@@ -90,7 +90,6 @@ namespace OpenHome.Av
                     iVolume.Mute.RemoveWatcher(this);
                     iVolume.Value.RemoveWatcher(this);
 
-                    iVolume.Dispose();
                     iVolume = null;
                 }
 
@@ -747,7 +746,6 @@ namespace OpenHome.Av
                     iInfo.Metadata.RemoveWatcher(this);
                     iInfo.Metatext.RemoveWatcher(this);
 
-                    iInfo.Dispose();
                     iInfo = null;
                 }
 

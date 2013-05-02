@@ -269,11 +269,20 @@ namespace OpenHome.Av
             iService = null;
         }
 
-        public void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback)
+        public Type Type
+        {
+            get
+            {
+                return typeof(Receiver);
+            }
+        }
+
+        public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
             if (iService == null && iPendingService == null)
             {
-                iPendingService = new CpProxyAvOpenhomeOrgReceiver1(aDevice.Device);
+                WatchableDevice d = aDevice as WatchableDevice;
+                iPendingService = new CpProxyAvOpenhomeOrgReceiver1(d.Device);
                 iPendingService.SetPropertyInitialEvent(delegate
                 {
                     iThread.Schedule(() =>
@@ -318,15 +327,28 @@ namespace OpenHome.Av
 
     public class MockWatchableReceiverFactory : IWatchableServiceFactory
     {
-        public MockWatchableReceiverFactory(IWatchableThread aThread)
+        public MockWatchableReceiverFactory(IWatchableThread aThread, string aMetadata, string aProtocolInfo, string aTransportState, string aUri)
         {
             iThread = aThread;
 
             iPendingService = false;
             iService = null;
+
+            iMetadata = aMetadata;
+            iProtocolInfo = aProtocolInfo;
+            iTransportState = aTransportState;
+            iUri = aUri;
         }
 
-        public void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback)
+        public Type Type
+        {
+            get
+            {
+                return typeof(Receiver);
+            }
+        }
+
+        public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
             if (iService == null && iPendingService == false)
             {
@@ -335,7 +357,7 @@ namespace OpenHome.Av
                 {
                     if (iPendingService)
                     {
-                        //iService = new MockWatchableReceiver(iThread, string.Format("Receiver({0})", aDevice.Udn), aDevice);
+                        iService = new MockWatchableReceiver(iThread, string.Format("Receiver({0})", aDevice.Udn), aDevice, iMetadata, iProtocolInfo, iTransportState, iUri);
                         iPendingService = false;
                         aCallback(iService);
                     }
@@ -357,6 +379,11 @@ namespace OpenHome.Av
         private bool iPendingService;
         private MockWatchableReceiver iService;
         private IWatchableThread iThread;
+
+        private string iMetadata;
+        private string iProtocolInfo;
+        private string iTransportState;
+        private string iUri;
     }
 
     public class MockWatchableReceiver : Receiver, IMockable

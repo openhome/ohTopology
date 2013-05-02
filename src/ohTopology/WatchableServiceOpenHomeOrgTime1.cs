@@ -198,11 +198,20 @@ namespace OpenHome.Av
             iService = null;
         }
 
-        public void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback)
+        public Type Type
+        {
+            get
+            {
+                return typeof(Time);
+            }
+        }
+
+        public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
             if (iService == null && iPendingService == null)
             {
-                iPendingService = new CpProxyAvOpenhomeOrgTime1(aDevice.Device);
+                WatchableDevice d = aDevice as WatchableDevice;
+                iPendingService = new CpProxyAvOpenhomeOrgTime1(d.Device);
                 iPendingService.SetPropertyInitialEvent(delegate
                 {
                     iThread.Schedule(() =>
@@ -246,15 +255,26 @@ namespace OpenHome.Av
 
     public class MockWatchableTimeFactory : IWatchableServiceFactory
     {
-        public MockWatchableTimeFactory(IWatchableThread aThread)
+        public MockWatchableTimeFactory(IWatchableThread aThread, uint aSeconds, uint aDuration)
         {
             iThread = aThread;
 
             iPendingService = false;
             iService = null;
+
+            iSeconds = aSeconds;
+            iDuration = aDuration;
         }
 
-        public void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback)
+        public Type Type
+        {
+            get
+            {
+                return typeof(Time);
+            }
+        }
+
+        public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
             if (iService == null && iPendingService == false)
             {
@@ -263,7 +283,7 @@ namespace OpenHome.Av
                 {
                     if (iPendingService)
                     {
-                        //iService = new MockWatchableTime(iThread, string.Format("Time({0})", aDevice.Udn), aDevice);
+                        iService = new MockWatchableTime(iThread, string.Format("Time({0})", aDevice.Udn), aDevice, iSeconds, iDuration);
                         iPendingService = false;
                         aCallback(iService);
                     }
@@ -285,6 +305,9 @@ namespace OpenHome.Av
         private bool iPendingService;
         private MockWatchableTime iService;
         private IWatchableThread iThread;
+
+        private uint iSeconds;
+        private uint iDuration;
     }
 
     public class MockWatchableTime : Time, IMockable

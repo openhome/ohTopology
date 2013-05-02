@@ -449,11 +449,20 @@ namespace OpenHome.Av
             iService = null;
         }
 
-        public void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback)
+        public Type Type
+        {
+            get
+            {
+                return typeof(Info);
+            }
+        }
+
+        public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
             if (iService == null && iPendingService == null)
             {
-                iPendingService = new CpProxyAvOpenhomeOrgInfo1(aDevice.Device);
+                WatchableDevice d = aDevice as WatchableDevice;
+                iPendingService = new CpProxyAvOpenhomeOrgInfo1(d.Device);
                 iPendingService.SetPropertyInitialEvent(delegate
                 {
                     iThread.Schedule(() =>
@@ -497,15 +506,27 @@ namespace OpenHome.Av
 
     public class MockWatchableInfoFactory : IWatchableServiceFactory
     {
-        public MockWatchableInfoFactory(IWatchableThread aThread)
+        public MockWatchableInfoFactory(IWatchableThread aThread, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
         {
             iThread = aThread;
 
             iPendingService = false;
             iService = null;
+
+            iDetails = aDetails;
+            iMetadata = aMetadata;
+            iMetatext = aMetatext;
         }
 
-        public void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback)
+        public Type Type
+        {
+            get
+            {
+                return typeof(Info);
+            }
+        }
+
+        public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
             if (iService == null && iPendingService == false)
             {
@@ -514,8 +535,7 @@ namespace OpenHome.Av
                 {
                     if (iPendingService)
                     {
-                        iService = new MockWatchableInfo(iThread, string.Format("Info({0})", aDevice.Udn), aDevice,
-                            new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty));
+                        iService = new MockWatchableInfo(iThread, string.Format("Info({0})", aDevice.Udn), aDevice, iDetails, iMetadata, iMetatext);
                         iPendingService = false;
                         aCallback(iService);
                     }
@@ -537,6 +557,10 @@ namespace OpenHome.Av
         private bool iPendingService;
         private MockWatchableInfo iService;
         private IWatchableThread iThread;
+
+        private IInfoDetails iDetails;
+        private IInfoMetadata iMetadata;
+        private IInfoMetatext iMetatext;
     }
 
     public class MockWatchableInfo : Info, IMockable

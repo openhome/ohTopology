@@ -14,14 +14,21 @@ namespace OpenHome.Av
 
     public interface IWatchableServiceFactory
     {
-        void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback);
+        Type Type { get; }
+        void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback);
         void Unsubscribe();
+    }
+
+    public interface IService : IDisposable
+    {
+        Type Type { get; } 
     }
 
     public interface IWatchableDevice
     {
         string Udn { get; }
         bool GetAttribute(string aKey, out string aValue);
+        //void Create<T>(Action<IWatchableDevice, T> aCallback) where T : IService;
         void Subscribe<T>(Action<IWatchableDevice, T> aCallback) where T : IWatchableService;
         void Unsubscribe<T>() where T : IWatchableService;
     }
@@ -223,6 +230,7 @@ namespace OpenHome.Av
         {
             iThread = aThread;
             iUdn = aUdn;
+
             iServices = new Dictionary<Type, IWatchableService>();
         }
 
@@ -248,8 +256,7 @@ namespace OpenHome.Av
         public void Subscribe<T>(Action<IWatchableDevice, T> aCallback) where T : IWatchableService
         {
             IWatchableService service;
-
-            if (iServices.TryGetValue(typeof(T), out service))
+            if(iServices.TryGetValue(typeof(T), out service))
             {
                 iThread.Schedule(() =>
                 {
@@ -280,9 +287,9 @@ namespace OpenHome.Av
         {
         }
 
-        protected Dictionary<Type, IWatchableService> iServices;
-
         private IWatchableThread iThread;
         private string iUdn;
+
+        protected Dictionary<Type, IWatchableService> iServices;
     }
 }

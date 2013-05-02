@@ -13,7 +13,9 @@ namespace OpenHome.Av
         public MockWatchableDsm(IWatchableThread aThread, string aUdn)
             : base(aThread, aUdn)
         {
-            // add a mock product service
+            // add a factory for each type of watchable service
+
+            // product service
             List<SourceXml.Source> sources = new List<SourceXml.Source>();
             sources.Add(new SourceXml.Source("Playlist", "Playlist", true));
             sources.Add(new SourceXml.Source("Radio", "Radio", true));
@@ -28,38 +30,33 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("TOSLINK1", "Digital", true));
             SourceXml xml = new SourceXml(sources.ToArray());
 
-            // product service
-            MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, this, "Main Room", "Mock DS", 0, xml, true, "Info Time Volume Sender",
+            Add<Product>(new MockWatchableProduct(aThread, aUdn, this, "Main Room", "Mock DSM", 0, xml, true, "Info Time Volume Sender",
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
-                "", "Linn High Fidelity System Component", "Mock DS", "",
-                "", "Linn High Fidelity System Component", "");
-            Add<Product>(product);
+                "", "Linn High Fidelity System Component", "Mock DSM", "",
+                "", "Linn High Fidelity System Component", ""));
 
             // volume service
-            MockWatchableVolume volume = new MockWatchableVolume(aThread, aUdn, this, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80);
-            Add<Volume>(volume);
+            Add<Volume>(new MockWatchableVolume(aThread, aUdn, this, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
 
             // info service
-            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, this, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty));
-            Add<Info>(info);
+            Add<Info>(new MockWatchableInfo(aThread, aUdn, this, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
 
             // time service
-            MockWatchableTime time = new MockWatchableTime(aThread, aUdn, this, 0, 0);
-            Add<Time>(time);
+            Add<Time>(new MockWatchableTime(aThread, aUdn, this, 0, 0));
 
             // receiver service
-            MockWatchableReceiver receiver = new MockWatchableReceiver(aThread, aUdn, this, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty);
-            Add<Receiver>(receiver);
+            Add<Receiver>(new MockWatchableReceiver(aThread, aUdn, this, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
 
             // sender service
-            MockWatchableSender sender = new MockWatchableSender(aThread, aUdn, this, "Info Time", false, string.Empty, string.Empty, "Enabled");
-            Add<Sender>(sender);
+            Add<Sender>(new MockWatchableSender(aThread, aUdn, this, "Info Time", false, string.Empty, string.Empty, "Enabled"));
         }
 
         public MockWatchableDsm(IWatchableThread aThread, string aUdn, string aRoom, string aName, string aAttributes)
             : base(aThread, aUdn)
         {
-            // add a mock product service
+            // add a factory for each type of watchable service
+
+            // product service
             List<SourceXml.Source> sources = new List<SourceXml.Source>();
             sources.Add(new SourceXml.Source("Playlist", "Playlist", true));
             sources.Add(new SourceXml.Source("Radio", "Radio", true));
@@ -75,32 +72,25 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("TOSLINK2", "Digital", true));
             SourceXml xml = new SourceXml(sources.ToArray());
 
-            // product service
-            MockWatchableProduct product = new MockWatchableProduct(aThread, aUdn, this, aRoom, aName, 0, xml, true, aAttributes,
+            Add<Product>(new MockWatchableProduct(aThread, aUdn, this, aRoom, aName, 0, xml, true, aAttributes,
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DSM", "",
-                "", "Linn High Fidelity System Component", "");
-            Add<Product>(product);
+                "", "Linn High Fidelity System Component", ""));
 
             // volume service
-            MockWatchableVolume volume = new MockWatchableVolume(aThread, aUdn, this, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80);
-            Add<Volume>(volume);
+            Add<Volume>(new MockWatchableVolume(aThread, aUdn, this, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
 
             // info service
-            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, this, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty));
-            Add<Info>(info);
+            Add<Info>(new MockWatchableInfo(aThread, aUdn, this, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
 
             // time service
-            MockWatchableTime time = new MockWatchableTime(aThread, aUdn, this, 0, 0);
-            Add<Time>(time);
+            Add<Time>(new MockWatchableTime(aThread, aUdn, this, 0, 0));
 
             // receiver service
-            MockWatchableReceiver receiver = new MockWatchableReceiver(aThread, aUdn, this, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty);
-            Add<Receiver>(receiver);
+            Add<Receiver>(new MockWatchableReceiver(aThread, aUdn, this, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
 
             // sender service
-            MockWatchableSender sender = new MockWatchableSender(aThread, aUdn, this, string.Empty, false, string.Empty, string.Empty, "Enabled");
-            Add<Sender>(sender);
+            Add<Sender>(new MockWatchableSender(aThread, aUdn, this, "Info Time", false, string.Empty, string.Empty, "Enabled"));
         }
 
         public override void Execute(IEnumerable<string> aValue)

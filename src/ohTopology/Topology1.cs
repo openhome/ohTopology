@@ -54,11 +54,14 @@ namespace OpenHome.Av
             iPendingSubscriptions = null;
 
             // dispose of all products, which will in turn unsubscribe
-            foreach (Product p in iProductLookup.Values)
+            foreach (IWatchableDevice d in iProductLookup.Keys)
             {
-                p.Dispose();
+                d.Unsubscribe<Product>();
             }
             iProductLookup = null;
+
+            iProducts.Dispose();
+            iProducts = null;
 
             iDisposed = true;
         }
@@ -91,6 +94,13 @@ namespace OpenHome.Av
 
         public void UnorderedRemove(IWatchableDevice aItem)
         {
+            if (iPendingSubscriptions.Contains(aItem))
+            {
+                aItem.Unsubscribe<Product>();
+                iPendingSubscriptions.Remove(aItem);
+                return;
+            }
+
             Product product;
             if (iProductLookup.TryGetValue(aItem, out product))
             {
@@ -101,16 +111,23 @@ namespace OpenHome.Av
                 // schedule Product disposal
                 iThread.Schedule(() =>
                 {
-                    product.Dispose();
+                    aItem.Unsubscribe<Product>();
                 });
             }
         }
 
         private void Subscribed(IWatchableDevice aDevice, Product aProduct)
         {
-            iProducts.Add(aProduct);
-            iProductLookup.Add(aDevice, aProduct);
-            iPendingSubscriptions.Remove(aDevice);
+            if (iPendingSubscriptions.Contains(aDevice))
+            {
+                iProducts.Add(aProduct);
+                iProductLookup.Add(aDevice, aProduct);
+                iPendingSubscriptions.Remove(aDevice);
+            }
+            else
+            {
+                aDevice.Unsubscribe<Product>();
+            }
         }
 
         private bool iDisposed;

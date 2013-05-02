@@ -798,11 +798,20 @@ namespace OpenHome.Av
             iService = null;
         }
 
-        public void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback)
+        public Type Type
+        {
+            get
+            {
+                return typeof(Volume);
+            }
+        }
+
+        public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
             if (iService == null && iPendingService == null)
             {
-                iPendingService = new CpProxyAvOpenhomeOrgVolume1(aDevice.Device);
+                WatchableDevice d = aDevice as WatchableDevice;
+                iPendingService = new CpProxyAvOpenhomeOrgVolume1(d.Device);
                 iPendingService.SetPropertyInitialEvent(delegate
                 {
                     iThread.Schedule(() =>
@@ -846,15 +855,36 @@ namespace OpenHome.Av
 
     public class MockWatchableVolumeFactory : IWatchableServiceFactory
     {
-        public MockWatchableVolumeFactory(IWatchableThread aThread)
+        public MockWatchableVolumeFactory(IWatchableThread aThread, int aBalance, uint aBalanceMax, int aFade, uint aFadeMax, bool aMute, uint aVolume, uint aVolumeLimit, uint aVolumeMax,
+            uint aVolumeMilliDbPerStep, uint aVolumeSteps, uint aVolumeUnity)
         {
             iThread = aThread;
 
             iPendingService = false;
             iService = null;
+
+            iBalance = aBalance;
+            iBalanceMax = aBalanceMax;
+            iFade = aFade;
+            iFadeMax = aFadeMax;
+            iMute = aMute;
+            iVolume = aVolume;
+            iVolumeLimit = aVolumeLimit;
+            iVolumeMax = aVolumeMax;
+            iVolumeMilliDbPerStep = aVolumeMilliDbPerStep;
+            iVolumeSteps = aVolumeSteps;
+            iVolumeUnity = aVolumeUnity;
         }
 
-        public void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback)
+        public Type Type
+        {
+            get
+            {
+                return typeof(Volume);
+            }
+        }
+
+        public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
             if (iService == null && iPendingService == false)
             {
@@ -863,7 +893,8 @@ namespace OpenHome.Av
                 {
                     if (iPendingService)
                     {
-                        //iService = new MockWatchableVolume(iThread, string.Format("Volume({0})", aDevice.Udn), aDevice);
+                        iService = new MockWatchableVolume(iThread, string.Format("Volume({0})", aDevice.Udn), aDevice, iBalance, iBalanceMax, iFade,
+                            iFadeMax, iMute, iVolume, iVolumeLimit, iVolumeMax, iVolumeMilliDbPerStep, iVolumeSteps, iVolumeUnity);
                         iPendingService = false;
                         aCallback(iService);
                     }
@@ -885,6 +916,18 @@ namespace OpenHome.Av
         private bool iPendingService;
         private MockWatchableVolume iService;
         private IWatchableThread iThread;
+
+        private int iBalance;
+        private uint iBalanceMax;
+        private int iFade;
+        private uint iFadeMax;
+        private bool iMute;
+        private uint iVolume;
+        private uint iVolumeLimit;
+        private uint iVolumeMax;
+        private uint iVolumeMilliDbPerStep;
+        private uint iVolumeSteps;
+        private uint iVolumeUnity;
     }
 
     public class MockWatchableVolume : Volume, IMockable

@@ -444,16 +444,25 @@ namespace OpenHome.Av
             iService = null;
         }
 
-        public void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback)
+        public Type Type
+        {
+            get
+            {
+                return typeof(Product);
+            }
+        }
+
+        public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
             if (iService == null && iPendingService == null)
             {
-                iPendingService = new CpProxyAvOpenhomeOrgProduct1(aDevice.Device);
+                WatchableDevice d = aDevice as WatchableDevice;
+                iPendingService = new CpProxyAvOpenhomeOrgProduct1(d.Device);
                 iPendingService.SetPropertyInitialEvent(delegate
                 {
                     iThread.Schedule(() =>
                     {
-                        iService = new WatchableProduct(iThread, string.Format("Product({0})", aDevice.Udn), aDevice, iPendingService);
+                        iService = new WatchableProduct(iThread, string.Format("{0}", aDevice.Udn), aDevice, iPendingService);
                         iPendingService = null;
                         aCallback(iService);
                     });
@@ -751,15 +760,43 @@ namespace OpenHome.Av
 
     public class MockWatchableProductFactory : IWatchableServiceFactory
     {
-        public MockWatchableProductFactory(IWatchableThread aThread)
+        public MockWatchableProductFactory(IWatchableThread aThread, string aRoom, string aName, uint aSourceIndex, SourceXml aSourceXmlFactory, bool aStandby,
+            string aAttributes, string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl, string aModelImageUri, string aModelInfo, string aModelName,
+            string aModelUrl, string aProductImageUri, string aProductInfo, string aProductUrl)
         {
             iThread = aThread;
 
             iPendingService = false;
             iService = null;
+
+            iRoom = aRoom;
+            iName = aName;
+            iSourceIndex = aSourceIndex;
+            iSourceXmlFactory = aSourceXmlFactory;
+            iStandby = aStandby;
+            iAttributes = aAttributes;
+            iManufacturerImageUri = aManufacturerImageUri;
+            iManufacturerInfo = aManufacturerInfo;
+            iManufacturerName = aManufacturerName;
+            iManufacturerUrl = aManufacturerUrl;
+            iModelImageUri = aModelImageUri;
+            iModelInfo = aModelInfo;
+            iModelName = aModelName;
+            iModelUrl = aModelUrl;
+            iProductImageUri = aProductImageUri;
+            iProductInfo = aProductInfo;
+            iProductUrl = aProductUrl;
         }
 
-        public void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback)
+        public Type Type
+        {
+            get
+            {
+                return typeof(Product);
+            }
+        }
+
+        public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
             if (iService == null && iPendingService == false)
             {
@@ -768,7 +805,9 @@ namespace OpenHome.Av
                 {
                     if (iPendingService)
                     {
-                        //iService = new MockWatchableProduct(iThread, string.Format("Product({0})", aDevice.Udn), aDevice);
+                        iService = new MockWatchableProduct(iThread, string.Format("{0}", aDevice.Udn), aDevice, iRoom, iName, iSourceIndex,
+                            iSourceXmlFactory, iStandby, iAttributes, iManufacturerImageUri, iManufacturerInfo, iManufacturerName, iManufacturerUrl,
+                            iModelImageUri, iModelInfo, iModelName, iModelUrl, iProductImageUri, iProductInfo, iProductUrl);
                         iPendingService = false;
                         aCallback(iService);
                     }
@@ -790,6 +829,24 @@ namespace OpenHome.Av
         private bool iPendingService;
         private MockWatchableProduct iService;
         private IWatchableThread iThread;
+
+        private string iRoom;
+        private string iName;
+        private uint iSourceIndex;
+        private SourceXml iSourceXmlFactory;
+        private bool iStandby;
+        private string iAttributes;
+        private string iManufacturerImageUri;
+        private string iManufacturerInfo;
+        private string iManufacturerName;
+        private string iManufacturerUrl;
+        private string iModelImageUri;
+        private string iModelInfo;
+        private string iModelName;
+        private string iModelUrl;
+        private string iProductImageUri;
+        private string iProductInfo;
+        private string iProductUrl;
     }
 
     public class MockWatchableProduct : Product, IMockable
