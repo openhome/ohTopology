@@ -7,22 +7,27 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    public interface IServiceOpenHomeOrgSender1
+    public interface IServiceOpenHomeOrgSender1 : IWatchableService
     {
         IWatchable<bool> Audio { get; }
         IWatchable<string> Metadata { get; }
         IWatchable<string> Status { get; }
     }
 
-    public abstract class Sender : IWatchableService, IServiceOpenHomeOrgSender1
+    public class Sender : IServiceOpenHomeOrgSender1
     {
-        protected Sender(string aId, IServiceOpenHomeOrgSender1 aService)
+        protected Sender(string aId, IWatchableDevice aDevice, IServiceOpenHomeOrgSender1 aService)
         {
             iId = aId;
+            iDevice = aDevice;
             iService = aService;
         }
 
-        public abstract void Dispose();
+        public void Dispose()
+        {
+            iService.Dispose();
+            iService = null;
+        }
 
         public string Id
         {
@@ -32,11 +37,11 @@ namespace OpenHome.Av
             }
         }
 
-        public string Type
+        public IWatchableDevice Device
         {
             get
             {
-                return "AvOpenHomeSender1";
+                return iDevice;
             }
         }
 
@@ -81,6 +86,7 @@ namespace OpenHome.Av
         }
 
         private string iId;
+        private IWatchableDevice iDevice;
 
         protected IServiceOpenHomeOrgSender1 iService;
         protected string iAttributes;
@@ -117,6 +123,7 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgSender1.Dispose");
                 }
 
+                iService.Dispose();
                 iService = null;
 
                 iDisposed = true;
@@ -280,7 +287,7 @@ namespace OpenHome.Av
                 {
                     iThread.Schedule(() =>
                     {
-                        iService = new WatchableSender(iThread, string.Format("Sender({0})", aDevice.Udn), iPendingService);
+                        iService = new WatchableSender(iThread, string.Format("Sender({0})", aDevice.Udn), aDevice, iPendingService);
                         iPendingService = null;
                         aCallback(iService);
                     });
@@ -311,37 +318,64 @@ namespace OpenHome.Av
 
     public class WatchableSender : Sender
     {
-        public WatchableSender(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgSender1 aService)
-            : base(aId, new ServiceOpenHomeOrgSender1(aThread, aId, aService))
+        public WatchableSender(IWatchableThread aThread, string aId, IWatchableDevice aDevice, CpProxyAvOpenhomeOrgSender1 aService)
+            : base(aId, aDevice, new ServiceOpenHomeOrgSender1(aThread, aId, aService))
         {
             iAttributes = aService.PropertyAttributes();
             iPresentationUrl = aService.PropertyPresentationUrl();
+        }
+    }
 
-            iCpService = aService;
+    public class MockWatchableSenderFactory : IWatchableServiceFactory
+    {
+        public MockWatchableSenderFactory(IWatchableThread aThread)
+        {
+            iThread = aThread;
+
+            iPendingService = false;
+            iService = null;
         }
 
-        public override void Dispose()
+        public void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
-            if (iCpService != null)
+            if (iService == null && iPendingService == false)
             {
-                iCpService.Dispose();
+                iPendingService = true;
+                iThread.Schedule(() =>
+                {
+                    if (iPendingService)
+                    {
+                        //iService = new MockWatchableSender(iThread, string.Format("Sender({0})", aDevice.Udn), aDevice);
+                        iPendingService = false;
+                        aCallback(iService);
+                    }
+                });
             }
         }
 
-        private CpProxyAvOpenhomeOrgSender1 iCpService;
+        public void Unsubscribe()
+        {
+            iPendingService = false;
+
+            if (iService != null)
+            {
+                iService.Dispose();
+                iService = null;
+            }
+        }
+
+        private bool iPendingService;
+        private MockWatchableSender iService;
+        private IWatchableThread iThread;
     }
 
     public class MockWatchableSender : Sender, IMockable
     {
-        public MockWatchableSender(IWatchableThread aThread, string aId, string aAttributes, bool aAudio, string aMetadata, string aPresentationUrl, string aStatus)
-            : base(aId, new MockServiceOpenHomeOrgSender1(aThread, aId, aAudio, aMetadata, aStatus))
+        public MockWatchableSender(IWatchableThread aThread, string aId, IWatchableDevice aDevice, string aAttributes, bool aAudio, string aMetadata, string aPresentationUrl, string aStatus)
+            : base(aId, aDevice, new MockServiceOpenHomeOrgSender1(aThread, aId, aAudio, aMetadata, aStatus))
         {
             iAttributes = aAttributes;
             iPresentationUrl = aPresentationUrl;
-        }
-
-        public override void Dispose()
-        {
         }
 
         public void Execute(IEnumerable<string> aValue)
@@ -349,8 +383,8 @@ namespace OpenHome.Av
             string command = aValue.First().ToLowerInvariant();
             if (command == "audio" || command == "metadata" || command == "status")
             {
-                MockServiceOpenHomeOrgSender1 i = iService as MockServiceOpenHomeOrgSender1;
-                i.Execute(aValue);
+                MockServiceOpenHomeOrgSender1 s = iService as MockServiceOpenHomeOrgSender1;
+                s.Execute(aValue);
             }
             else if (command == "attributes")
             {

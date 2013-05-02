@@ -7,22 +7,27 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    public interface IServiceOpenHomeOrgReceiver1
+    public interface IServiceOpenHomeOrgReceiver1 : IWatchableService
     {
         IWatchable<string> Metadata { get; }
         IWatchable<string> TransportState { get; }
         IWatchable<string> Uri { get; }
     }
 
-    public abstract class Receiver : IWatchableService, IServiceOpenHomeOrgReceiver1
+    public class Receiver : IServiceOpenHomeOrgReceiver1
     {
-        protected Receiver(string aId, IServiceOpenHomeOrgReceiver1 aService)
+        protected Receiver(string aId, IWatchableDevice aDevice, IServiceOpenHomeOrgReceiver1 aService)
         {
             iId = aId;
+            iDevice = aDevice;
             iService = aService;
         }
 
-        public abstract void Dispose();
+        public void Dispose()
+        {
+            iService.Dispose();
+            iService = null;
+        }
 
         public string Id
         {
@@ -32,11 +37,11 @@ namespace OpenHome.Av
             }
         }
 
-        public string Type
+        public IWatchableDevice Device
         {
             get
             {
-                return "AvOpenHomeReceiver1";
+                return iDevice;
             }
         }
 
@@ -73,12 +78,13 @@ namespace OpenHome.Av
         }
 
         private string iId;
+        private IWatchableDevice iDevice;
 
         protected IServiceOpenHomeOrgReceiver1 iService;
         protected string iProtocolInfo;
     }
 
-    public class ServiceOpenHomeOrgReceiver1 : IServiceOpenHomeOrgReceiver1, IDisposable
+    public class ServiceOpenHomeOrgReceiver1 : IServiceOpenHomeOrgReceiver1
     {
         public ServiceOpenHomeOrgReceiver1(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgReceiver1 aService)
         {
@@ -108,6 +114,7 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgReceiver1.Dispose");
                 }
 
+                iService.Dispose();
                 iService = null;
 
                 iDisposed = true;
@@ -187,7 +194,7 @@ namespace OpenHome.Av
         private Watchable<string> iUri;
     }
 
-    public class MockServiceOpenHomeOrgReceiver1 : IServiceOpenHomeOrgReceiver1, IMockable, IDisposable
+    public class MockServiceOpenHomeOrgReceiver1 : IServiceOpenHomeOrgReceiver1, IMockable
     {
         public MockServiceOpenHomeOrgReceiver1(IWatchableThread aThread, string aId, string aMetadata, string aTransportState, string aUri)
         {
@@ -271,7 +278,7 @@ namespace OpenHome.Av
                 {
                     iThread.Schedule(() =>
                     {
-                        iService = new WatchableReceiver(iThread, string.Format("Receiver({0})", aDevice.Udn), iPendingService);
+                        iService = new WatchableReceiver(iThread, string.Format("Receiver({0})", aDevice.Udn), aDevice, iPendingService);
                         iPendingService = null;
                         aCallback(iService);
                     });
@@ -302,35 +309,62 @@ namespace OpenHome.Av
 
     public class WatchableReceiver : Receiver
     {
-        public WatchableReceiver(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgReceiver1 aService)
-            : base(aId, new ServiceOpenHomeOrgReceiver1(aThread, aId, aService))
+        public WatchableReceiver(IWatchableThread aThread, string aId, IWatchableDevice aDevice, CpProxyAvOpenhomeOrgReceiver1 aService)
+            : base(aId, aDevice, new ServiceOpenHomeOrgReceiver1(aThread, aId, aService))
         {
             iProtocolInfo = aService.PropertyProtocolInfo();
+        }
+    }
 
-            iCpService = aService;
+    public class MockWatchableReceiverFactory : IWatchableServiceFactory
+    {
+        public MockWatchableReceiverFactory(IWatchableThread aThread)
+        {
+            iThread = aThread;
+
+            iPendingService = false;
+            iService = null;
         }
 
-        public override void Dispose()
+        public void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
-            if (iCpService != null)
+            if (iService == null && iPendingService == false)
             {
-                iCpService.Dispose();
+                iPendingService = true;
+                iThread.Schedule(() =>
+                {
+                    if (iPendingService)
+                    {
+                        //iService = new MockWatchableReceiver(iThread, string.Format("Receiver({0})", aDevice.Udn), aDevice);
+                        iPendingService = false;
+                        aCallback(iService);
+                    }
+                });
             }
         }
 
-        private CpProxyAvOpenhomeOrgReceiver1 iCpService;
+        public void Unsubscribe()
+        {
+            iPendingService = false;
+
+            if (iService != null)
+            {
+                iService.Dispose();
+                iService = null;
+            }
+        }
+
+        private bool iPendingService;
+        private MockWatchableReceiver iService;
+        private IWatchableThread iThread;
     }
 
     public class MockWatchableReceiver : Receiver, IMockable
     {
-        public MockWatchableReceiver(IWatchableThread aThread, string aId, string aMetadata, string aProtocolInfo, string aTransportState, string aUri)
-            : base(aId, new MockServiceOpenHomeOrgReceiver1(aThread, aId, aMetadata, aTransportState, aUri))
+        public MockWatchableReceiver(IWatchableThread aThread, string aId, IWatchableDevice aDevice, string aMetadata, string aProtocolInfo, string aTransportState, string aUri)
+            : base(aId, aDevice, new MockServiceOpenHomeOrgReceiver1(aThread, aId, aMetadata, aTransportState, aUri))
         {
             iProtocolInfo = aProtocolInfo;
-        }
-
-        public override void Dispose()
-        {
         }
 
         public void Execute(IEnumerable<string> aValue)
@@ -338,8 +372,8 @@ namespace OpenHome.Av
             string command = aValue.First().ToLowerInvariant();
             if(command == "metadata" || command == "transportstate" || command == "uri")
             {
-                MockServiceOpenHomeOrgReceiver1 i = iService as MockServiceOpenHomeOrgReceiver1;
-                i.Execute(aValue);
+                MockServiceOpenHomeOrgReceiver1 r = iService as MockServiceOpenHomeOrgReceiver1;
+                r.Execute(aValue);
             }
             else if (command == "protocolinfo")
             {

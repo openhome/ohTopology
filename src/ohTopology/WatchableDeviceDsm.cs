@@ -36,23 +36,23 @@ namespace OpenHome.Av
             Add<Product>(product);
 
             // volume service
-            MockWatchableVolume volume = new MockWatchableVolume(aThread, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80);
+            MockWatchableVolume volume = new MockWatchableVolume(aThread, aUdn, this, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80);
             Add<Volume>(volume);
 
             // info service
-            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty));
+            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, this, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty));
             Add<Info>(info);
 
             // time service
-            MockWatchableTime time = new MockWatchableTime(aThread, aUdn, 0, 0);
+            MockWatchableTime time = new MockWatchableTime(aThread, aUdn, this, 0, 0);
             Add<Time>(time);
 
             // receiver service
-            MockWatchableReceiver receiver = new MockWatchableReceiver(aThread, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty);
+            MockWatchableReceiver receiver = new MockWatchableReceiver(aThread, aUdn, this, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty);
             Add<Receiver>(receiver);
 
             // sender service
-            MockWatchableSender sender = new MockWatchableSender(aThread, aUdn, "Info Time", false, string.Empty, string.Empty, "Enabled");
+            MockWatchableSender sender = new MockWatchableSender(aThread, aUdn, this, "Info Time", false, string.Empty, string.Empty, "Enabled");
             Add<Sender>(sender);
         }
 
@@ -83,23 +83,23 @@ namespace OpenHome.Av
             Add<Product>(product);
 
             // volume service
-            MockWatchableVolume volume = new MockWatchableVolume(aThread, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80);
+            MockWatchableVolume volume = new MockWatchableVolume(aThread, aUdn, this, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80);
             Add<Volume>(volume);
 
             // info service
-            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty));
+            MockWatchableInfo info = new MockWatchableInfo(aThread, aUdn, this, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty));
             Add<Info>(info);
 
             // time service
-            MockWatchableTime time = new MockWatchableTime(aThread, aUdn, 0, 0);
+            MockWatchableTime time = new MockWatchableTime(aThread, aUdn, this, 0, 0);
             Add<Time>(time);
 
             // receiver service
-            MockWatchableReceiver receiver = new MockWatchableReceiver(aThread, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty);
+            MockWatchableReceiver receiver = new MockWatchableReceiver(aThread, aUdn, this, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty);
             Add<Receiver>(receiver);
 
             // sender service
-            MockWatchableSender sender = new MockWatchableSender(aThread, aUdn, string.Empty, false, string.Empty, string.Empty, "Enabled");
+            MockWatchableSender sender = new MockWatchableSender(aThread, aUdn, this, string.Empty, false, string.Empty, string.Empty, "Enabled");
             Add<Sender>(sender);
         }
 

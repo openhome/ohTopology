@@ -249,10 +249,6 @@ namespace OpenHome.Av
             throw new NotImplementedException();
         }
 
-        public void Subscribe<T>(Action<T> aCallback) where T : IWatchableService
-        {
-        }
-
         public void Subscribe<T>(Action<IWatchableDevice, T> aCallback) where T : IWatchableService
         {
             IWatchableService service;

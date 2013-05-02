@@ -28,7 +28,7 @@ namespace OpenHome.Av
         string Metatext { get; }
     }
 
-    public interface IServiceOpenHomeOrgInfo1
+    public interface IServiceOpenHomeOrgInfo1 : IWatchableService
     {
         IWatchable<IInfoDetails> Details { get; }
         IWatchable<IInfoMetadata> Metadata { get; }
@@ -149,15 +149,20 @@ namespace OpenHome.Av
         private string iMetatext;
     }
 
-    public abstract class Info : IWatchableService, IServiceOpenHomeOrgInfo1
+    public class Info : IServiceOpenHomeOrgInfo1
     {
-        protected Info(string aId, IServiceOpenHomeOrgInfo1 aService)
+        protected Info(string aId, IWatchableDevice aDevice, IServiceOpenHomeOrgInfo1 aService)
         {
             iId = aId;
+            iDevice = aDevice;
             iService = aService;
         }
 
-        public abstract void Dispose();
+        public void Dispose()
+        {
+            iService.Dispose();
+            iService = null;
+        }
 
         public string Id
         {
@@ -167,11 +172,11 @@ namespace OpenHome.Av
             }
         }
 
-        public string Type
+        public IWatchableDevice Device
         {
             get
             {
-                return "AvOpenHomeInfo1";
+                return iDevice;
             }
         }
 
@@ -200,10 +205,11 @@ namespace OpenHome.Av
         }
 
         private string iId;
+        private IWatchableDevice iDevice;
         protected IServiceOpenHomeOrgInfo1 iService;
     }
 
-    public class ServiceOpenHomeOrgInfo1 : IServiceOpenHomeOrgInfo1, IDisposable
+    public class ServiceOpenHomeOrgInfo1 : IServiceOpenHomeOrgInfo1
     {
         public ServiceOpenHomeOrgInfo1(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgInfo1 aService)
         {
@@ -247,6 +253,7 @@ namespace OpenHome.Av
                 iMetatext.Dispose();
                 iMetatext = null;
 
+                iService.Dispose();
                 iService = null;
 
                 iDisposed = true;
@@ -338,7 +345,7 @@ namespace OpenHome.Av
         private Watchable<IInfoMetatext> iMetatext;
     }
 
-    public class MockServiceOpenHomeOrgInfo1 : IServiceOpenHomeOrgInfo1, IMockable, IDisposable
+    public class MockServiceOpenHomeOrgInfo1 : IServiceOpenHomeOrgInfo1, IMockable
     {
         public MockServiceOpenHomeOrgInfo1(IWatchableThread aThread, string aId, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
         {
@@ -451,7 +458,7 @@ namespace OpenHome.Av
                 {
                     iThread.Schedule(() =>
                     {
-                        iService = new WatchableInfo(iThread, string.Format("Info({0})", aDevice.Udn), iPendingService);
+                        iService = new WatchableInfo(iThread, string.Format("Info({0})", aDevice.Udn), aDevice, iPendingService);
                         iPendingService = null;
                         aCallback(iService);
                     });
@@ -482,38 +489,61 @@ namespace OpenHome.Av
 
     public class WatchableInfo : Info
     {
-        public WatchableInfo(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgInfo1 aService)
-            : base(aId, new ServiceOpenHomeOrgInfo1(aThread, aId, aService))
+        public WatchableInfo(IWatchableThread aThread, string aId, IWatchableDevice aDevice, CpProxyAvOpenhomeOrgInfo1 aService)
+            : base(aId, aDevice, new ServiceOpenHomeOrgInfo1(aThread, aId, aService))
         {
-            iCpService = aService;
+        }
+    }
+
+    public class MockWatchableInfoFactory : IWatchableServiceFactory
+    {
+        public MockWatchableInfoFactory(IWatchableThread aThread)
+        {
+            iThread = aThread;
+
+            iPendingService = false;
+            iService = null;
         }
 
-        public override void Dispose()
+        public void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
-            if (iCpService != null)
+            if (iService == null && iPendingService == false)
             {
-                iCpService.Dispose();
+                iPendingService = true;
+                iThread.Schedule(() =>
+                {
+                    if (iPendingService)
+                    {
+                        iService = new MockWatchableInfo(iThread, string.Format("Info({0})", aDevice.Udn), aDevice,
+                            new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty));
+                        iPendingService = false;
+                        aCallback(iService);
+                    }
+                });
             }
-
-            ServiceOpenHomeOrgInfo1 service = iService as ServiceOpenHomeOrgInfo1;
-            service.Dispose();
         }
 
-        private CpProxyAvOpenhomeOrgInfo1 iCpService;
+        public void Unsubscribe()
+        {
+            iPendingService = false;
+
+            if (iService != null)
+            {
+                iService.Dispose();
+                iService = null;
+            }
+        }
+
+        private bool iPendingService;
+        private MockWatchableInfo iService;
+        private IWatchableThread iThread;
     }
 
     public class MockWatchableInfo : Info, IMockable
     {
-        public MockWatchableInfo(IWatchableThread aThread, string aId, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
-            : base(aId, new MockServiceOpenHomeOrgInfo1(aThread, aId, aDetails, aMetadata, aMetatext))
+        public MockWatchableInfo(IWatchableThread aThread, string aId, IWatchableDevice aDevice, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
+            : base(aId, aDevice, new MockServiceOpenHomeOrgInfo1(aThread, aId, aDetails, aMetadata, aMetatext))
         {
-        }
-
-        public override void Dispose()
-        {
-            // we cannot do this until mock services are created in a factory and not used as a singleton for a device
-            //MockServiceOpenHomeOrgInfo1 service = iService as MockServiceOpenHomeOrgInfo1;
-            //service.Dispose();
         }
 
         public void Execute(IEnumerable<string> aValue)
