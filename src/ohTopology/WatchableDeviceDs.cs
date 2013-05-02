@@ -24,7 +24,7 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("Net Aux", "NetAux", false));
             SourceXml xml = new SourceXml(sources.ToArray());
 
-            Add<Product>(new MockWatchableProduct(aThread, aUdn, this, "Main Room", "Mock DS", 0, xml, true, "Info Time Volume Sender",
+            Add<Product>(new MockWatchableProduct(aThread, aUdn, "Main Room", "Mock DS", 0, xml, true, "Info Time Volume Sender",
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DS", "",
                 "", "Linn High Fidelity System Component", ""));
@@ -33,16 +33,16 @@ namespace OpenHome.Av
             Add<Volume>(new MockWatchableVolume(aThread, aUdn, this, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
 
             // info service
-            Add<Info>(new MockWatchableInfo(aThread, aUdn, this, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
+            Add<Info>(new MockWatchableInfo(aThread, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
 
             // time service
-            Add<Time>(new MockWatchableTime(aThread, aUdn, this, 0, 0));
+            Add<Time>(new MockWatchableTime(aThread, aUdn, 0, 0));
 
             // receiver service
-            Add<Receiver>(new MockWatchableReceiver(aThread, aUdn, this, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
+            Add<Receiver>(new MockWatchableReceiver(aThread, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
 
             // sender service
-            Add<Sender>(new MockWatchableSender(aThread, aUdn, this, "Info Time", false, string.Empty, string.Empty, "Enabled"));
+            Add<Sender>(new MockWatchableSender(aThread, aUdn, "Info Time", false, string.Empty, string.Empty, "Enabled"));
         }
 
         public MockWatchableDs(IWatchableThread aThread, string aUdn, string aRoom, string aName, string aAttributes)
@@ -59,7 +59,7 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("Net Aux", "NetAux", false));
             SourceXml xml = new SourceXml(sources.ToArray());
 
-            Add<Product>(new MockWatchableProduct(aThread, aUdn, this, aRoom, aName, 0, xml, true, aAttributes,
+            Add<Product>(new MockWatchableProduct(aThread, aUdn, aRoom, aName, 0, xml, true, aAttributes,
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DS", "",
                 "", "Linn High Fidelity System Component", ""));
@@ -68,16 +68,16 @@ namespace OpenHome.Av
             Add<Volume>(new MockWatchableVolume(aThread, aUdn, this, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
 
             // info service
-            Add<Info>(new MockWatchableInfo(aThread, aUdn, this, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
+            Add<Info>(new MockWatchableInfo(aThread, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
 
             // time service
-            Add<Time>(new MockWatchableTime(aThread, aUdn, this, 0, 0));
+            Add<Time>(new MockWatchableTime(aThread, aUdn, 0, 0));
 
             // receiver service
-            Add<Receiver>(new MockWatchableReceiver(aThread, aUdn, this, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
+            Add<Receiver>(new MockWatchableReceiver(aThread, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
 
             // sender service
-            Add<Sender>(new MockWatchableSender(aThread, aUdn, this, "Info Time", false, string.Empty, string.Empty, "Enabled"));
+            Add<Sender>(new MockWatchableSender(aThread, aUdn, "Info Time", false, string.Empty, string.Empty, "Enabled"));
         }
 
         public override void Execute(IEnumerable<string> aValue)

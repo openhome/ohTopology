@@ -15,10 +15,9 @@ namespace OpenHome.Av
 
     public abstract class Time : IServiceOpenHomeOrgTime1, IWatchableService
     {
-        protected Time(string aId, IWatchableDevice aDevice)
+        protected Time(string aId)
         {
             iId = aId;
-            iDevice = aDevice;
         }
 
         public abstract void Dispose();
@@ -28,14 +27,6 @@ namespace OpenHome.Av
             get
             {
                 return iId;
-            }
-        }
-
-        public IWatchableDevice Device
-        {
-            get
-            {
-                return iDevice;
             }
         }
 
@@ -58,7 +49,6 @@ namespace OpenHome.Av
         }
 
         private string iId;
-        private IWatchableDevice iDevice;
     }
 
     public class ServiceOpenHomeOrgTime1 : IServiceOpenHomeOrgTime1, IDisposable
@@ -214,7 +204,7 @@ namespace OpenHome.Av
                 {
                     iThread.Schedule(() =>
                     {
-                        iService = new WatchableTime(iThread, string.Format("Time({0})", aDevice.Udn), aDevice, iPendingService);
+                        iService = new WatchableTime(iThread, string.Format("Time({0})", aDevice.Udn), iPendingService);
                         iPendingService = null;
                         aCallback(iService);
                     });
@@ -245,8 +235,8 @@ namespace OpenHome.Av
 
     public class WatchableTime : Time
     {
-        public WatchableTime(IWatchableThread aThread, string aId, IWatchableDevice aDevice, CpProxyAvOpenhomeOrgTime1 aService)
-            : base(aId, aDevice)
+        public WatchableTime(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgTime1 aService)
+            : base(aId)
         {
             iService = new ServiceOpenHomeOrgTime1(aThread, aId, aService);
         }
@@ -270,8 +260,8 @@ namespace OpenHome.Av
 
     public class MockWatchableTime : Time, IMockable
     {
-        public MockWatchableTime(IWatchableThread aThread, string aId, IWatchableDevice aDevice, uint aSeconds, uint aDuration)
-            : base(aId, aDevice)
+        public MockWatchableTime(IWatchableThread aThread, string aId, uint aSeconds, uint aDuration)
+            : base(aId)
         {
             iService = new MockServiceOpenHomeOrgTime1(aThread, aId, aSeconds, aDuration);
         }
@@ -296,5 +286,38 @@ namespace OpenHome.Av
         }
 
         private MockServiceOpenHomeOrgTime1 iService;
+    }
+
+    public class ServiceTime : IServiceOpenHomeOrgTime1, IService
+    {
+        public ServiceTime(IWatchableDevice aDevice, IServiceOpenHomeOrgTime1 aService)
+        {
+            iDevice = aDevice;
+            iService = aService;
+        }
+
+        public void Dispose()
+        {
+            iDevice.Unsubscribe<Time>();
+            iDevice = null;
+        }
+
+        public IWatchableDevice Device
+        {
+            get { return iDevice; }
+        }
+
+        public IWatchable<uint> Duration
+        {
+            get { return iService.Duration; }
+        }
+
+        public IWatchable<uint> Seconds
+        {
+            get { return iService.Seconds; }
+        }
+
+        private IWatchableDevice iDevice;
+        private IServiceOpenHomeOrgTime1 iService;
     }
 }

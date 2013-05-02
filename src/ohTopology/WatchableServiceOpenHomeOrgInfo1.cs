@@ -151,10 +151,9 @@ namespace OpenHome.Av
 
     public abstract class Info : IServiceOpenHomeOrgInfo1, IWatchableService
     {
-        protected Info(string aId, IWatchableDevice aDevice)
+        protected Info(string aId)
         {
             iId = aId;
-            iDevice = aDevice;
         }
 
         public abstract void Dispose();
@@ -166,14 +165,6 @@ namespace OpenHome.Av
             get
             {
                 return iId;
-            }
-        }
-
-        public IWatchableDevice Device
-        {
-            get
-            {
-                return iDevice;
             }
         }
 
@@ -202,7 +193,6 @@ namespace OpenHome.Av
         }
 
         private string iId;
-        private IWatchableDevice iDevice;
     }
 
     public class ServiceOpenHomeOrgInfo1 : IServiceOpenHomeOrgInfo1
@@ -455,7 +445,7 @@ namespace OpenHome.Av
                 {
                     iThread.Schedule(() =>
                     {
-                        iService = new WatchableInfo(iThread, string.Format("Info({0})", aDevice.Udn), aDevice, iPendingService);
+                        iService = new WatchableInfo(iThread, string.Format("Info({0})", aDevice.Udn), iPendingService);
                         iPendingService = null;
                         aCallback(iService);
                     });
@@ -486,8 +476,8 @@ namespace OpenHome.Av
 
     public class WatchableInfo : Info
     {
-        public WatchableInfo(IWatchableThread aThread, string aId, IWatchableDevice aDevice, CpProxyAvOpenhomeOrgInfo1 aService)
-            : base(aId, aDevice)
+        public WatchableInfo(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgInfo1 aService)
+            : base(aId)
         {
             iService = new ServiceOpenHomeOrgInfo1(aThread, aId, aService);
         }
@@ -511,8 +501,8 @@ namespace OpenHome.Av
 
     public class MockWatchableInfo : Info, IMockable
     {
-        public MockWatchableInfo(IWatchableThread aThread, string aId, IWatchableDevice aDevice, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
-            : base(aId, aDevice)
+        public MockWatchableInfo(IWatchableThread aThread, string aId, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
+            : base(aId)
         {
             iService = new MockServiceOpenHomeOrgInfo1(aThread, aId, aDetails, aMetadata, aMetatext);
         }
@@ -537,5 +527,43 @@ namespace OpenHome.Av
         }
 
         private MockServiceOpenHomeOrgInfo1 iService;
+    }
+
+    public class ServiceInfo : IServiceOpenHomeOrgInfo1, IService
+    {
+        public ServiceInfo(IWatchableDevice aDevice, IServiceOpenHomeOrgInfo1 aService)
+        {
+            iDevice = aDevice;
+            iService = aService;
+        }
+
+        public void Dispose()
+        {
+            iDevice.Unsubscribe<Info>();
+            iDevice = null;
+        }
+
+        public IWatchableDevice Device
+        {
+            get { return iDevice; }
+        }
+   
+        public IWatchable<IInfoDetails> Details
+        {
+            get { return iService.Details; }
+        }
+
+        public IWatchable<IInfoMetadata> Metadata
+        {
+            get { return iService.Metadata; }
+        }
+
+        public IWatchable<IInfoMetatext> Metatext
+        {
+            get { return iService.Metatext; }
+        }
+
+        private IWatchableDevice iDevice;
+        private IServiceOpenHomeOrgInfo1 iService;
     }
 }

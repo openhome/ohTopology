@@ -14,12 +14,16 @@ namespace OpenHome.Av
         IWatchable<string> Uri { get; }
     }
 
-    public abstract class Receiver : IServiceOpenHomeOrgReceiver1, IWatchableService
+    public interface IReceiver : IServiceOpenHomeOrgReceiver1
     {
-        protected Receiver(string aId, IWatchableDevice aDevice)
+        string ProtocolInfo{ get; }
+    }
+
+    public abstract class Receiver : IReceiver, IWatchableService
+    {
+        protected Receiver(string aId)
         {
             iId = aId;
-            iDevice = aDevice;
         }
 
         public abstract void Dispose();
@@ -29,14 +33,6 @@ namespace OpenHome.Av
             get
             {
                 return iId;
-            }
-        }
-
-        public IWatchableDevice Device
-        {
-            get
-            {
-                return iDevice;
             }
         }
 
@@ -75,7 +71,6 @@ namespace OpenHome.Av
         }
 
         private string iId;
-        private IWatchableDevice iDevice;
 
         protected string iProtocolInfo;
     }
@@ -292,7 +287,7 @@ namespace OpenHome.Av
                 {
                     iThread.Schedule(() =>
                     {
-                        iService = new WatchableReceiver(iThread, string.Format("Receiver({0})", aDevice.Udn), aDevice, iPendingService);
+                        iService = new WatchableReceiver(iThread, string.Format("Receiver({0})", aDevice.Udn), iPendingService);
                         iPendingService = null;
                         aCallback(iService);
                     });
@@ -323,8 +318,8 @@ namespace OpenHome.Av
 
     public class WatchableReceiver : Receiver
     {
-        public WatchableReceiver(IWatchableThread aThread, string aId, IWatchableDevice aDevice, CpProxyAvOpenhomeOrgReceiver1 aService)
-            : base(aId, aDevice)
+        public WatchableReceiver(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgReceiver1 aService)
+            : base(aId)
         {
             iProtocolInfo = aService.PropertyProtocolInfo();
 
@@ -350,8 +345,8 @@ namespace OpenHome.Av
     
     public class MockWatchableReceiver : Receiver, IMockable
     {
-        public MockWatchableReceiver(IWatchableThread aThread, string aId, IWatchableDevice aDevice, string aMetadata, string aProtocolInfo, string aTransportState, string aUri)
-            : base(aId, aDevice)
+        public MockWatchableReceiver(IWatchableThread aThread, string aId, string aMetadata, string aProtocolInfo, string aTransportState, string aUri)
+            : base(aId)
         {
             iProtocolInfo = aProtocolInfo;
 
@@ -391,5 +386,48 @@ namespace OpenHome.Av
         }
 
         private MockServiceOpenHomeOrgReceiver1 iService;
+    }
+
+    public class ServiceReceiver : IReceiver, IService
+    {
+        public ServiceReceiver(IWatchableDevice aDevice, IReceiver aService)
+        {
+            iDevice = aDevice;
+            iService = aService;
+        }
+
+        public void Dispose()
+        {
+            iDevice.Unsubscribe<Receiver>();
+            iDevice = null;
+        }
+
+        public IWatchableDevice Device
+        {
+            get { return iDevice; }
+        }
+
+        public string ProtocolInfo
+        {
+            get { return iService.ProtocolInfo; }
+        }
+
+        public IWatchable<string> Metadata
+        {
+            get { return iService.Metadata; }
+        }
+
+        public IWatchable<string> TransportState
+        {
+            get { return iService.TransportState; }
+        }
+
+        public IWatchable<string> Uri
+        {
+            get { return iService.Uri; }
+        }
+
+        private IWatchableDevice iDevice;
+        private IReceiver iService;
     }
 }

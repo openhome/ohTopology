@@ -952,4 +952,112 @@ namespace OpenHome.Av
 
         private MockServiceOpenHomeOrgVolume1 iService;
     }
+
+    public class ServiceVolume : IServiceOpenHomeOrgVolume1, IService
+    {
+        public ServiceVolume(IWatchableDevice aDevice, IServiceOpenHomeOrgVolume1 aService)
+        {
+            iDevice = aDevice;
+            iService = aService;
+        }
+
+        public void Dispose()
+        {
+            iDevice.Unsubscribe<Volume>();
+            iDevice = null;
+        }
+
+        public IWatchableDevice Device
+        {
+            get { return iDevice; }
+        }
+
+        public IWatchable<int> Balance
+        {
+            get { return iService.Balance; }
+        }
+
+        public IWatchable<uint> BalanceMax
+        {
+            get { return iService.BalanceMax; }
+        }
+
+        public IWatchable<int> Fade
+        {
+            get { return iService.Fade; }
+        }
+
+        public IWatchable<uint> FadeMax
+        {
+            get { return iService.FadeMax; }
+        }
+
+        public IWatchable<bool> Mute
+        {
+            get { return iService.Mute; }
+        }
+
+        public IWatchable<uint> Value
+        {
+            get { return iService.Value; }
+        }
+
+        public IWatchable<uint> VolumeLimit
+        {
+            get { return iService.VolumeLimit; }
+        }
+
+        public IWatchable<uint> VolumeMax
+        {
+            get { return iService.VolumeMax; }
+        }
+
+        public IWatchable<uint> VolumeMilliDbPerStep
+        {
+            get { return iService.VolumeMilliDbPerStep; }
+        }
+
+        public IWatchable<uint> VolumeSteps
+        {
+            get { return iService.VolumeSteps; }
+        }
+
+        public IWatchable<uint> VolumeUnity
+        {
+            get { return iService.VolumeUnity; }
+        }
+
+        public void SetBalance(int aValue)
+        {
+            iService.SetBalance(aValue);
+        }
+
+        public void SetFade(int aValue)
+        {
+            iService.SetFade(aValue);
+        }
+
+        public void SetMute(bool aValue)
+        {
+            iService.SetMute(aValue);
+        }
+
+        public void SetVolume(uint aValue)
+        {
+            iService.SetVolume(aValue);
+        }
+
+        public void VolumeDec()
+        {
+            iService.VolumeDec();
+        }
+
+        public void VolumeInc()
+        {
+            iService.VolumeInc();
+        }
+
+        private IWatchableDevice iDevice;
+        private IServiceOpenHomeOrgVolume1 iService;
+    }
 }

@@ -20,6 +20,7 @@ namespace OpenHome.Av
 
     public interface IService : IDisposable
     {
+        IWatchableDevice Device { get; }
     }
 
     public interface IWatchableDevice

@@ -19,7 +19,7 @@ namespace TestTopology
             }
         }
 
-        class ProductWatcher : IUnorderedWatcher<Product>
+        class ProductWatcher : IUnorderedWatcher<ServiceProduct>
         {
             public ProductWatcher(MockableScriptRunner aRunner)
             {
@@ -38,14 +38,14 @@ namespace TestTopology
             {
             }
 
-            public void UnorderedAdd(Product aItem)
+            public void UnorderedAdd(ServiceProduct aItem)
             {
-                iRunner.Result("product added " + aItem.Id);
+                iRunner.Result("product added " + aItem.Device.Udn);
             }
 
-            public void UnorderedRemove(Product aItem)
+            public void UnorderedRemove(ServiceProduct aItem)
             {
-                iRunner.Result("product removed " + aItem.Id);
+                iRunner.Result("product removed " + aItem.Device.Udn);
             }
 
             private MockableScriptRunner iRunner;

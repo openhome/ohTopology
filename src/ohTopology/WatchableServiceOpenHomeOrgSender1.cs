@@ -14,12 +14,17 @@ namespace OpenHome.Av
         IWatchable<string> Status { get; }
     }
 
-    public abstract class Sender : IServiceOpenHomeOrgSender1, IWatchableService
+    public interface ISender : IServiceOpenHomeOrgSender1
     {
-        protected Sender(string aId, IWatchableDevice aDevice)
+        string Attributes { get; }
+        string PresentationUrl { get;}
+    }
+
+    public abstract class Sender : ISender, IWatchableService
+    {
+        protected Sender(string aId)
         {
             iId = aId;
-            iDevice = aDevice;
         }
 
         public abstract void Dispose();
@@ -29,14 +34,6 @@ namespace OpenHome.Av
             get
             {
                 return iId;
-            }
-        }
-
-        public IWatchableDevice Device
-        {
-            get
-            {
-                return iDevice;
             }
         }
 
@@ -83,7 +80,6 @@ namespace OpenHome.Av
         }
 
         private string iId;
-        private IWatchableDevice iDevice;
 
         protected string iAttributes;
         protected string iPresentationUrl;
@@ -301,7 +297,7 @@ namespace OpenHome.Av
                 {
                     iThread.Schedule(() =>
                     {
-                        iService = new WatchableSender(iThread, string.Format("Sender({0})", aDevice.Udn), aDevice, iPendingService);
+                        iService = new WatchableSender(iThread, string.Format("Sender({0})", aDevice.Udn), iPendingService);
                         iPendingService = null;
                         aCallback(iService);
                     });
@@ -332,8 +328,8 @@ namespace OpenHome.Av
 
     public class WatchableSender : Sender
     {
-        public WatchableSender(IWatchableThread aThread, string aId, IWatchableDevice aDevice, CpProxyAvOpenhomeOrgSender1 aService)
-            : base(aId, aDevice)
+        public WatchableSender(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgSender1 aService)
+            : base(aId)
         {
             iAttributes = aService.PropertyAttributes();
             iPresentationUrl = aService.PropertyPresentationUrl();
@@ -360,8 +356,8 @@ namespace OpenHome.Av
         
     public class MockWatchableSender : Sender, IMockable
     {
-        public MockWatchableSender(IWatchableThread aThread, string aId, IWatchableDevice aDevice, string aAttributes, bool aAudio, string aMetadata, string aPresentationUrl, string aStatus)
-            : base(aId, aDevice)
+        public MockWatchableSender(IWatchableThread aThread, string aId, string aAttributes, bool aAudio, string aMetadata, string aPresentationUrl, string aStatus)
+            : base(aId)
         {
             iAttributes = aAttributes;
             iPresentationUrl = aPresentationUrl;
@@ -407,5 +403,53 @@ namespace OpenHome.Av
         }
 
         private MockServiceOpenHomeOrgSender1 iService;
+    }
+
+    public class ServiceSender : ISender, IService
+    {
+        public ServiceSender(IWatchableDevice aDevice, ISender aService)
+        {
+            iDevice = aDevice;
+            iService = aService;
+        }
+
+        public void Dispose()
+        {
+            iDevice.Unsubscribe<Sender>();
+            iDevice = null;
+        }
+
+        public IWatchableDevice Device
+        {
+            get { return iDevice; }
+        }
+
+        public string Attributes
+        {
+            get { return iService.Attributes; }
+        }
+
+        public string PresentationUrl
+        {
+            get { return iService.PresentationUrl; }
+        }
+
+        public IWatchable<bool> Audio
+        {
+            get { return iService.Audio; }
+        }
+
+        public IWatchable<string> Metadata
+        {
+            get { return iService.Metadata; }
+        }
+
+        public IWatchable<string> Status
+        {
+            get { return iService.Status; }
+        }
+
+        private IWatchableDevice iDevice;
+        private ISender iService;
     }
 }
