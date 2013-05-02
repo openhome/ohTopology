@@ -78,11 +78,6 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("VolumeController.Dispose");
                 }
 
-                if (iPending)
-                {
-                    iDevice.Unsubscribe<Volume>();
-                }
-
                 if (iVolume != null)
                 {
                     iHasVolume.Update(false);
@@ -155,17 +150,23 @@ namespace OpenHome.Av
 
         private void Subscribed(IWatchableDevice aDevice, Volume aVolume)
         {
+            ServiceVolume volume = new ServiceVolume(aDevice, aVolume);
             lock (iLock)
             {
                 if (!iDisposed)
                 {
                     iPending = false;
-                    iVolume = aVolume;
+                    iVolume = volume;
 
                     iVolume.Mute.AddWatcher(this);
                     iVolume.Value.AddWatcher(this);
 
                     iHasVolume.Update(true);
+                }
+                else
+                {
+                    iPending = false;
+                    volume.Dispose();
                 }
             }
         }
@@ -173,7 +174,7 @@ namespace OpenHome.Av
         private object iLock;
         private bool iDisposed;
         private bool iPending;
-        private Volume iVolume;
+        private ServiceVolume iVolume;
 
         private IWatchableDevice iDevice;
         private Watchable<bool> iHasVolume;
@@ -800,16 +801,22 @@ namespace OpenHome.Av
 
         private void Subscribed(IWatchableDevice aDevice, Info aInfo)
         {
+            ServiceInfo info = new ServiceInfo(aDevice, aInfo);
             lock (iLock)
             {
                 if (!iDisposed)
                 {
                     iPending = false;
-                    iInfo = aInfo;
+                    iInfo = info;
 
                     iInfo.Details.AddWatcher(this);
                     iInfo.Metadata.AddWatcher(this);
                     iInfo.Metatext.AddWatcher(this);
+                }
+                else
+                {
+                    iPending = false;
+                    info.Dispose();
                 }
             }
         }
@@ -817,7 +824,7 @@ namespace OpenHome.Av
         private object iLock;
         private bool iDisposed;
         private bool iPending;
-        private Info iInfo;
+        private ServiceInfo iInfo;
 
         private IWatchableDevice iDevice;
         private Watchable<RoomDetails> iDetails;
