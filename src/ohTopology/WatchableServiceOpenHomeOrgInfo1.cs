@@ -149,7 +149,7 @@ namespace OpenHome.Av
         private string iMetatext;
     }
 
-    public abstract class Info : IWatchableService, IServiceOpenHomeOrgInfo1, IDisposable
+    public abstract class Info : IWatchableService, IServiceOpenHomeOrgInfo1
     {
         protected Info(string aId, IServiceOpenHomeOrgInfo1 aService)
         {

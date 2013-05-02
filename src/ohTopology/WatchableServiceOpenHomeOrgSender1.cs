@@ -14,7 +14,7 @@ namespace OpenHome.Av
         IWatchable<string> Status { get; }
     }
 
-    public abstract class Sender : IWatchableService, IServiceOpenHomeOrgSender1, IDisposable
+    public abstract class Sender : IWatchableService, IServiceOpenHomeOrgSender1
     {
         protected Sender(string aId, IServiceOpenHomeOrgSender1 aService)
         {

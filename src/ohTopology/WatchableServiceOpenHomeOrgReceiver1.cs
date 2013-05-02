@@ -14,7 +14,7 @@ namespace OpenHome.Av
         IWatchable<string> Uri { get; }
     }
 
-    public abstract class Receiver : IWatchableService, IServiceOpenHomeOrgReceiver1, IDisposable
+    public abstract class Receiver : IWatchableService, IServiceOpenHomeOrgReceiver1
     {
         protected Receiver(string aId, IServiceOpenHomeOrgReceiver1 aService)
         {

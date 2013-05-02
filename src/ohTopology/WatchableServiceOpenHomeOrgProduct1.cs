@@ -23,7 +23,7 @@ namespace OpenHome.Av
         void SetStandby(bool aValue);
     }
 
-    public abstract class Product : IWatchableService, IServiceOpenHomeOrgProduct1, IDisposable
+    public abstract class Product : IWatchableService, IServiceOpenHomeOrgProduct1
     {
         protected Product(string aId, IWatchableDevice aDevice)
         {
