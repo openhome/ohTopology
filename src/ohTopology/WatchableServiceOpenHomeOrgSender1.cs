@@ -7,27 +7,22 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    public interface IServiceOpenHomeOrgSender1 : IWatchableService
+    public interface IServiceOpenHomeOrgSender1
     {
         IWatchable<bool> Audio { get; }
         IWatchable<string> Metadata { get; }
         IWatchable<string> Status { get; }
     }
 
-    public class Sender : IServiceOpenHomeOrgSender1
+    public abstract class Sender : IServiceOpenHomeOrgSender1, IWatchableService
     {
-        protected Sender(string aId, IWatchableDevice aDevice, IServiceOpenHomeOrgSender1 aService)
+        protected Sender(string aId, IWatchableDevice aDevice)
         {
             iId = aId;
             iDevice = aDevice;
-            iService = aService;
         }
 
-        public void Dispose()
-        {
-            iService.Dispose();
-            iService = null;
-        }
+        public abstract void Dispose();
 
         public string Id
         {
@@ -45,11 +40,13 @@ namespace OpenHome.Av
             }
         }
 
+        internal abstract IServiceOpenHomeOrgSender1 Service { get; }
+
         public IWatchable<bool> Audio
         {
             get
             {
-                return iService.Audio;
+                return Service.Audio;
             }
         }
 
@@ -57,7 +54,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return iService.Metadata;
+                return Service.Metadata;
             }
         }
 
@@ -65,7 +62,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return iService.Status;
+                return Service.Status;
             }
         }
 
@@ -88,7 +85,6 @@ namespace OpenHome.Av
         private string iId;
         private IWatchableDevice iDevice;
 
-        protected IServiceOpenHomeOrgSender1 iService;
         protected string iAttributes;
         protected string iPresentationUrl;
     }
@@ -125,6 +121,15 @@ namespace OpenHome.Av
 
                 iService.Dispose();
                 iService = null;
+
+                iAudio.Dispose();
+                iAudio = null;
+
+                iMetadata.Dispose();
+                iMetadata = null;
+
+                iStatus.Dispose();
+                iStatus = null;
 
                 iDisposed = true;
             }
@@ -214,6 +219,14 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
+            iAudio.Dispose();
+            iAudio = null;
+
+            iMetadata.Dispose();
+            iMetadata = null;
+
+            iStatus.Dispose();
+            iStatus = null;
         }
 
         public IWatchable<bool> Audio
@@ -278,14 +291,6 @@ namespace OpenHome.Av
             iService = null;
         }
 
-        public Type Type
-        {
-            get
-            {
-                return typeof(Sender);
-            }
-        }
-
         public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
             if (iService == null && iPendingService == null)
@@ -328,83 +333,54 @@ namespace OpenHome.Av
     public class WatchableSender : Sender
     {
         public WatchableSender(IWatchableThread aThread, string aId, IWatchableDevice aDevice, CpProxyAvOpenhomeOrgSender1 aService)
-            : base(aId, aDevice, new ServiceOpenHomeOrgSender1(aThread, aId, aService))
+            : base(aId, aDevice)
         {
             iAttributes = aService.PropertyAttributes();
             iPresentationUrl = aService.PropertyPresentationUrl();
-        }
-    }
 
-    public class MockWatchableSenderFactory : IWatchableServiceFactory
-    {
-        public MockWatchableSenderFactory(IWatchableThread aThread, string aAttributes, bool aAudio, string aMetadata, string aPresentationUrl, string aStatus)
+            iService = new ServiceOpenHomeOrgSender1(aThread, aId, aService);
+        }
+
+        public override void Dispose()
         {
-            iThread = aThread;
-
-            iPendingService = false;
+            iService.Dispose();
             iService = null;
-
-            iAttributes = aAttributes;
-            iAudio = aAudio;
-            iMetadata = aMetadata;
-            iPresentationUrl = aPresentationUrl;
-            iStatus = aStatus;
         }
 
-        public Type Type
+        internal override IServiceOpenHomeOrgSender1 Service
         {
             get
             {
-                return typeof(Sender);
+                return iService;
             }
         }
 
-        public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
-        {
-            if (iService == null && iPendingService == false)
-            {
-                iPendingService = true;
-                iThread.Schedule(() =>
-                {
-                    if (iPendingService)
-                    {
-                        iService = new MockWatchableSender(iThread, string.Format("Sender({0})", aDevice.Udn), aDevice, iAttributes, iAudio, iMetadata, iPresentationUrl, iStatus);
-                        iPendingService = false;
-                        aCallback(iService);
-                    }
-                });
-            }
-        }
-
-        public void Unsubscribe()
-        {
-            iPendingService = false;
-
-            if (iService != null)
-            {
-                iService.Dispose();
-                iService = null;
-            }
-        }
-
-        private bool iPendingService;
-        private MockWatchableSender iService;
-        private IWatchableThread iThread;
-
-        private string iAttributes;
-        private bool iAudio;
-        private string iMetadata;
-        private string iPresentationUrl;
-        private string iStatus;
+        private ServiceOpenHomeOrgSender1 iService;
     }
-
+        
     public class MockWatchableSender : Sender, IMockable
     {
         public MockWatchableSender(IWatchableThread aThread, string aId, IWatchableDevice aDevice, string aAttributes, bool aAudio, string aMetadata, string aPresentationUrl, string aStatus)
-            : base(aId, aDevice, new MockServiceOpenHomeOrgSender1(aThread, aId, aAudio, aMetadata, aStatus))
+            : base(aId, aDevice)
         {
             iAttributes = aAttributes;
             iPresentationUrl = aPresentationUrl;
+
+            iService = new MockServiceOpenHomeOrgSender1(aThread, aId, aAudio, aMetadata, aStatus);
+        }
+
+        public override void Dispose()
+        {
+            iService.Dispose();
+            iService = null;
+        }
+
+        internal override IServiceOpenHomeOrgSender1 Service
+        {
+            get
+            {
+                return iService;
+            }
         }
 
         public void Execute(IEnumerable<string> aValue)
@@ -412,8 +388,7 @@ namespace OpenHome.Av
             string command = aValue.First().ToLowerInvariant();
             if (command == "audio" || command == "metadata" || command == "status")
             {
-                MockServiceOpenHomeOrgSender1 s = iService as MockServiceOpenHomeOrgSender1;
-                s.Execute(aValue);
+                iService.Execute(aValue);
             }
             else if (command == "attributes")
             {
@@ -430,5 +405,7 @@ namespace OpenHome.Av
                 throw new NotSupportedException();
             }
         }
+
+        private MockServiceOpenHomeOrgSender1 iService;
     }
 }

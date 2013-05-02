@@ -14,14 +14,12 @@ namespace OpenHome.Av
 
     public interface IWatchableServiceFactory
     {
-        Type Type { get; }
         void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback);
         void Unsubscribe();
     }
 
     public interface IService : IDisposable
     {
-        Type Type { get; } 
     }
 
     public interface IWatchableDevice
@@ -236,6 +234,10 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
+            foreach (IWatchableService s in iServices.Values)
+            {
+                s.Dispose();
+            }
             iServices.Clear();
             iServices = null;
         }

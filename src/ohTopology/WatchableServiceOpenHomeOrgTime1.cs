@@ -7,26 +7,21 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    public interface IServiceOpenHomeOrgTime1 : IWatchableService
+    public interface IServiceOpenHomeOrgTime1
     {
         IWatchable<uint> Duration { get; }
         IWatchable<uint> Seconds { get; }
     }
 
-    public abstract class Time : IServiceOpenHomeOrgTime1
+    public abstract class Time : IServiceOpenHomeOrgTime1, IWatchableService
     {
-        protected Time(string aId, IWatchableDevice aDevice, IServiceOpenHomeOrgTime1 aService)
+        protected Time(string aId, IWatchableDevice aDevice)
         {
             iId = aId;
             iDevice = aDevice;
-            iService = aService;
         }
 
-        public void Dispose()
-        {
-            iService.Dispose();
-            iService = null;
-        }
+        public abstract void Dispose();
 
         public string Id
         {
@@ -44,11 +39,13 @@ namespace OpenHome.Av
             }
         }
 
+        internal abstract IServiceOpenHomeOrgTime1 Service { get; }
+
         public IWatchable<uint> Duration
         {
             get
             {
-                return iService.Duration;
+                return Service.Duration;
             }
         }
 
@@ -56,14 +53,12 @@ namespace OpenHome.Av
         {
             get
             {
-                return iService.Seconds;
+                return Service.Seconds;
             }
         }
 
         private string iId;
         private IWatchableDevice iDevice;
-
-        protected IServiceOpenHomeOrgTime1 iService;
     }
 
     public class ServiceOpenHomeOrgTime1 : IServiceOpenHomeOrgTime1, IDisposable
@@ -96,6 +91,12 @@ namespace OpenHome.Av
 
                 iService.Dispose();
                 iService = null;
+
+                iDuration.Dispose();
+                iDuration = null;
+
+                iSeconds.Dispose();
+                iSeconds = null;
 
                 iDisposed = true;
             }
@@ -162,6 +163,11 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
+            iDuration.Dispose();
+            iDuration = null;
+
+            iSeconds.Dispose();
+            iSeconds = null;
         }
 
         public IWatchable<uint> Duration
@@ -196,14 +202,6 @@ namespace OpenHome.Av
             iThread = aThread;
 
             iService = null;
-        }
-
-        public Type Type
-        {
-            get
-            {
-                return typeof(Time);
-            }
         }
 
         public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
@@ -248,79 +246,55 @@ namespace OpenHome.Av
     public class WatchableTime : Time
     {
         public WatchableTime(IWatchableThread aThread, string aId, IWatchableDevice aDevice, CpProxyAvOpenhomeOrgTime1 aService)
-            : base(aId, aDevice, new ServiceOpenHomeOrgTime1(aThread, aId, aService))
+            : base(aId, aDevice)
         {
+            iService = new ServiceOpenHomeOrgTime1(aThread, aId, aService);
         }
-    }
 
-    public class MockWatchableTimeFactory : IWatchableServiceFactory
-    {
-        public MockWatchableTimeFactory(IWatchableThread aThread, uint aSeconds, uint aDuration)
+        public override void Dispose()
         {
-            iThread = aThread;
-
-            iPendingService = false;
+            iService.Dispose();
             iService = null;
-
-            iSeconds = aSeconds;
-            iDuration = aDuration;
         }
 
-        public Type Type
+        internal override IServiceOpenHomeOrgTime1 Service
         {
             get
             {
-                return typeof(Time);
+                return iService;
             }
         }
 
-        public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
-        {
-            if (iService == null && iPendingService == false)
-            {
-                iPendingService = true;
-                iThread.Schedule(() =>
-                {
-                    if (iPendingService)
-                    {
-                        iService = new MockWatchableTime(iThread, string.Format("Time({0})", aDevice.Udn), aDevice, iSeconds, iDuration);
-                        iPendingService = false;
-                        aCallback(iService);
-                    }
-                });
-            }
-        }
-
-        public void Unsubscribe()
-        {
-            iPendingService = false;
-
-            if (iService != null)
-            {
-                iService.Dispose();
-                iService = null;
-            }
-        }
-
-        private bool iPendingService;
-        private MockWatchableTime iService;
-        private IWatchableThread iThread;
-
-        private uint iSeconds;
-        private uint iDuration;
+        private ServiceOpenHomeOrgTime1 iService;
     }
 
     public class MockWatchableTime : Time, IMockable
     {
         public MockWatchableTime(IWatchableThread aThread, string aId, IWatchableDevice aDevice, uint aSeconds, uint aDuration)
-            : base(aId, aDevice, new MockServiceOpenHomeOrgTime1(aThread, aId, aSeconds, aDuration))
+            : base(aId, aDevice)
         {
+            iService = new MockServiceOpenHomeOrgTime1(aThread, aId, aSeconds, aDuration);
+        }
+
+        public override void Dispose()
+        {
+            iService.Dispose();
+            iService = null;
         }
 
         public void Execute(IEnumerable<string> aValue)
         {
-            MockServiceOpenHomeOrgTime1 t = iService as MockServiceOpenHomeOrgTime1;
-            t.Execute(aValue);
+            iService.Execute(aValue);
         }
+
+        internal override IServiceOpenHomeOrgTime1 Service
+        {
+            get
+            {
+                return iService;
+            }
+        }
+
+        private MockServiceOpenHomeOrgTime1 iService;
     }
 }

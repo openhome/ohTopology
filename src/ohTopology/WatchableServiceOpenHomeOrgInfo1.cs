@@ -28,7 +28,7 @@ namespace OpenHome.Av
         string Metatext { get; }
     }
 
-    public interface IServiceOpenHomeOrgInfo1 : IWatchableService
+    public interface IServiceOpenHomeOrgInfo1
     {
         IWatchable<IInfoDetails> Details { get; }
         IWatchable<IInfoMetadata> Metadata { get; }
@@ -149,20 +149,17 @@ namespace OpenHome.Av
         private string iMetatext;
     }
 
-    public class Info : IServiceOpenHomeOrgInfo1
+    public abstract class Info : IServiceOpenHomeOrgInfo1, IWatchableService
     {
-        protected Info(string aId, IWatchableDevice aDevice, IServiceOpenHomeOrgInfo1 aService)
+        protected Info(string aId, IWatchableDevice aDevice)
         {
             iId = aId;
             iDevice = aDevice;
-            iService = aService;
         }
 
-        public void Dispose()
-        {
-            iService.Dispose();
-            iService = null;
-        }
+        public abstract void Dispose();
+
+        internal abstract IServiceOpenHomeOrgInfo1 Service { get; }
 
         public string Id
         {
@@ -184,7 +181,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return iService.Details;
+                return Service.Details;
             }
         }
 
@@ -192,7 +189,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return iService.Metadata;
+                return Service.Metadata;
             }
         }
 
@@ -200,13 +197,12 @@ namespace OpenHome.Av
         {
             get
             {
-                return iService.Metatext;
+                return Service.Metatext;
             }
         }
 
         private string iId;
         private IWatchableDevice iDevice;
-        protected IServiceOpenHomeOrgInfo1 iService;
     }
 
     public class ServiceOpenHomeOrgInfo1 : IServiceOpenHomeOrgInfo1
@@ -449,14 +445,6 @@ namespace OpenHome.Av
             iService = null;
         }
 
-        public Type Type
-        {
-            get
-            {
-                return typeof(Info);
-            }
-        }
-
         public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
             if (iService == null && iPendingService == null)
@@ -499,81 +487,55 @@ namespace OpenHome.Av
     public class WatchableInfo : Info
     {
         public WatchableInfo(IWatchableThread aThread, string aId, IWatchableDevice aDevice, CpProxyAvOpenhomeOrgInfo1 aService)
-            : base(aId, aDevice, new ServiceOpenHomeOrgInfo1(aThread, aId, aService))
+            : base(aId, aDevice)
         {
+            iService = new ServiceOpenHomeOrgInfo1(aThread, aId, aService);
         }
-    }
 
-    public class MockWatchableInfoFactory : IWatchableServiceFactory
-    {
-        public MockWatchableInfoFactory(IWatchableThread aThread, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
+        public override void Dispose()
         {
-            iThread = aThread;
-
-            iPendingService = false;
+            iService.Dispose();
             iService = null;
-
-            iDetails = aDetails;
-            iMetadata = aMetadata;
-            iMetatext = aMetatext;
         }
 
-        public Type Type
+        internal override IServiceOpenHomeOrgInfo1 Service
         {
             get
             {
-                return typeof(Info);
+                return iService;
             }
         }
 
-        public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
-        {
-            if (iService == null && iPendingService == false)
-            {
-                iPendingService = true;
-                iThread.Schedule(() =>
-                {
-                    if (iPendingService)
-                    {
-                        iService = new MockWatchableInfo(iThread, string.Format("Info({0})", aDevice.Udn), aDevice, iDetails, iMetadata, iMetatext);
-                        iPendingService = false;
-                        aCallback(iService);
-                    }
-                });
-            }
-        }
-
-        public void Unsubscribe()
-        {
-            iPendingService = false;
-
-            if (iService != null)
-            {
-                iService.Dispose();
-                iService = null;
-            }
-        }
-
-        private bool iPendingService;
-        private MockWatchableInfo iService;
-        private IWatchableThread iThread;
-
-        private IInfoDetails iDetails;
-        private IInfoMetadata iMetadata;
-        private IInfoMetatext iMetatext;
+        private ServiceOpenHomeOrgInfo1 iService;
     }
 
     public class MockWatchableInfo : Info, IMockable
     {
         public MockWatchableInfo(IWatchableThread aThread, string aId, IWatchableDevice aDevice, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
-            : base(aId, aDevice, new MockServiceOpenHomeOrgInfo1(aThread, aId, aDetails, aMetadata, aMetatext))
+            : base(aId, aDevice)
         {
+            iService = new MockServiceOpenHomeOrgInfo1(aThread, aId, aDetails, aMetadata, aMetatext);
+        }
+
+        public override void Dispose()
+        {
+            iService.Dispose();
+            iService = null;
+        }
+
+        internal override IServiceOpenHomeOrgInfo1 Service
+        {
+            get
+            {
+                return iService;
+            }
         }
 
         public void Execute(IEnumerable<string> aValue)
         {
-            MockServiceOpenHomeOrgInfo1 i = iService as MockServiceOpenHomeOrgInfo1;
-            i.Execute(aValue);
+            iService.Execute(aValue);
         }
+
+        private MockServiceOpenHomeOrgInfo1 iService;
     }
 }
