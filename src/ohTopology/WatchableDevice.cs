@@ -228,10 +228,6 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            foreach (IWatchableService s in iServices.Values)
-            {
-                s.Dispose();
-            }
             iServices.Clear();
             iServices = null;
         }
