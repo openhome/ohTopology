@@ -52,6 +52,11 @@ namespace OpenHome.Av
             get { return iProxy.Id; }
         }
 
+        public T Value
+        {
+            get { return iProxy.Value; }
+        }
+
         public void AddWatcher(IWatcher<T> aWatcher)
         {
             iProxy.AddWatcher(aWatcher);

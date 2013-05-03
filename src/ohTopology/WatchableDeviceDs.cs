@@ -5,13 +5,14 @@ using System.Threading.Tasks;
 
 using OpenHome.Net.ControlPoint;
 using OpenHome.Os.App;
+using OpenHome.Os;
 
 namespace OpenHome.Av
 {
     public class MockWatchableDs : MockWatchableDevice
     {
-        public MockWatchableDs(IWatchableThread aThread, string aUdn)
-            : base(aThread, aUdn)
+        public MockWatchableDs(IWatchableThread aThread, IWatchableThread aSubscribeThread, string aUdn)
+            : base(aThread, aSubscribeThread, aUdn)
         {
             // add a factory for each type of watchable service
 
@@ -24,29 +25,29 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("Net Aux", "NetAux", false));
             SourceXml xml = new SourceXml(sources.ToArray());
 
-            Add<Product>(new MockWatchableProduct(aThread, aUdn, "Main Room", "Mock DS", 0, xml, true, "Info Time Volume Sender",
+            Add<ServiceProduct>(new MockWatchableProduct(aThread, aUdn, "Main Room", "Mock DS", 0, xml, true, "Info Time Volume Sender",
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DS", "",
                 "", "Linn High Fidelity System Component", ""));
 
             // volume service
-            Add<Volume>(new MockWatchableVolume(aThread, aUdn, this, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
+            Add<ServiceVolume>(new MockWatchableVolume(aThread, aUdn, this, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
 
             // info service
-            Add<Info>(new MockWatchableInfo(aThread, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
+            Add<ServiceInfo>(new MockWatchableInfo(aThread, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
 
             // time service
-            Add<Time>(new MockWatchableTime(aThread, aUdn, 0, 0));
+            Add<ServiceTime>(new MockWatchableTime(aThread, aUdn, 0, 0));
 
             // receiver service
-            Add<Receiver>(new MockWatchableReceiver(aThread, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
+            Add<ServiceReceiver>(new MockWatchableReceiver(aThread, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
 
             // sender service
-            Add<Sender>(new MockWatchableSender(aThread, aUdn, "Info Time", false, string.Empty, string.Empty, "Enabled"));
+            Add<ServiceSender>(new MockWatchableSender(aThread, aUdn, "Info Time", false, string.Empty, string.Empty, "Enabled"));
         }
 
-        public MockWatchableDs(IWatchableThread aThread, string aUdn, string aRoom, string aName, string aAttributes)
-            : base(aThread, aUdn)
+        public MockWatchableDs(IWatchableThread aThread, IWatchableThread aSubscribeThread, string aUdn, string aRoom, string aName, string aAttributes)
+            : base(aThread, aSubscribeThread, aUdn)
         {
             // add a factory for each type of watchable service
 
@@ -59,25 +60,25 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("Net Aux", "NetAux", false));
             SourceXml xml = new SourceXml(sources.ToArray());
 
-            Add<Product>(new MockWatchableProduct(aThread, aUdn, aRoom, aName, 0, xml, true, aAttributes,
+            Add<ServiceProduct>(new MockWatchableProduct(aThread, aUdn, aRoom, aName, 0, xml, true, aAttributes,
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DS", "",
                 "", "Linn High Fidelity System Component", ""));
 
             // volume service
-            Add<Volume>(new MockWatchableVolume(aThread, aUdn, this, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
+            Add<ServiceVolume>(new MockWatchableVolume(aThread, aUdn, this, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
 
             // info service
-            Add<Info>(new MockWatchableInfo(aThread, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
+            Add<ServiceInfo>(new MockWatchableInfo(aThread, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
 
             // time service
-            Add<Time>(new MockWatchableTime(aThread, aUdn, 0, 0));
+            Add<ServiceTime>(new MockWatchableTime(aThread, aUdn, 0, 0));
 
             // receiver service
-            Add<Receiver>(new MockWatchableReceiver(aThread, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
+            Add<ServiceReceiver>(new MockWatchableReceiver(aThread, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
 
             // sender service
-            Add<Sender>(new MockWatchableSender(aThread, aUdn, "Info Time", false, string.Empty, string.Empty, "Enabled"));
+            Add<ServiceSender>(new MockWatchableSender(aThread, aUdn, "Info Time", false, string.Empty, string.Empty, "Enabled"));
         }
 
         public override void Execute(IEnumerable<string> aValue)
@@ -87,7 +88,7 @@ namespace OpenHome.Av
             string command = aValue.First().ToLowerInvariant();
             if (command == "product")
             {
-                Type key = typeof(Product);
+                Type key = typeof(ServiceProduct);
                 foreach (KeyValuePair<Type, IWatchableService> s in iServices)
                 {
                     if (s.Key == key)
@@ -99,7 +100,7 @@ namespace OpenHome.Av
             }
             else if (command == "info")
             {
-                Type key = typeof(Info);
+                Type key = typeof(ServiceInfo);
                 foreach (KeyValuePair<Type, IWatchableService> s in iServices)
                 {
                     if (s.Key == key)

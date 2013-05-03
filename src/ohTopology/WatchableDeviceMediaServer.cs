@@ -10,8 +10,8 @@ namespace OpenHome.Av
 {
     public class MockWatchableMediaServer : MockWatchableDevice
     {
-        public MockWatchableMediaServer(IWatchableThread aThread, string aUdn)
-            : base(aThread, aUdn)
+        public MockWatchableMediaServer(IWatchableThread aThread, IWatchableThread aSubscribeThread, string aUdn)
+            : base(aSubscribeThread, aThread, aUdn)
         {
             // content directory service
             //MockWatchableContentDirectory contentDirectory = new MockWatchableContentDirectory(aThread, aUdn, 0, "");

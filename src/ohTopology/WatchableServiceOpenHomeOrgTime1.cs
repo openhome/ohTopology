@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 using OpenHome.Os.App;
 using OpenHome.Net.ControlPoint.Proxies;
+using OpenHome.Os;
 
 namespace OpenHome.Av
 {
@@ -21,6 +22,11 @@ namespace OpenHome.Av
         }
 
         public abstract void Dispose();
+
+        public IService Create(IManagableWatchableDevice aDevice)
+        {
+            return new ServiceTime(aDevice, this);
+        }
 
         public string Id
         {
@@ -187,47 +193,62 @@ namespace OpenHome.Av
 
     public class WatchableTimeFactory : IWatchableServiceFactory
     {
-        public WatchableTimeFactory(IWatchableThread aThread)
+        public WatchableTimeFactory(IWatchableThread aThread, IWatchableThread aSubscribeThread)
         {
+            iLock = new object();
             iThread = aThread;
 
-            iService = null;
+            iSubscribeThread = aSubscribeThread;
         }
 
         public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
-            if (iService == null && iPendingService == null)
+            iSubscribeThread.Schedule(() =>
             {
-                WatchableDevice d = aDevice as WatchableDevice;
-                iPendingService = new CpProxyAvOpenhomeOrgTime1(d.Device);
-                iPendingService.SetPropertyInitialEvent(delegate
+                if (iService == null && iPendingService == null)
                 {
-                    iThread.Schedule(() =>
+                    WatchableDevice d = aDevice as WatchableDevice;
+                    iPendingService = new CpProxyAvOpenhomeOrgTime1(d.Device);
+                    iPendingService.SetPropertyInitialEvent(delegate
                     {
-                        iService = new WatchableTime(iThread, string.Format("Time({0})", aDevice.Udn), iPendingService);
-                        iPendingService = null;
-                        aCallback(iService);
+                        lock (iLock)
+                        {
+                            if (iPendingService != null)
+                            {
+                                iService = new WatchableTime(iThread, string.Format("Time({0})", aDevice.Udn), iPendingService);
+                                iPendingService = null;
+                                aCallback(iService);
+                            }
+                        }
                     });
-                });
-                iPendingService.Subscribe();
-            }
+                    iPendingService.Subscribe();
+                }
+            });
         }
 
         public void Unsubscribe()
         {
-            if (iPendingService != null)
+            iSubscribeThread.Schedule(() =>
             {
-                iPendingService.Dispose();
-                iPendingService = null;
-            }
+                lock (iLock)
+                {
+                    if (iPendingService != null)
+                    {
+                        iPendingService.Dispose();
+                        iPendingService = null;
+                    }
 
-            if (iService != null)
-            {
-                iService.Dispose();
-                iService = null;
-            }
+                    if (iService != null)
+                    {
+                        iService.Dispose();
+                        iService = null;
+                    }
+                }
+            });
         }
 
+        private object iLock;
+        private IWatchableThread iSubscribeThread;
         private CpProxyAvOpenhomeOrgTime1 iPendingService;
         private WatchableTime iService;
         private IWatchableThread iThread;
@@ -290,7 +311,7 @@ namespace OpenHome.Av
 
     public class ServiceTime : IServiceOpenHomeOrgTime1, IService
     {
-        public ServiceTime(IWatchableDevice aDevice, IServiceOpenHomeOrgTime1 aService)
+        public ServiceTime(IManagableWatchableDevice aDevice, IServiceOpenHomeOrgTime1 aService)
         {
             iDevice = aDevice;
             iService = aService;
@@ -298,7 +319,7 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            iDevice.Unsubscribe<Time>();
+            iDevice.Unsubscribe<ServiceTime>();
             iDevice = null;
         }
 
@@ -317,7 +338,7 @@ namespace OpenHome.Av
             get { return iService.Seconds; }
         }
 
-        private IWatchableDevice iDevice;
+        private IManagableWatchableDevice iDevice;
         private IServiceOpenHomeOrgTime1 iService;
     }
 }

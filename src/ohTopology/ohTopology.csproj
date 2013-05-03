@@ -66,6 +66,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SourceController.cs" />
     <Compile Include="WatchableServiceMediaServer.cs" />
     <Compile Include="WatchableDeviceMediaServer.cs" />
     <Compile Include="WatchableDeviceDsm.cs" />
@@ -83,6 +84,7 @@
     <Compile Include="WatchableDevice.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgInfo1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgProduct1.cs" />
+    <Compile Include="WatchableServiceOpenHomeOrgRadio1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgReceiver1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgSender1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgTime1.cs" />

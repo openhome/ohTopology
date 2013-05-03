@@ -1,25 +1,28 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Collections;
 
 using OpenHome.Os.App;
+using OpenHome.Os;
 using OpenHome.Net.ControlPoint;
 
 namespace OpenHome.Av
 {
-    public interface INetwork
+    public interface INetwork : IWatchableThread
     {
         void Start();
         void Stop();
         void Refresh();
-        WatchableDeviceUnordered GetWatchableDeviceCollection<T>() where T : IWatchableService;
+        WatchableDeviceUnordered GetWatchableDeviceCollection<T>() where T : IService;
     }
 
-    public class ServiceWatchableDeviceCollection : WatchableDeviceUnordered
+    public class ServiceWatchableDeviceCollection : WatchableDeviceUnordered, IEnumerable<IManagableWatchableDevice>
     {
-        public ServiceWatchableDeviceCollection(IWatchableThread aThread, string aDomainName, string aServiceType, uint aVersion)
+        public ServiceWatchableDeviceCollection(IWatchableThread aThread, IWatchableThread aSubscribeThread, string aDomainName, string aServiceType, uint aVersion)
             : base(aThread)
         {
+            iSubscribeThread = aSubscribeThread;
             iLock = new object();
             iDisposed = false;
 
@@ -73,7 +76,7 @@ namespace OpenHome.Av
                     return;
                 }
 
-                DisposableWatchableDevice device = new DisposableWatchableDevice(WatchableThread, aDevice);
+                DisposableWatchableDevice device = new DisposableWatchableDevice(WatchableThread, iSubscribeThread, aDevice);
                 iCpDeviceLookup.Add(aDevice.Udn(), device);
 
                 WatchableThread.Schedule(() =>
@@ -106,8 +109,19 @@ namespace OpenHome.Av
             }
         }
 
+        public IEnumerator<IManagableWatchableDevice> GetEnumerator()
+        {
+            return iCpDeviceLookup.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return iCpDeviceLookup.Values.GetEnumerator();
+        }
+
         private object iLock;
         private bool iDisposed;
+        private IWatchableThread iSubscribeThread;
 
         private CpDeviceList iCpDeviceList;
         private Dictionary<string, DisposableWatchableDevice> iCpDeviceLookup;
@@ -115,9 +129,11 @@ namespace OpenHome.Av
 
     public class Network : INetwork, IDisposable
     {
-        public Network(IWatchableThread aThread)
+        public Network(IWatchableThread aThread, IWatchableThread aSubscribeThread)
         {
+            iSubscribeThread = aSubscribeThread;
             iThread = aThread;
+
             iDeviceCollections = new Dictionary<Type, ServiceWatchableDeviceCollection>();
         }
 
@@ -134,7 +150,7 @@ namespace OpenHome.Av
         public void Start()
         {
             // add device lists for each type of watchable service
-            iDeviceCollections.Add(typeof(Product), new ServiceWatchableDeviceCollection(iThread, "av.openhome.org", "Product", 1));
+            iDeviceCollections.Add(typeof(Product), new ServiceWatchableDeviceCollection(iThread, iSubscribeThread, "av.openhome.org", "Product", 1));
             //iDeviceCollections.Add(typeof(ContentDirectory), new ServiceWatchableDeviceCollection(iThread, "upnp.org", "ContentDirectory", 1));
         }
 
@@ -155,21 +171,55 @@ namespace OpenHome.Av
             }
         }
 
-        public WatchableDeviceUnordered GetWatchableDeviceCollection<T>() where T : IWatchableService
+        public WatchableDeviceUnordered GetWatchableDeviceCollection<T>() where T : IService
         {
             return iDeviceCollections[typeof(T)];
         }
 
+        public void Assert()
+        {
+            iThread.Assert();
+        }
+
+        public void Schedule(Action aAction)
+        {
+            iThread.Schedule(aAction);
+        }
+
+        public void Execute(Action aAction)
+        {
+            iThread.Execute(aAction);
+        }
+
+        public void Wait()
+        {
+            iThread.Wait(() =>
+            {
+                iSubscribeThread.Wait();
+            });
+        }
+
+        public void Wait(Action aAction)
+        {
+            iThread.Wait(() =>
+            {
+                iSubscribeThread.Wait(aAction);
+            });
+        }
+
         private IWatchableThread iThread;
+        private IWatchableThread iSubscribeThread;
+
         private Dictionary<Type, ServiceWatchableDeviceCollection> iDeviceCollections;
     }
 
     public class MockNetwork : INetwork, IMockable, IDisposable
     {
-        public MockNetwork(IWatchableThread aThread, Mockable aMocker)
+        public MockNetwork(IWatchableThread aThread, IWatchableThread aSubscribeThread, Mockable aMocker)
         {
             iLock = new object();
 
+            iSubscribeThread = aSubscribeThread;
             iThread = aThread;
             iMocker = aMocker;
 
@@ -237,10 +287,7 @@ namespace OpenHome.Av
                     {
                         foreach (WatchableDeviceUnordered c in k.Value)
                         {
-                            iThread.Schedule(() =>
-                            {
-                                c.Add(aDevice);
-                            });
+                            c.Add(aDevice);
                         }
                     }
                 }
@@ -274,17 +321,14 @@ namespace OpenHome.Av
                     {
                         foreach (WatchableDeviceUnordered c in k.Value)
                         {
-                            iThread.Schedule(() =>
-                            {
-                                c.Remove(aDevice);
-                            });
+                            c.Remove(aDevice);
                         }
                     }
                 }
             }
         }
 
-        public WatchableDeviceUnordered GetWatchableDeviceCollection<T>() where T : IWatchableService
+        public WatchableDeviceUnordered GetWatchableDeviceCollection<T>() where T : IService
         {
             Type key = typeof(T);
 
@@ -341,16 +385,16 @@ namespace OpenHome.Av
 
                     if (type == "ds")
                     {
-                        AddDevice(new MockWatchableDs(iThread, udn));
+                        AddDevice(new MockWatchableDs(iThread, iSubscribeThread, udn));
                     }
                     else if(type == "dsm")
                     {
-                        AddDevice(new MockWatchableDsm(iThread, udn));
+                        AddDevice(new MockWatchableDsm(iThread, iSubscribeThread, udn));
                     }
                     /*
                     else if (type == "mediaserver")
                     {
-                        AddDevice(new MockWatchableMediaServer(iThread, udn));
+                        AddDevice(new MockWatchableMediaServer(iThread, iSubscribeThread, udn));
                     }
                     */
                     else
@@ -415,9 +459,41 @@ namespace OpenHome.Av
             }
         }
 
+        public void Assert()
+        {
+            iThread.Assert();
+        }
+
+        public void Schedule(Action aAction)
+        {
+            iThread.Schedule(aAction);
+        }
+
+        public void Execute(Action aAction)
+        {
+            iThread.Execute(aAction);
+        }
+
+        public void Wait()
+        {
+            iThread.Wait(() =>
+            {
+                iSubscribeThread.Wait();
+            });
+        }
+
+        public void Wait(Action aAction)
+        {
+            iThread.Wait(() =>
+            {
+                iSubscribeThread.Wait(aAction);
+            });
+        }
+
         private object iLock;
 
         protected IWatchableThread iThread;
+        protected IWatchableThread iSubscribeThread;
 
         private Mockable iMocker;
 
@@ -428,8 +504,8 @@ namespace OpenHome.Av
 
     public class FourDsMockNetwork : MockNetwork
     {
-        public FourDsMockNetwork(IWatchableThread aThread, Mockable aMocker)
-            : base(aThread, aMocker)
+        public FourDsMockNetwork(IWatchableThread aThread, IWatchableThread aSubscribeThread, Mockable aMocker)
+            : base(aThread, aSubscribeThread, aMocker)
         {
         }
 
@@ -439,10 +515,10 @@ namespace OpenHome.Av
 
             iThread.Schedule(() =>
             {
-                AddDevice(new MockWatchableDs(iThread, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));
-                AddDevice(new MockWatchableDsm(iThread, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
-                AddDevice(new MockWatchableDsm(iThread, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
-                AddDevice(new MockWatchableDs(iThread, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
+                AddDevice(new MockWatchableDs(iThread, iSubscribeThread, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));
+                AddDevice(new MockWatchableDsm(iThread, iSubscribeThread, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
+                AddDevice(new MockWatchableDsm(iThread, iSubscribeThread, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
+                AddDevice(new MockWatchableDs(iThread, iSubscribeThread, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
             });
         }
     }

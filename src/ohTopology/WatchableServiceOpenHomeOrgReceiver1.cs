@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 using OpenHome.Os.App;
 using OpenHome.Net.ControlPoint.Proxies;
+using OpenHome.Os;
 
 namespace OpenHome.Av
 {
@@ -27,6 +28,11 @@ namespace OpenHome.Av
         }
 
         public abstract void Dispose();
+
+        public IService Create(IManagableWatchableDevice aDevice)
+        {
+            return new ServiceReceiver(aDevice, this);
+        }
 
         public string Id
         {
@@ -270,47 +276,62 @@ namespace OpenHome.Av
 
     public class WatchableReceiverFactory : IWatchableServiceFactory
     {
-        public WatchableReceiverFactory(IWatchableThread aThread)
+        public WatchableReceiverFactory(IWatchableThread aThread, IWatchableThread aSubscribeThread)
         {
+            iLock = new object();
             iThread = aThread;
 
-            iService = null;
+            iSubscribeThread = aSubscribeThread;
         }
 
         public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
-            if (iService == null && iPendingService == null)
+            iSubscribeThread.Schedule(() =>
             {
-                WatchableDevice d = aDevice as WatchableDevice;
-                iPendingService = new CpProxyAvOpenhomeOrgReceiver1(d.Device);
-                iPendingService.SetPropertyInitialEvent(delegate
+                if (iService == null && iPendingService == null)
                 {
-                    iThread.Schedule(() =>
+                    WatchableDevice d = aDevice as WatchableDevice;
+                    iPendingService = new CpProxyAvOpenhomeOrgReceiver1(d.Device);
+                    iPendingService.SetPropertyInitialEvent(delegate
                     {
-                        iService = new WatchableReceiver(iThread, string.Format("Receiver({0})", aDevice.Udn), iPendingService);
-                        iPendingService = null;
-                        aCallback(iService);
+                        lock (iLock)
+                        {
+                            if (iPendingService != null)
+                            {
+                                iService = new WatchableReceiver(iThread, string.Format("Receiver({0})", aDevice.Udn), iPendingService);
+                                iPendingService = null;
+                                aCallback(iService);
+                            }
+                        }
                     });
-                });
-                iPendingService.Subscribe();
-            }
+                    iPendingService.Subscribe();
+                }
+            });
         }
 
         public void Unsubscribe()
         {
-            if (iPendingService != null)
+            iSubscribeThread.Schedule(() =>
             {
-                iPendingService.Dispose();
-                iPendingService = null;
-            }
+                lock (iLock)
+                {
+                    if (iPendingService != null)
+                    {
+                        iPendingService.Dispose();
+                        iPendingService = null;
+                    }
 
-            if (iService != null)
-            {
-                iService.Dispose();
-                iService = null;
-            }
+                    if (iService != null)
+                    {
+                        iService.Dispose();
+                        iService = null;
+                    }
+                }
+            });
         }
 
+        private object iLock;
+        private IWatchableThread iSubscribeThread;
         private CpProxyAvOpenhomeOrgReceiver1 iPendingService;
         private WatchableReceiver iService;
         private IWatchableThread iThread;
@@ -390,7 +411,7 @@ namespace OpenHome.Av
 
     public class ServiceReceiver : IReceiver, IService
     {
-        public ServiceReceiver(IWatchableDevice aDevice, IReceiver aService)
+        public ServiceReceiver(IManagableWatchableDevice aDevice, IReceiver aService)
         {
             iDevice = aDevice;
             iService = aService;
@@ -398,7 +419,7 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            iDevice.Unsubscribe<Receiver>();
+            iDevice.Unsubscribe<ServiceReceiver>();
             iDevice = null;
         }
 
@@ -427,7 +448,7 @@ namespace OpenHome.Av
             get { return iService.Uri; }
         }
 
-        private IWatchableDevice iDevice;
+        private IManagableWatchableDevice iDevice;
         private IReceiver iService;
     }
 }

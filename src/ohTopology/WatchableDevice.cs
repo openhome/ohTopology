@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 using OpenHome.Net.ControlPoint;
@@ -10,6 +11,7 @@ namespace OpenHome.Av
 {
     public interface IWatchableService : IDisposable
     {
+        IService Create(IManagableWatchableDevice aDevice);
     }
 
     public interface IWatchableServiceFactory
@@ -27,9 +29,12 @@ namespace OpenHome.Av
     {
         string Udn { get; }
         bool GetAttribute(string aKey, out string aValue);
-        //void Create<T>(Action<IWatchableDevice, T> aCallback) where T : IService;
-        void Subscribe<T>(Action<IWatchableDevice, T> aCallback) where T : IWatchableService;
-        void Unsubscribe<T>() where T : IWatchableService;
+        void Create<T>(Action<IWatchableDevice, T> aAction) where T : IService;
+    }
+
+    public interface IManagableWatchableDevice : IWatchableDevice
+    {
+        void Unsubscribe<T>() where T : IService;
     }
 
     public class WatchableDeviceUnordered : WatchableUnordered<IWatchableDevice>
@@ -57,9 +62,18 @@ namespace OpenHome.Av
         private List<IWatchableDevice> iList;
     }
 
-    public class WatchableDevice : IWatchableDevice
+    public abstract class WatchableDevice : IManagableWatchableDevice
     {
-        public WatchableDevice(IWatchableThread aThread, CpDevice aDevice)
+        public abstract void Unsubscribe<T>() where T : IService;
+        public abstract string Udn { get; }
+        public abstract bool GetAttribute(string aKey, out string aValue);
+        public abstract void Create<T>(Action<IWatchableDevice, T> aAction) where T : IService;
+        public abstract CpDevice Device { get; }
+    }
+
+    public class DisposableWatchableDevice : WatchableDevice, IDisposable
+    {
+        public DisposableWatchableDevice(IWatchableThread aThread, IWatchableThread aSubscribeThread, CpDevice aDevice)
         {
             iLock = new object();
             iDisposed = false;
@@ -69,11 +83,11 @@ namespace OpenHome.Av
 
             // add a factory for each type of watchable service
 
-            iFactories.Add(typeof(Product), new WatchableProductFactory(aThread));
-            iFactories.Add(typeof(Volume), new WatchableVolumeFactory(aThread));
-            iFactories.Add(typeof(Info), new WatchableInfoFactory(aThread));
-            iFactories.Add(typeof(Time), new WatchableTimeFactory(aThread));
-            //iFactories.Add(typeof(ContentDirectory), new WatchableContentDirectoryFactory(aThread));
+            iFactories.Add(typeof(ServiceProduct), new WatchableProductFactory(aSubscribeThread, aThread));
+            iFactories.Add(typeof(ServiceVolume), new WatchableVolumeFactory(aSubscribeThread, aThread));
+            iFactories.Add(typeof(ServiceInfo), new WatchableInfoFactory(aSubscribeThread, aThread));
+            iFactories.Add(typeof(ServiceTime), new WatchableTimeFactory(aSubscribeThread, aThread));
+            //iFactories.Add(typeof(ServiceContentDirectory), new WatchableContentDirectoryFactory(aSubscribeThread, aThread));
 
             iServices = new Dictionary<Type, IWatchableService>();
             iServiceRefCount = new Dictionary<Type, uint>();
@@ -82,7 +96,26 @@ namespace OpenHome.Av
             iDevice.AddRef();
         }
 
-        public string Udn
+        public void Dispose()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("DisposableWatchableDevice.Dispose");
+                }
+
+                iFactories.Clear();
+                iFactories = null;
+
+                iDevice.RemoveRef();
+                iDevice = null;
+
+                iDisposed = true;
+            }
+        }
+
+        public override string Udn
         {
             get
             {
@@ -98,7 +131,7 @@ namespace OpenHome.Av
             }
         }
 
-        public bool GetAttribute(string aKey, out string aValue)
+        public override bool GetAttribute(string aKey, out string aValue)
         {
             lock (iLock)
             {
@@ -111,24 +144,15 @@ namespace OpenHome.Av
             }
         }
 
-        public void Subscribe<T>(Action<IWatchableDevice, T> aCallback) where T : IWatchableService
+        public override void Create<T>(Action<IWatchableDevice, T> aAction)
         {
             lock (iLock)
             {
-                IWatchableService service;
-                if (iServices.TryGetValue(typeof(T), out service))
-                {
-                    ++iServiceRefCount[typeof(T)];
-
-                    iThread.Schedule(() =>
-                    {
-                        aCallback(this, (T)service);
-                    });
-                }
-                else
+                IWatchableService service = GetService(typeof(T));
+                if (service == null)
                 {
                     IWatchableServiceFactory factory = iFactories[typeof(T)];
-                    factory.Subscribe(this, delegate(IWatchableService aService)
+                    factory.Subscribe(this, (IWatchableService aService) =>
                     {
                         lock (iLock)
                         {
@@ -138,14 +162,36 @@ namespace OpenHome.Av
 
                         iThread.Schedule(() =>
                         {
-                            aCallback(this, (T)aService);
+                            aAction(this, (T)aService.Create(this));
                         });
+                    });
+                }
+                else
+                {
+                    ++iServiceRefCount[typeof(T)];
+
+                    iThread.Schedule(() =>
+                    {
+                        aAction(this, (T)service.Create(this));
                     });
                 }
             }
         }
 
-        public void Unsubscribe<T>() where T : IWatchableService
+        private IWatchableService GetService(Type aType)
+        {
+            IWatchableService service;
+            if (iServices.TryGetValue(aType, out service))
+            {
+                ++iServiceRefCount[aType];
+
+                return service;
+            }
+
+            return null;
+        }
+
+        public override void Unsubscribe<T>()
         {
             lock (iLock)
             {
@@ -171,7 +217,7 @@ namespace OpenHome.Av
             }
         }
 
-        public CpDevice Device
+        public override CpDevice Device
         {
             get
             {
@@ -189,6 +235,7 @@ namespace OpenHome.Av
 
         protected object iLock;
         protected bool iDisposed;
+
         private IWatchableThread iThread;
 
         protected CpDevice iDevice;
@@ -199,37 +246,14 @@ namespace OpenHome.Av
         private Dictionary<Type, uint> iServiceRefCount;
     }
 
-    public class DisposableWatchableDevice : WatchableDevice, IDisposable
+    public class MockWatchableDevice : IManagableWatchableDevice, IMockable, IDisposable
     {
-        public DisposableWatchableDevice(IWatchableThread aThread, CpDevice aDevice)
-            : base(aThread, aDevice)
-        {
-        }
-
-        public void Dispose()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("DisposableWatchableDevice.Dispose");
-                }
-
-                iDevice.RemoveRef();
-                iDevice = null;
-
-                iDisposed = true;
-            }
-        }
-    }
-
-    public class MockWatchableDevice : IWatchableDevice, IMockable, IDisposable
-    {
-        public MockWatchableDevice(IWatchableThread aThread, string aUdn)
+        public MockWatchableDevice(IWatchableThread aThread, IWatchableThread aSubscribeThread, string aUdn)
         {
             iThread = aThread;
             iUdn = aUdn;
 
+            iSubscribeThread = aSubscribeThread;
             iServices = new Dictionary<Type, IWatchableService>();
         }
 
@@ -256,27 +280,30 @@ namespace OpenHome.Av
             throw new NotImplementedException();
         }
 
-        public void Subscribe<T>(Action<IWatchableDevice, T> aCallback) where T : IWatchableService
+        public void Create<T>(Action<IWatchableDevice, T> aAction) where T : IService
         {
-            IWatchableService service;
-            if(iServices.TryGetValue(typeof(T), out service))
+            iSubscribeThread.Schedule(() =>
             {
-                iThread.Schedule(() =>
+                IWatchableService service;
+                if (iServices.TryGetValue(typeof(T), out service))
                 {
-                    aCallback(this, (T)service);
-                });
-
-                return;
-            }
-
-            throw new NotSupportedException();
+                    iThread.Schedule(() =>
+                    {
+                        aAction(this, (T)service.Create(this));
+                    });
+                }
+                else
+                {
+                    throw new NotSupportedException();
+                }
+            });
         }
 
-        public void Unsubscribe<T>() where T : IWatchableService
+        public void Unsubscribe<T>() where T : IService
         {
         }
 
-        public void Add<T>(IWatchableService aService) where T : IWatchableService
+        public void Add<T>(IWatchableService aService) where T : IService
         {
             iServices.Add(typeof(T), aService);
         }
@@ -290,8 +317,9 @@ namespace OpenHome.Av
         {
         }
 
-        private IWatchableThread iThread;
         private string iUdn;
+        private IWatchableThread iThread;
+        private IWatchableThread iSubscribeThread; 
 
         protected Dictionary<Type, IWatchableService> iServices;
     }

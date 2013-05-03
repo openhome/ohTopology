@@ -277,7 +277,7 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("Topology3.Dispose");
             }
 
-            iThread.Wait(() =>
+            iThread.Execute(() =>
             {
                 iTopology2.Groups.RemoveWatcher(this);
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using OpenHome.Net.ControlPoint;
 using OpenHome.Os.App;
@@ -25,7 +26,7 @@ namespace OpenHome.Av
             iProductLookup = new Dictionary<IWatchableDevice, ServiceProduct>();
             iProducts = new WatchableUnordered<ServiceProduct>(aThread);
 
-            iDevices = iNetwork.GetWatchableDeviceCollection<Product>();
+            iDevices = iNetwork.GetWatchableDeviceCollection<ServiceProduct>();
             iThread.Schedule(() =>
             {
                 iDevices.AddWatcher(this);
@@ -39,7 +40,7 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("Topology1.Dispose");
             }
 
-            iThread.Wait(() =>
+            iThread.Execute(() =>
             {
                 iDevices.RemoveWatcher(this);
             });
@@ -47,16 +48,16 @@ namespace OpenHome.Av
             iDevices = null;
 
             // stop subscriptions for all products that are outstanding
-            foreach (IWatchableDevice d in iPendingSubscriptions)
+            /*foreach (Task<ServiceProduct> t in iPendingSubscriptions.Values)
             {
-                d.Unsubscribe<Product>();
-            }
+                t.Dispose();
+            }*/
             iPendingSubscriptions = null;
 
             // dispose of all products, which will in turn unsubscribe
-            foreach (IWatchableDevice d in iProductLookup.Keys)
+            foreach (ServiceProduct p in iProductLookup.Values)
             {
-                d.Unsubscribe<Product>();
+                p.Dispose();
             }
             iProductLookup = null;
 
@@ -88,8 +89,20 @@ namespace OpenHome.Av
 
         public void UnorderedAdd(IWatchableDevice aItem)
         {
-            aItem.Subscribe<Product>(Subscribed);
             iPendingSubscriptions.Add(aItem);
+            aItem.Create<ServiceProduct>((IWatchableDevice device, ServiceProduct product) =>
+            {
+                if (iPendingSubscriptions.Contains(aItem))
+                {
+                    iProducts.Add(product);
+                    iProductLookup.Add(product.Device, product);
+                    iPendingSubscriptions.Remove(aItem);
+                }
+                else
+                {
+                    product.Dispose();
+                }
+            });
         }
 
         public void UnorderedRemove(IWatchableDevice aItem)
@@ -115,20 +128,19 @@ namespace OpenHome.Av
             }
         }
 
-        private void Subscribed(IWatchableDevice aDevice, Product aProduct)
+        /*private void Subscribed(IWatchableDevice aDevice, ServiceProduct aProduct)
         {
-            ServiceProduct product = new ServiceProduct(aDevice, aProduct);
             if (iPendingSubscriptions.Contains(aDevice))
             {
-                iProducts.Add(product);
-                iProductLookup.Add(aDevice, product);
+                iProducts.Add(aProduct);
+                iProductLookup.Add(aDevice, aProduct);
                 iPendingSubscriptions.Remove(aDevice);
             }
             else
             {
-                product.Dispose();
+                aProduct.Dispose();
             }
-        }
+        }*/
 
         private bool iDisposed;
 

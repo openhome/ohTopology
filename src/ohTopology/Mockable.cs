@@ -121,7 +121,7 @@ namespace OpenHome.Av
                     {
                         if (wait)
                         {
-                            aThread.WaitAll();
+                            aThread.Wait();
                             wait = false;
                         }
 

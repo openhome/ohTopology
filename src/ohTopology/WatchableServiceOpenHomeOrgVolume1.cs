@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 using OpenHome.Os.App;
 using OpenHome.Net.ControlPoint.Proxies;
+using OpenHome.Os;
 
 namespace OpenHome.Av
 {
@@ -39,6 +40,11 @@ namespace OpenHome.Av
         }
 
         public abstract void Dispose();
+
+        public IService Create(IManagableWatchableDevice aDevice)
+        {
+            return new ServiceVolume(aDevice, this);
+        }
 
         internal abstract IServiceOpenHomeOrgVolume1 Service { get; }
 
@@ -851,47 +857,62 @@ namespace OpenHome.Av
 
     public class WatchableVolumeFactory : IWatchableServiceFactory
     {
-        public WatchableVolumeFactory(IWatchableThread aThread)
+        public WatchableVolumeFactory(IWatchableThread aThread, IWatchableThread aSubscribeThread)
         {
+            iLock = new object();
             iThread = aThread;
 
-            iService = null;
+            iSubscribeThread = aSubscribeThread;
         }
 
         public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
-            if (iService == null && iPendingService == null)
+            iSubscribeThread.Schedule(() =>
             {
-                WatchableDevice d = aDevice as WatchableDevice;
-                iPendingService = new CpProxyAvOpenhomeOrgVolume1(d.Device);
-                iPendingService.SetPropertyInitialEvent(delegate
+                if (iService == null && iPendingService == null)
                 {
-                    iThread.Schedule(() =>
+                    WatchableDevice d = aDevice as WatchableDevice;
+                    iPendingService = new CpProxyAvOpenhomeOrgVolume1(d.Device);
+                    iPendingService.SetPropertyInitialEvent(delegate
                     {
-                        iService = new WatchableVolume(iThread, string.Format("Volume({0})", aDevice.Udn), aDevice, iPendingService);
-                        iPendingService = null;
-                        aCallback(iService);
+                        lock (iLock)
+                        {
+                            if (iPendingService != null)
+                            {
+                                iService = new WatchableVolume(iThread, string.Format("Volume({0})", aDevice.Udn), aDevice, iPendingService);
+                                iPendingService = null;
+                                aCallback(iService);
+                            }
+                        }
                     });
-                });
-                iPendingService.Subscribe();
-            }
+                    iPendingService.Subscribe();
+                }
+            });
         }
 
         public void Unsubscribe()
         {
-            if (iPendingService != null)
+            iSubscribeThread.Schedule(() =>
             {
-                iPendingService.Dispose();
-                iPendingService = null;
-            }
+                lock (iLock)
+                {
+                    if (iPendingService != null)
+                    {
+                        iPendingService.Dispose();
+                        iPendingService = null;
+                    }
 
-            if (iService != null)
-            {
-                iService.Dispose();
-                iService = null;
-            }
+                    if (iService != null)
+                    {
+                        iService.Dispose();
+                        iService = null;
+                    }
+                }
+            });
         }
 
+        private object iLock;
+        private IWatchableThread iSubscribeThread;
         private CpProxyAvOpenhomeOrgVolume1 iPendingService;
         private WatchableVolume iService;
         private IWatchableThread iThread;
@@ -955,7 +976,7 @@ namespace OpenHome.Av
 
     public class ServiceVolume : IServiceOpenHomeOrgVolume1, IService
     {
-        public ServiceVolume(IWatchableDevice aDevice, IServiceOpenHomeOrgVolume1 aService)
+        public ServiceVolume(IManagableWatchableDevice aDevice, IServiceOpenHomeOrgVolume1 aService)
         {
             iDevice = aDevice;
             iService = aService;
@@ -963,7 +984,7 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            iDevice.Unsubscribe<Volume>();
+            iDevice.Unsubscribe<ServiceVolume>();
             iDevice = null;
         }
 
@@ -1057,7 +1078,7 @@ namespace OpenHome.Av
             iService.VolumeInc();
         }
 
-        private IWatchableDevice iDevice;
+        private IManagableWatchableDevice iDevice;
         private IServiceOpenHomeOrgVolume1 iService;
     }
 }

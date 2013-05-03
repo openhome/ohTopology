@@ -187,10 +187,11 @@ namespace TestTopology2
 
             ExceptionReporter reporter = new ExceptionReporter();
             WatchableThread thread = new WatchableThread(reporter);
+            WatchableThread subscribeThread = new WatchableThread(reporter);
 
             Mockable mocker = new Mockable();
 
-            MockNetwork network = new FourDsMockNetwork(thread, mocker);
+            MockNetwork network = new FourDsMockNetwork(thread, subscribeThread, mocker);
             mocker.Add("network", network);
 
             Topology1 topology1 = new Topology1(thread, network);
@@ -208,14 +209,14 @@ namespace TestTopology2
 
             try
             {
-            	runner.Run(thread, new StreamReader(args[0]), mocker);
+            	runner.Run(network, new StreamReader(args[0]), mocker);
             }
             catch (MockableScriptRunner.AssertError)
             {
                 return 1;
             }
 
-            thread.Wait(() =>
+            thread.Execute(() =>
             {
                 topology2.Groups.RemoveWatcher(watcher);
                 watcher.Dispose();

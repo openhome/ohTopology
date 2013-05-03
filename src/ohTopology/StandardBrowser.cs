@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using OpenHome.Os.App;
 
@@ -18,43 +19,9 @@ namespace OpenHome.Av
         IWatchable<IInfoMetadata> Metadata { get; }
     }
 
-    public interface ISourceController
-    {
-        string Name { get; }
-
-        IWatchable<bool> Standby { get; }
-        void SetStandby(bool aValue);
-
-        IWatchable<IInfoNext> InfoNext { get; }
-
-        IWatchable<string> TransportState { get; }
-
-        IWatchable<bool> CanPause { get; }
-        void Play();
-        void Pause();
-        void Stop();
-
-        bool CanSkip { get; }
-        void Previous();
-        void Next();
-
-        //IWatchable<ITime> Create();
-
-        IWatchable<bool> CanSeek { get; }
-        void Seek(uint aSeconds);
-
-        IWatchable<bool> HasVolume { get; }
-        IWatchable<bool> Mute { get; }
-        IWatchable<uint> Volume { get; }
-        void SetMute(bool aMute);
-        void SetVolume(uint aSeconds);
-        void VolumeInc();
-        void VolumeDec();
-    }
-
     class VolumeController : IWatcher<bool>, IWatcher<uint>, IDisposable
     {
-        public VolumeController(IWatchableDevice aDevice, Watchable<bool> aHasVolume, Watchable<bool> aMute, Watchable<uint> aValue)
+        public VolumeController(IWatchableThread aThread, IWatchableDevice aDevice, Watchable<bool> aHasVolume, Watchable<bool> aMute, Watchable<uint> aValue)
         {
             iLock = new object();
             iDisposed = false;
@@ -65,8 +32,25 @@ namespace OpenHome.Av
             iMute = aMute;
             iValue = aValue;
 
-            iPending = true;
-            iDevice.Subscribe<Volume>(Subscribed);
+            iDevice.Create<ServiceVolume>((IWatchableDevice device, ServiceVolume volume) =>
+            {
+                lock (iLock)
+                {
+                    if (!iDisposed)
+                    {
+                        iVolume = volume;
+
+                        iVolume.Mute.AddWatcher(this);
+                        iVolume.Value.AddWatcher(this);
+
+                        iHasVolume.Update(true);
+                    }
+                    else
+                    {
+                        volume.Dispose();
+                    }
+                }
+            });
         }
 
         public void Dispose()
@@ -85,6 +69,7 @@ namespace OpenHome.Av
                     iVolume.Mute.RemoveWatcher(this);
                     iVolume.Value.RemoveWatcher(this);
 
+                    iVolume.Dispose();
                     iVolume = null;
                 }
 
@@ -148,32 +133,8 @@ namespace OpenHome.Av
         {
         }
 
-        private void Subscribed(IWatchableDevice aDevice, Volume aVolume)
-        {
-            ServiceVolume volume = new ServiceVolume(aDevice, aVolume);
-            lock (iLock)
-            {
-                if (!iDisposed)
-                {
-                    iPending = false;
-                    iVolume = volume;
-
-                    iVolume.Mute.AddWatcher(this);
-                    iVolume.Value.AddWatcher(this);
-
-                    iHasVolume.Update(true);
-                }
-                else
-                {
-                    iPending = false;
-                    volume.Dispose();
-                }
-            }
-        }
-
         private object iLock;
         private bool iDisposed;
-        private bool iPending;
         private ServiceVolume iVolume;
 
         private IWatchableDevice iDevice;
@@ -319,7 +280,7 @@ namespace OpenHome.Av
             }
         }
 
-        IWatchable<bool> CanPause
+        public IWatchable<bool> CanPause
         {
             get
             {
@@ -490,7 +451,7 @@ namespace OpenHome.Av
             if (aValue.VolumeDevices.Count() > 0)
             {
                 IWatchableDevice device = aValue.VolumeDevices.ElementAt(0);
-                iVolumeController = new VolumeController(device, iHasVolume, iMute, iValue);
+                iVolumeController = new VolumeController(iThread, device, iHasVolume, iMute, iValue);
             }
         }
 
@@ -504,12 +465,12 @@ namespace OpenHome.Av
                     if (device != iVolumeController.Device)
                     {
                         iVolumeController.Dispose();
-                        iVolumeController = new VolumeController(device, iHasVolume, iMute, iValue);
+                        iVolumeController = new VolumeController(iThread, device, iHasVolume, iMute, iValue);
                     }
                 }
                 else
                 {
-                    iVolumeController = new VolumeController(device, iHasVolume, iMute, iValue);
+                    iVolumeController = new VolumeController(iThread, device, iHasVolume, iMute, iValue);
                 }
             }
             else
@@ -713,7 +674,7 @@ namespace OpenHome.Av
 
     class InfoWatcher : IWatcher<IInfoDetails>, IWatcher<IInfoMetadata>, IWatcher<IInfoMetatext>, IDisposable
     {
-        public InfoWatcher(IWatchableDevice aDevice, Watchable<RoomDetails> aDetails, Watchable<RoomMetadata> aMetadata, Watchable<RoomMetatext> aMetatext)
+        public InfoWatcher(IWatchableThread aThread, IWatchableDevice aDevice, Watchable<RoomDetails> aDetails, Watchable<RoomMetadata> aMetadata, Watchable<RoomMetatext> aMetatext)
         {
             iLock = new object();
             iDisposed = false;
@@ -723,8 +684,24 @@ namespace OpenHome.Av
             iMetadata = aMetadata;
             iMetatext = aMetatext;
 
-            iPending = true;
-            iDevice.Subscribe<Info>(Subscribed);
+            iDevice.Create<ServiceInfo>((IWatchableDevice device, ServiceInfo info) =>
+            {
+                lock (iLock)
+                {
+                    if (!iDisposed)
+                    {
+                        iInfo = info;
+
+                        iInfo.Details.AddWatcher(this);
+                        iInfo.Metadata.AddWatcher(this);
+                        iInfo.Metatext.AddWatcher(this);
+                    }
+                    else
+                    {
+                        info.Dispose();
+                    }
+                }
+            });
         }
 
         public void Dispose()
@@ -734,11 +711,6 @@ namespace OpenHome.Av
                 if (iDisposed)
                 {
                     throw new ObjectDisposedException("InfoWatcher.Dispose");
-                }
-
-                if (iPending)
-                {
-                    iDevice.Unsubscribe<Info>();
                 }
 
                 if (iInfo != null)
@@ -799,31 +771,8 @@ namespace OpenHome.Av
             iMetatext.Update(new RoomMetatext());
         }
 
-        private void Subscribed(IWatchableDevice aDevice, Info aInfo)
-        {
-            ServiceInfo info = new ServiceInfo(aDevice, aInfo);
-            lock (iLock)
-            {
-                if (!iDisposed)
-                {
-                    iPending = false;
-                    iInfo = info;
-
-                    iInfo.Details.AddWatcher(this);
-                    iInfo.Metadata.AddWatcher(this);
-                    iInfo.Metatext.AddWatcher(this);
-                }
-                else
-                {
-                    iPending = false;
-                    info.Dispose();
-                }
-            }
-        }
-
         private object iLock;
         private bool iDisposed;
-        private bool iPending;
         private ServiceInfo iInfo;
 
         private IWatchableDevice iDevice;
@@ -1048,7 +997,7 @@ namespace OpenHome.Av
         {
             ITopology4Source source = iSources[0];
             iWatchableSource = new Watchable<ITopology4Source>(iThread, string.Format("Source({0})", iName), source);
-            iInfoWatcher = new InfoWatcher(source.Device, iDetails, iMetadata, iMetatext);
+            iInfoWatcher = new InfoWatcher(iThread, source.Device, iDetails, iMetadata, iMetatext);
             iSource = source;
         }
 
@@ -1077,7 +1026,7 @@ namespace OpenHome.Av
             iInfoWatcher.Dispose();
             iInfoWatcher = null;
 
-            iInfoWatcher = new InfoWatcher(source.Device, iDetails, iMetadata, iMetatext);
+            iInfoWatcher = new InfoWatcher(iThread, source.Device, iDetails, iMetadata, iMetatext);
 
             iWatchableSource.Update(source);
             iSource = source;
@@ -1135,7 +1084,7 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("LinnHouse.Dispose");
             }
 
-            iThread.Wait(() =>
+            iThread.Execute(() =>
             {
                 iTopology4.Rooms.RemoveWatcher(this);
 
