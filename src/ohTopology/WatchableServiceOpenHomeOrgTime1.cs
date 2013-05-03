@@ -16,24 +16,11 @@ namespace OpenHome.Av
 
     public abstract class Time : IServiceOpenHomeOrgTime1, IWatchableService
     {
-        protected Time(string aId)
-        {
-            iId = aId;
-        }
-
         public abstract void Dispose();
 
         public IService Create(IManagableWatchableDevice aDevice)
         {
             return new ServiceTime(aDevice, this);
-        }
-
-        public string Id
-        {
-            get
-            {
-                return iId;
-            }
         }
 
         internal abstract IServiceOpenHomeOrgTime1 Service { get; }
@@ -53,8 +40,6 @@ namespace OpenHome.Av
                 return Service.Seconds;
             }
         }
-
-        private string iId;
     }
 
     public class ServiceOpenHomeOrgTime1 : IServiceOpenHomeOrgTime1, IDisposable
@@ -257,7 +242,6 @@ namespace OpenHome.Av
     public class WatchableTime : Time
     {
         public WatchableTime(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgTime1 aService)
-            : base(aId)
         {
             iService = new ServiceOpenHomeOrgTime1(aThread, aId, aService);
         }
@@ -282,7 +266,6 @@ namespace OpenHome.Av
     public class MockWatchableTime : Time, IMockable
     {
         public MockWatchableTime(IWatchableThread aThread, string aId, uint aSeconds, uint aDuration)
-            : base(aId)
         {
             iService = new MockServiceOpenHomeOrgTime1(aThread, aId, aSeconds, aDuration);
         }

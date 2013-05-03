@@ -448,6 +448,8 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, ITopology4Source aValue)
         {
+            iSourceController = SourceController.Create(iThread, aValue);
+
             if (aValue.VolumeDevices.Count() > 0)
             {
                 IWatchableDevice device = aValue.VolumeDevices.ElementAt(0);
@@ -457,6 +459,14 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
         {
+            if (iSourceController != null)
+            {
+                iSourceController.Dispose();
+                iSourceController = null;
+            }
+
+            iSourceController = SourceController.Create(iThread, aValue);
+
             if (aValue.VolumeDevices.Count() > 0)
             {
                 IWatchableDevice device = aValue.VolumeDevices.ElementAt(0);
@@ -485,6 +495,12 @@ namespace OpenHome.Av
 
         public void ItemClose(string aId, ITopology4Source aValue)
         {
+            if (iSourceController != null)
+            {
+                iSourceController.Dispose();
+                iSourceController = null;
+            }
+
             if (iVolumeController != null)
             {
                 iVolumeController.Dispose();
@@ -986,6 +1002,8 @@ namespace OpenHome.Av
         {
             iSources.Remove(aPrevious);
             iSources.Add(aValue);
+
+            SelectSource();
         }
 
         public void ItemClose(string aId, ITopology4Source aValue)

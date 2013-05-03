@@ -32,13 +32,6 @@ namespace OpenHome.Av
 
     public abstract class Volume : IServiceOpenHomeOrgVolume1, IWatchableService
     {
-
-        protected Volume(string aId, IWatchableDevice aDevice)
-        {
-            iId = aId;
-            iDevice = aDevice;
-        }
-
         public abstract void Dispose();
 
         public IService Create(IManagableWatchableDevice aDevice)
@@ -47,22 +40,6 @@ namespace OpenHome.Av
         }
 
         internal abstract IServiceOpenHomeOrgVolume1 Service { get; }
-
-        public string Id
-        {
-            get
-            {
-                return iId;
-            }
-        }
-
-        public IWatchableDevice Device
-        {
-            get
-            {
-                return iDevice;
-            }
-        }
 
         public IWatchable<int> Balance
         {
@@ -181,9 +158,6 @@ namespace OpenHome.Av
         {
             Service.VolumeInc();
         }
-
-        private string iId;
-        private IWatchableDevice iDevice;
     }
 
     public class ServiceOpenHomeOrgVolume1 : IServiceOpenHomeOrgVolume1, IDisposable
@@ -879,7 +853,7 @@ namespace OpenHome.Av
                         {
                             if (iPendingService != null)
                             {
-                                iService = new WatchableVolume(iThread, string.Format("Volume({0})", aDevice.Udn), aDevice, iPendingService);
+                                iService = new WatchableVolume(iThread, string.Format("Volume({0})", aDevice.Udn), iPendingService);
                                 iPendingService = null;
                                 aCallback(iService);
                             }
@@ -920,8 +894,7 @@ namespace OpenHome.Av
 
     public class WatchableVolume : Volume
     {
-        public WatchableVolume(IWatchableThread aThread, string aId, IWatchableDevice aDevice, CpProxyAvOpenhomeOrgVolume1 aService)
-            : base(aId, aDevice)
+        public WatchableVolume(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgVolume1 aService)
         {
             iService = new ServiceOpenHomeOrgVolume1(aThread, aId, aService);
         }
@@ -945,9 +918,8 @@ namespace OpenHome.Av
 
     public class MockWatchableVolume : Volume, IMockable
     {
-        public MockWatchableVolume(IWatchableThread aThread, string aId, IWatchableDevice aDevice, int aBalance, uint aBalanceMax, int aFade, uint aFadeMax, bool aMute, uint aVolume, uint aVolumeLimit, uint aVolumeMax,
+        public MockWatchableVolume(IWatchableThread aThread, string aId, int aBalance, uint aBalanceMax, int aFade, uint aFadeMax, bool aMute, uint aVolume, uint aVolumeLimit, uint aVolumeMax,
             uint aVolumeMilliDbPerStep, uint aVolumeSteps, uint aVolumeUnity)
-            : base(aId, aDevice)
         {
             iService = new MockServiceOpenHomeOrgVolume1(aThread, aId, aBalance, aBalanceMax, aFade, aFadeMax, aMute, aVolume, aVolumeLimit, aVolumeMax, aVolumeMilliDbPerStep, aVolumeSteps, aVolumeUnity);
         }

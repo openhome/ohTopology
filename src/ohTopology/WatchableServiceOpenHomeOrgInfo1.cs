@@ -152,11 +152,6 @@ namespace OpenHome.Av
 
     public abstract class Info : IServiceOpenHomeOrgInfo1, IWatchableService
     {
-        protected Info(string aId)
-        {
-            iId = aId;
-        }
-
         public abstract void Dispose();
 
         public IService Create(IManagableWatchableDevice aDevice)
@@ -165,14 +160,6 @@ namespace OpenHome.Av
         }
 
         internal abstract IServiceOpenHomeOrgInfo1 Service { get; }
-
-        public string Id
-        {
-            get
-            {
-                return iId;
-            }
-        }
 
         public IWatchable<IInfoDetails> Details
         {
@@ -197,8 +184,6 @@ namespace OpenHome.Av
                 return Service.Metatext;
             }
         }
-
-        private string iId;
     }
 
     public class ServiceOpenHomeOrgInfo1 : IServiceOpenHomeOrgInfo1
@@ -498,7 +483,6 @@ namespace OpenHome.Av
     public class WatchableInfo : Info
     {
         public WatchableInfo(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgInfo1 aService)
-            : base(aId)
         {
             iService = new ServiceOpenHomeOrgInfo1(aThread, aId, aService);
         }
@@ -523,7 +507,6 @@ namespace OpenHome.Av
     public class MockWatchableInfo : Info, IMockable
     {
         public MockWatchableInfo(IWatchableThread aThread, string aId, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
-            : base(aId)
         {
             iService = new MockServiceOpenHomeOrgInfo1(aThread, aId, aDetails, aMetadata, aMetatext);
         }

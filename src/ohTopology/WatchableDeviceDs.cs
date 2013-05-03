@@ -31,7 +31,7 @@ namespace OpenHome.Av
                 "", "Linn High Fidelity System Component", ""));
 
             // volume service
-            Add<ServiceVolume>(new MockWatchableVolume(aThread, aUdn, this, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
+            Add<ServiceVolume>(new MockWatchableVolume(aThread, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
 
             // info service
             Add<ServiceInfo>(new MockWatchableInfo(aThread, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
@@ -44,6 +44,9 @@ namespace OpenHome.Av
 
             // sender service
             Add<ServiceSender>(new MockWatchableSender(aThread, aUdn, "Info Time", false, string.Empty, string.Empty, "Enabled"));
+
+            // radio service
+            Add<ServiceRadio>(new MockWatchableRadio(aThread, aUdn, 0, new byte[0], string.Empty, string.Empty, "Stopped", string.Empty));
         }
 
         public MockWatchableDs(IWatchableThread aThread, IWatchableThread aSubscribeThread, string aUdn, string aRoom, string aName, string aAttributes)
@@ -66,7 +69,7 @@ namespace OpenHome.Av
                 "", "Linn High Fidelity System Component", ""));
 
             // volume service
-            Add<ServiceVolume>(new MockWatchableVolume(aThread, aUdn, this, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
+            Add<ServiceVolume>(new MockWatchableVolume(aThread, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
 
             // info service
             Add<ServiceInfo>(new MockWatchableInfo(aThread, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
@@ -79,6 +82,9 @@ namespace OpenHome.Av
 
             // sender service
             Add<ServiceSender>(new MockWatchableSender(aThread, aUdn, "Info Time", false, string.Empty, string.Empty, "Enabled"));
+
+            // radio service
+            Add<ServiceRadio>(new MockWatchableRadio(aThread, aUdn, 0, new byte[0], string.Empty, string.Empty, "Stopped", string.Empty));
         }
 
         public override void Execute(IEnumerable<string> aValue)

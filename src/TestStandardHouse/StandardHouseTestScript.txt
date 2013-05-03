@@ -147,3 +147,6 @@ expect Details(Main Room) Updated: Active=True, BitDepth=1, BitRate=2, CodeName=
 expect Metadata(Main Room) Updated: Active=True, Metadata=Ds68, Uri=http://Ds68
 expect Metatext(Main Room) Updated: Active=True, Metatext=Ds68
 empty
+
+mock network update ds 67 product sourceindex 1
+empty

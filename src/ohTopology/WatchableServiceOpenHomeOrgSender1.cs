@@ -23,24 +23,11 @@ namespace OpenHome.Av
 
     public abstract class Sender : ISender, IWatchableService
     {
-        protected Sender(string aId)
-        {
-            iId = aId;
-        }
-
         public abstract void Dispose();
 
         public IService Create(IManagableWatchableDevice aDevice)
         {
             return new ServiceSender(aDevice, this);
-        }
-
-        public string Id
-        {
-            get
-            {
-                return iId;
-            }
         }
 
         internal abstract IServiceOpenHomeOrgSender1 Service { get; }
@@ -84,8 +71,6 @@ namespace OpenHome.Av
                 return iPresentationUrl;
             }
         }
-
-        private string iId;
 
         protected string iAttributes;
         protected string iPresentationUrl;
@@ -350,7 +335,6 @@ namespace OpenHome.Av
     public class WatchableSender : Sender
     {
         public WatchableSender(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgSender1 aService)
-            : base(aId)
         {
             iAttributes = aService.PropertyAttributes();
             iPresentationUrl = aService.PropertyPresentationUrl();
@@ -378,7 +362,6 @@ namespace OpenHome.Av
     public class MockWatchableSender : Sender, IMockable
     {
         public MockWatchableSender(IWatchableThread aThread, string aId, string aAttributes, bool aAudio, string aMetadata, string aPresentationUrl, string aStatus)
-            : base(aId)
         {
             iAttributes = aAttributes;
             iPresentationUrl = aPresentationUrl;

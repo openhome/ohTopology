@@ -41,11 +41,6 @@ namespace OpenHome.Av
 
     public abstract class Product : IProduct, IWatchableService
     {
-        protected Product(string aId)
-        {
-            iId = aId;
-        }
-
         // IDisposable methods
 
         public abstract void Dispose();
@@ -53,14 +48,6 @@ namespace OpenHome.Av
         public IService Create(IManagableWatchableDevice aDevice)
         {
             return new ServiceProduct(aDevice, this);
-        }
-
-        public string Id
-        {
-            get
-            {
-                return iId;
-            }
         }
 
         internal abstract IServiceOpenHomeOrgProduct1 Service { get; }
@@ -219,8 +206,6 @@ namespace OpenHome.Av
                 return iProductUrl;
             }
         }
-
-        private string iId;
 
         protected string iAttributes;
         protected string iManufacturerImageUri;
@@ -517,7 +502,6 @@ namespace OpenHome.Av
     public class WatchableProduct : Product
     {
         public WatchableProduct(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgProduct1 aService)
-            : base(aId)
         {
             iAttributes = aService.PropertyAttributes();
             iManufacturerImageUri = aService.PropertyManufacturerImageUri();
@@ -813,7 +797,6 @@ namespace OpenHome.Av
         public MockWatchableProduct(IWatchableThread aThread, string aId, string aRoom, string aName, uint aSourceIndex, SourceXml aSourceXmlFactory, bool aStandby,
             string aAttributes, string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl, string aModelImageUri, string aModelInfo, string aModelName,
             string aModelUrl, string aProductImageUri, string aProductInfo, string aProductUrl)
-            : base(aId)
         {
             iAttributes = aAttributes;
             iManufacturerImageUri = aManufacturerImageUri;

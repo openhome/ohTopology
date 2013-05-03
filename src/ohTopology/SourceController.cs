@@ -36,27 +36,76 @@ namespace OpenHome.Av
         void VolumeDec();
     }
 
-    public class SourceControllerRadio : ISourceController
+    public class SourceController
+    {
+        public static ISourceController Create(IWatchableThread aThread, ITopology4Source aSource)
+        {
+            if (aSource.Type == "Radio")
+            {
+                Console.WriteLine("Create RADIO source controller");
+                return new SourceControllerRadio(aThread, aSource);
+            }
+
+            return null;
+        }
+    }
+
+    public class SourceControllerRadio : IWatcher<string>, ISourceController
     {
         public SourceControllerRadio(IWatchableThread aThread, ITopology4Source aSource)
         {
+            iLock = new object();
+            iDisposed = false;
+
             iSource = aSource;
 
             iCanPause = new Watchable<bool>(aThread, string.Format("CanPause({0}:{1})", aSource.Group, aSource.Name), false);
             iCanSeek = new Watchable<bool>(aThread, string.Format("CanSeek({0}:{1})", aSource.Group, aSource.Name), false);
-            iCanSkip = new Watchable<bool>(aThread, string.Format("CanSkip({0}:{1})", aSource.Group, aSource.Name), false);
+            iTransportState = new Watchable<string>(aThread, string.Format("TransportState({0}:{1})", aSource.Group, aSource.Name), string.Empty);
+
+            aSource.Device.Create<ServiceRadio>((IWatchableDevice device, ServiceRadio radio) =>
+            {
+                lock (iLock)
+                {
+                    if (!iDisposed)
+                    {
+                        iRadio = radio;
+
+                        iRadio.TransportState.AddWatcher(this);
+                    }
+                    else
+                    {
+                        radio.Dispose();
+                    }
+                }
+            });
         }
 
         public void Dispose()
         {
-            iCanPause.Dispose();
-            iCanPause = null;
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("SourceControllerRadio.Dispose");
+                }
 
-            iCanSeek.Dispose();
-            iCanSeek = null;
+                if (iRadio != null)
+                {
+                    iRadio.TransportState.RemoveWatcher(this);
 
-            iCanSkip.Dispose();
-            iCanSkip = null;
+                    iRadio.Dispose();
+                    iRadio = null;
+                }
+
+                iCanPause.Dispose();
+                iCanPause = null;
+
+                iCanSeek.Dispose();
+                iCanSeek = null;
+
+                iDisposed = true;
+            }
         }
 
         public string Name
@@ -82,7 +131,10 @@ namespace OpenHome.Av
 
         public IWatchable<string> TransportState
         {
-            get { throw new NotImplementedException(); }
+            get 
+            {
+                return iTransportState;
+            }
         }
 
         public IWatchable<bool> CanPause
@@ -95,22 +147,25 @@ namespace OpenHome.Av
 
         public void Play()
         {
-            throw new NotImplementedException();
+            iRadio.Play();
         }
 
         public void Pause()
         {
-            throw new NotImplementedException();
+            iRadio.Pause();
         }
 
         public void Stop()
         {
-            throw new NotImplementedException();
+            iRadio.Stop();
         }
 
         public bool CanSkip
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                return true;
+            }
         }
 
         public void Previous()
@@ -125,12 +180,15 @@ namespace OpenHome.Av
 
         public IWatchable<bool> CanSeek
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                return iCanSeek;
+            }
         }
 
         public void Seek(uint aSeconds)
         {
-            throw new NotImplementedException();
+            iRadio.SeekSecondsAbsolute(aSeconds);
         }
 
         public IWatchable<bool> HasVolume
@@ -167,11 +225,29 @@ namespace OpenHome.Av
         {
             throw new NotImplementedException();
         }
+        
+        public void ItemOpen(string aId, string aValue)
+        {
+            iTransportState.Update(aValue);
+        }
+
+        public void ItemUpdate(string aId, string aValue, string aPrevious)
+        {
+            iTransportState.Update(aValue);
+        }
+
+        public void ItemClose(string aId, string aValue)
+        {
+        }
+
+        private object iLock;
+        private bool iDisposed;
 
         private ITopology4Source iSource;
+        private ServiceRadio iRadio;
 
         private Watchable<bool> iCanPause;
         private Watchable<bool> iCanSeek;
-        private Watchable<bool> iCanSkip;
+        private Watchable<string> iTransportState;
     }
 }

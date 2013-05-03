@@ -37,6 +37,9 @@
     <Reference Include="CpAvOpenhomeOrgProduct1.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgProduct1.net.dll</HintPath>
     </Reference>
+    <Reference Include="CpAvOpenhomeOrgRadio1.net">
+      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgRadio1.net.dll</HintPath>
+    </Reference>
     <Reference Include="CpAvOpenhomeOrgReceiver1.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgReceiver1.net.dll</HintPath>
     </Reference>
