@@ -6,13 +6,14 @@ namespace OpenHome.Av
 {
     public class SourceControllerPlaylist : IWatcher<string>, ISourceController
     {
-        public SourceControllerPlaylist(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause, Watchable<bool> aCanSkip, Watchable<bool> aCanSeek)
+        public SourceControllerPlaylist(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasSourceControl, Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause, Watchable<bool> aCanSkip, Watchable<bool> aCanSeek)
         {
             iLock = new object();
             iDisposed = false;
 
             iSource = aSource;
 
+            iHasSourceControl = aHasSourceControl;
             iInfoNext = aInfoNext;
             iCanPause = aCanPause;
             iCanSeek = aCanSeek;
@@ -28,7 +29,10 @@ namespace OpenHome.Av
 
                         aHasInfoNext.Update(true);
                         aCanSkip.Update(true);
+
                         iPlaylist.TransportState.AddWatcher(this);
+
+                        iHasSourceControl.Update(true);
                     }
                     else
                     {
@@ -49,15 +53,19 @@ namespace OpenHome.Av
 
                 if (iPlaylist != null)
                 {
+                    iHasSourceControl.Update(false);
+
                     iPlaylist.TransportState.RemoveWatcher(this);
 
                     iPlaylist.Dispose();
                     iPlaylist = null;
                 }
 
+                iHasSourceControl = null;
                 iInfoNext = null;
                 iCanPause = null;
                 iCanSeek = null;
+                iTransportState = null;
 
                 iDisposed = true;
             }
@@ -68,6 +76,14 @@ namespace OpenHome.Av
             get
             {
                 return iSource.Name;
+            }
+        }
+
+        public IWatchable<bool> HasSourceControl
+        {
+            get
+            {
+                return iHasSourceControl;
             }
         }
 
@@ -169,6 +185,7 @@ namespace OpenHome.Av
         private ITopology4Source iSource;
         private ServicePlaylist iPlaylist;
 
+        private Watchable<bool> iHasSourceControl;
         private Watchable<IInfoMetadata> iInfoNext;
         private Watchable<bool> iCanPause;
         private Watchable<bool> iCanSeek;

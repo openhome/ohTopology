@@ -6,13 +6,14 @@ namespace OpenHome.Av
 {
     public class SourceControllerRadio : IWatcher<string>, ISourceController
     {
-        public SourceControllerRadio(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause, Watchable<bool> aCanSkip, Watchable<bool> aCanSeek)
+        public SourceControllerRadio(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasSourceControl, Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause, Watchable<bool> aCanSkip, Watchable<bool> aCanSeek)
         {
             iLock = new object();
             iDisposed = false;
 
             iSource = aSource;
 
+            iHasSourceControl = aHasSourceControl;
             iCanPause = aCanPause;
             iCanSeek = aCanSeek;
             iTransportState = aTransportState;
@@ -29,7 +30,10 @@ namespace OpenHome.Av
                         aCanSkip.Update(false);
                         iCanPause.Update(false);
                         iCanSeek.Update(false);
+
                         iRadio.TransportState.AddWatcher(this);
+                        
+                        iHasSourceControl.Update(true);
                     }
                     else
                     {
@@ -50,14 +54,18 @@ namespace OpenHome.Av
 
                 if (iRadio != null)
                 {
+                    iHasSourceControl.Update(false);
+
                     iRadio.TransportState.RemoveWatcher(this);
 
                     iRadio.Dispose();
                     iRadio = null;
                 }
 
+                iHasSourceControl = null;
                 iCanPause = null;
                 iCanSeek = null;
+                iTransportState = null;
 
                 iDisposed = true;
             }
@@ -68,6 +76,14 @@ namespace OpenHome.Av
             get
             {
                 return iSource.Name;
+            }
+        }
+
+        public IWatchable<bool> HasSourceControl
+        {
+            get
+            {
+                return iHasSourceControl;
             }
         }
 
@@ -166,6 +182,7 @@ namespace OpenHome.Av
         private ITopology4Source iSource;
         private ServiceRadio iRadio;
 
+        private Watchable<bool> iHasSourceControl;
         private Watchable<bool> iCanPause;
         private Watchable<bool> iCanSeek;
         private Watchable<string> iTransportState;

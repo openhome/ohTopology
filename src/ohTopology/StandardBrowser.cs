@@ -42,6 +42,7 @@ namespace OpenHome.Av
 
             iStandby = new WatchableProxy<EStandby>(aRoom.Standby);
 
+            iHasSourceControl = new Watchable<bool>(aThread, string.Format("HasSourceControl({0})", aRoom.Name), false);
             iHasInfoNext = new Watchable<bool>(aThread, string.Format("HasInfoNext({0})", aRoom.Name), false);
             iInfoNext = new Watchable<IInfoMetadata>(iThread, string.Format("InfoNext({0})", iRoom.Name), new RoomMetadata());
             
@@ -79,6 +80,9 @@ namespace OpenHome.Av
 
             iStandby.Dispose();
             iStandby = null;
+
+            iHasSourceControl.Dispose();
+            iHasSourceControl = null;
 
             iHasInfoNext.Dispose();
             iHasInfoNext = null;
@@ -234,6 +238,14 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<bool> HasSourceControl
+        {
+            get
+            {
+                return iHasSourceControl;
+            }
+        }
+
         public IWatchable<bool> HasInfoNext
         {
             get
@@ -350,7 +362,7 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, ITopology4Source aValue)
         {
-            iSourceController = SourceController.Create(iThread, aValue, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek);
+            iSourceController = SourceController.Create(iThread, aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek);
 
             if (aValue.VolumeDevices.Count() > 0)
             {
@@ -367,7 +379,7 @@ namespace OpenHome.Av
                 iSourceController = null;
             }
 
-            iSourceController = SourceController.Create(iThread, aValue, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek);
+            iSourceController = SourceController.Create(iThread, aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek);
 
             if (aValue.VolumeDevices.Count() > 0)
             {
@@ -424,6 +436,7 @@ namespace OpenHome.Av
         private Watchable<uint> iValue;
 
         private ISourceController iSourceController;
+        private Watchable<bool> iHasSourceControl;
         private Watchable<bool> iHasInfoNext;
         private Watchable<IInfoMetadata> iInfoNext;
         private Watchable<string> iTransportState;

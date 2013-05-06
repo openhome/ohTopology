@@ -44,6 +44,7 @@ namespace TestLinnHouse
 
                 controller.Active.AddWatcher(this);
                 controller.HasVolume.AddWatcher(this);
+                controller.HasSourceControl.AddWatcher(this);
                 controller.Mute.AddWatcher(this);
                 controller.Volume.AddWatcher(this);
                 controller.TransportState.AddWatcher(this);
@@ -58,6 +59,7 @@ namespace TestLinnHouse
 
                 controller.Active.RemoveWatcher(this);
                 controller.HasVolume.RemoveWatcher(this);
+                controller.HasSourceControl.RemoveWatcher(this);
                 controller.Mute.RemoveWatcher(this);
                 controller.Volume.RemoveWatcher(this);
                 controller.TransportState.RemoveWatcher(this);
