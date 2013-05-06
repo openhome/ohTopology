@@ -284,7 +284,10 @@ namespace OpenHome.Av
             {
                 if (iActive.Value)
                 {
-                    iSourceController.Play();
+                    if (iHasSourceControl.Value)
+                    {
+                        iSourceController.Play();
+                    }
                 }
             });
         }
@@ -295,7 +298,10 @@ namespace OpenHome.Av
             {
                 if (iActive.Value)
                 {
-                    iSourceController.Pause();
+                    if (iHasSourceControl.Value)
+                    {
+                        iSourceController.Pause();
+                    }
                 }
             });
         }
@@ -306,7 +312,10 @@ namespace OpenHome.Av
             {
                 if (iActive.Value)
                 {
-                    iSourceController.Stop();
+                    if (iHasSourceControl.Value)
+                    {
+                        iSourceController.Stop();
+                    }
                 }
             });
         }
@@ -325,7 +334,10 @@ namespace OpenHome.Av
             {
                 if (iActive.Value)
                 {
-                    iSourceController.Previous();
+                    if (iHasSourceControl.Value)
+                    {
+                        iSourceController.Previous();
+                    }
                 }
             });
         }
@@ -336,7 +348,10 @@ namespace OpenHome.Av
             {
                 if (iActive.Value)
                 {
-                    iSourceController.Next();
+                    if (iHasSourceControl.Value)
+                    {
+                        iSourceController.Next();
+                    }
                 }
             });
         }
@@ -355,7 +370,10 @@ namespace OpenHome.Av
             {
                 if (iActive.Value)
                 {
-                    iSourceController.Seek(aSeconds);
+                    if (iHasSourceControl.Value)
+                    {
+                        iSourceController.Seek(aSeconds);
+                    }
                 }
             });
         }
