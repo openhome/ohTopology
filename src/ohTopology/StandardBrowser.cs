@@ -13,456 +13,6 @@ namespace OpenHome.Av
         void Play();
     }
 
-    public interface IStandardRoomController : ISourceController
-    {
-        IWatchable<bool> Active { get; }
-
-        IWatchable<EStandby> Standby { get; }
-        void SetStandby(bool aValue);
-        
-        IWatchable<bool> HasVolume { get; }
-        IWatchable<bool> Mute { get; }
-        IWatchable<uint> Volume { get; }
-        void SetMute(bool aMute);
-        void SetVolume(uint aVolume);
-        void VolumeInc();
-        void VolumeDec();
-    }
-
-    public class StandardRoomController : IWatcher<ITopology4Source>, IDisposable
-    {
-        internal StandardRoomController(IWatchableThread aThread, StandardRoom aRoom)
-        {
-            iThread = aThread;
-            iRoom = aRoom;
-
-            iLock = new object();
-            iIsActive = true;
-            iActive = new Watchable<bool>(aThread, string.Format("Active({0})", aRoom.Name), true);
-
-            iStandby = new WatchableProxy<EStandby>(aRoom.Standby);
-
-            iHasSourceControl = new Watchable<bool>(aThread, string.Format("HasSourceControl({0})", aRoom.Name), false);
-            iHasInfoNext = new Watchable<bool>(aThread, string.Format("HasInfoNext({0})", aRoom.Name), false);
-            iInfoNext = new Watchable<IInfoMetadata>(iThread, string.Format("InfoNext({0})", iRoom.Name), new RoomMetadata());
-            
-            iHasVolume = new Watchable<bool>(aThread, string.Format("HasVolume({0})", aRoom.Name), false);
-            iMute = new Watchable<bool>(aThread, string.Format("Mute({0})", aRoom.Name), false);
-            iValue = new Watchable<uint>(aThread, string.Format("Volume({0})", aRoom.Name), 0);
-
-            iCanPause = new Watchable<bool>(aThread, string.Format("CanPause({0})", aRoom.Name), false);
-            iCanSkip = new Watchable<bool>(aThread, string.Format("CanSkip({0})", aRoom.Name), false);
-            iCanSeek = new Watchable<bool>(aThread, string.Format("CanSeek({0})", aRoom.Name), false);
-            iTransportState = new Watchable<string>(aThread, string.Format("TransportState({0})", aRoom.Name), string.Empty);
-
-            iRoom.Source.AddWatcher(this);
-
-            iRoom.AddController(this);
-        }
-
-        public void Dispose()
-        {
-            lock (iLock)
-            {
-                if (iIsActive)
-                {
-                    iStandby.Detach();
-
-                    iRoom.Source.RemoveWatcher(this);
-                    iRoom.RemoveController(this);
-                }
-            }
-
-            iRoom = null;
-
-            iActive.Dispose();
-            iActive = null;
-
-            iStandby.Dispose();
-            iStandby = null;
-
-            iHasSourceControl.Dispose();
-            iHasSourceControl = null;
-
-            iHasInfoNext.Dispose();
-            iHasInfoNext = null;
-
-            iInfoNext.Dispose();
-            iInfoNext = null;
-
-            iHasVolume.Dispose();
-            iHasVolume = null;
-
-            iMute.Dispose();
-            iMute = null;
-
-            iValue.Dispose();
-            iValue = null;
-
-            iTransportState.Dispose();
-            iTransportState = null;
-
-            iCanPause.Dispose();
-            iCanPause = null;
-
-            iCanSkip.Dispose();
-            iCanSkip = null;
-
-            iCanSeek.Dispose();
-            iCanSeek = null;
-        }
-
-        internal void SetInactive()
-        {
-            lock (iLock)
-            {
-                iIsActive = false;
-
-                iActive.Update(false);
-
-                iStandby.Detach();
-
-                iRoom.Source.RemoveWatcher(this);
-                iRoom.RemoveController(this);
-            }
-        }
-
-        public IWatchable<bool> Active
-        {
-            get
-            {
-                return iActive;
-            }
-        }
-
-        public IWatchable<EStandby> Standby
-        {
-            get
-            {
-                return iStandby;
-            }
-        }
-
-        public void SetStandby(bool aValue)
-        {
-            iThread.Schedule(() =>
-            {
-                if (iActive.Value)
-                {
-                    iRoom.SetStandby(aValue);
-                }
-            });
-        }
-
-        public IWatchable<bool> HasVolume
-        {
-            get
-            {
-                return iHasVolume;
-            }
-        }
-
-        public IWatchable<bool> Mute
-        {
-            get
-            {
-                return iMute;
-            }
-        }
-        public IWatchable<uint> Volume
-        {
-            get
-            {
-                return iValue;
-            }
-        }
-
-        public void SetMute(bool aMute)
-        {
-            iThread.Schedule(() =>
-            {
-                if (iActive.Value)
-                {
-                    iVolumeController.SetMute(aMute);
-                }
-            });
-        }
-
-        public void SetVolume(uint aVolume)
-        {
-            iThread.Schedule(() =>
-            {
-                if (iActive.Value)
-                {
-                    if (iHasVolume.Value)
-                    {
-                        iVolumeController.SetVolume(aVolume);
-                    }
-                }
-            });
-        }
-
-        public void VolumeInc()
-        {
-            iThread.Schedule(() =>
-            {
-                if (iActive.Value)
-                {
-                    if (iHasVolume.Value)
-                    {
-                        iVolumeController.VolumeInc();
-                    }
-                }
-            });
-        }
-
-        public void VolumeDec()
-        {
-            iThread.Schedule(() =>
-            {
-                if (iActive.Value)
-                {
-                    if (iHasVolume.Value)
-                    {
-                        iVolumeController.VolumeDec();
-                    }
-                }
-            });
-        }
-
-        public string Name
-        {
-            get
-            {
-                return iRoom.Name;
-            }
-        }
-
-        public IWatchable<bool> HasSourceControl
-        {
-            get
-            {
-                return iHasSourceControl;
-            }
-        }
-
-        public IWatchable<bool> HasInfoNext
-        {
-            get
-            {
-                return iHasInfoNext;
-            }
-        }
-
-        public IWatchable<IInfoMetadata> InfoNext
-        {
-            get
-            {
-                return iInfoNext;
-            }
-        }
-
-        public IWatchable<string> TransportState
-        {
-            get
-            {
-                return iTransportState;
-            }
-        }
-
-        public IWatchable<bool> CanPause
-        {
-            get
-            {
-                return iCanPause;
-            }
-        }
-
-        public void Play()
-        {
-            iThread.Schedule(() =>
-            {
-                if (iActive.Value)
-                {
-                    if (iHasSourceControl.Value)
-                    {
-                        iSourceController.Play();
-                    }
-                }
-            });
-        }
-
-        public void Pause()
-        {
-            iThread.Schedule(() =>
-            {
-                if (iActive.Value)
-                {
-                    if (iHasSourceControl.Value)
-                    {
-                        iSourceController.Pause();
-                    }
-                }
-            });
-        }
-
-        public void Stop()
-        {
-            iThread.Schedule(() =>
-            {
-                if (iActive.Value)
-                {
-                    if (iHasSourceControl.Value)
-                    {
-                        iSourceController.Stop();
-                    }
-                }
-            });
-        }
-
-        public IWatchable<bool> CanSkip
-        {
-            get
-            {
-                return iCanSkip;
-            }
-        }
-
-        public void Previous()
-        {
-            iThread.Schedule(() =>
-            {
-                if (iActive.Value)
-                {
-                    if (iHasSourceControl.Value)
-                    {
-                        iSourceController.Previous();
-                    }
-                }
-            });
-        }
-
-        public void Next()
-        {
-            iThread.Schedule(() =>
-            {
-                if (iActive.Value)
-                {
-                    if (iHasSourceControl.Value)
-                    {
-                        iSourceController.Next();
-                    }
-                }
-            });
-        }
-
-        public IWatchable<bool> CanSeek
-        {
-            get
-            {
-                return iCanSeek;
-            }
-        }
-
-        public void Seek(uint aSeconds)
-        {
-            iThread.Schedule(() =>
-            {
-                if (iActive.Value)
-                {
-                    if (iHasSourceControl.Value)
-                    {
-                        iSourceController.Seek(aSeconds);
-                    }
-                }
-            });
-        }
-
-        public void ItemOpen(string aId, ITopology4Source aValue)
-        {
-            iSourceController = SourceController.Create(iThread, aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek);
-
-            if (aValue.VolumeDevices.Count() > 0)
-            {
-                IWatchableDevice device = aValue.VolumeDevices.ElementAt(0);
-                iVolumeController = new VolumeController(iThread, device, iHasVolume, iMute, iValue);
-            }
-        }
-
-        public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
-        {
-            if (iSourceController != null)
-            {
-                iSourceController.Dispose();
-                iSourceController = null;
-            }
-
-            iSourceController = SourceController.Create(iThread, aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek);
-
-            if (aValue.VolumeDevices.Count() > 0)
-            {
-                IWatchableDevice device = aValue.VolumeDevices.ElementAt(0);
-                if (iVolumeController != null)
-                {
-                    if (device != iVolumeController.Device)
-                    {
-                        iVolumeController.Dispose();
-                        iVolumeController = new VolumeController(iThread, device, iHasVolume, iMute, iValue);
-                    }
-                }
-                else
-                {
-                    iVolumeController = new VolumeController(iThread, device, iHasVolume, iMute, iValue);
-                }
-            }
-            else
-            {
-                if (iVolumeController != null)
-                {
-                    iVolumeController.Dispose();
-                    iVolumeController = null;
-                }
-            }
-        }
-
-        public void ItemClose(string aId, ITopology4Source aValue)
-        {
-            if (iSourceController != null)
-            {
-                iSourceController.Dispose();
-                iSourceController = null;
-            }
-
-            if (iVolumeController != null)
-            {
-                iVolumeController.Dispose();
-                iVolumeController = null;
-            }
-        }
-
-        private IWatchableThread iThread;
-        private StandardRoom iRoom;
-
-        private object iLock;
-        private bool iIsActive;
-        private Watchable<bool> iActive;
-        private WatchableProxy<EStandby> iStandby;
-
-        private VolumeController iVolumeController;
-        private Watchable<bool> iHasVolume;
-        private Watchable<bool> iMute;
-        private Watchable<uint> iValue;
-
-        private ISourceController iSourceController;
-        private Watchable<bool> iHasSourceControl;
-        private Watchable<bool> iHasInfoNext;
-        private Watchable<IInfoMetadata> iInfoNext;
-        private Watchable<string> iTransportState;
-        private Watchable<bool> iCanPause;
-        private Watchable<bool> iCanSkip;
-        private Watchable<bool> iCanSeek;
-    }
-
     public class RoomDetails : IInfoDetails
     {
         internal RoomDetails()
@@ -731,6 +281,11 @@ namespace OpenHome.Av
         private Watchable<RoomMetatext> iMetatext;
     }
 
+    public interface IZone
+    {
+        IRoom Room { get; }
+    }
+
     public interface IStandardRoom
     {
         string Name { get; }
@@ -739,6 +294,10 @@ namespace OpenHome.Av
         IWatchable<RoomDetails> Details { get; }
         IWatchable<RoomMetadata> Metadata { get; }
         IWatchable<RoomMetatext> Metatext { get; }
+
+        IWatchable<bool> HasSender { get; }
+        IWatchable<bool> HasReceiver {get;}
+        IWatchableUnordered<IZone> Listeners { get; }
 
         IWatchable<ITopology4Source> Source { get; }
 
@@ -755,8 +314,6 @@ namespace OpenHome.Av
             iThread = aThread;
             iHouse = aHouse;
             iRoom = aRoom;
-            
-            iName = aRoom.Name;
 
             iControllers = new List<StandardRoomController>();
             iRoots = new List<ITopology4Root>();
@@ -764,9 +321,9 @@ namespace OpenHome.Av
 
             iStandby = new WatchableProxy<EStandby>(iRoom.Standby);
 
-            iDetails = new Watchable<RoomDetails>(iThread, string.Format("Details({0})", iName), new RoomDetails());
-            iMetadata = new Watchable<RoomMetadata>(iThread, string.Format("Metadata({0})", iName), new RoomMetadata());
-            iMetatext = new Watchable<RoomMetatext>(iThread, string.Format("Metatext({0})", iName), new RoomMetatext());
+            iDetails = new Watchable<RoomDetails>(iThread, string.Format("Details({0})", aRoom.Name), new RoomDetails());
+            iMetadata = new Watchable<RoomMetadata>(iThread, string.Format("Metadata({0})", aRoom.Name), new RoomMetadata());
+            iMetatext = new Watchable<RoomMetatext>(iThread, string.Format("Metatext({0})", aRoom.Name), new RoomMetatext());
 
             iRoom.Roots.AddWatcher(this);
         }
@@ -813,7 +370,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return iName;
+                return iRoom.Name;
             }
         }
 
@@ -865,6 +422,30 @@ namespace OpenHome.Av
         public void SetStandby(bool aValue)
         {
             iRoom.SetStandby(aValue);
+        }
+
+        public IWatchable<bool> HasSender
+        {
+            get
+            {
+                return iHasSender;
+            }
+        }
+
+        public IWatchable<bool> HasReceiver
+        {
+            get
+            {
+                return iHasReceiver;
+            }
+        }
+
+        public IWatchableUnordered<IZone> Listeners
+        {
+            get
+            {
+                return iListeners;
+            }
         }
 
         public void Play(string aId, string aMetadata, string aUri)
@@ -948,7 +529,7 @@ namespace OpenHome.Av
         private void SelectFirstSource()
         {
             ITopology4Source source = iSources[0];
-            iWatchableSource = new Watchable<ITopology4Source>(iThread, string.Format("Source({0})", iName), source);
+            iWatchableSource = new Watchable<ITopology4Source>(iThread, string.Format("Source({0})", iRoom.Name), source);
             iInfoWatcher = new InfoWatcher(iThread, source.Device, iDetails, iMetadata, iMetatext);
             iSource = source;
         }
@@ -1000,13 +581,16 @@ namespace OpenHome.Av
         private IWatchableThread iThread;
         private StandardHouse iHouse;
         private ITopology4Room iRoom;
-        private string iName;
 
         private IEnumerable<ITopology4Root> iRoots;
         private List<StandardRoomController> iControllers;
         private ITopology4Source iSource;
         private List<ITopology4Source> iSources;
         private Watchable<ITopology4Source> iWatchableSource;
+
+        private Watchable<bool> iHasSender;
+        private Watchable<bool> iHasReceiver;
+        private WatchableUnordered<IZone> iListeners;
 
         private WatchableProxy<EStandby> iStandby;
         private InfoWatcher iInfoWatcher;

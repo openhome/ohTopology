@@ -124,11 +124,6 @@ namespace OpenHome.Av
         uint TrackCount { get; }
     }
 
-    public interface IZone
-    {
-        IRoom Room { get; }
-    }
-
     public interface IRoom
     {
         IWatchable<string> Name { get; }

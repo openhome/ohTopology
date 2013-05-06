@@ -23,18 +23,8 @@ namespace OpenHome.Av
         void Previous();
         void Next();
 
-        //IWatchable<ITime> Create();
-
         IWatchable<bool> CanSeek { get; }
         void Seek(uint aSeconds);
-
-        /*IWatchable<bool> HasVolume { get; }
-        IWatchable<bool> Mute { get; }
-        IWatchable<uint> Volume { get; }
-        void SetMute(bool aMute);
-        void SetVolume(uint aSeconds);
-        void VolumeInc();
-        void VolumeDec();*/
     }
 
     public class SourceController
@@ -53,6 +43,10 @@ namespace OpenHome.Av
             {
                 return new SourceControllerReceiver(aThread, aSource, aHasSourceControl, aHasInfoNext, aInfoNext, aTransportState, aCanPause, aCanSeek, aCanSkip);
             }
+            /*else if (aSource.Type == "NetAux" || aSource.Type == "UpnpAv" || aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi")
+            {
+                return new SourceControllerExternal(aThread, aSource, aHasSourceControl, aHasInfoNext, aInfoNext, aTransportState, aCanPause, aCanSeek, aCanSkip);
+            }*/
 
             return null;
         }
