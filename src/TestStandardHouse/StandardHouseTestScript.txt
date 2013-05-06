@@ -173,3 +173,7 @@ empty
 mock network update ds 67 radio transportstate Playing
 expect TransportState(Main Room): Stopped -> Playing
 empty
+
+mock network update ds 67 product sourceindex 3
+expect TransportState(Main Room): Playing -> Stopped
+empty

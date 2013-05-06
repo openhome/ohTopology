@@ -983,10 +983,13 @@ namespace OpenHome.Av
                 }
             }
 
-            iInfoWatcher.Dispose();
-            iInfoWatcher = null;
+            if (iSource.Device != source.Device)
+            {
+                iInfoWatcher.Dispose();
+                iInfoWatcher = null;
 
-            iInfoWatcher = new InfoWatcher(iThread, source.Device, iDetails, iMetadata, iMetatext);
+                iInfoWatcher = new InfoWatcher(iThread, source.Device, iDetails, iMetadata, iMetatext);
+            }
 
             iWatchableSource.Update(source);
             iSource = source;
