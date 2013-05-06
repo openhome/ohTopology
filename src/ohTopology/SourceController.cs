@@ -9,7 +9,7 @@ namespace OpenHome.Av
         string Name { get; }
 
         bool HasInfoNext { get; }
-        IWatchable<IInfoNext> InfoNext { get; }
+        IWatchable<IInfoMetadata> InfoNext { get; }
 
         IWatchable<string> TransportState { get; }
 
@@ -38,7 +38,7 @@ namespace OpenHome.Av
 
     public class SourceController
     {
-        public static ISourceController Create(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasInfoNext, Watchable<IInfoNext> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause, Watchable<bool> aCanSkip, Watchable<bool> aCanSeek)
+        public static ISourceController Create(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause, Watchable<bool> aCanSkip, Watchable<bool> aCanSeek)
         {
             if (aSource.Type == "Playlist")
             {

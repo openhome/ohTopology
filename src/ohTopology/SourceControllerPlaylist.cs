@@ -6,7 +6,7 @@ namespace OpenHome.Av
 {
     public class SourceControllerPlaylist : IWatcher<string>, ISourceController
     {
-        public SourceControllerPlaylist(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasInfoNext, Watchable<IInfoNext> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause, Watchable<bool> aCanSkip, Watchable<bool> aCanSeek)
+        public SourceControllerPlaylist(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause, Watchable<bool> aCanSkip, Watchable<bool> aCanSeek)
         {
             iLock = new object();
             iDisposed = false;
@@ -79,7 +79,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<IInfoNext> InfoNext
+        public IWatchable<IInfoMetadata> InfoNext
         {
             get 
             {
@@ -169,7 +169,7 @@ namespace OpenHome.Av
         private ITopology4Source iSource;
         private ServicePlaylist iPlaylist;
 
-        private Watchable<IInfoNext> iInfoNext;
+        private Watchable<IInfoMetadata> iInfoNext;
         private Watchable<bool> iCanPause;
         private Watchable<bool> iCanSeek;
         private Watchable<string> iTransportState;

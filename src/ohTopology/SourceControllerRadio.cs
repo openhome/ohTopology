@@ -6,7 +6,7 @@ namespace OpenHome.Av
 {
     public class SourceControllerRadio : IWatcher<string>, ISourceController
     {
-        public SourceControllerRadio(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasInfoNext, Watchable<IInfoNext> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause, Watchable<bool> aCanSkip, Watchable<bool> aCanSeek)
+        public SourceControllerRadio(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause, Watchable<bool> aCanSkip, Watchable<bool> aCanSeek)
         {
             iLock = new object();
             iDisposed = false;
@@ -79,7 +79,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<IInfoNext> InfoNext
+        public IWatchable<IInfoMetadata> InfoNext
         {
             get { throw new NotSupportedException(); }
         }

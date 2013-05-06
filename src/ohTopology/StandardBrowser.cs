@@ -13,12 +13,6 @@ namespace OpenHome.Av
         void Play();
     }
 
-    public interface IInfoNext
-    {
-        bool Enabled { get; }
-        IInfoMetadata Metadata { get; }
-    }
-
     public interface IStandardRoomController : ISourceController
     {
         IWatchable<bool> Active { get; }
@@ -49,7 +43,7 @@ namespace OpenHome.Av
             iStandby = new WatchableProxy<EStandby>(aRoom.Standby);
 
             iHasInfoNext = new Watchable<bool>(aThread, string.Format("HasInfoNext({0})", aRoom.Name), false);
-            iInfoNext = new Watchable<IInfoNext>(iThread, string.Format("InfoNext({0})", iRoom.Name), new RoomMetadataNext());
+            iInfoNext = new Watchable<IInfoMetadata>(iThread, string.Format("InfoNext({0})", iRoom.Name), new RoomMetadata());
             
             iHasVolume = new Watchable<bool>(aThread, string.Format("HasVolume({0})", aRoom.Name), false);
             iMute = new Watchable<bool>(aThread, string.Format("Mute({0})", aRoom.Name), false);
@@ -248,7 +242,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<IInfoNext> InfoNext
+        public IWatchable<IInfoMetadata> InfoNext
         {
             get
             {
@@ -431,7 +425,7 @@ namespace OpenHome.Av
 
         private ISourceController iSourceController;
         private Watchable<bool> iHasInfoNext;
-        private Watchable<IInfoNext> iInfoNext;
+        private Watchable<IInfoMetadata> iInfoNext;
         private Watchable<string> iTransportState;
         private Watchable<bool> iCanPause;
         private Watchable<bool> iCanSkip;
@@ -595,39 +589,6 @@ namespace OpenHome.Av
 
         private bool iEnabled;
         private string iMetatext;
-    }
-
-    public class RoomMetadataNext : IInfoNext
-    {
-        public RoomMetadataNext()
-        {
-            iEnabled = false;
-        }
-
-        public RoomMetadataNext(IInfoMetadata aMetadata)
-        {
-            iEnabled = true;
-            iMetadata = aMetadata;
-        }
-
-        public bool Enabled
-        {
-            get
-            {
-                return iEnabled;
-            }
-        }
-
-        public IInfoMetadata Metadata
-        {
-            get
-            {
-                return iMetadata;
-            }
-        }
-
-        private bool iEnabled;
-        private IInfoMetadata iMetadata;
     }
 
     class InfoWatcher : IWatcher<IInfoDetails>, IWatcher<IInfoMetadata>, IWatcher<IInfoMetatext>, IDisposable
