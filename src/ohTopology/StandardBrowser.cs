@@ -15,132 +15,24 @@ namespace OpenHome.Av
 
     public interface IInfoNext
     {
-        IWatchable<bool> Enabled { get; }
-        IWatchable<IInfoMetadata> Metadata { get; }
+        bool Enabled { get; }
+        IInfoMetadata Metadata { get; }
     }
 
-    class VolumeController : IWatcher<bool>, IWatcher<uint>, IDisposable
+    public interface IStandardRoomController : ISourceController
     {
-        public VolumeController(IWatchableThread aThread, IWatchableDevice aDevice, Watchable<bool> aHasVolume, Watchable<bool> aMute, Watchable<uint> aValue)
-        {
-            iLock = new object();
-            iDisposed = false;
+        IWatchable<bool> Active { get; }
 
-            iDevice = aDevice;
-
-            iHasVolume = aHasVolume;
-            iMute = aMute;
-            iValue = aValue;
-
-            iDevice.Create<ServiceVolume>((IWatchableDevice device, ServiceVolume volume) =>
-            {
-                lock (iLock)
-                {
-                    if (!iDisposed)
-                    {
-                        iVolume = volume;
-
-                        iVolume.Mute.AddWatcher(this);
-                        iVolume.Value.AddWatcher(this);
-
-                        iHasVolume.Update(true);
-                    }
-                    else
-                    {
-                        volume.Dispose();
-                    }
-                }
-            });
-        }
-
-        public void Dispose()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("VolumeController.Dispose");
-                }
-
-                if (iVolume != null)
-                {
-                    iHasVolume.Update(false);
-
-                    iVolume.Mute.RemoveWatcher(this);
-                    iVolume.Value.RemoveWatcher(this);
-
-                    iVolume.Dispose();
-                    iVolume = null;
-                }
-
-                iDisposed = true;
-            }
-        }
-
-        public IWatchableDevice Device
-        {
-            get
-            {
-                return iDevice;
-            }
-        }
-
-        public void SetMute(bool aValue)
-        {
-            iVolume.SetMute(aValue);
-        }
-
-        public void SetVolume(uint aValue)
-        {
-            iVolume.SetVolume(aValue);
-        }
-
-        public void VolumeInc()
-        {
-            iVolume.VolumeInc();
-        }
-
-        public void VolumeDec()
-        {
-            iVolume.VolumeDec();
-        }
-
-        public void ItemOpen(string aId, bool aValue)
-        {
-            iMute.Update(aValue);
-        }
-
-        public void ItemUpdate(string aId, bool aValue, bool aPrevious)
-        {
-            iMute.Update(aValue);
-        }
-
-        public void ItemClose(string aId, bool aValue)
-        {
-        }
-
-        public void ItemOpen(string aId, uint aValue)
-        {
-            iValue.Update(aValue);
-        }
-
-        public void ItemUpdate(string aId, uint aValue, uint aPrevious)
-        {
-            iValue.Update(aValue);
-        }
-
-        public void ItemClose(string aId, uint aValue)
-        {
-        }
-
-        private object iLock;
-        private bool iDisposed;
-        private ServiceVolume iVolume;
-
-        private IWatchableDevice iDevice;
-        private Watchable<bool> iHasVolume;
-        private Watchable<bool> iMute;
-        private Watchable<uint> iValue;
+        IWatchable<EStandby> Standby { get; }
+        void SetStandby(bool aValue);
+        
+        IWatchable<bool> HasVolume { get; }
+        IWatchable<bool> Mute { get; }
+        IWatchable<uint> Volume { get; }
+        void SetMute(bool aMute);
+        void SetVolume(uint aVolume);
+        void VolumeInc();
+        void VolumeDec();
     }
 
     public class StandardRoomController : IWatcher<ITopology4Source>, IDisposable
@@ -156,9 +48,17 @@ namespace OpenHome.Av
 
             iStandby = new WatchableProxy<EStandby>(aRoom.Standby);
 
+            iHasInfoNext = new Watchable<bool>(aThread, string.Format("HasInfoNext({0})", aRoom.Name), false);
+            iInfoNext = new Watchable<IInfoNext>(iThread, string.Format("InfoNext({0})", iRoom.Name), new RoomMetadataNext());
+            
             iHasVolume = new Watchable<bool>(aThread, string.Format("HasVolume({0})", aRoom.Name), false);
             iMute = new Watchable<bool>(aThread, string.Format("Mute({0})", aRoom.Name), false);
             iValue = new Watchable<uint>(aThread, string.Format("Volume({0})", aRoom.Name), 0);
+
+            iCanPause = new Watchable<bool>(aThread, string.Format("CanPause({0})", aRoom.Name), false);
+            iCanSkip = new Watchable<bool>(aThread, string.Format("CanSkip({0})", aRoom.Name), false);
+            iCanSeek = new Watchable<bool>(aThread, string.Format("CanSeek({0})", aRoom.Name), false);
+            iTransportState = new Watchable<string>(aThread, string.Format("TransportState({0})", aRoom.Name), string.Empty);
 
             iRoom.Source.AddWatcher(this);
 
@@ -186,6 +86,12 @@ namespace OpenHome.Av
             iStandby.Dispose();
             iStandby = null;
 
+            iHasInfoNext.Dispose();
+            iHasInfoNext = null;
+
+            iInfoNext.Dispose();
+            iInfoNext = null;
+
             iHasVolume.Dispose();
             iHasVolume = null;
 
@@ -195,23 +101,17 @@ namespace OpenHome.Av
             iValue.Dispose();
             iValue = null;
 
-            //iInfoNext.Dispose();
-            iInfoNext = null;
-
-            //iTransportState.Dispose();
+            iTransportState.Dispose();
             iTransportState = null;
 
-            //iCanPause.Dispose();
+            iCanPause.Dispose();
             iCanPause = null;
 
-            //iCanSkip.Dispose();
+            iCanSkip.Dispose();
             iCanSkip = null;
 
-            //iCanSeek.Dispose();
+            iCanSeek.Dispose();
             iCanSeek = null;
-
-            //iVolume.Dispose();
-            iValue = null;
         }
 
         internal void SetInactive()
@@ -237,14 +137,6 @@ namespace OpenHome.Av
             }
         }
 
-        public string Name
-        {
-            get
-            {
-                return iRoom.Name;
-            }
-        }
-
         public IWatchable<EStandby> Standby
         {
             get
@@ -262,6 +154,98 @@ namespace OpenHome.Av
                     iRoom.SetStandby(aValue);
                 }
             });
+        }
+
+        public IWatchable<bool> HasVolume
+        {
+            get
+            {
+                return iHasVolume;
+            }
+        }
+
+        public IWatchable<bool> Mute
+        {
+            get
+            {
+                return iMute;
+            }
+        }
+        public IWatchable<uint> Volume
+        {
+            get
+            {
+                return iValue;
+            }
+        }
+
+        public void SetMute(bool aMute)
+        {
+            iThread.Schedule(() =>
+            {
+                if (iActive.Value)
+                {
+                    iVolumeController.SetMute(aMute);
+                }
+            });
+        }
+
+        public void SetVolume(uint aVolume)
+        {
+            iThread.Schedule(() =>
+            {
+                if (iActive.Value)
+                {
+                    if (iHasVolume.Value)
+                    {
+                        iVolumeController.SetVolume(aVolume);
+                    }
+                }
+            });
+        }
+
+        public void VolumeInc()
+        {
+            iThread.Schedule(() =>
+            {
+                if (iActive.Value)
+                {
+                    if (iHasVolume.Value)
+                    {
+                        iVolumeController.VolumeInc();
+                    }
+                }
+            });
+        }
+
+        public void VolumeDec()
+        {
+            iThread.Schedule(() =>
+            {
+                if (iActive.Value)
+                {
+                    if (iHasVolume.Value)
+                    {
+                        iVolumeController.VolumeDec();
+                    }
+                }
+            });
+        }
+
+        public string Name
+        {
+            get
+            {
+                return iRoom.Name;
+            }
+        }
+
+        public IWatchable<bool> HasInfoNext
+        {
+            get
+            {
+                return iHasInfoNext;
+            }
         }
 
         public IWatchable<IInfoNext> InfoNext
@@ -370,85 +354,9 @@ namespace OpenHome.Av
             });
         }
 
-        public IWatchable<bool> HasVolume
-        {
-            get
-            {
-                return iHasVolume;
-            }
-        }
-        
-        public IWatchable<bool> Mute
-        {
-            get
-            {
-                return iMute;
-            }
-        }
-        public IWatchable<uint> Volume
-        {
-            get
-            {
-                return iValue;
-            }
-        }
-
-        public void SetMute(bool aMute)
-        {
-            iThread.Schedule(() =>
-            {
-                if (iActive.Value)
-                {
-                    iVolumeController.SetMute(aMute);
-                }
-            });
-        }
-
-        public void SetVolume(uint aVolume)
-        {
-            iThread.Schedule(() =>
-            {
-                if (iActive.Value)
-                {
-                    if(iHasVolume.Value)
-                    {
-                        iVolumeController.SetVolume(aVolume);
-                    }
-                }
-            });
-        }
-
-        public void VolumeInc()
-        {
-            iThread.Schedule(() =>
-            {
-                if (iActive.Value)
-                {
-                    if(iHasVolume.Value)
-                    {
-                        iVolumeController.VolumeInc();
-                    }
-                }
-            });
-        }
-
-        public void VolumeDec()
-        {
-            iThread.Schedule(() =>
-            {
-                if (iActive.Value)
-                {
-                    if(iHasVolume.Value)
-                    {
-                        iVolumeController.VolumeDec();
-                    }
-                }
-            });
-        }
-
         public void ItemOpen(string aId, ITopology4Source aValue)
         {
-            iSourceController = SourceController.Create(iThread, aValue);
+            iSourceController = SourceController.Create(iThread, aValue, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek);
 
             if (aValue.VolumeDevices.Count() > 0)
             {
@@ -465,7 +373,7 @@ namespace OpenHome.Av
                 iSourceController = null;
             }
 
-            iSourceController = SourceController.Create(iThread, aValue);
+            iSourceController = SourceController.Create(iThread, aValue, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek);
 
             if (aValue.VolumeDevices.Count() > 0)
             {
@@ -522,6 +430,7 @@ namespace OpenHome.Av
         private Watchable<uint> iValue;
 
         private ISourceController iSourceController;
+        private Watchable<bool> iHasInfoNext;
         private Watchable<IInfoNext> iInfoNext;
         private Watchable<string> iTransportState;
         private Watchable<bool> iCanPause;
@@ -686,6 +595,39 @@ namespace OpenHome.Av
 
         private bool iEnabled;
         private string iMetatext;
+    }
+
+    public class RoomMetadataNext : IInfoNext
+    {
+        public RoomMetadataNext()
+        {
+            iEnabled = false;
+        }
+
+        public RoomMetadataNext(IInfoMetadata aMetadata)
+        {
+            iEnabled = true;
+            iMetadata = aMetadata;
+        }
+
+        public bool Enabled
+        {
+            get
+            {
+                return iEnabled;
+            }
+        }
+
+        public IInfoMetadata Metadata
+        {
+            get
+            {
+                return iMetadata;
+            }
+        }
+
+        private bool iEnabled;
+        private IInfoMetadata iMetadata;
     }
 
     class InfoWatcher : IWatcher<IInfoDetails>, IWatcher<IInfoMetadata>, IWatcher<IInfoMetatext>, IDisposable

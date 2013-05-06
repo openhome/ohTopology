@@ -10,9 +10,12 @@ namespace OpenHome.Av
 {
     public interface IServiceOpenHomeOrgReceiver1
     {
-        IWatchable<string> Metadata { get; }
+        IWatchable<IInfoMetadata> Metadata { get; }
         IWatchable<string> TransportState { get; }
-        IWatchable<string> Uri { get; }
+
+        void Play();
+        void Stop();
+        void SetSender(string aUri, string aMetadata);
     }
 
     public interface IReceiver : IServiceOpenHomeOrgReceiver1
@@ -31,7 +34,7 @@ namespace OpenHome.Av
 
         internal abstract IServiceOpenHomeOrgReceiver1 Service { get; }
 
-        public IWatchable<string> Metadata
+        public IWatchable<IInfoMetadata> Metadata
         {
             get
             {
@@ -47,20 +50,27 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<string> Uri
-        {
-            get
-            {
-                return Service.Uri;
-            }
-        }
-
         public string ProtocolInfo
         {
             get
             {
                 return iProtocolInfo;
             }
+        }
+
+        public void Play()
+        {
+            Service.Play();
+        }
+
+        public void Stop()
+        {
+            Service.Stop();
+        }
+
+        public void SetSender(string aUri, string aMetadata)
+        {
+            Service.SetSender(aUri, aMetadata);
         }
 
         protected string iProtocolInfo;
@@ -79,11 +89,9 @@ namespace OpenHome.Av
 
                 iService.SetPropertyMetadataChanged(HandleMetadataChanged);
                 iService.SetPropertyTransportStateChanged(HandleTransportStateChanged);
-                iService.SetPropertyUriChanged(HandleUriChanged);
 
-                iMetadata = new Watchable<string>(aThread, string.Format("Metadata({0})", aId), iService.PropertyMetadata());
+                iMetadata = new Watchable<IInfoMetadata>(aThread, string.Format("Metadata({0})", aId), new InfoMetadata(iService.PropertyMetadata(), iService.PropertyUri()));
                 iTransportState = new Watchable<string>(aThread, string.Format("TransportState({0})", aId), iService.PropertyTransportState());
-                iUri = new Watchable<string>(aThread, string.Format("Uri({0})", aId), iService.PropertyUri());
             }
         }
         
@@ -105,14 +113,11 @@ namespace OpenHome.Av
                 iTransportState.Dispose();
                 iTransportState = null;
 
-                iUri.Dispose();
-                iUri = null;
-
                 iDisposed = true;
             }
         }
 
-        public IWatchable<string> Metadata
+        public IWatchable<IInfoMetadata> Metadata
         {
             get
             {
@@ -128,11 +133,42 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<string> Uri
+        public void Play()
         {
-            get
+            lock (iLock)
             {
-                return iUri;
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgReceiver1.Play");
+                }
+
+                iService.BeginPlay(null);
+            }
+        }
+
+        public void Stop()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgReceiver1.Stop");
+                }
+
+                iService.BeginStop(null);
+            }
+        }
+
+        public void SetSender(string aUri, string aMetadata)
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgReceiver1.SetSender");
+                }
+
+                iService.BeginSetSender(aUri, aMetadata, null);
             }
         }
 
@@ -145,7 +181,7 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iMetadata.Update(iService.PropertyMetadata());
+                iMetadata.Update(new InfoMetadata(iService.PropertyMetadata(), iService.PropertyUri()));
             }
         }
 
@@ -162,36 +198,21 @@ namespace OpenHome.Av
             }
         }
 
-        private void HandleUriChanged()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iUri.Update(iService.PropertyUri());
-            }
-        }
-
         private object iLock;
         private bool iDisposed;
 
         private CpProxyAvOpenhomeOrgReceiver1 iService;
 
-        private Watchable<string> iMetadata;
+        private Watchable<IInfoMetadata> iMetadata;
         private Watchable<string> iTransportState;
-        private Watchable<string> iUri;
     }
 
     public class MockServiceOpenHomeOrgReceiver1 : IServiceOpenHomeOrgReceiver1, IMockable
     {
         public MockServiceOpenHomeOrgReceiver1(IWatchableThread aThread, string aId, string aMetadata, string aTransportState, string aUri)
         {
-            iMetadata = new Watchable<string>(aThread, string.Format("Metadata({0})", aId), aMetadata);
+            iMetadata = new Watchable<IInfoMetadata>(aThread, string.Format("Metadata({0})", aId), new InfoMetadata(aMetadata, aUri));
             iTransportState = new Watchable<string>(aThread, string.Format("TransportState({0})", aId), aTransportState);
-            iUri = new Watchable<string>(aThread, string.Format("Uri({0})", aId), aUri);
         }
 
         public void Dispose()
@@ -201,12 +222,9 @@ namespace OpenHome.Av
 
             iTransportState.Dispose();
             iTransportState = null;
-
-            iUri.Dispose();
-            iUri = null;
         }
 
-        public IWatchable<string> Metadata
+        public IWatchable<IInfoMetadata> Metadata
         {
             get
             {
@@ -222,12 +240,19 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<string> Uri
+        public void Play()
         {
-            get
-            {
-                return iUri;
-            }
+            iTransportState.Update("Playing");
+        }
+
+        public void Stop()
+        {
+            iTransportState.Update("Stopped");
+        }
+
+        public void SetSender(string aUri, string aMetadata)
+        {
+            iMetadata.Update(new InfoMetadata(aMetadata, aUri));
         }
 
         public void Execute(IEnumerable<string> aValue)
@@ -236,17 +261,17 @@ namespace OpenHome.Av
             if (command == "metadata")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-                iMetadata.Update(value.First());
+                if (value.Count() != 2)
+                {
+                    throw new NotSupportedException();
+                }
+                IInfoMetadata metadata = new InfoMetadata(value.ElementAt(0), value.ElementAt(1));
+                iMetadata.Update(metadata);
             }
             else if (command == "transportstate")
             {
                 IEnumerable<string> value = aValue.Skip(1);
                 iTransportState.Update(value.First());
-            }
-            else if (command == "uri")
-            {
-                IEnumerable<string> value = aValue.Skip(1);
-                iUri.Update(value.First());
             }
             else
             {
@@ -254,9 +279,8 @@ namespace OpenHome.Av
             }
         }
 
-        private Watchable<string> iMetadata;
+        private Watchable<IInfoMetadata> iMetadata;
         private Watchable<string> iTransportState;
-        private Watchable<string> iUri;
     }
 
     public class WatchableReceiverFactory : IWatchableServiceFactory
@@ -374,7 +398,7 @@ namespace OpenHome.Av
         public void Execute(IEnumerable<string> aValue)
         {
             string command = aValue.First().ToLowerInvariant();
-            if(command == "metadata" || command == "transportstate" || command == "uri")
+            if(command == "metadata" || command == "transportstate")
             {
                 iService.Execute(aValue);
             }
@@ -416,7 +440,7 @@ namespace OpenHome.Av
             get { return iService.ProtocolInfo; }
         }
 
-        public IWatchable<string> Metadata
+        public IWatchable<IInfoMetadata> Metadata
         {
             get { return iService.Metadata; }
         }
@@ -426,9 +450,19 @@ namespace OpenHome.Av
             get { return iService.TransportState; }
         }
 
-        public IWatchable<string> Uri
+        public void Play()
         {
-            get { return iService.Uri; }
+            iService.Play();
+        }
+
+        public void Stop()
+        {
+            iService.Stop();
+        }
+
+        public void SetSender(string aUri, string aMetadata)
+        {
+            iService.SetSender(aUri, aMetadata);
         }
 
         private IManagableWatchableDevice iDevice;

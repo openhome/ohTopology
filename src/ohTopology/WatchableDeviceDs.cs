@@ -39,14 +39,17 @@ namespace OpenHome.Av
             // time service
             Add<ServiceTime>(new MockWatchableTime(aThread, aUdn, 0, 0));
 
-            // receiver service
-            Add<ServiceReceiver>(new MockWatchableReceiver(aThread, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
-
             // sender service
             Add<ServiceSender>(new MockWatchableSender(aThread, aUdn, "Info Time", false, string.Empty, string.Empty, "Enabled"));
 
+            // receiver service
+            Add<ServiceReceiver>(new MockWatchableReceiver(aThread, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
+
             // radio service
-            Add<ServiceRadio>(new MockWatchableRadio(aThread, aUdn, 0, new byte[0], string.Empty, string.Empty, "Stopped", string.Empty));
+            Add<ServiceRadio>(new MockWatchableRadio(aThread, aUdn, 0, new List<uint>(), string.Empty, string.Empty, "Stopped", string.Empty, 100));
+
+            // playlist service
+            Add<ServicePlaylist>(new MockWatchablePlaylist(aThread, aUdn, 0, new List<uint>(), false, false, "Stopped", string.Empty, 1000));
         }
 
         public MockWatchableDs(IWatchableThread aThread, IWatchableThread aSubscribeThread, string aUdn, string aRoom, string aName, string aAttributes)
@@ -77,14 +80,17 @@ namespace OpenHome.Av
             // time service
             Add<ServiceTime>(new MockWatchableTime(aThread, aUdn, 0, 0));
 
-            // receiver service
-            Add<ServiceReceiver>(new MockWatchableReceiver(aThread, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
-
             // sender service
             Add<ServiceSender>(new MockWatchableSender(aThread, aUdn, "Info Time", false, string.Empty, string.Empty, "Enabled"));
 
+            // receiver service
+            Add<ServiceReceiver>(new MockWatchableReceiver(aThread, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
+
             // radio service
-            Add<ServiceRadio>(new MockWatchableRadio(aThread, aUdn, 0, new byte[0], string.Empty, string.Empty, "Stopped", string.Empty));
+            Add<ServiceRadio>(new MockWatchableRadio(aThread, aUdn, 0, new List<uint>(), string.Empty, string.Empty, "Stopped", string.Empty, 100));
+
+            // playlist service
+            Add<ServicePlaylist>(new MockWatchablePlaylist(aThread, aUdn, 0, new List<uint>(), false, false, "Stopped", string.Empty, 1000));
         }
 
         public override void Execute(IEnumerable<string> aValue)
@@ -112,6 +118,54 @@ namespace OpenHome.Av
                     if (s.Key == key)
                     {
                         MockWatchableInfo i = s.Value as MockWatchableInfo;
+                        i.Execute(aValue.Skip(1));
+                    }
+                }
+            }
+            else if (command == "sender")
+            {
+                Type key = typeof(ServiceSender);
+                foreach (KeyValuePair<Type, IWatchableService> s in iServices)
+                {
+                    if (s.Key == key)
+                    {
+                        MockWatchableSender i = s.Value as MockWatchableSender;
+                        i.Execute(aValue.Skip(1));
+                    }
+                }
+            }
+            else if (command == "playlist")
+            {
+                Type key = typeof(ServicePlaylist);
+                foreach (KeyValuePair<Type, IWatchableService> s in iServices)
+                {
+                    if (s.Key == key)
+                    {
+                        MockWatchablePlaylist i = s.Value as MockWatchablePlaylist;
+                        i.Execute(aValue.Skip(1));
+                    }
+                }
+            }
+            else if (command == "radio")
+            {
+                Type key = typeof(ServiceRadio);
+                foreach (KeyValuePair<Type, IWatchableService> s in iServices)
+                {
+                    if (s.Key == key)
+                    {
+                        MockWatchableRadio i = s.Value as MockWatchableRadio;
+                        i.Execute(aValue.Skip(1));
+                    }
+                }
+            }
+            else if (command == "receiver")
+            {
+                Type key = typeof(ServiceReceiver);
+                foreach (KeyValuePair<Type, IWatchableService> s in iServices)
+                {
+                    if (s.Key == key)
+                    {
+                        MockWatchableReceiver i = s.Value as MockWatchableReceiver;
                         i.Execute(aValue.Skip(1));
                     }
                 }

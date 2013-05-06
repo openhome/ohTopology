@@ -8,42 +8,50 @@ using OpenHome.Os;
 
 namespace OpenHome.Av
 {
-    public interface IServiceOpenHomeOrgRadio1
+    public interface IServiceOpenHomeOrgPlaylist1
     {
         IWatchable<uint> Id { get; }
         IWatchable<IList<uint>> IdArray { get; }
         IWatchable<string> TransportState { get; }
-        IWatchable<IInfoMetadata> Metadata { get; }
+        IWatchable<bool> Repeat { get; }
+        IWatchable<bool> Shuffle { get; }
 
         void Play();
         void Pause();
         void Stop();
+        void Previous();
+        void Next();
+        void SeekId(uint aValue);
+        void SeekIndex(uint aValue);
         void SeekSecondsAbsolute(uint aValue);
         void SeekSecondsRelative(int aValue);
 
-        void SetId(uint aId, string aUri);
-        void SetChannel(string aUri, string aMetadata);
+        uint Insert(uint aAfterId, string aUri, string aMetadata);
+        void DeleteId(uint aValue);
+        void DeleteAll();
+        void SetRepeat(bool aValue);
+        void SetShuffle(bool aValue);
 
-        string Read(uint aId);
+        IInfoMetadata Read(uint aId);
         string ReadList(string aIdList);
     }
 
-    public interface IRadio : IServiceOpenHomeOrgRadio1
+    public interface IPlaylist : IServiceOpenHomeOrgPlaylist1
     {
-        uint ChannelsMax { get; }
+        uint TracksMax { get; }
         string ProtocolInfo { get; }
     }
 
-    public abstract class Radio : IRadio, IWatchableService
+    public abstract class Playlist : IPlaylist, IWatchableService
     {
         public abstract void Dispose();
 
         public IService Create(IManagableWatchableDevice aDevice)
         {
-            return new ServiceRadio(aDevice, this);
+            return new ServicePlaylist(aDevice, this);
         }
 
-        internal abstract IServiceOpenHomeOrgRadio1 Service { get; }
+        internal abstract IServiceOpenHomeOrgPlaylist1 Service { get; }
 
         public IWatchable<uint> Id
         {
@@ -52,7 +60,7 @@ namespace OpenHome.Av
                 return Service.Id;
             }
         }
-        
+
         public IWatchable<IList<uint>> IdArray
         {
             get
@@ -60,7 +68,7 @@ namespace OpenHome.Av
                 return Service.IdArray;
             }
         }
-        
+
         public IWatchable<string> TransportState
         {
             get
@@ -68,20 +76,28 @@ namespace OpenHome.Av
                 return Service.TransportState;
             }
         }
-        
-        public IWatchable<IInfoMetadata> Metadata
+
+        public IWatchable<bool> Repeat
         {
             get
             {
-                return Service.Metadata;
+                return Service.Repeat;
             }
         }
 
-        public uint ChannelsMax
+        public IWatchable<bool> Shuffle
         {
             get
             {
-                return iChannelsMax;
+                return Service.Shuffle;
+            }
+        }
+
+        public uint TracksMax
+        {
+            get
+            {
+                return iTracksMax;
             }
         }
 
@@ -108,6 +124,26 @@ namespace OpenHome.Av
             Service.Stop();
         }
 
+        public void Previous()
+        {
+            Service.Previous();
+        }
+
+        public void Next()
+        {
+            Service.Next();
+        }
+
+        public void SeekId(uint aValue)
+        {
+            Service.SeekId(aValue);
+        }
+
+        public void SeekIndex(uint aValue)
+        {
+            Service.SeekIndex(aValue);
+        }
+
         public void SeekSecondsAbsolute(uint aValue)
         {
             Service.SeekSecondsAbsolute(aValue);
@@ -118,17 +154,32 @@ namespace OpenHome.Av
             Service.SeekSecondsRelative(aValue);
         }
 
-        public void SetId(uint aId, string aUri)
+        public uint Insert(uint aAfterId, string aUri, string aMetadata)
         {
-            Service.SetId(aId, aUri);
+            return Service.Insert(aAfterId, aUri, aMetadata);
         }
 
-        public void SetChannel(string aUri, string aMetadata)
+        public void DeleteId(uint aValue)
         {
-            Service.SetChannel(aUri, aMetadata);
+            Service.DeleteId(aValue);
         }
 
-        public string Read(uint aId)
+        public void DeleteAll()
+        {
+            Service.DeleteAll();
+        }
+
+        public void SetRepeat(bool aValue)
+        {
+            Service.SetRepeat(aValue);
+        }
+
+        public void SetShuffle(bool aValue)
+        {
+            Service.SetShuffle(aValue);
+        }
+
+        public IInfoMetadata Read(uint aId)
         {
             return Service.Read(aId);
         }
@@ -138,13 +189,13 @@ namespace OpenHome.Av
             return Service.ReadList(aIdList);
         }
 
-        protected uint iChannelsMax;
+        protected uint iTracksMax;
         protected string iProtocolInfo;
     }
 
-    public class ServiceOpenHomeOrgRadio1 : IServiceOpenHomeOrgRadio1
+    public class ServiceOpenHomeOrgPlaylist1 : IServiceOpenHomeOrgPlaylist1
     {
-        public ServiceOpenHomeOrgRadio1(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgRadio1 aService)
+        public ServiceOpenHomeOrgPlaylist1(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgPlaylist1 aService)
         {
             iLock = new object();
             iDisposed = false;
@@ -155,13 +206,15 @@ namespace OpenHome.Av
 
                 iService.SetPropertyIdChanged(HandleIdChanged);
                 iService.SetPropertyIdArrayChanged(HandleIdArrayChanged);
-                iService.SetPropertyMetadataChanged(HandleMetadataChanged);
                 iService.SetPropertyTransportStateChanged(HandleTransportStateChanged);
+                iService.SetPropertyRepeatChanged(HandleRepeatChanged);
+                iService.SetPropertyShuffleChanged(HandleShuffleChanged);
 
                 iId = new Watchable<uint>(aThread, string.Format("Id({0})", aId), iService.PropertyId());
                 iIdArray = new Watchable<IList<uint>>(aThread, string.Format("IdArray({0})", aId), ByteArray.Unpack(iService.PropertyIdArray()));
                 iTransportState = new Watchable<string>(aThread, string.Format("TransportState({0})", aId), iService.PropertyTransportState());
-                iMetadata = new Watchable<IInfoMetadata>(aThread, string.Format("Metadata({0})", aId), new InfoMetadata(iService.PropertyMetadata(), iService.PropertyUri()));
+                iRepeat = new Watchable<bool>(aThread, string.Format("Repeat({0})", aId), iService.PropertyRepeat());
+                iShuffle = new Watchable<bool>(aThread, string.Format("Shuffle({0})", aId), iService.PropertyShuffle());
             }
         }
 
@@ -171,7 +224,7 @@ namespace OpenHome.Av
             {
                 if (iDisposed)
                 {
-                    throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.Dispose");
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.Dispose");
                 }
 
                 iService.Dispose();
@@ -186,8 +239,11 @@ namespace OpenHome.Av
                 iTransportState.Dispose();
                 iTransportState = null;
 
-                iMetadata.Dispose();
-                iMetadata = null;
+                iRepeat.Dispose();
+                iRepeat = null;
+
+                iShuffle.Dispose();
+                iShuffle = null;
 
                 iDisposed = true;
             }
@@ -217,11 +273,19 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<IInfoMetadata> Metadata
+        public IWatchable<bool> Repeat
         {
             get
             {
-                return iMetadata;
+                return iRepeat;
+            }
+        }
+
+        public IWatchable<bool> Shuffle
+        {
+            get
+            {
+                return iShuffle;
             }
         }
 
@@ -231,7 +295,7 @@ namespace OpenHome.Av
             {
                 if (iDisposed)
                 {
-                    throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.Play");
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.Play");
                 }
 
                 iService.BeginPlay(null);
@@ -244,7 +308,7 @@ namespace OpenHome.Av
             {
                 if (iDisposed)
                 {
-                    throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.Pause");
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.Pause");
                 }
 
                 iService.BeginPause(null);
@@ -257,10 +321,62 @@ namespace OpenHome.Av
             {
                 if (iDisposed)
                 {
-                    throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.Stop");
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.Stop");
                 }
 
                 iService.BeginStop(null);
+            }
+        }
+
+        public void Previous()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.Previous");
+                }
+
+                iService.BeginPrevious(null);
+            }
+        }
+
+        public void Next()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.Next");
+                }
+
+                iService.BeginNext(null);
+            }
+        }
+
+        public void SeekId(uint aValue)
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.SeekId");
+                }
+
+                iService.BeginSeekId(aValue, null);
+            }
+        }
+
+        public void SeekIndex(uint aValue)
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.SeekIndex");
+                }
+
+                iService.BeginSeekIndex(aValue, null);
             }
         }
 
@@ -270,7 +386,7 @@ namespace OpenHome.Av
             {
                 if (iDisposed)
                 {
-                    throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.SeekSecondsAbsolute");
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.SeekSecondsAbsolute");
                 }
 
                 iService.BeginSeekSecondAbsolute(aValue, null);
@@ -283,51 +399,93 @@ namespace OpenHome.Av
             {
                 if (iDisposed)
                 {
-                    throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.SeekSecondsRelative");
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.SeekSecondsRelative");
                 }
 
                 iService.BeginSeekSecondRelative(aValue, null);
             }
         }
 
-        public void SetId(uint aId, string aUri)
+        public uint Insert(uint aAfterId, string aUri, string aMetadata)
         {
             lock (iLock)
             {
                 if (iDisposed)
                 {
-                    throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.SetId");
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.Insert");
                 }
 
-                iService.BeginSetId(aId, aUri, null);
+                uint newId;
+                iService.SyncInsert(aAfterId, aUri, aMetadata, out newId);
+                return newId;
             }
         }
 
-        public void SetChannel(string aUri, string aMetadata)
+        public void DeleteId(uint aValue)
         {
             lock (iLock)
             {
                 if (iDisposed)
                 {
-                    throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.SetChannel");
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.DeleteId");
                 }
 
-                iService.BeginSetChannel(aUri, aMetadata, null);
+                iService.BeginDeleteId(aValue, null);
             }
         }
 
-        public string Read(uint aId)
+        public void DeleteAll()
         {
             lock (iLock)
             {
                 if (iDisposed)
                 {
-                    throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.Read");
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.DeleteAll");
                 }
 
+                iService.BeginDeleteAll(null);
+            }
+        }
+
+        public void SetRepeat(bool aValue)
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.SetRepeat");
+                }
+
+                iService.BeginSetRepeat(aValue, null);
+            }
+        }
+
+        public void SetShuffle(bool aValue)
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.SetShuffle");
+                }
+
+                iService.BeginSetShuffle(aValue, null);
+            }
+        }
+
+        public IInfoMetadata Read(uint aId)
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.Read");
+                }
+
+                string uri;
                 string metadata;
-                iService.SyncRead(aId, out metadata);
-                return metadata;
+                iService.SyncRead(aId, out uri, out metadata);
+                return new InfoMetadata(uri, metadata);
             }
         }
 
@@ -337,7 +495,7 @@ namespace OpenHome.Av
             {
                 if (iDisposed)
                 {
-                    throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.ReadList");
+                    throw new ObjectDisposedException("ServiceOpenHomeOrgPlaylist1.ReadList");
                 }
 
                 string metadata;
@@ -372,23 +530,6 @@ namespace OpenHome.Av
             }
         }
 
-        private void HandleMetadataChanged()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iMetadata.Update(
-                    new InfoMetadata(
-                        iService.PropertyMetadata(),
-                        iService.PropertyUri()
-                    ));
-            }
-        }
-
         private void HandleTransportStateChanged()
         {
             lock (iLock)
@@ -402,25 +543,53 @@ namespace OpenHome.Av
             }
         }
 
+        private void HandleRepeatChanged()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    return;
+                }
+
+                iRepeat.Update(iService.PropertyRepeat());
+            }
+        }
+
+        private void HandleShuffleChanged()
+        {
+            lock (iLock)
+            {
+                if (iDisposed)
+                {
+                    return;
+                }
+
+                iShuffle.Update(iService.PropertyShuffle());
+            }
+        }
+
         private object iLock;
         private bool iDisposed;
 
-        private CpProxyAvOpenhomeOrgRadio1 iService;
+        private CpProxyAvOpenhomeOrgPlaylist1 iService;
 
         private Watchable<uint> iId;
         private Watchable<IList<uint>> iIdArray;
         private Watchable<string> iTransportState;
-        private Watchable<IInfoMetadata> iMetadata;
+        private Watchable<bool> iRepeat;
+        private Watchable<bool> iShuffle;
     }
 
-    public class MockServiceOpenHomeOrgRadio1 : IServiceOpenHomeOrgRadio1, IMockable
+    public class MockServiceOpenHomeOrgPlaylist1 : IServiceOpenHomeOrgPlaylist1, IMockable
     {
-        public MockServiceOpenHomeOrgRadio1(IWatchableThread aThread, string aServiceId, uint aId, IList<uint> aIdArray, IInfoMetadata aMetadata, string aTransportState)
+        public MockServiceOpenHomeOrgPlaylist1(IWatchableThread aThread, string aServiceId, uint aId, IList<uint> aIdArray, bool aRepeat, bool aShuffle, string aTransportState)
         {
             iId = new Watchable<uint>(aThread, string.Format("Id({0})", aServiceId), aId);
             iIdArray = new Watchable<IList<uint>>(aThread, string.Format("IdArray({0})", aServiceId), aIdArray);
-            iMetadata = new Watchable<IInfoMetadata>(aThread, string.Format("Metadata({0})", aServiceId), aMetadata);
             iTransportState = new Watchable<string>(aThread, string.Format("TransportState({0})", aServiceId), aTransportState);
+            iRepeat = new Watchable<bool>(aThread, string.Format("Repeat({0})", aServiceId), aRepeat);
+            iShuffle = new Watchable<bool>(aThread, string.Format("Shuffle({0})", aServiceId), aShuffle);
         }
 
         public void Dispose()
@@ -434,8 +603,11 @@ namespace OpenHome.Av
             iTransportState.Dispose();
             iTransportState = null;
 
-            iMetadata.Dispose();
-            iMetadata = null;
+            iRepeat.Dispose();
+            iRepeat = null;
+
+            iShuffle.Dispose();
+            iShuffle = null;
         }
 
         public IWatchable<uint> Id
@@ -462,11 +634,19 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<IInfoMetadata> Metadata
+        public IWatchable<bool> Repeat
         {
             get
             {
-                return iMetadata;
+                return iRepeat;
+            }
+        }
+
+        public IWatchable<bool> Shuffle
+        {
+            get
+            {
+                return iShuffle;
             }
         }
 
@@ -485,6 +665,22 @@ namespace OpenHome.Av
             iTransportState.Update("Stopped");
         }
 
+        public void Previous()
+        {
+        }
+
+        public void Next()
+        {
+        }
+
+        public void SeekId(uint aValue)
+        {
+        }
+
+        public void SeekIndex(uint aValue)
+        {
+        }
+
         public void SeekSecondsAbsolute(uint aValue)
         {
         }
@@ -493,19 +689,32 @@ namespace OpenHome.Av
         {
         }
 
-        public void SetId(uint aId, string aUri)
+        public uint Insert(uint aAfterId, string aUri, string aMetadata)
         {
-            iId.Update(aId);
+            return 0;
         }
 
-        public void SetChannel(string aUri, string aMetadata)
+        public void DeleteId(uint aValue)
         {
-            iMetadata.Update(new InfoMetadata(aMetadata, aUri));
         }
 
-        public string Read(uint aId)
+        public void DeleteAll()
         {
-            return string.Empty;
+        }
+
+        public void SetRepeat(bool aValue)
+        {
+            iRepeat.Update(aValue);
+        }
+
+        public void SetShuffle(bool aValue)
+        {
+            iShuffle.Update(aValue);
+        }
+
+        public IInfoMetadata Read(uint aId)
+        {
+            return new InfoMetadata(string.Empty, string.Empty);
         }
 
         public string ReadList(string aIdList)
@@ -531,20 +740,20 @@ namespace OpenHome.Av
                 }
                 iIdArray.Update(ids);
             }
-            else if (command == "metadata")
-            {
-                IEnumerable<string> value = aValue.Skip(1);
-                if (value.Count() != 2)
-                {
-                    throw new NotSupportedException();
-                }
-                IInfoMetadata metadata = new InfoMetadata(value.ElementAt(0), value.ElementAt(1));
-                iMetadata.Update(metadata);
-            }
             else if (command == "transportstate")
             {
                 IEnumerable<string> value = aValue.Skip(1);
                 iTransportState.Update(value.First());
+            }
+            else if (command == "repeat")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+                iRepeat.Update(bool.Parse(value.First()));
+            }
+            else if (command == "shuffle")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+                iShuffle.Update(bool.Parse(value.First()));
             }
             else
             {
@@ -554,13 +763,14 @@ namespace OpenHome.Av
 
         private Watchable<uint> iId;
         private Watchable<IList<uint>> iIdArray;
-        private Watchable<IInfoMetadata> iMetadata;
         private Watchable<string> iTransportState;
+        private Watchable<bool> iRepeat;
+        private Watchable<bool> iShuffle;
     }
 
-    public class WatchableRadioFactory : IWatchableServiceFactory
+    public class WatchablePlaylistFactory : IWatchableServiceFactory
     {
-        public WatchableRadioFactory(IWatchableThread aThread, IWatchableThread aSubscribeThread)
+        public WatchablePlaylistFactory(IWatchableThread aThread, IWatchableThread aSubscribeThread)
         {
             iLock = new object();
             iThread = aThread;
@@ -575,14 +785,14 @@ namespace OpenHome.Av
                 if (iService == null && iPendingService == null)
                 {
                     WatchableDevice d = aDevice as WatchableDevice;
-                    iPendingService = new CpProxyAvOpenhomeOrgRadio1(d.Device);
+                    iPendingService = new CpProxyAvOpenhomeOrgPlaylist1(d.Device);
                     iPendingService.SetPropertyInitialEvent(delegate
                     {
                         lock (iLock)
                         {
                             if (iPendingService != null)
                             {
-                                iService = new WatchableRadio(iThread, string.Format("Radio({0})", aDevice.Udn), iPendingService);
+                                iService = new WatchablePlaylist(iThread, string.Format("Playlist({0})", aDevice.Udn), iPendingService);
                                 iPendingService = null;
                                 aCallback(iService);
                             }
@@ -616,19 +826,19 @@ namespace OpenHome.Av
 
         private object iLock;
         private IWatchableThread iSubscribeThread;
-        private CpProxyAvOpenhomeOrgRadio1 iPendingService;
-        private WatchableRadio iService;
+        private CpProxyAvOpenhomeOrgPlaylist1 iPendingService;
+        private WatchablePlaylist iService;
         private IWatchableThread iThread;
     }
 
-    public class WatchableRadio : Radio
+    public class WatchablePlaylist : Playlist
     {
-        public WatchableRadio(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgRadio1 aService)
+        public WatchablePlaylist(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgPlaylist1 aService)
         {
-            iChannelsMax = aService.PropertyChannelsMax();
+            iTracksMax = aService.PropertyTracksMax();
             iProtocolInfo = aService.PropertyProtocolInfo();
 
-            iService = new ServiceOpenHomeOrgRadio1(aThread, aId, aService);
+            iService = new ServiceOpenHomeOrgPlaylist1(aThread, aId, aService);
         }
 
         public override void Dispose()
@@ -637,7 +847,7 @@ namespace OpenHome.Av
             iService = null;
         }
 
-        internal override IServiceOpenHomeOrgRadio1 Service
+        internal override IServiceOpenHomeOrgPlaylist1 Service
         {
             get
             {
@@ -645,17 +855,17 @@ namespace OpenHome.Av
             }
         }
 
-        private ServiceOpenHomeOrgRadio1 iService;
+        private ServiceOpenHomeOrgPlaylist1 iService;
     }
 
-    public class MockWatchableRadio : Radio, IMockable
+    public class MockWatchablePlaylist : Playlist, IMockable
     {
-        public MockWatchableRadio(IWatchableThread aThread, string aServiceId, uint aId, IList<uint> aIdArray, string aMetadata, string aProtocolInfo, string aTransportState, string aUri, uint aChannelsMax)
+        public MockWatchablePlaylist(IWatchableThread aThread, string aServiceId, uint aId, IList<uint> aIdArray, bool aRepeat, bool aShuffle, string aTransportState, string aProtocolInfo, uint aTracksMax)
         {
-            iChannelsMax = aChannelsMax;
+            iTracksMax = aTracksMax;
             iProtocolInfo = aProtocolInfo;
 
-            iService = new MockServiceOpenHomeOrgRadio1(aThread, aServiceId, aId, aIdArray, new InfoMetadata(aMetadata, aUri), aTransportState);
+            iService = new MockServiceOpenHomeOrgPlaylist1(aThread, aServiceId, aId, aIdArray, aRepeat, aShuffle, aTransportState);
         }
 
         public override void Dispose()
@@ -664,7 +874,7 @@ namespace OpenHome.Av
             iService = null;
         }
 
-        internal override IServiceOpenHomeOrgRadio1 Service
+        internal override IServiceOpenHomeOrgPlaylist1 Service
         {
             get
             {
@@ -675,14 +885,14 @@ namespace OpenHome.Av
         public void Execute(IEnumerable<string> aValue)
         {
             string command = aValue.First().ToLowerInvariant();
-            if (command == "id" || command == "idarray" || command == "metadata" || command == "transportstate" || command == "uri")
+            if (command == "id" || command == "idarray" || command == "transportstate" || command == "repeat" || command == "shuffle")
             {
                 iService.Execute(aValue);
             }
-            else if (command == "channelsmax")
+            else if (command == "tracksmax")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-                iChannelsMax = uint.Parse(value.First());
+                iTracksMax = uint.Parse(value.First());
             }
             else if (command == "protocolinfo")
             {
@@ -695,12 +905,12 @@ namespace OpenHome.Av
             }
         }
 
-        private MockServiceOpenHomeOrgRadio1 iService;
+        private MockServiceOpenHomeOrgPlaylist1 iService;
     }
 
-    public class ServiceRadio : IRadio, IService
+    public class ServicePlaylist : IPlaylist, IService
     {
-        public ServiceRadio(IManagableWatchableDevice aDevice, IRadio aService)
+        public ServicePlaylist(IManagableWatchableDevice aDevice, IPlaylist aService)
         {
             iDevice = aDevice;
             iService = aService;
@@ -708,7 +918,7 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            iDevice.Unsubscribe<ServiceRadio>();
+            iDevice.Unsubscribe<ServicePlaylist>();
             iDevice = null;
         }
 
@@ -732,14 +942,19 @@ namespace OpenHome.Av
             get { return iService.TransportState; }
         }
 
-        public IWatchable<IInfoMetadata> Metadata
+        public IWatchable<bool> Repeat
         {
-            get { return iService.Metadata; }
+            get { return iService.Repeat; }
         }
 
-        public uint ChannelsMax
+        public IWatchable<bool> Shuffle
         {
-            get { return iService.ChannelsMax; }
+            get { return iService.Shuffle; }
+        }
+
+        public uint TracksMax
+        {
+            get { return iService.TracksMax; }
         }
 
         public string ProtocolInfo
@@ -762,6 +977,26 @@ namespace OpenHome.Av
             iService.Stop();
         }
 
+        public void Previous()
+        {
+            iService.Previous();
+        }
+
+        public void Next()
+        {
+            iService.Next();
+        }
+
+        public void SeekId(uint aValue)
+        {
+            iService.SeekId(aValue);
+        }
+
+        public void SeekIndex(uint aValue)
+        {
+            iService.SeekIndex(aValue);
+        }
+
         public void SeekSecondsAbsolute(uint aValue)
         {
             iService.SeekSecondsAbsolute(aValue);
@@ -772,17 +1007,32 @@ namespace OpenHome.Av
             iService.SeekSecondsRelative(aValue);
         }
 
-        public void SetId(uint aId, string aUri)
+        public uint Insert(uint aAfterId, string aUri, string aMetadata)
         {
-            iService.SetId(aId, aUri);
+            return iService.Insert(aAfterId, aUri, aMetadata);
         }
 
-        public void SetChannel(string aUri, string aMetadata)
+        public void DeleteId(uint aValue)
         {
-            iService.SetChannel(aUri, aMetadata);
+            iService.DeleteId(aValue);
         }
 
-        public string Read(uint aId)
+        public void DeleteAll()
+        {
+            iService.DeleteAll();
+        }
+
+        public void SetRepeat(bool aValue)
+        {
+            iService.SetRepeat(aValue);
+        }
+
+        public void SetShuffle(bool aValue)
+        {
+            iService.SetShuffle(aValue);
+        }
+
+        public IInfoMetadata Read(uint aId)
         {
             return iService.Read(aId);
         }
@@ -793,6 +1043,6 @@ namespace OpenHome.Av
         }
 
         private IManagableWatchableDevice iDevice;
-        private IRadio iService;
+        private IPlaylist iService;
     }
 }

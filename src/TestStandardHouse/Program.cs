@@ -19,7 +19,7 @@ namespace TestLinnHouse
             }
         }
 
-        class RoomControllerWatcher : IWatcher<bool>, IWatcher<uint>, IDisposable
+        class RoomControllerWatcher : IWatcher<bool>, IWatcher<uint>, IWatcher<string>, IDisposable
         {
             public RoomControllerWatcher(MockableScriptRunner aRunner)
             {
@@ -46,6 +46,7 @@ namespace TestLinnHouse
                 controller.HasVolume.AddWatcher(this);
                 controller.Mute.AddWatcher(this);
                 controller.Volume.AddWatcher(this);
+                controller.TransportState.AddWatcher(this);
 
                 iRoomControllerLookup.Add(aRoom, controller);
             }
@@ -59,6 +60,7 @@ namespace TestLinnHouse
                 controller.HasVolume.RemoveWatcher(this);
                 controller.Mute.RemoveWatcher(this);
                 controller.Volume.RemoveWatcher(this);
+                controller.TransportState.RemoveWatcher(this);
 
                 controller.Dispose();
             }
@@ -88,6 +90,20 @@ namespace TestLinnHouse
             }
 
             public void ItemClose(string aId, uint aValue)
+            {
+            }
+
+            public void ItemOpen(string aId, string aValue)
+            {
+                iRunner.Result(string.Format("{0}: {1}", aId, aValue));
+            }
+
+            public void ItemUpdate(string aId, string aValue, string aPrevious)
+            {
+                iRunner.Result(string.Format("{0}: {1} -> {2}", aId, aPrevious, aValue));
+            }
+
+            public void ItemClose(string aId, string aValue)
             {
             }
 

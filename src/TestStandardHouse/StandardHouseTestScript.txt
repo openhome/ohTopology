@@ -8,6 +8,7 @@ expect Active(Kitchen): True
 expect HasVolume(Kitchen): False
 expect Mute(Kitchen): False
 expect Volume(Kitchen): 0
+expect TransportState(Kitchen): 
 
 expect Room Added: Sitting Room at 1
 expect Standby(Sitting Room)(Proxy): eOn
@@ -18,6 +19,7 @@ expect Active(Sitting Room): True
 expect HasVolume(Sitting Room): False
 expect Mute(Sitting Room): False
 expect Volume(Sitting Room): 0
+expect TransportState(Sitting Room): 
 
 expect Room Added: Bedroom at 0
 expect Standby(Bedroom)(Proxy): eOn
@@ -28,6 +30,7 @@ expect Active(Bedroom): True
 expect HasVolume(Bedroom): False
 expect Mute(Bedroom): False
 expect Volume(Bedroom): 0
+expect TransportState(Bedroom): 
 
 expect Room Added: Dining Room at 1
 expect Standby(Dining Room)(Proxy): eOn
@@ -38,11 +41,13 @@ expect Active(Dining Room): True
 expect HasVolume(Dining Room): False
 expect Mute(Dining Room): False
 expect Volume(Dining Room): 0
+expect TransportState(Dining Room): 
 
 expect Details(Kitchen) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Kitchen) Updated: Active=True, Metadata=, Uri=
 expect Metatext(Kitchen) Updated: Active=True, Metatext=
 
+expect TransportState(Kitchen):  -> Stopped
 expect Volume(Kitchen): 0 -> 50
 expect HasVolume(Kitchen): False -> True
 
@@ -50,6 +55,7 @@ expect Details(Sitting Room) Updated: Active=True, BitDepth=0, BitRate=0, CodeNa
 expect Metadata(Sitting Room) Updated: Active=True, Metadata=, Uri=
 expect Metatext(Sitting Room) Updated: Active=True, Metatext=
 
+expect TransportState(Sitting Room):  -> Stopped
 expect Volume(Sitting Room): 0 -> 50
 expect HasVolume(Sitting Room): False -> True
 
@@ -57,6 +63,7 @@ expect Details(Bedroom) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, 
 expect Metadata(Bedroom) Updated: Active=True, Metadata=, Uri=
 expect Metatext(Bedroom) Updated: Active=True, Metatext=
 
+expect TransportState(Bedroom):  -> Stopped
 expect Volume(Bedroom): 0 -> 50
 expect HasVolume(Bedroom): False -> True
 
@@ -64,6 +71,7 @@ expect Details(Dining Room) Updated: Active=True, BitDepth=0, BitRate=0, CodeNam
 expect Metadata(Dining Room) Updated: Active=True, Metadata=, Uri=
 expect Metatext(Dining Room) Updated: Active=True, Metatext=
 
+expect TransportState(Dining Room):  -> Stopped
 expect Volume(Dining Room): 0 -> 50
 expect HasVolume(Dining Room): False -> True
 empty
@@ -79,10 +87,12 @@ expect Active(Main Room): True
 expect HasVolume(Main Room): False
 expect Mute(Main Room): False
 expect Volume(Main Room): 0
+expect TransportState(Main Room): 
 
 expect Details(Main Room) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Main Room) Updated: Active=True, Metadata=, Uri=
 expect Metatext(Main Room) Updated: Active=True, Metatext=
+expect TransportState(Main Room):  -> Stopped
 expect Volume(Main Room): 0 -> 50
 expect HasVolume(Main Room): False -> True
 empty
@@ -118,10 +128,12 @@ expect Active(Main Room): True
 expect HasVolume(Main Room): False
 expect Mute(Main Room): False
 expect Volume(Main Room): 0
+expect TransportState(Main Room): 
 
 expect Details(Main Room) Updated: Active=True, BitDepth=50, BitRate=100, CodeName=flac, Duration=500, Lossless=True, SampleRate=44000
 expect Metadata(Main Room) Updated: Active=True, Metadata=blah, Uri=http://blah
 expect Metatext(Main Room) Updated: Active=True, Metatext=testing
+expect TransportState(Main Room):  -> Stopped
 expect Volume(Main Room): 0 -> 50
 expect HasVolume(Main Room): False -> True
 empty
@@ -148,5 +160,16 @@ expect Metadata(Main Room) Updated: Active=True, Metadata=Ds68, Uri=http://Ds68
 expect Metatext(Main Room) Updated: Active=True, Metatext=Ds68
 empty
 
+// change to radio source to check create source controller
 mock network update ds 67 product sourceindex 1
+expect Details(Main Room) Updated: Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
+expect Metadata(Main Room) Updated: Active=False, Metadata=, Uri=
+expect Metatext(Main Room) Updated: Active=False, Metatext=
+expect Details(Main Room) Updated: Active=True, BitDepth=50, BitRate=100, CodeName=flac, Duration=500, Lossless=True, SampleRate=44000
+expect Metadata(Main Room) Updated: Active=True, Metadata=blah, Uri=http://blah
+expect Metatext(Main Room) Updated: Active=True, Metatext=testing
+empty
+
+mock network update ds 67 radio transportstate Playing
+expect TransportState(Main Room): Stopped -> Playing
 empty

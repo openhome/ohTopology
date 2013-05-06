@@ -34,6 +34,9 @@
     <Reference Include="CpAvOpenhomeOrgMediaServer1.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgMediaServer1.net.dll</HintPath>
     </Reference>
+    <Reference Include="CpAvOpenhomeOrgPlaylist1.net">
+      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgPlaylist1.net.dll</HintPath>
+    </Reference>
     <Reference Include="CpAvOpenhomeOrgProduct1.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgProduct1.net.dll</HintPath>
     </Reference>
@@ -69,7 +72,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ByteArray.cs" />
     <Compile Include="SourceController.cs" />
+    <Compile Include="SourceControllerPlaylist.cs" />
+    <Compile Include="SourceControllerRadio.cs" />
+    <Compile Include="SourceControllerReceiver.cs" />
+    <Compile Include="VolumeController.cs" />
     <Compile Include="WatchableServiceMediaServer.cs" />
     <Compile Include="WatchableDeviceMediaServer.cs" />
     <Compile Include="WatchableDeviceDsm.cs" />
@@ -86,6 +94,7 @@
     <Compile Include="Topology4.cs" />
     <Compile Include="WatchableDevice.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgInfo1.cs" />
+    <Compile Include="WatchableServiceOpenHomeOrgPlaylist1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgProduct1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgRadio1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgReceiver1.cs" />
