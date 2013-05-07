@@ -141,6 +141,7 @@ namespace OpenHome.Av
                     }
 					else if (command == "empty")
 					{
+                        aThread.Wait();
 						Assert(iResultQueue.Count == 0);
 					}
                     else if (command == "break")

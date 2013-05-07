@@ -296,7 +296,6 @@ namespace OpenHome.Av
         IWatchable<RoomMetatext> Metatext { get; }
 
         IWatchable<bool> HasSender { get; }
-        IWatchable<bool> HasReceiver {get;}
         IWatchableUnordered<IZone> Listeners { get; }
 
         IWatchable<ITopology4Source> Source { get; }
@@ -307,7 +306,7 @@ namespace OpenHome.Av
         void Play(string aId, string aMetadata, string aUri);
     }
 
-    public class StandardRoom : IStandardRoom, ITopologyObject, IWatcher<IEnumerable<ITopology4Root>>, IWatcher<ITopology4Source>, IDisposable
+    public class StandardRoom : IStandardRoom, ITopologyObject, IWatcher<IEnumerable<ITopology4Root>>, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IDisposable
     {
         public StandardRoom(IWatchableThread aThread, StandardHouse aHouse, ITopology4Room aRoom)
         {
@@ -326,7 +325,6 @@ namespace OpenHome.Av
             iMetatext = new Watchable<RoomMetatext>(iThread, string.Format("Metatext({0})", aRoom.Name), new RoomMetatext());
 
             iHasSender = new Watchable<bool>(aThread, string.Format("HasSender({0})", aRoom.Name), false);
-            iHasReceiver = new Watchable<bool>(aThread, string.Format("HasReceiver({0})", aRoom.Name), false);
 
             iRoom.Roots.AddWatcher(this);
         }
@@ -365,9 +363,6 @@ namespace OpenHome.Av
 
             iHasSender.Dispose();
             iHasSender = null;
-
-            iHasReceiver.Dispose();
-            iHasReceiver = null;
 
             iRoots = null;
             iRoom = null;
@@ -441,14 +436,6 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<bool> HasReceiver
-        {
-            get
-            {
-                return iHasReceiver;
-            }
-        }
-
         public IWatchableUnordered<IZone> Listeners
         {
             get
@@ -477,25 +464,11 @@ namespace OpenHome.Av
         {
             iRoots = aValue;
 
-            bool hasReceiver = false;
             foreach (ITopology4Root r in aValue)
             {
                 r.Source.AddWatcher(this);
-
-                if (!hasReceiver)
-                {
-                    foreach (Topology4Source s in r.Sources)
-                    {
-                        if (s.Type == "Receiver")
-                        {
-                            hasReceiver = true;
-                            break;
-                        }
-                    }
-                }
+                r.Senders.AddWatcher(this);
             }
-
-            iHasReceiver.Update(hasReceiver);
 
             SelectFirstSource();
         }
@@ -505,25 +478,16 @@ namespace OpenHome.Av
             foreach (ITopology4Root r in aPrevious)
             {
                 r.Source.RemoveWatcher(this);
+                r.Senders.RemoveWatcher(this);
             }
 
             iRoots = aValue;
 
-            bool hasReceiver = false;
             foreach (ITopology4Root r in aValue)
             {
                 r.Source.AddWatcher(this);
-
-                if (!hasReceiver)
-                {
-                    foreach (Topology4Source s in r.Sources)
-                    {
-                        hasReceiver = (s.Type == "Receiver");
-                    }
-                }
+                r.Senders.AddWatcher(this);
             }
-
-            iHasReceiver.Update(hasReceiver);
 
             SelectSource();
         }
@@ -535,6 +499,7 @@ namespace OpenHome.Av
             foreach (ITopology4Root r in aValue)
             {
                 r.Source.RemoveWatcher(this);
+                r.Senders.RemoveWatcher(this);
             }
 
             iInfoWatcher.Dispose();
@@ -603,6 +568,40 @@ namespace OpenHome.Av
             iSource = source;
         }
 
+        public void ItemOpen(string aId, IEnumerable<ITopology4Group> aValue)
+        {
+            EvaluateHasSender(aValue);
+        }
+
+        public void ItemUpdate(string aId, IEnumerable<ITopology4Group> aValue, IEnumerable<ITopology4Group> aPrevious)
+        {
+            EvaluateHasSender(aValue);
+        }
+
+        public void ItemClose(string aId, IEnumerable<ITopology4Group> aValue)
+        {
+        }
+
+        private void EvaluateHasSender(IEnumerable<ITopology4Group> aValue)
+        {
+            if (iRoots.Count() == 1)
+            {
+                ITopology4Root root = iRoots.First();
+                foreach (ITopology4Group g in aValue)
+                {
+                    if (root == g)
+                    {
+                        iHasSender.Update(true);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                iHasSender.Update(false);
+            }
+        }
+
         internal void AddController(StandardRoomController aController)
         {
             iControllers.Add(aController);
@@ -624,7 +623,6 @@ namespace OpenHome.Av
         private Watchable<ITopology4Source> iWatchableSource;
 
         private Watchable<bool> iHasSender;
-        private Watchable<bool> iHasReceiver;
         private WatchableUnordered<IZone> iListeners;
 
         private WatchableProxy<EStandby> iStandby;

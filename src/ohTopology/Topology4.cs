@@ -161,56 +161,6 @@ namespace OpenHome.Av
         IWatchable<IEnumerable<ITopology4Group>> Senders { get; }
     }
 
-    public class Topology4Root : ITopology4Root
-    {
-        public Topology4Root(Topology4Group aGroup)
-        {
-            iGroup = aGroup;
-        }
-
-        public string Name
-        {
-            get
-            {
-                return iGroup.Name;
-            }
-        }
-
-        public IWatchableDevice Device
-        {
-            get
-            {
-                return iGroup.Device;
-            }
-        }
-
-        public IWatchable<ITopology4Source> Source
-        {
-            get
-            {
-                return iGroup.Source;
-            }
-        }
-
-        public IEnumerable<ITopology4Source> Sources
-        {
-            get
-            {
-                return iGroup.Sources;
-            }
-        }
-
-        public IWatchable<IEnumerable<ITopology4Group>> Senders
-        {
-            get
-            {
-                return iGroup.Senders;
-            }
-        }
-
-        private Topology4Group iGroup;
-    }
-
     public class Topology4Group : ITopology4Root, IWatcher<uint>, IWatcher<string>, ITopologyObject, IDisposable
     {
         public Topology4Group(IWatchableThread aThread, string aName, ITopology3Group aGroup, IEnumerable<ITopology2Source> aSources)
@@ -816,14 +766,14 @@ namespace OpenHome.Av
                 InsertIntoTree(new Topology4Group(iThread, iGroup3NameLookup[g], g, iGroup3SourcesLookup[g]));
             }
 
-            List<Topology4Root> roots = new List<Topology4Root>();
+            List<ITopology4Root> roots = new List<ITopology4Root>();
             List<ITopology4Source> sources = new List<ITopology4Source>();
             foreach (Topology4Group g in iRoots)
             {
                 g.EvaluateSources();
                 g.EvaluateSenders();
                 sources.AddRange(g.Sources);
-                roots.Add(new Topology4Root(g));
+                roots.Add(g);
             }
 
             iWatchableRoots.Update(roots);
