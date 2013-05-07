@@ -4,6 +4,7 @@ expect Standby(Kitchen)(Proxy): eOn
 expect Details(Kitchen): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Kitchen): Active=False, Metadata=, Uri=
 expect Metatext(Kitchen): Active=False, Metatext=
+expect HasReceiver(Kitchen): True
 expect Active(Kitchen): True
 expect HasVolume(Kitchen): False
 expect HasSourceControl(Kitchen): False
@@ -16,6 +17,7 @@ expect Standby(Sitting Room)(Proxy): eOn
 expect Details(Sitting Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Sitting Room): Active=False, Metadata=, Uri=
 expect Metatext(Sitting Room): Active=False, Metatext=
+expect HasReceiver(Sitting Room): True
 expect Active(Sitting Room): True
 expect HasVolume(Sitting Room): False
 expect HasSourceControl(Sitting Room): False
@@ -28,6 +30,7 @@ expect Standby(Bedroom)(Proxy): eOn
 expect Details(Bedroom): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Bedroom): Active=False, Metadata=, Uri=
 expect Metatext(Bedroom): Active=False, Metatext=
+expect HasReceiver(Bedroom): True
 expect Active(Bedroom): True
 expect HasVolume(Bedroom): False
 expect HasSourceControl(Bedroom): False
@@ -40,6 +43,7 @@ expect Standby(Dining Room)(Proxy): eOn
 expect Details(Dining Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Dining Room): Active=False, Metadata=, Uri=
 expect Metatext(Dining Room): Active=False, Metatext=
+expect HasReceiver(Dining Room): True
 expect Active(Dining Room): True
 expect HasVolume(Dining Room): False
 expect HasSourceControl(Dining Room): False
@@ -91,6 +95,7 @@ expect Standby(Main Room)(Proxy): eOn
 expect Details(Main Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Main Room): Active=False, Metadata=, Uri=
 expect Metatext(Main Room): Active=False, Metatext=
+expect HasReceiver(Main Room): True
 expect Active(Main Room): True
 expect HasVolume(Main Room): False
 expect HasSourceControl(Main Room): False
@@ -134,6 +139,7 @@ expect Standby(Main Room)(Proxy): eOn
 expect Details(Main Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Main Room): Active=False, Metadata=, Uri=
 expect Metatext(Main Room): Active=False, Metatext=
+expect HasReceiver(Main Room): True
 expect Active(Main Room): True
 expect HasVolume(Main Room): False
 expect HasSourceControl(Main Room): False

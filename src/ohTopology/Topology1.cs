@@ -43,16 +43,10 @@ namespace OpenHome.Av
             iThread.Execute(() =>
             {
                 iDevices.RemoveWatcher(this);
+                iPendingSubscriptions.Clear();
             });
             iDevices.Dispose();
             iDevices = null;
-
-            // stop subscriptions for all products that are outstanding
-            /*foreach (Task<ServiceProduct> t in iPendingSubscriptions.Values)
-            {
-                t.Dispose();
-            }*/
-            iPendingSubscriptions = null;
 
             // dispose of all products, which will in turn unsubscribe
             foreach (ServiceProduct p in iProductLookup.Values)
@@ -127,20 +121,6 @@ namespace OpenHome.Av
                 });
             }
         }
-
-        /*private void Subscribed(IWatchableDevice aDevice, ServiceProduct aProduct)
-        {
-            if (iPendingSubscriptions.Contains(aDevice))
-            {
-                iProducts.Add(aProduct);
-                iProductLookup.Add(aDevice, aProduct);
-                iPendingSubscriptions.Remove(aDevice);
-            }
-            else
-            {
-                aProduct.Dispose();
-            }
-        }*/
 
         private bool iDisposed;
 

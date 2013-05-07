@@ -563,16 +563,26 @@ namespace OpenHome.Av
         public WatchableRadioFactory(IWatchableThread aThread, IWatchableThread aSubscribeThread)
         {
             iLock = new object();
-            iThread = aThread;
+            iDisposed = false;
 
+            iThread = aThread;
             iSubscribeThread = aSubscribeThread;
+        }
+
+        public void Dispose()
+        {
+            iSubscribeThread.Execute(() =>
+            {
+                Unsubscribe();
+                iDisposed = true;
+            });
         }
 
         public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
             iSubscribeThread.Schedule(() =>
             {
-                if (iService == null && iPendingService == null)
+                if (!iDisposed && iService == null && iPendingService == null)
                 {
                     WatchableDevice d = aDevice as WatchableDevice;
                     iPendingService = new CpProxyAvOpenhomeOrgRadio1(d.Device);
@@ -615,6 +625,7 @@ namespace OpenHome.Av
         }
 
         private object iLock;
+        private bool iDisposed;
         private IWatchableThread iSubscribeThread;
         private CpProxyAvOpenhomeOrgRadio1 iPendingService;
         private WatchableRadio iService;

@@ -15,7 +15,7 @@ namespace OpenHome.Av
         string Type { get; }
         bool Visible { get; }
 
-        IEnumerable<IWatchableDevice> VolumeDevices { get; }
+        IEnumerable<ITopology4Group> Volumes { get; }
         IWatchableDevice Device { get; }
         bool HasInfo { get; }
         bool HasTime { get; }
@@ -28,13 +28,13 @@ namespace OpenHome.Av
         public static bool Equals(ITopology4Source aSource1, ITopology4Source aSource2)
         {
             bool volume = false;
-            if (aSource1.VolumeDevices.Count() == aSource2.VolumeDevices.Count())
+            if (aSource1.Volumes.Count() == aSource2.Volumes.Count())
             {
                 volume = true;
-                int count = aSource1.VolumeDevices.Count();
+                int count = aSource1.Volumes.Count();
                 for (int i = 0; i < count; ++i)
                 {
-                    if (aSource1.VolumeDevices.ElementAt(i) != aSource2.VolumeDevices.ElementAt(i))
+                    if (aSource1.Volumes.ElementAt(i) != aSource2.Volumes.ElementAt(i))
                     {
                         volume = false;
                         break;
@@ -106,10 +106,10 @@ namespace OpenHome.Av
             }
         }
 
-        public IEnumerable<IWatchableDevice> VolumeDevices
+        public IEnumerable<ITopology4Group> Volumes
         {
-            get { return iVolumeDevices; }
-            set { iVolumeDevices = value; }
+            get { return iVolumes; }
+            set { iVolumes = value; }
         }
 
         public IWatchableDevice Device
@@ -142,31 +142,46 @@ namespace OpenHome.Av
         private string iType;
         private bool iVisible;
 
-        private IEnumerable<IWatchableDevice> iVolumeDevices;
+        private IEnumerable<ITopology4Group> iVolumes;
         private IWatchableDevice iDevice;
         private bool iHasInfo;
         private bool iHasTime;
     }
+
+    public interface ITopology4Group
+    {
+        string Name { get; }
+        IWatchableDevice Device { get; }
+    }
     
-    public interface ITopology4Root
+    public interface ITopology4Root : ITopology4Group
     {
         IWatchable<ITopology4Source> Source { get; }
         IEnumerable<ITopology4Source> Sources { get; }
+        IWatchable<IEnumerable<ITopology4Group>> Senders { get; }
     }
 
-    public class Topology4Root : ITopology4Root, ITopologyObject, IDisposable
+    public class Topology4Root : ITopology4Root
     {
         public Topology4Root(Topology4Group aGroup)
         {
             iGroup = aGroup;
         }
 
-        public void Detach()
+        public string Name
         {
+            get
+            {
+                return iGroup.Name;
+            }
         }
 
-        public void Dispose()
+        public IWatchableDevice Device
         {
+            get
+            {
+                return iGroup.Device;
+            }
         }
 
         public IWatchable<ITopology4Source> Source
@@ -185,10 +200,18 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<IEnumerable<ITopology4Group>> Senders
+        {
+            get
+            {
+                return iGroup.Senders;
+            }
+        }
+
         private Topology4Group iGroup;
     }
 
-    public class Topology4Group : IWatcher<uint>, ITopologyObject, IDisposable
+    public class Topology4Group : ITopology4Root, IWatcher<uint>, IWatcher<string>, ITopologyObject, IDisposable
     {
         public Topology4Group(IWatchableThread aThread, string aName, ITopology3Group aGroup, IEnumerable<ITopology2Source> aSources)
         {
@@ -196,10 +219,14 @@ namespace OpenHome.Av
             iName = aName;
             iGroup = aGroup;
 
+            iLock = new object();
+            iDetached = false;
+
             iChildren = new List<Topology4Group>();
 
             iSources = new List<Topology4Source>();
             iVisibleSources = new List<ITopology4Source>();
+            iSenders = new Watchable<IEnumerable<ITopology4Group>>(iThread, string.Format("Senders({0})", iName), new List<ITopology4Group>());
 
             foreach (ITopology2Source s in aSources)
             {
@@ -208,23 +235,54 @@ namespace OpenHome.Av
             }
 
             iGroup.SourceIndex.AddWatcher(this);
+
+            if (iGroup.Attributes.Contains("Sender"))
+            {
+                iGroup.Device.Create<ServiceSender>((IWatchableDevice device, ServiceSender sender) =>
+                {
+                    lock (iLock)
+                    {
+                        if (!iDetached)
+                        {
+                            iSender = sender;
+
+                            iSender.Status.AddWatcher(this);
+                        }
+                        else
+                        {
+                            sender.Dispose();
+                        }
+                    }
+                });
+            }
         }
 
         public void Detach()
         {
             iGroup.SourceIndex.RemoveWatcher(this);
+
+            lock (iLock)
+            {
+                if (iSender != null)
+                {
+                    iSender.Status.RemoveWatcher(this);
+                }
+
+                iDetached = true;
+            }
         }
 
         public void Dispose()
         {
-            iGroup = null;
-        }
-
-        public IWatchable<ITopology4Source> Source
-        {
-            get
+            lock (iLock)
             {
-                return iWatchableSource;
+                if (iSender != null)
+                {
+                    iSender.Dispose();
+                    iSender = null;
+                }
+
+                iGroup = null;
             }
         }
 
@@ -236,23 +294,37 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchableDevice Device
+        {
+            get
+            {
+                return iGroup.Device;
+            }
+        }
+
+        public IWatchable<ITopology4Source> Source
+        {
+            get
+            {
+                return iWatchableSource;
+            }
+        }
+
         public void EvaluateSources()
         {
             bool hasInfo = iGroup.Attributes.Contains("Info");
             bool hasTime = iGroup.Attributes.Contains("Time") && hasInfo;
 
-            // get list of all volume devices
-            List<IWatchableDevice> volumeDevices = new List<IWatchableDevice>();
+            // get list of all volume groups
+            List<ITopology4Group> volumes = new List<ITopology4Group>();
 
             Topology4Group group = this;
 
             while (group != null)
             {
-                IWatchableDevice volumeDevice = group.iGroup.Attributes.Contains("Volume") ? group.iGroup.Device : null;
-
-                if (volumeDevice != null)
+                if(group.iGroup.Attributes.Contains("Volume"))
                 {
-                    volumeDevices.Insert(0, volumeDevice);
+                    volumes.Insert(0, group);
                 }
 
                 group = group.Parent;
@@ -260,7 +332,7 @@ namespace OpenHome.Av
 
             foreach (Topology4Source s in iSources)
             {
-                s.VolumeDevices = volumeDevices;
+                s.Volumes = volumes;
                 s.Device = iGroup.Device;
                 s.HasInfo = hasInfo;
                 s.HasTime = hasTime;
@@ -305,6 +377,36 @@ namespace OpenHome.Av
             get
             {
                 return iVisibleSources;
+            }
+        }
+
+        public void EvaluateSenders()
+        {
+            foreach (Topology4Group g in iChildren)
+            {
+                g.EvaluateSenders();
+            }
+
+            List<ITopology4Group> senderDevices = new List<ITopology4Group>();
+
+            foreach (Topology4Group g in iChildren)
+            {
+                senderDevices.AddRange(g.Senders.Value);
+            }
+
+            if (iHasSender)
+            {
+                senderDevices.Insert(0, this);
+            }
+
+            iSenders.Update(senderDevices);
+        }
+
+        public IWatchable<IEnumerable<ITopology4Group>> Senders
+        {
+            get
+            {
+                return iSenders;
             }
         }
 
@@ -393,6 +495,34 @@ namespace OpenHome.Av
             iWatchableSource.Update(source);
         }
 
+        public void ItemOpen(string aId, string aValue)
+        {
+            iHasSender = (aValue == "Enabled");
+            EvaluateSendersFromChild();
+        }
+
+        public void ItemUpdate(string aId, string aValue, string aPrevious)
+        {
+            iHasSender = (aValue == "Enabled");
+            EvaluateSendersFromChild();
+        }
+
+        public void ItemClose(string aId, string aValue)
+        {
+        }
+
+        private void EvaluateSendersFromChild()
+        {
+            if (iParent != null)
+            {
+                iParent.EvaluateSendersFromChild();
+            }
+            else
+            {
+                EvaluateSenders();
+            }
+        }
+
         public void SetSourceIndex(uint aValue)
         {
             if (iGroup != null)
@@ -406,6 +536,8 @@ namespace OpenHome.Av
             }
         }
 
+        private object iLock;
+        private bool iDetached;
         private IWatchableThread iThread;
         private ITopology3Group iGroup;
 
@@ -414,6 +546,10 @@ namespace OpenHome.Av
         private uint iParentSourceIndex;
         private Topology4Group iParent;
         private List<Topology4Group> iChildren;
+
+        private ServiceSender iSender;
+        private bool iHasSender;
+        private Watchable<IEnumerable<ITopology4Group>> iSenders;
 
         private uint iSourceIndex;
         private Watchable<ITopology4Source> iWatchableSource;
@@ -480,6 +616,15 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
+            iWatchableStandby.Dispose();
+            iWatchableStandby = null;
+
+            iWatchableRoots.Dispose();
+            iWatchableRoots = null;
+            
+            iWatchableSources.Dispose();
+            iWatchableSources = null;
+
             iGroup3NameLookup.Clear();
             iGroup3NameLookup = null;
 
@@ -497,10 +642,6 @@ namespace OpenHome.Av
             iGroup4s = null;
 
             iRoots = null;
-
-            iWatchableStandby.Dispose();
-            iWatchableRoots.Dispose();
-            iWatchableSources.Dispose();
         }
 
         public string Name
@@ -559,7 +700,7 @@ namespace OpenHome.Av
             aItem.Name.AddWatcher(this);
             aItem.Standby.AddWatcher(this);
 
-            foreach(IWatchable<ITopology2Source> s in aItem.Sources)
+            foreach (IWatchable<ITopology2Source> s in aItem.Sources)
             {
                 s.AddWatcher(this);
             }
@@ -666,7 +807,6 @@ namespace OpenHome.Av
         private void CreateTree()
         {
             List<Topology4Group> oldGroups = new List<Topology4Group>(iGroup4s);
-            List<Topology4Group> newGroups = new List<Topology4Group>();
 
             iGroup4s.Clear();
             iRoots.Clear();
@@ -681,6 +821,7 @@ namespace OpenHome.Av
             foreach (Topology4Group g in iRoots)
             {
                 g.EvaluateSources();
+                g.EvaluateSenders();
                 sources.AddRange(g.Sources);
                 roots.Add(new Topology4Root(g));
             }

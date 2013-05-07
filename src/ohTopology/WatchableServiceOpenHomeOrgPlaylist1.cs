@@ -773,16 +773,26 @@ namespace OpenHome.Av
         public WatchablePlaylistFactory(IWatchableThread aThread, IWatchableThread aSubscribeThread)
         {
             iLock = new object();
-            iThread = aThread;
+            iDisposed = false;
 
+            iThread = aThread;
             iSubscribeThread = aSubscribeThread;
+        }
+
+        public void Dispose()
+        {
+            iSubscribeThread.Execute(() =>
+            {
+                Unsubscribe();
+                iDisposed = true;
+            });
         }
 
         public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
         {
             iSubscribeThread.Schedule(() =>
             {
-                if (iService == null && iPendingService == null)
+                if (!iDisposed && iService == null && iPendingService == null)
                 {
                     WatchableDevice d = aDevice as WatchableDevice;
                     iPendingService = new CpProxyAvOpenhomeOrgPlaylist1(d.Device);
@@ -825,6 +835,7 @@ namespace OpenHome.Av
         }
 
         private object iLock;
+        private bool iDisposed;
         private IWatchableThread iSubscribeThread;
         private CpProxyAvOpenhomeOrgPlaylist1 iPendingService;
         private WatchablePlaylist iService;

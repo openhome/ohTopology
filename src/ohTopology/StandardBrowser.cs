@@ -325,6 +325,9 @@ namespace OpenHome.Av
             iMetadata = new Watchable<RoomMetadata>(iThread, string.Format("Metadata({0})", aRoom.Name), new RoomMetadata());
             iMetatext = new Watchable<RoomMetatext>(iThread, string.Format("Metatext({0})", aRoom.Name), new RoomMetatext());
 
+            iHasSender = new Watchable<bool>(aThread, string.Format("HasSender({0})", aRoom.Name), false);
+            iHasReceiver = new Watchable<bool>(aThread, string.Format("HasReceiver({0})", aRoom.Name), false);
+
             iRoom.Roots.AddWatcher(this);
         }
 
@@ -359,6 +362,12 @@ namespace OpenHome.Av
 
             iMetatext.Dispose();
             iMetatext = null;
+
+            iHasSender.Dispose();
+            iHasSender = null;
+
+            iHasReceiver.Dispose();
+            iHasReceiver = null;
 
             iRoots = null;
             iRoom = null;
@@ -468,10 +477,25 @@ namespace OpenHome.Av
         {
             iRoots = aValue;
 
+            bool hasReceiver = false;
             foreach (ITopology4Root r in aValue)
             {
                 r.Source.AddWatcher(this);
+
+                if (!hasReceiver)
+                {
+                    foreach (Topology4Source s in r.Sources)
+                    {
+                        if (s.Type == "Receiver")
+                        {
+                            hasReceiver = true;
+                            break;
+                        }
+                    }
+                }
             }
+
+            iHasReceiver.Update(hasReceiver);
 
             SelectFirstSource();
         }
@@ -485,10 +509,21 @@ namespace OpenHome.Av
 
             iRoots = aValue;
 
+            bool hasReceiver = false;
             foreach (ITopology4Root r in aValue)
             {
                 r.Source.AddWatcher(this);
+
+                if (!hasReceiver)
+                {
+                    foreach (Topology4Source s in r.Sources)
+                    {
+                        hasReceiver = (s.Type == "Receiver");
+                    }
+                }
             }
+
+            iHasReceiver.Update(hasReceiver);
 
             SelectSource();
         }

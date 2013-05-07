@@ -114,7 +114,7 @@ namespace TestLinnHouse
             private Dictionary<IStandardRoom, StandardRoomController> iRoomControllerLookup;
         }
 
-        class RoomWatcher : IOrderedWatcher<IStandardRoom>, IWatcher<EStandby>, IWatcher<RoomDetails>, IWatcher<RoomMetadata>, IWatcher<RoomMetatext>, IDisposable
+        class RoomWatcher : IOrderedWatcher<IStandardRoom>, IWatcher<EStandby>, IWatcher<bool>, IWatcher<RoomDetails>, IWatcher<RoomMetadata>, IWatcher<RoomMetatext>, IDisposable
         {
             public RoomWatcher(MockableScriptRunner aRunner)
             {
@@ -135,6 +135,7 @@ namespace TestLinnHouse
                     r.Details.RemoveWatcher(this);
                     r.Metadata.RemoveWatcher(this);
                     r.Metatext.RemoveWatcher(this);
+                    r.HasReceiver.RemoveWatcher(this);
                     //r.Roots.RemoveWatcher(iRootWatcher);
                     //r.Sources.RemoveWatcher(iSourceWatcher);
                 }
@@ -165,6 +166,7 @@ namespace TestLinnHouse
                 aItem.Details.AddWatcher(this);
                 aItem.Metadata.AddWatcher(this);
                 aItem.Metatext.AddWatcher(this);
+                aItem.HasReceiver.AddWatcher(this);
 
                 //aItem.Roots.AddWatcher(iRootWatcher);
                 //aItem.Sources.AddWatcher(iSourceWatcher);
@@ -188,6 +190,7 @@ namespace TestLinnHouse
                 aItem.Details.RemoveWatcher(this);
                 aItem.Metadata.RemoveWatcher(this);
                 aItem.Metatext.RemoveWatcher(this);
+                aItem.HasReceiver.RemoveWatcher(this);
                 //aItem.Roots.RemoveWatcher(iRootWatcher);
                 //aItem.Sources.RemoveWatcher(iSourceWatcher);
                 iRoomControllerWatcher.Remove(aItem);
@@ -204,6 +207,20 @@ namespace TestLinnHouse
             }
 
             public void ItemClose(string aId, EStandby aValue)
+            {
+            }
+
+            public void ItemOpen(string aId, bool aValue)
+            {
+                iRunner.Result(string.Format("{0}: {1}", aId, aValue));
+            }
+
+            public void ItemUpdate(string aId, bool aValue, bool aPrevious)
+            {
+                iRunner.Result(string.Format("{0}: {1} -> {2}", aId, aPrevious, aValue));
+            }
+
+            public void ItemClose(string aId, bool aValue)
             {
             }
 

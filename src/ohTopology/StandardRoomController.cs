@@ -375,10 +375,10 @@ namespace OpenHome.Av
         {
             iSourceController = SourceController.Create(iThread, aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek);
 
-            if (aValue.VolumeDevices.Count() > 0)
+            if (aValue.Volumes.Count() > 0)
             {
-                IWatchableDevice device = aValue.VolumeDevices.ElementAt(0);
-                iVolumeController = new VolumeController(iThread, device, iHasVolume, iMute, iValue);
+                ITopology4Group group = aValue.Volumes.ElementAt(0);
+                iVolumeController = new VolumeController(iThread, group.Device, iHasVolume, iMute, iValue);
             }
         }
 
@@ -392,20 +392,20 @@ namespace OpenHome.Av
 
             iSourceController = SourceController.Create(iThread, aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek);
 
-            if (aValue.VolumeDevices.Count() > 0)
+            if (aValue.Volumes.Count() > 0)
             {
-                IWatchableDevice device = aValue.VolumeDevices.ElementAt(0);
+                ITopology4Group group = aValue.Volumes.ElementAt(0);
                 if (iVolumeController != null)
                 {
-                    if (device != iVolumeController.Device)
+                    if (group.Device != iVolumeController.Device)
                     {
                         iVolumeController.Dispose();
-                        iVolumeController = new VolumeController(iThread, device, iHasVolume, iMute, iValue);
+                        iVolumeController = new VolumeController(iThread, group.Device, iHasVolume, iMute, iValue);
                     }
                 }
                 else
                 {
-                    iVolumeController = new VolumeController(iThread, device, iHasVolume, iMute, iValue);
+                    iVolumeController = new VolumeController(iThread, group.Device, iHasVolume, iMute, iValue);
                 }
             }
             else

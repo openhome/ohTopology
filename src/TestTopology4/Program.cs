@@ -19,7 +19,7 @@ namespace TestTopology4
             }
         }
 
-        class RootWatcher : IWatcher<IEnumerable<ITopology4Root>>, IWatcher<ITopology4Source>, IDisposable
+        class RootWatcher : IWatcher<IEnumerable<ITopology4Root>>, IWatcher<ITopology4Source>, IWatcher<IEnumerable<ITopology4Group>>, IDisposable
         {
             public RootWatcher(MockableScriptRunner aRunner)
             {
@@ -35,6 +35,7 @@ namespace TestTopology4
                 foreach (ITopology4Root g in aValue)
                 {
                     g.Source.AddWatcher(this);
+                    g.Senders.AddWatcher(this);
                 }
             }
 
@@ -79,11 +80,13 @@ namespace TestTopology4
                 foreach (ITopology4Root r in removed)
                 {
                     r.Source.RemoveWatcher(this);
+                    r.Senders.RemoveWatcher(this);
                 }
 
                 foreach (ITopology4Root r in added)
                 {
                     r.Source.AddWatcher(this);
+                    r.Senders.AddWatcher(this);
                 }
             }
 
@@ -92,6 +95,7 @@ namespace TestTopology4
                 foreach (ITopology4Root r in aValue)
                 {
                     r.Source.RemoveWatcher(this);
+                    r.Senders.RemoveWatcher(this);
                 }
             }
 
@@ -114,12 +118,36 @@ namespace TestTopology4
                 string info = string.Format("{0}: Group={1}, Name={2}, Type={3}, Visible={4}, HasInfo={5}, HasTime={6}, Device={7}, Volume=",
                                             aSource.Index, aSource.Group, aSource.Name, aSource.Type, aSource.Visible, aSource.HasInfo, aSource.HasTime, aSource.Device.Udn);
 
-                foreach (IWatchableDevice d in aSource.VolumeDevices)
+                foreach (ITopology4Group g in aSource.Volumes)
                 {
-                    info += d.Udn + " ";
+                    info += g.Device.Udn + " ";
                 }
 
                 return info;
+            }
+
+            public void ItemOpen(string aId, IEnumerable<ITopology4Group> aValue)
+            {
+                string info = "Senders=";
+                foreach (ITopology4Group g in aValue)
+                {
+                    info += g.Name + " ";
+                }
+                iRunner.Result(info);
+            }
+
+            public void ItemUpdate(string aId, IEnumerable<ITopology4Group> aValue, IEnumerable<ITopology4Group> aPrevious)
+            {
+                string info = "Updated: Senders=";
+                foreach (ITopology4Group g in aValue)
+                {
+                    info += g.Name + " ";
+                }
+                iRunner.Result(info);
+            }
+
+            public void ItemClose(string aId, IEnumerable<ITopology4Group> aValue)
+            {
             }
 
             private MockableScriptRunner iRunner;
@@ -165,9 +193,9 @@ namespace TestTopology4
                 string info = string.Format("{0}: Group={1}, Name={2}, Type={3}, Visible={4}, HasInfo={5}, HasTime={6}, Device={7}, Volume=",
                                             aSource.Index, aSource.Group, aSource.Name, aSource.Type, aSource.Visible, aSource.HasInfo, aSource.HasTime, aSource.Device.Udn);
 
-                foreach (IWatchableDevice d in aSource.VolumeDevices)
+                foreach (ITopology4Group g in aSource.Volumes)
                 {
-                    info += d.Udn + " ";
+                    info += g.Device.Udn + " ";
                 }
 
                 return info;

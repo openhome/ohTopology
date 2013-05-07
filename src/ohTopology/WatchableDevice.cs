@@ -14,7 +14,7 @@ namespace OpenHome.Av
         IService Create(IManagableWatchableDevice aDevice);
     }
 
-    public interface IWatchableServiceFactory
+    public interface IWatchableServiceFactory : IDisposable
     {
         void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback);
         void Unsubscribe();
@@ -64,11 +64,12 @@ namespace OpenHome.Av
 
     public abstract class WatchableDevice : IManagableWatchableDevice
     {
-        public abstract void Unsubscribe<T>() where T : IService;
         public abstract string Udn { get; }
-        public abstract bool GetAttribute(string aKey, out string aValue);
-        public abstract void Create<T>(Action<IWatchableDevice, T> aAction) where T : IService;
         public abstract CpDevice Device { get; }
+        public abstract bool GetAttribute(string aKey, out string aValue);
+
+        public abstract void Create<T>(Action<IWatchableDevice, T> aAction) where T : IService;
+        public abstract void Unsubscribe<T>() where T : IService;
     }
 
     public class DisposableWatchableDevice : WatchableDevice, IDisposable
@@ -87,6 +88,10 @@ namespace OpenHome.Av
             iFactories.Add(typeof(ServiceVolume), new WatchableVolumeFactory(aSubscribeThread, aThread));
             iFactories.Add(typeof(ServiceInfo), new WatchableInfoFactory(aSubscribeThread, aThread));
             iFactories.Add(typeof(ServiceTime), new WatchableTimeFactory(aSubscribeThread, aThread));
+            iFactories.Add(typeof(ServiceSender), new WatchableSenderFactory(aSubscribeThread, aThread));
+            iFactories.Add(typeof(ServicePlaylist), new WatchablePlaylistFactory(aSubscribeThread, aThread));
+            iFactories.Add(typeof(ServiceRadio), new WatchableRadioFactory(aSubscribeThread, aThread));
+            iFactories.Add(typeof(ServiceReceiver), new WatchableReceiverFactory(aSubscribeThread, aThread));
             //iFactories.Add(typeof(ServiceContentDirectory), new WatchableContentDirectoryFactory(aSubscribeThread, aThread));
 
             iServices = new Dictionary<Type, IWatchableService>();
@@ -105,6 +110,20 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("DisposableWatchableDevice.Dispose");
                 }
 
+                foreach (IWatchableService s in iServices.Values)
+                {
+                    s.Dispose();
+                }
+                iServices.Clear();
+                iServices = null;
+
+                iServiceRefCount.Clear();
+                iServiceRefCount = null;
+
+                foreach (IWatchableServiceFactory f in iFactories.Values)
+                {
+                    f.Dispose();
+                }
                 iFactories.Clear();
                 iFactories = null;
 
