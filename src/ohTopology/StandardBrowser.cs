@@ -303,7 +303,7 @@ namespace OpenHome.Av
         IWatchable<IEnumerable<ITopology4Source>> Sources { get; }
 
         void SetStandby(bool aValue);
-        void Play(string aId, string aMetadata, string aUri);
+        void Play(string aMode, string aUri, string aMetadata);
 
         IWatchableThread WatchableThread { get; }
     }
@@ -459,8 +459,9 @@ namespace OpenHome.Av
             }
         }
 
-        public void Play(string aId, string aMetadata, string aUri)
+        public void Play(string aMode, string aUri, string aMetadata)
         {
+            Invoker.Play(iSources, aMode, aUri, aMetadata);
         }
 
         public IWatchableThread WatchableThread

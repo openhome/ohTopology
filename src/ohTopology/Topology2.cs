@@ -303,18 +303,19 @@ namespace OpenHome.Av
     public interface ITopology2
     {
         IWatchableUnordered<ITopology2Group> Groups { get; }
+        IWatchableThread WatchableThread { get; }
     }
 
     public class Topology2 : ITopology2, IUnorderedWatcher<ServiceProduct>, IDisposable
     {
-        public Topology2(IWatchableThread aThread, ITopology1 aTopology1)
+        public Topology2(ITopology1 aTopology1)
         {
             iDisposed = false;
 
-            iThread = aThread;
+            iThread = aTopology1.WatchableThread;
             iTopology1 = aTopology1;
 
-            iGroups = new WatchableUnordered<ITopology2Group>(aThread);
+            iGroups = new WatchableUnordered<ITopology2Group>(iThread);
 
             iGroupLookup = new Dictionary<ServiceProduct, Topology2Group>();
 
@@ -359,6 +360,14 @@ namespace OpenHome.Av
             get
             {
                 return iGroups;
+            }
+        }
+
+        public IWatchableThread WatchableThread
+        {
+            get
+            {
+                return iThread;
             }
         }
 

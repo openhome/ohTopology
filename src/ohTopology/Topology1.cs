@@ -11,6 +11,7 @@ namespace OpenHome.Av
     public interface ITopology1
     {
         IWatchableUnordered<ServiceProduct> Products { get; }
+        IWatchableThread WatchableThread { get; }
     }
 
     public class Topology1 : ITopology1, IUnorderedWatcher<IWatchableDevice>, IDisposable
@@ -66,6 +67,14 @@ namespace OpenHome.Av
             get
             {
                 return iProducts;
+            }
+        }
+
+        public IWatchableThread WatchableThread
+        {
+            get
+            {
+                return iThread;
             }
         }
 

@@ -195,7 +195,7 @@ namespace TestTopology2
             mocker.Add("network", network);
 
             Topology1 topology1 = new Topology1(thread, network);
-            Topology2 topology2 = new Topology2(thread, topology1);
+            Topology2 topology2 = new Topology2(topology1);
 
             MockableScriptRunner runner = new MockableScriptRunner();
 

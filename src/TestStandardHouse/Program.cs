@@ -292,9 +292,9 @@ namespace TestLinnHouse
             mocker.Add("network", network);
 
             Topology1 topology1 = new Topology1(thread, network);
-            Topology2 topology2 = new Topology2(thread, topology1);
-            Topology3 topology3 = new Topology3(thread, topology2);
-            Topology4 topology4 = new Topology4(thread, topology3);
+            Topology2 topology2 = new Topology2(topology1);
+            Topology3 topology3 = new Topology3(topology2);
+            Topology4 topology4 = new Topology4(topology3);
 
             StandardHouse house = new StandardHouse(thread, topology4);
 
