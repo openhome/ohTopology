@@ -24,33 +24,33 @@ namespace OpenHome.Av
 
     public class StandardRoomController : IWatcher<ITopology4Source>, IDisposable
     {
-        internal StandardRoomController(IWatchableThread aThread, StandardRoom aRoom)
+        public StandardRoomController(IStandardRoom aRoom)
         {
-            iThread = aThread;
+            iThread = aRoom.WatchableThread;
             iRoom = aRoom;
 
             iLock = new object();
             iIsActive = true;
-            iActive = new Watchable<bool>(aThread, string.Format("Active({0})", aRoom.Name), true);
+            iActive = new Watchable<bool>(iThread, string.Format("Active({0})", aRoom.Name), true);
 
             iStandby = new WatchableProxy<EStandby>(aRoom.Standby);
 
-            iHasVolume = new Watchable<bool>(aThread, string.Format("HasVolume({0})", aRoom.Name), false);
-            iMute = new Watchable<bool>(aThread, string.Format("Mute({0})", aRoom.Name), false);
-            iValue = new Watchable<uint>(aThread, string.Format("Volume({0})", aRoom.Name), 0);
+            iHasVolume = new Watchable<bool>(iThread, string.Format("HasVolume({0})", aRoom.Name), false);
+            iMute = new Watchable<bool>(iThread, string.Format("Mute({0})", aRoom.Name), false);
+            iValue = new Watchable<uint>(iThread, string.Format("Volume({0})", aRoom.Name), 0);
 
-            iHasSourceControl = new Watchable<bool>(aThread, string.Format("HasSourceControl({0})", aRoom.Name), false);
-            iHasInfoNext = new Watchable<bool>(aThread, string.Format("HasInfoNext({0})", aRoom.Name), false);
+            iHasSourceControl = new Watchable<bool>(iThread, string.Format("HasSourceControl({0})", aRoom.Name), false);
+            iHasInfoNext = new Watchable<bool>(iThread, string.Format("HasInfoNext({0})", aRoom.Name), false);
             iInfoNext = new Watchable<IInfoMetadata>(iThread, string.Format("InfoNext({0})", iRoom.Name), new RoomMetadata());
 
-            iCanPause = new Watchable<bool>(aThread, string.Format("CanPause({0})", aRoom.Name), false);
-            iCanSkip = new Watchable<bool>(aThread, string.Format("CanSkip({0})", aRoom.Name), false);
-            iCanSeek = new Watchable<bool>(aThread, string.Format("CanSeek({0})", aRoom.Name), false);
-            iTransportState = new Watchable<string>(aThread, string.Format("TransportState({0})", aRoom.Name), string.Empty);
+            iCanPause = new Watchable<bool>(iThread, string.Format("CanPause({0})", aRoom.Name), false);
+            iCanSkip = new Watchable<bool>(iThread, string.Format("CanSkip({0})", aRoom.Name), false);
+            iCanSeek = new Watchable<bool>(iThread, string.Format("CanSeek({0})", aRoom.Name), false);
+            iTransportState = new Watchable<string>(iThread, string.Format("TransportState({0})", aRoom.Name), string.Empty);
 
             iRoom.Source.AddWatcher(this);
 
-            iRoom.AddController(this);
+            iRoom.Join(SetInactive);
         }
 
         public void Dispose()
@@ -62,7 +62,7 @@ namespace OpenHome.Av
                     iStandby.Detach();
 
                     iRoom.Source.RemoveWatcher(this);
-                    iRoom.RemoveController(this);
+                    iRoom.UnJoin(SetInactive);
                 }
             }
 
@@ -105,7 +105,7 @@ namespace OpenHome.Av
             iCanSeek = null;
         }
 
-        internal void SetInactive()
+        private void SetInactive()
         {
             lock (iLock)
             {
@@ -116,7 +116,7 @@ namespace OpenHome.Av
                 iStandby.Detach();
 
                 iRoom.Source.RemoveWatcher(this);
-                iRoom.RemoveController(this);
+                iRoom.UnJoin(SetInactive);
             }
         }
 
@@ -434,7 +434,7 @@ namespace OpenHome.Av
         }
 
         private IWatchableThread iThread;
-        private StandardRoom iRoom;
+        private IStandardRoom iRoom;
 
         private object iLock;
         private bool iIsActive;

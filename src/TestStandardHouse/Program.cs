@@ -40,7 +40,7 @@ namespace TestLinnHouse
 
             public void Add(IStandardRoom aRoom)
             {
-                StandardRoomController controller = aRoom.Create();
+                StandardRoomController controller = new StandardRoomController(aRoom);
 
                 controller.Active.AddWatcher(this);
                 controller.HasVolume.AddWatcher(this);
@@ -135,7 +135,7 @@ namespace TestLinnHouse
                     r.Details.RemoveWatcher(this);
                     r.Metadata.RemoveWatcher(this);
                     r.Metatext.RemoveWatcher(this);
-                    r.HasSender.RemoveWatcher(this);
+                    r.IsZoneable.RemoveWatcher(this);
                     //r.Roots.RemoveWatcher(iRootWatcher);
                     //r.Sources.RemoveWatcher(iSourceWatcher);
                 }
@@ -166,7 +166,7 @@ namespace TestLinnHouse
                 aItem.Details.AddWatcher(this);
                 aItem.Metadata.AddWatcher(this);
                 aItem.Metatext.AddWatcher(this);
-                aItem.HasSender.AddWatcher(this);
+                aItem.IsZoneable.AddWatcher(this);
                 //aItem.Roots.AddWatcher(iRootWatcher);
                 //aItem.Sources.AddWatcher(iSourceWatcher);
                 iRoomControllerWatcher.Add(aItem);
@@ -189,7 +189,7 @@ namespace TestLinnHouse
                 aItem.Details.RemoveWatcher(this);
                 aItem.Metadata.RemoveWatcher(this);
                 aItem.Metatext.RemoveWatcher(this);
-                aItem.HasSender.RemoveWatcher(this);
+                aItem.IsZoneable.RemoveWatcher(this);
                 //aItem.Roots.RemoveWatcher(iRootWatcher);
                 //aItem.Sources.RemoveWatcher(iSourceWatcher);
                 iRoomControllerWatcher.Remove(aItem);

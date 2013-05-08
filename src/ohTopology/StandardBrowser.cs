@@ -7,12 +7,6 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    interface IInvoker
-    {
-        void SetUri(string aUri, string aMetadata);
-        void Play();
-    }
-
     public class RoomDetails : IInfoDetails
     {
         internal RoomDetails()
@@ -286,7 +280,13 @@ namespace OpenHome.Av
         IRoom Room { get; }
     }
 
-    public interface IStandardRoom
+    public interface IJoinable
+    {
+        void Join(Action aAction);
+        void UnJoin(Action aAction);
+    }
+
+    public interface IStandardRoom : IJoinable
     {
         string Name { get; }
         
@@ -295,15 +295,17 @@ namespace OpenHome.Av
         IWatchable<RoomMetadata> Metadata { get; }
         IWatchable<RoomMetatext> Metatext { get; }
 
-        IWatchable<bool> HasSender { get; }
+        // multi-room interface
+        IWatchable<bool> IsZoneable { get; }
         IWatchableUnordered<IZone> Listeners { get; }
 
         IWatchable<ITopology4Source> Source { get; }
-
-        StandardRoomController Create();
+        IWatchable<IEnumerable<ITopology4Source>> Sources { get; }
 
         void SetStandby(bool aValue);
         void Play(string aId, string aMetadata, string aUri);
+
+        IWatchableThread WatchableThread { get; }
     }
 
     public class StandardRoom : IStandardRoom, ITopologyObject, IWatcher<IEnumerable<ITopology4Root>>, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IDisposable
@@ -314,7 +316,7 @@ namespace OpenHome.Av
             iHouse = aHouse;
             iRoom = aRoom;
 
-            iControllers = new List<StandardRoomController>();
+            iJoiners = new List<Action>();
             iRoots = new List<ITopology4Root>();
             iSources = new List<ITopology4Source>();
 
@@ -335,16 +337,16 @@ namespace OpenHome.Av
 
             iStandby.Detach();
 
-            List<StandardRoomController> controllers = new List<StandardRoomController>(iControllers);
-            foreach (StandardRoomController c in controllers)
+            List<Action> linked = new List<Action>(iJoiners);
+            foreach (Action a in linked)
             {
-                c.SetInactive();
+                a();
             }
-            if (iControllers.Count > 0)
+            if (iJoiners.Count > 0)
             {
-                throw new Exception("iControllers.Count > 0");
+                throw new Exception("iJoiners.Count > 0");
             }
-            iControllers = null;
+            iJoiners = null;
         }
 
         public void Dispose()
@@ -418,9 +420,22 @@ namespace OpenHome.Av
             }
         }
 
-        public StandardRoomController Create()
+        public IWatchable<IEnumerable<ITopology4Source>> Sources
         {
-            return new StandardRoomController(iThread, this);
+            get
+            {
+                return iWatchableSources;
+            }
+        }
+
+        public void Join(Action aAction)
+        {
+            iJoiners.Add(aAction);
+        }
+
+        public void UnJoin(Action aAction)
+        {
+            iJoiners.Remove(aAction);
         }
 
         public void SetStandby(bool aValue)
@@ -428,7 +443,7 @@ namespace OpenHome.Av
             iRoom.SetStandby(aValue);
         }
 
-        public IWatchable<bool> HasSender
+        public IWatchable<bool> IsZoneable
         {
             get
             {
@@ -448,6 +463,14 @@ namespace OpenHome.Av
         {
         }
 
+        public IWatchableThread WatchableThread
+        {
+            get
+            {
+                return iThread;
+            }
+        }
+
         public void UnorderedOpen()
         {
         }
@@ -462,6 +485,8 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, IEnumerable<ITopology4Root> aValue)
         {
+            iWatchableSources = new Watchable<IEnumerable<ITopology4Source>>(iThread, string.Format("Sources({0})", iRoom.Name), new List<ITopology4Source>());
+            
             iRoots = aValue;
 
             foreach (ITopology4Root r in aValue)
@@ -470,6 +495,7 @@ namespace OpenHome.Av
                 r.Senders.AddWatcher(this);
             }
 
+            iWatchableSources.Update(new List<ITopology4Source>(iSources));
             SelectFirstSource();
         }
 
@@ -489,6 +515,7 @@ namespace OpenHome.Av
                 r.Senders.AddWatcher(this);
             }
 
+            iWatchableSources.Update(new List<ITopology4Source>(iSources));
             SelectSource();
         }
 
@@ -504,6 +531,9 @@ namespace OpenHome.Av
 
             iInfoWatcher.Dispose();
             iInfoWatcher = null;
+
+            iWatchableSources.Dispose();
+            iWatchableSources = null;
 
             iSource = null;
         }
@@ -602,25 +632,16 @@ namespace OpenHome.Av
             }
         }
 
-        internal void AddController(StandardRoomController aController)
-        {
-            iControllers.Add(aController);
-        }
-
-        internal void RemoveController(StandardRoomController aController)
-        {
-            iControllers.Remove(aController);
-        }
-
         private IWatchableThread iThread;
         private StandardHouse iHouse;
         private ITopology4Room iRoom;
 
         private IEnumerable<ITopology4Root> iRoots;
-        private List<StandardRoomController> iControllers;
+        private List<Action> iJoiners;
         private ITopology4Source iSource;
         private List<ITopology4Source> iSources;
         private Watchable<ITopology4Source> iWatchableSource;
+        private Watchable<IEnumerable<ITopology4Source>> iWatchableSources;
 
         private Watchable<bool> iHasSender;
         private WatchableUnordered<IZone> iListeners;

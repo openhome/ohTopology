@@ -73,11 +73,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ByteArray.cs" />
+    <Compile Include="Invoker.cs" />
     <Compile Include="SourceController.cs" />
     <Compile Include="SourceControllerPlaylist.cs" />
     <Compile Include="SourceControllerRadio.cs" />
     <Compile Include="SourceControllerReceiver.cs" />
     <Compile Include="StandardRoomController.cs" />
+    <Compile Include="StandardRoomWatchers.cs" />
     <Compile Include="VolumeController.cs" />
     <Compile Include="WatchableServiceMediaServer.cs" />
     <Compile Include="WatchableDeviceMediaServer.cs" />
