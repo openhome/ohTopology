@@ -20,55 +20,49 @@ namespace OpenHome.Av
 
             aSource.Device.Create<ServiceRadio>((IWatchableDevice device, ServiceRadio radio) =>
             {
-                lock (iLock)
+                if (!iDisposed)
                 {
-                    if (!iDisposed)
-                    {
-                        iRadio = radio;
+                    iRadio = radio;
 
-                        aHasInfoNext.Update(false);
-                        aCanSkip.Update(false);
-                        iCanPause.Update(false);
-                        iCanSeek.Update(false);
+                    aHasInfoNext.Update(false);
+                    aCanSkip.Update(false);
+                    iCanPause.Update(false);
+                    iCanSeek.Update(false);
 
-                        iRadio.TransportState.AddWatcher(this);
+                    iRadio.TransportState.AddWatcher(this);
                         
-                        iHasSourceControl.Update(true);
-                    }
-                    else
-                    {
-                        radio.Dispose();
-                    }
+                    iHasSourceControl.Update(true);
+                }
+                else
+                {
+                    radio.Dispose();
                 }
             });
         }
 
         public void Dispose()
         {
-            lock (iLock)
+            if (iDisposed)
             {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("SourceControllerRadio.Dispose");
-                }
-
-                if (iRadio != null)
-                {
-                    iHasSourceControl.Update(false);
-
-                    iRadio.TransportState.RemoveWatcher(this);
-
-                    iRadio.Dispose();
-                    iRadio = null;
-                }
-
-                iHasSourceControl = null;
-                iCanPause = null;
-                iCanSeek = null;
-                iTransportState = null;
-
-                iDisposed = true;
+                throw new ObjectDisposedException("SourceControllerRadio.Dispose");
             }
+
+            if (iRadio != null)
+            {
+                iHasSourceControl.Update(false);
+
+                iRadio.TransportState.RemoveWatcher(this);
+
+                iRadio.Dispose();
+                iRadio = null;
+            }
+
+            iHasSourceControl = null;
+            iCanPause = null;
+            iCanSeek = null;
+            iTransportState = null;
+
+            iDisposed = true;
         }
 
         public string Name

@@ -8,7 +8,6 @@ namespace OpenHome.Av
     {
         public SourceControllerReceiver(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasSourceControl, Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause, Watchable<bool> aCanSkip, Watchable<bool> aCanSeek)
         {
-            iLock = new object();
             iDisposed = false;
 
             iSource = aSource;
@@ -20,55 +19,49 @@ namespace OpenHome.Av
 
             aSource.Device.Create<ServiceReceiver>((IWatchableDevice device, ServiceReceiver receiver) =>
             {
-                lock (iLock)
+                if (!iDisposed)
                 {
-                    if (!iDisposed)
-                    {
-                        iReceiver = receiver;
+                    iReceiver = receiver;
 
-                        aHasInfoNext.Update(false);
-                        aCanSkip.Update(false);
-                        iCanPause.Update(false);
-                        iCanSeek.Update(false);
+                    aHasInfoNext.Update(false);
+                    aCanSkip.Update(false);
+                    iCanPause.Update(false);
+                    iCanSeek.Update(false);
 
-                        iReceiver.TransportState.AddWatcher(this);
+                    iReceiver.TransportState.AddWatcher(this);
 
-                        iHasSourceControl.Update(true);
-                    }
-                    else
-                    {
-                        receiver.Dispose();
-                    }
+                    iHasSourceControl.Update(true);
+                }
+                else
+                {
+                    receiver.Dispose();
                 }
             });
         }
 
         public void Dispose()
         {
-            lock (iLock)
+            if (iDisposed)
             {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("SourceControllerReceiver.Dispose");
-                }
-
-                if (iReceiver != null)
-                {
-                    iHasSourceControl.Update(false);
-
-                    iReceiver.TransportState.RemoveWatcher(this);
-
-                    iReceiver.Dispose();
-                    iReceiver = null;
-                }
-
-                iHasSourceControl = null;
-                iCanPause = null;
-                iCanSeek = null;
-                iTransportState = null;
-
-                iDisposed = true;
+                throw new ObjectDisposedException("SourceControllerReceiver.Dispose");
             }
+
+            if (iReceiver != null)
+            {
+                iHasSourceControl.Update(false);
+
+                iReceiver.TransportState.RemoveWatcher(this);
+
+                iReceiver.Dispose();
+                iReceiver = null;
+            }
+
+            iHasSourceControl = null;
+            iCanPause = null;
+            iCanSeek = null;
+            iTransportState = null;
+
+            iDisposed = true;
         }
 
         public string Name
@@ -176,7 +169,6 @@ namespace OpenHome.Av
         {
         }
 
-        private object iLock;
         private bool iDisposed;
 
         private ITopology4Source iSource;

@@ -8,7 +8,6 @@ namespace OpenHome.Av
     {
         public VolumeController(IWatchableThread aThread, IWatchableDevice aDevice, Watchable<bool> aHasVolume, Watchable<bool> aMute, Watchable<uint> aValue)
         {
-            iLock = new object();
             iDisposed = false;
 
             iDevice = aDevice;
@@ -19,47 +18,41 @@ namespace OpenHome.Av
 
             iDevice.Create<ServiceVolume>((IWatchableDevice device, ServiceVolume volume) =>
             {
-                lock (iLock)
+                if (!iDisposed)
                 {
-                    if (!iDisposed)
-                    {
-                        iVolume = volume;
+                    iVolume = volume;
 
-                        iVolume.Mute.AddWatcher(this);
-                        iVolume.Value.AddWatcher(this);
+                    iVolume.Mute.AddWatcher(this);
+                    iVolume.Value.AddWatcher(this);
 
-                        iHasVolume.Update(true);
-                    }
-                    else
-                    {
-                        volume.Dispose();
-                    }
+                    iHasVolume.Update(true);
+                }
+                else
+                {
+                    volume.Dispose();
                 }
             });
         }
 
         public void Dispose()
         {
-            lock (iLock)
+            if (iDisposed)
             {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("VolumeController.Dispose");
-                }
-
-                if (iVolume != null)
-                {
-                    iHasVolume.Update(false);
-
-                    iVolume.Mute.RemoveWatcher(this);
-                    iVolume.Value.RemoveWatcher(this);
-
-                    iVolume.Dispose();
-                    iVolume = null;
-                }
-
-                iDisposed = true;
+                throw new ObjectDisposedException("VolumeController.Dispose");
             }
+
+            if (iVolume != null)
+            {
+                iHasVolume.Update(false);
+
+                iVolume.Mute.RemoveWatcher(this);
+                iVolume.Value.RemoveWatcher(this);
+
+                iVolume.Dispose();
+                iVolume = null;
+            }
+
+            iDisposed = true;
         }
 
         public IWatchableDevice Device
@@ -118,7 +111,6 @@ namespace OpenHome.Av
         {
         }
 
-        private object iLock;
         private bool iDisposed;
         private ServiceVolume iVolume;
 

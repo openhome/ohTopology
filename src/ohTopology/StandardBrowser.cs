@@ -170,7 +170,6 @@ namespace OpenHome.Av
     {
         public InfoWatcher(IWatchableThread aThread, IWatchableDevice aDevice, Watchable<RoomDetails> aDetails, Watchable<RoomMetadata> aMetadata, Watchable<RoomMetatext> aMetatext)
         {
-            iLock = new object();
             iDisposed = false;
 
             iDevice = aDevice;
@@ -180,44 +179,38 @@ namespace OpenHome.Av
 
             iDevice.Create<ServiceInfo>((IWatchableDevice device, ServiceInfo info) =>
             {
-                lock (iLock)
+                if (!iDisposed)
                 {
-                    if (!iDisposed)
-                    {
-                        iInfo = info;
+                    iInfo = info;
 
-                        iInfo.Details.AddWatcher(this);
-                        iInfo.Metadata.AddWatcher(this);
-                        iInfo.Metatext.AddWatcher(this);
-                    }
-                    else
-                    {
-                        info.Dispose();
-                    }
+                    iInfo.Details.AddWatcher(this);
+                    iInfo.Metadata.AddWatcher(this);
+                    iInfo.Metatext.AddWatcher(this);
+                }
+                else
+                {
+                    info.Dispose();
                 }
             });
         }
 
         public void Dispose()
         {
-            lock (iLock)
+            if (iDisposed)
             {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("InfoWatcher.Dispose");
-                }
-
-                if (iInfo != null)
-                {
-                    iInfo.Details.RemoveWatcher(this);
-                    iInfo.Metadata.RemoveWatcher(this);
-                    iInfo.Metatext.RemoveWatcher(this);
-
-                    iInfo = null;
-                }
-
-                iDisposed = true;
+                throw new ObjectDisposedException("InfoWatcher.Dispose");
             }
+
+            if (iInfo != null)
+            {
+                iInfo.Details.RemoveWatcher(this);
+                iInfo.Metadata.RemoveWatcher(this);
+                iInfo.Metatext.RemoveWatcher(this);
+
+                iInfo = null;
+            }
+
+            iDisposed = true;
         }
 
         public void ItemOpen(string aId, IInfoDetails aValue)
@@ -265,7 +258,6 @@ namespace OpenHome.Av
             iMetatext.Update(new RoomMetatext());
         }
 
-        private object iLock;
         private bool iDisposed;
         private ServiceInfo iInfo;
 

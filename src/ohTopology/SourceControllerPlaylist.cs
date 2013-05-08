@@ -8,7 +8,6 @@ namespace OpenHome.Av
     {
         public SourceControllerPlaylist(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasSourceControl, Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause, Watchable<bool> aCanSkip, Watchable<bool> aCanSeek)
         {
-            iLock = new object();
             iDisposed = false;
 
             iSource = aSource;
@@ -21,54 +20,48 @@ namespace OpenHome.Av
 
             aSource.Device.Create<ServicePlaylist>((IWatchableDevice device, ServicePlaylist playlist) =>
             {
-                lock (iLock)
+                if (!iDisposed)
                 {
-                    if (!iDisposed)
-                    {
-                        iPlaylist = playlist;
+                    iPlaylist = playlist;
 
-                        aHasInfoNext.Update(true);
-                        aCanSkip.Update(true);
+                    aHasInfoNext.Update(true);
+                    aCanSkip.Update(true);
 
-                        iPlaylist.TransportState.AddWatcher(this);
+                    iPlaylist.TransportState.AddWatcher(this);
 
-                        iHasSourceControl.Update(true);
-                    }
-                    else
-                    {
-                        playlist.Dispose();
-                    }
+                    iHasSourceControl.Update(true);
+                }
+                else
+                {
+                    playlist.Dispose();
                 }
             });
         }
 
         public void Dispose()
         {
-            lock (iLock)
+            if (iDisposed)
             {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("SourceControllerPlaylist.Dispose");
-                }
-
-                if (iPlaylist != null)
-                {
-                    iHasSourceControl.Update(false);
-
-                    iPlaylist.TransportState.RemoveWatcher(this);
-
-                    iPlaylist.Dispose();
-                    iPlaylist = null;
-                }
-
-                iHasSourceControl = null;
-                iInfoNext = null;
-                iCanPause = null;
-                iCanSeek = null;
-                iTransportState = null;
-
-                iDisposed = true;
+                throw new ObjectDisposedException("SourceControllerPlaylist.Dispose");
             }
+
+            if (iPlaylist != null)
+            {
+                iHasSourceControl.Update(false);
+
+                iPlaylist.TransportState.RemoveWatcher(this);
+
+                iPlaylist.Dispose();
+                iPlaylist = null;
+            }
+
+            iHasSourceControl = null;
+            iInfoNext = null;
+            iCanPause = null;
+            iCanSeek = null;
+            iTransportState = null;
+
+            iDisposed = true;
         }
 
         public string Name
@@ -179,7 +172,6 @@ namespace OpenHome.Av
         {
         }
 
-        private object iLock;
         private bool iDisposed;
 
         private ITopology4Source iSource;
