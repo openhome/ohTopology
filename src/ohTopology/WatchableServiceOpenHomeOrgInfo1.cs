@@ -546,7 +546,7 @@ namespace OpenHome.Av
 
     public class ServiceInfo : IServiceOpenHomeOrgInfo1, IService
     {
-        public ServiceInfo(IManagableWatchableDevice aDevice, IServiceOpenHomeOrgInfo1 aService)
+        public ServiceInfo(IManagableWatchableDevice aDevice, Info aService)
         {
             iDevice = aDevice;
             iService = aService;
@@ -579,6 +579,6 @@ namespace OpenHome.Av
         }
 
         private IManagableWatchableDevice iDevice;
-        private IServiceOpenHomeOrgInfo1 iService;
+        private Info iService;
     }
 }

@@ -11,13 +11,10 @@ namespace OpenHome.Av
     public interface IServiceOpenHomeOrgVolume1
     {
         IWatchable<int> Balance { get; }
-        IWatchable<uint> BalanceMax { get; }
         IWatchable<int> Fade { get; }
-        IWatchable<uint> FadeMax { get; }
         IWatchable<bool> Mute { get; }
         IWatchable<uint> Value { get; }
         IWatchable<uint> VolumeLimit { get; }
-        IWatchable<uint> VolumeMax { get; }
         IWatchable<uint> VolumeMilliDbPerStep { get; }
         IWatchable<uint> VolumeSteps { get; }
         IWatchable<uint> VolumeUnity { get; }
@@ -30,7 +27,14 @@ namespace OpenHome.Av
         void VolumeInc();
     }
 
-    public abstract class Volume : IServiceOpenHomeOrgVolume1, IWatchableService
+    public interface IVolume : IServiceOpenHomeOrgVolume1
+    {
+        uint BalanceMax { get; }
+        uint FadeMax { get; }
+        uint VolumeMax { get; }
+    }
+
+    public abstract class Volume : IVolume, IWatchableService
     {
         public abstract void Dispose();
 
@@ -49,27 +53,11 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<uint> BalanceMax
-        {
-            get
-            {
-                return Service.BalanceMax;
-            }
-        }
-
         public IWatchable<int> Fade
         {
             get
             {
                 return Service.Fade;
-            }
-        }
-
-        public IWatchable<uint> FadeMax
-        {
-            get
-            {
-                return Service.FadeMax;
             }
         }
 
@@ -97,11 +85,27 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<uint> VolumeMax
+        public uint BalanceMax
         {
             get
             {
-                return Service.VolumeMax;
+                return iBalanceMax;
+            }
+        }
+
+        public uint FadeMax
+        {
+            get
+            {
+                return iFadeMax;
+            }
+        }
+
+        public uint VolumeMax
+        {
+            get
+            {
+                return iVolumeMax;
             }
         }
 
@@ -158,6 +162,10 @@ namespace OpenHome.Av
         {
             Service.VolumeInc();
         }
+
+        protected uint iBalanceMax;
+        protected uint iFadeMax;
+        protected uint iVolumeMax;
     }
 
     public class ServiceOpenHomeOrgVolume1 : IServiceOpenHomeOrgVolume1, IDisposable
@@ -172,25 +180,19 @@ namespace OpenHome.Av
                 iService = aService;
 
                 iService.SetPropertyBalanceChanged(HandleBalanceChanged);
-                iService.SetPropertyBalanceMaxChanged(HandleBalanceMaxChanged);
                 iService.SetPropertyFadeChanged(HandleFadeChanged);
-                iService.SetPropertyFadeMaxChanged(HandleFadeMaxChanged);
                 iService.SetPropertyMuteChanged(HandleMuteChanged);
                 iService.SetPropertyVolumeChanged(HandleVolumeChanged);
                 iService.SetPropertyVolumeLimitChanged(HandleVolumeLimitChanged);
-                iService.SetPropertyVolumeMaxChanged(HandleVolumeMaxChanged);
                 iService.SetPropertyVolumeMilliDbPerStepChanged(HandleVolumeMilliDbPerStepChanged);
                 iService.SetPropertyVolumeStepsChanged(HandleVolumeStepsChanged);
                 iService.SetPropertyVolumeUnityChanged(HandleVolumeUnityChanged);
 
                 iBalance = new Watchable<int>(aThread, string.Format("Balance({0})", aId), iService.PropertyBalance());
-                iBalanceMax = new Watchable<uint>(aThread, string.Format("BalanceMax({0})", aId), iService.PropertyBalanceMax());
                 iFade = new Watchable<int>(aThread, string.Format("Fade({0})", aId), iService.PropertyFade());
-                iFadeMax = new Watchable<uint>(aThread, string.Format("FadeMax({0})", aId), iService.PropertyFadeMax());
                 iMute = new Watchable<bool>(aThread, string.Format("Mute({0})", aId), iService.PropertyMute());
                 iValue = new Watchable<uint>(aThread, string.Format("Value({0})", aId), iService.PropertyVolume());
                 iVolumeLimit = new Watchable<uint>(aThread, string.Format("VolumeLimit({0})", aId), iService.PropertyVolumeLimit());
-                iVolumeMax = new Watchable<uint>(aThread, string.Format("VolumeMax({0})", aId), iService.PropertyVolumeMax());
                 iVolumeMilliDbPerStep = new Watchable<uint>(aThread, string.Format("VolumeMilliDbPerStep({0})", aId), iService.PropertyVolumeMilliDbPerStep());
                 iVolumeSteps = new Watchable<uint>(aThread, string.Format("VolumeSteps({0})", aId), iService.PropertyVolumeSteps());
                 iVolumeUnity = new Watchable<uint>(aThread, string.Format("VolumeUnity({0})", aId), iService.PropertyVolumeUnity());
@@ -212,14 +214,8 @@ namespace OpenHome.Av
                 iBalance.Dispose();
                 iBalance = null;
 
-                iBalanceMax.Dispose();
-                iBalanceMax = null;
-
                 iFade.Dispose();
                 iFade = null;
-
-                iFadeMax.Dispose();
-                iFadeMax = null;
 
                 iMute.Dispose();
                 iMute = null;
@@ -229,9 +225,6 @@ namespace OpenHome.Av
 
                 iVolumeLimit.Dispose();
                 iVolumeLimit = null;
-
-                iVolumeMax.Dispose();
-                iVolumeMax = null;
 
                 iVolumeMilliDbPerStep.Dispose();
                 iVolumeMilliDbPerStep = null;
@@ -254,27 +247,11 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<uint> BalanceMax
-        {
-            get
-            {
-                return iBalanceMax;
-            }
-        }
-
         public IWatchable<int> Fade
         {
             get
             {
                 return iFade;
-            }
-        }
-
-        public IWatchable<uint> FadeMax
-        {
-            get
-            {
-                return iFadeMax;
             }
         }
 
@@ -298,14 +275,6 @@ namespace OpenHome.Av
             get
             {
                 return iVolumeLimit;
-            }
-        }
-
-        public IWatchable<uint> VolumeMax
-        {
-            get
-            {
-                return iVolumeMax;
             }
         }
 
@@ -450,19 +419,6 @@ namespace OpenHome.Av
             }
         }
 
-        private void HandleVolumeMaxChanged()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iVolumeMax.Update(iService.PropertyVolumeMax());
-            }
-        }
-
         private void HandleVolumeLimitChanged()
         {
             lock (iLock)
@@ -502,19 +458,6 @@ namespace OpenHome.Av
             }
         }
 
-        private void HandleFadeMaxChanged()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iFadeMax.Update(iService.PropertyFadeMax());
-            }
-        }
-
         private void HandleFadeChanged()
         {
             lock (iLock)
@@ -525,19 +468,6 @@ namespace OpenHome.Av
                 }
 
                 iFade.Update(iService.PropertyFade());
-            }
-        }
-
-        private void HandleBalanceMaxChanged()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                iBalanceMax.Update(iService.PropertyBalanceMax());
             }
         }
 
@@ -560,13 +490,10 @@ namespace OpenHome.Av
         private CpProxyAvOpenhomeOrgVolume1 iService;
 
         private Watchable<int> iBalance;
-        private Watchable<uint> iBalanceMax;
         private Watchable<int> iFade;
-        private Watchable<uint> iFadeMax;
         private Watchable<bool> iMute;
         private Watchable<uint> iValue;
         private Watchable<uint> iVolumeLimit;
-        private Watchable<uint> iVolumeMax;
         private Watchable<uint> iVolumeMilliDbPerStep;
         private Watchable<uint> iVolumeSteps;
         private Watchable<uint> iVolumeUnity;
@@ -592,13 +519,10 @@ namespace OpenHome.Av
             iCurrentVolume = value;
 
             iBalance = new Watchable<int>(aThread, string.Format("Balance({0})", aId), aBalance);
-            iBalanceMax = new Watchable<uint>(aThread, string.Format("BalanceMax({0})", aId), aBalanceMax);
             iFade = new Watchable<int>(aThread, string.Format("Fade({0})", aId), aFade);
-            iFadeMax = new Watchable<uint>(aThread, string.Format("FadeMax({0})", aId), aFadeMax);
             iMute = new Watchable<bool>(aThread, string.Format("Mute({0})", aId), aMute);
             iValue = new Watchable<uint>(aThread, string.Format("Value({0})", aId), value);
             iVolumeLimit = new Watchable<uint>(aThread, string.Format("VolumeLimit({0})", aId), volumeLimit);
-            iVolumeMax = new Watchable<uint>(aThread, string.Format("VolumeMax({0})", aId), aVolumeMax);
             iVolumeMilliDbPerStep = new Watchable<uint>(aThread, string.Format("VolumeMilliDbPerStep({0})", aId), aVolumeMilliDbPerStep);
             iVolumeSteps = new Watchable<uint>(aThread, string.Format("VolumeSteps({0})", aId), aVolumeSteps);
             iVolumeUnity = new Watchable<uint>(aThread, string.Format("VolumeUnity({0})", aId), aVolumeUnity);
@@ -609,14 +533,8 @@ namespace OpenHome.Av
             iBalance.Dispose();
             iBalance = null;
 
-            iBalanceMax.Dispose();
-            iBalanceMax = null;
-
             iFade.Dispose();
             iFade = null;
-
-            iFadeMax.Dispose();
-            iFadeMax = null;
 
             iMute.Dispose();
             iMute = null;
@@ -626,9 +544,6 @@ namespace OpenHome.Av
 
             iVolumeLimit.Dispose();
             iVolumeLimit = null;
-
-            iVolumeMax.Dispose();
-            iVolumeMax = null;
 
             iVolumeMilliDbPerStep.Dispose();
             iVolumeMilliDbPerStep = null;
@@ -648,27 +563,11 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<uint> BalanceMax
-        {
-            get
-            {
-                return iBalanceMax;
-            }
-        }
-
         public IWatchable<int> Fade
         {
             get
             {
                 return iFade;
-            }
-        }
-
-        public IWatchable<uint> FadeMax
-        {
-            get
-            {
-                return iFadeMax;
             }
         }
 
@@ -693,14 +592,6 @@ namespace OpenHome.Av
             get
             {
                 return iVolumeLimit;
-            }
-        }
-
-        public IWatchable<uint> VolumeMax
-        {
-            get
-            {
-                return iVolumeMax;
             }
         }
 
@@ -817,13 +708,10 @@ namespace OpenHome.Av
         private uint iCurrentVolumeLimit;
 
         private Watchable<int> iBalance;
-        private Watchable<uint> iBalanceMax;
         private Watchable<int> iFade;
-        private Watchable<uint> iFadeMax;
         private Watchable<bool> iMute;
         private Watchable<uint> iValue;
         private Watchable<uint> iVolumeLimit;
-        private Watchable<uint> iVolumeMax;
         private Watchable<uint> iVolumeMilliDbPerStep;
         private Watchable<uint> iVolumeSteps;
         private Watchable<uint> iVolumeUnity;
@@ -907,6 +795,10 @@ namespace OpenHome.Av
     {
         public WatchableVolume(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgVolume1 aService)
         {
+            iBalanceMax = aService.PropertyBalanceMax();
+            iFadeMax = aService.PropertyFadeMax();
+            iVolumeMax = aService.PropertyVolumeMax();
+
             iService = new ServiceOpenHomeOrgVolume1(aThread, aId, aService);
         }
 
@@ -932,6 +824,10 @@ namespace OpenHome.Av
         public MockWatchableVolume(IWatchableThread aThread, string aId, int aBalance, uint aBalanceMax, int aFade, uint aFadeMax, bool aMute, uint aVolume, uint aVolumeLimit, uint aVolumeMax,
             uint aVolumeMilliDbPerStep, uint aVolumeSteps, uint aVolumeUnity)
         {
+            iBalanceMax = aBalanceMax;
+            iFadeMax = aFadeMax;
+            iVolumeMax = aVolumeMax;
+
             iService = new MockServiceOpenHomeOrgVolume1(aThread, aId, aBalance, aBalanceMax, aFade, aFadeMax, aMute, aVolume, aVolumeLimit, aVolumeMax, aVolumeMilliDbPerStep, aVolumeSteps, aVolumeUnity);
         }
 
@@ -957,9 +853,9 @@ namespace OpenHome.Av
         private MockServiceOpenHomeOrgVolume1 iService;
     }
 
-    public class ServiceVolume : IServiceOpenHomeOrgVolume1, IService
+    public class ServiceVolume : IVolume, IService
     {
-        public ServiceVolume(IManagableWatchableDevice aDevice, IServiceOpenHomeOrgVolume1 aService)
+        public ServiceVolume(IManagableWatchableDevice aDevice, IVolume aService)
         {
             iDevice = aDevice;
             iService = aService;
@@ -981,19 +877,9 @@ namespace OpenHome.Av
             get { return iService.Balance; }
         }
 
-        public IWatchable<uint> BalanceMax
-        {
-            get { return iService.BalanceMax; }
-        }
-
         public IWatchable<int> Fade
         {
             get { return iService.Fade; }
-        }
-
-        public IWatchable<uint> FadeMax
-        {
-            get { return iService.FadeMax; }
         }
 
         public IWatchable<bool> Mute
@@ -1011,11 +897,6 @@ namespace OpenHome.Av
             get { return iService.VolumeLimit; }
         }
 
-        public IWatchable<uint> VolumeMax
-        {
-            get { return iService.VolumeMax; }
-        }
-
         public IWatchable<uint> VolumeMilliDbPerStep
         {
             get { return iService.VolumeMilliDbPerStep; }
@@ -1029,6 +910,21 @@ namespace OpenHome.Av
         public IWatchable<uint> VolumeUnity
         {
             get { return iService.VolumeUnity; }
+        }
+
+        public uint BalanceMax
+        {
+            get { return iService.BalanceMax; }
+        }
+
+        public uint FadeMax
+        {
+            get { return iService.FadeMax; }
+        }
+
+        public uint VolumeMax
+        {
+            get { return iService.VolumeMax; }
         }
 
         public void SetBalance(int aValue)
@@ -1062,6 +958,6 @@ namespace OpenHome.Av
         }
 
         private IManagableWatchableDevice iDevice;
-        private IServiceOpenHomeOrgVolume1 iService;
+        private IVolume iService;
     }
 }

@@ -305,7 +305,7 @@ namespace OpenHome.Av
 
     public class ServiceTime : IServiceOpenHomeOrgTime1, IService
     {
-        public ServiceTime(IManagableWatchableDevice aDevice, IServiceOpenHomeOrgTime1 aService)
+        public ServiceTime(IManagableWatchableDevice aDevice, Time aService)
         {
             iDevice = aDevice;
             iService = aService;
@@ -333,6 +333,6 @@ namespace OpenHome.Av
         }
 
         private IManagableWatchableDevice iDevice;
-        private IServiceOpenHomeOrgTime1 iService;
+        private Time iService;
     }
 }

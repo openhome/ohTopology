@@ -95,68 +95,10 @@ namespace OpenHome.Av
         private Watchable<T> iProxy;
     }
 
-    public interface IHouse
-    {
-        IWatchableUnordered<IRoom> Rooms { get; }
-
-        void Refresh();
-    }
-
     public enum EStandby
     {
         eOn,
         eMixed,
         eOff
-    }
-
-    public interface IVolume
-    {
-        bool Enabled { get; }
-        bool Mute { get; }
-        uint Volume { get; }
-    }
-
-    public interface ITime
-    {
-        bool Enabled { get; }
-        uint Duration { get; }
-        uint Seconds { get; }
-        uint TrackCount { get; }
-    }
-
-    public interface IRoom
-    {
-        IWatchable<string> Name { get; }
-        IWatchable<EStandby> Standby { get; }
-        IWatchable<IVolume> Volume { get; }
-        IWatchable<ISource> Current { get; }
-        IWatchable<ITime> Time { get; }
-        //IWatchable<IInfo> Info { get; }
-        IWatchableUnordered<IWatchableSource> Sources { get; }
-
-        IWatchable<bool> HasSender { get; }
-        IWatchable<bool> HasReceiver { get; }
-        IWatchable<IZone> Zone { get; }
-        IWatchableUnordered<IRoom> Listeners { get; }
-
-        void SetStandby(uint aIndex, bool aValue);
-        void SetMute(bool aValue);
-        void SetVolume(uint Value);
-        void VolumeInc();
-        void VolumeDec();
-
-        void SetSender(IRoom aRoom);
-    }
-
-    public interface IWatchableSource : IWatchable<ISource>
-    {
-        void Select();
-    }
-
-    public interface ISource
-    {
-        string Name { get; }
-        string Group { get; }
-        string Type { get; }
     }
 }

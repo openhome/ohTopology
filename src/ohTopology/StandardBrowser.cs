@@ -269,7 +269,7 @@ namespace OpenHome.Av
 
     public interface IZone
     {
-        IRoom Room { get; }
+        IStandardRoom Room { get; }
     }
 
     public interface IJoinable
