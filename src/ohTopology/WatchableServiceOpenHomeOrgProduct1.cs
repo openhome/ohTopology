@@ -18,9 +18,9 @@ namespace OpenHome.Av
         IWatchable<string> SourceXml { get; }
         IWatchable<bool> Standby { get; }
 
-        void SetSourceIndex(uint aValue);
-        void SetSourceIndexByName(string aValue);
-        void SetStandby(bool aValue);
+        void SetSourceIndex(uint aValue, Action aAction);
+        void SetSourceIndexByName(string aValue, Action aAction);
+        void SetStandby(bool aValue, Action aAction);
     }
 
     public interface IProduct : IServiceOpenHomeOrgProduct1
@@ -94,19 +94,19 @@ namespace OpenHome.Av
             }
         }
 
-        public void SetSourceIndex(uint aValue)
+        public void SetSourceIndex(uint aValue, Action aAction)
         {
-            Service.SetSourceIndex(aValue);
+            Service.SetSourceIndex(aValue, aAction);
         }
 
-        public void SetSourceIndexByName(string aValue)
+        public void SetSourceIndexByName(string aValue, Action aAction)
         {
-            Service.SetSourceIndexByName(aValue);
+            Service.SetSourceIndexByName(aValue, aAction);
         }
 
-        public void SetStandby(bool aValue)
+        public void SetStandby(bool aValue, Action aAction)
         {
-            Service.SetStandby(aValue);
+            Service.SetStandby(aValue, aAction);
         }
 
         // Product methods
@@ -225,6 +225,8 @@ namespace OpenHome.Av
     {
         public ServiceOpenHomeOrgProduct1(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgProduct1 aService)
         {
+            iThread = aThread;
+
             iLock = new object();
             iDisposed = false;
 
@@ -238,11 +240,11 @@ namespace OpenHome.Av
                 iService.SetPropertySourceXmlChanged(HandleSourceXmlChanged);
                 iService.SetPropertyStandbyChanged(HandleStandbyChanged);
 
-                iRoom = new Watchable<string>(aThread, string.Format("Room({0})", aId), iService.PropertyProductRoom());
-                iName = new Watchable<string>(aThread, string.Format("Name({0})", aId), iService.PropertyProductName());
-                iSourceIndex = new Watchable<uint>(aThread, string.Format("SourceIndex({0})", aId), iService.PropertySourceIndex());
-                iSourceXml = new Watchable<string>(aThread, string.Format("SourceXml({0})", aId), iService.PropertySourceXml());
-                iStandby = new Watchable<bool>(aThread, string.Format("Standby({0})", aId), iService.PropertyStandby());
+                iRoom = new Watchable<string>(iThread, string.Format("Room({0})", aId), iService.PropertyProductRoom());
+                iName = new Watchable<string>(iThread, string.Format("Name({0})", aId), iService.PropertyProductName());
+                iSourceIndex = new Watchable<uint>(iThread, string.Format("SourceIndex({0})", aId), iService.PropertySourceIndex());
+                iSourceXml = new Watchable<string>(iThread, string.Format("SourceXml({0})", aId), iService.PropertySourceXml());
+                iStandby = new Watchable<bool>(iThread, string.Format("Standby({0})", aId), iService.PropertyStandby());
             }
         }
 
@@ -317,7 +319,7 @@ namespace OpenHome.Av
             }
         }
 
-        public void SetSourceIndex(uint aValue)
+        public void SetSourceIndex(uint aValue, Action aAction)
         {
             lock (iLock)
             {
@@ -326,11 +328,20 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgProduct1.SetSourceIndex");
                 }
 
-                iService.BeginSetSourceIndex(aValue, null);
+                iService.BeginSetSourceIndex(aValue, (IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
-        public void SetSourceIndexByName(string aValue)
+        public void SetSourceIndexByName(string aValue, Action aAction)
         {
             lock (iLock)
             {
@@ -339,11 +350,20 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgProduct1.SetSourceIndexByName");
                 }
 
-                iService.BeginSetSourceIndexByName(aValue, null);
+                iService.BeginSetSourceIndexByName(aValue, (IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
-        public void SetStandby(bool aValue)
+        public void SetStandby(bool aValue, Action aAction)
         {
             lock (iLock)
             {
@@ -352,7 +372,16 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgProduct1.SetStandby");
                 }
 
-                iService.BeginSetStandby(aValue, null);
+                iService.BeginSetStandby(aValue, (IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
@@ -427,6 +456,7 @@ namespace OpenHome.Av
         private object iLock;
         private bool iDisposed;
 
+        private IWatchableThread iThread;
         private CpProxyAvOpenhomeOrgProduct1 iService;
 
         private Watchable<string> iRoom;
@@ -656,13 +686,15 @@ namespace OpenHome.Av
     {
         public MockServiceOpenHomeOrgProduct1(IWatchableThread aThread, string aId, string aRoom, string aName, uint aSourceIndex, SourceXml aSourceXmlFactory, bool aStandby)
         {
+            iThread = aThread;
+
             iSourceXmlFactory = aSourceXmlFactory;
 
-            iRoom = new Watchable<string>(aThread, string.Format("Room({0})", aId), aRoom);
-            iName = new Watchable<string>(aThread, string.Format("Name({0})", aId), aName);
-            iSourceIndex = new Watchable<uint>(aThread, string.Format("SourceIndex({0})", aId), aSourceIndex);
-            iSourceXml = new Watchable<string>(aThread, string.Format("SourceXml({0})", aId), iSourceXmlFactory.ToString());
-            iStandby = new Watchable<bool>(aThread, string.Format("Standby({0})", aId), aStandby);
+            iRoom = new Watchable<string>(iThread, string.Format("Room({0})", aId), aRoom);
+            iName = new Watchable<string>(iThread, string.Format("Name({0})", aId), aName);
+            iSourceIndex = new Watchable<uint>(iThread, string.Format("SourceIndex({0})", aId), aSourceIndex);
+            iSourceXml = new Watchable<string>(iThread, string.Format("SourceXml({0})", aId), iSourceXmlFactory.ToString());
+            iStandby = new Watchable<bool>(iThread, string.Format("Standby({0})", aId), aStandby);
         }
 
         public void Dispose()
@@ -779,20 +811,36 @@ namespace OpenHome.Av
             }
         }
 
-        public void SetSourceIndex(uint aValue)
+        public void SetSourceIndex(uint aValue, Action aAction)
         {
             iSourceIndex.Update(aValue);
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
 
-        public void SetSourceIndexByName(string aValue)
+        public void SetSourceIndexByName(string aValue, Action aAction)
         {
             throw new NotSupportedException();
         }
 
-        public void SetStandby(bool aValue)
+        public void SetStandby(bool aValue, Action aAction)
         {
             iStandby.Update(aValue);
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
+
+        private IWatchableThread iThread;
 
         private SourceXml iSourceXmlFactory;
 
@@ -924,19 +972,19 @@ namespace OpenHome.Av
             get { return iService.Standby; }
         }
 
-        public void SetSourceIndex(uint aValue)
+        public void SetSourceIndex(uint aValue, Action aAction)
         {
-            iService.SetSourceIndex(aValue);
+            iService.SetSourceIndex(aValue, aAction);
         }
 
-        public void SetSourceIndexByName(string aValue)
+        public void SetSourceIndexByName(string aValue, Action aAction)
         {
-            iService.SetSourceIndexByName(aValue);
+            iService.SetSourceIndexByName(aValue, aAction);
         }
 
-        public void SetStandby(bool aValue)
+        public void SetStandby(bool aValue, Action aAction)
         {
-            iService.SetStandby(aValue);
+            iService.SetStandby(aValue, aAction);
         }
 
         public string Attributes

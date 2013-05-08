@@ -15,14 +15,14 @@ namespace OpenHome.Av
         IWatchable<string> TransportState { get; }
         IWatchable<IInfoMetadata> Metadata { get; }
 
-        void Play();
-        void Pause();
-        void Stop();
-        void SeekSecondsAbsolute(uint aValue);
-        void SeekSecondsRelative(int aValue);
+        void Play(Action aAction);
+        void Pause(Action aAction);
+        void Stop(Action aAction);
+        void SeekSecondsAbsolute(uint aValue, Action aAction);
+        void SeekSecondsRelative(int aValue, Action aAction);
 
-        void SetId(uint aId, string aUri);
-        void SetChannel(string aUri, string aMetadata);
+        void SetId(uint aId, string aUri, Action aAction);
+        void SetChannel(string aUri, string aMetadata, Action aAction);
 
         string Read(uint aId);
         string ReadList(string aIdList);
@@ -93,39 +93,39 @@ namespace OpenHome.Av
             }
         }
 
-        public void Play()
+        public void Play(Action aAction)
         {
-            Service.Play();
+            Service.Play(aAction);
         }
 
-        public void Pause()
+        public void Pause(Action aAction)
         {
-            Service.Pause();
+            Service.Pause(aAction);
         }
 
-        public void Stop()
+        public void Stop(Action aAction)
         {
-            Service.Stop();
+            Service.Stop(aAction);
         }
 
-        public void SeekSecondsAbsolute(uint aValue)
+        public void SeekSecondsAbsolute(uint aValue, Action aAction)
         {
-            Service.SeekSecondsAbsolute(aValue);
+            Service.SeekSecondsAbsolute(aValue, aAction);
         }
 
-        public void SeekSecondsRelative(int aValue)
+        public void SeekSecondsRelative(int aValue, Action aAction)
         {
-            Service.SeekSecondsRelative(aValue);
+            Service.SeekSecondsRelative(aValue, aAction);
         }
 
-        public void SetId(uint aId, string aUri)
+        public void SetId(uint aId, string aUri, Action aAction)
         {
-            Service.SetId(aId, aUri);
+            Service.SetId(aId, aUri, aAction);
         }
 
-        public void SetChannel(string aUri, string aMetadata)
+        public void SetChannel(string aUri, string aMetadata, Action aAction)
         {
-            Service.SetChannel(aUri, aMetadata);
+            Service.SetChannel(aUri, aMetadata, aAction);
         }
 
         public string Read(uint aId)
@@ -146,6 +146,8 @@ namespace OpenHome.Av
     {
         public ServiceOpenHomeOrgRadio1(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgRadio1 aService)
         {
+            iThread = aThread;
+
             iLock = new object();
             iDisposed = false;
 
@@ -158,10 +160,10 @@ namespace OpenHome.Av
                 iService.SetPropertyMetadataChanged(HandleMetadataChanged);
                 iService.SetPropertyTransportStateChanged(HandleTransportStateChanged);
 
-                iId = new Watchable<uint>(aThread, string.Format("Id({0})", aId), iService.PropertyId());
-                iIdArray = new Watchable<IList<uint>>(aThread, string.Format("IdArray({0})", aId), ByteArray.Unpack(iService.PropertyIdArray()));
-                iTransportState = new Watchable<string>(aThread, string.Format("TransportState({0})", aId), iService.PropertyTransportState());
-                iMetadata = new Watchable<IInfoMetadata>(aThread, string.Format("Metadata({0})", aId), new InfoMetadata(iService.PropertyMetadata(), iService.PropertyUri()));
+                iId = new Watchable<uint>(iThread, string.Format("Id({0})", aId), iService.PropertyId());
+                iIdArray = new Watchable<IList<uint>>(iThread, string.Format("IdArray({0})", aId), ByteArray.Unpack(iService.PropertyIdArray()));
+                iTransportState = new Watchable<string>(iThread, string.Format("TransportState({0})", aId), iService.PropertyTransportState());
+                iMetadata = new Watchable<IInfoMetadata>(iThread, string.Format("Metadata({0})", aId), new InfoMetadata(iService.PropertyMetadata(), iService.PropertyUri()));
             }
         }
 
@@ -225,7 +227,7 @@ namespace OpenHome.Av
             }
         }
 
-        public void Play()
+        public void Play(Action aAction)
         {
             lock (iLock)
             {
@@ -234,11 +236,20 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.Play");
                 }
 
-                iService.BeginPlay(null);
+                iService.BeginPlay((IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
-        public void Pause()
+        public void Pause(Action aAction)
         {
             lock (iLock)
             {
@@ -247,11 +258,20 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.Pause");
                 }
 
-                iService.BeginPause(null);
+                iService.BeginPause((IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
-        public void Stop()
+        public void Stop(Action aAction)
         {
             lock (iLock)
             {
@@ -260,11 +280,20 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.Stop");
                 }
 
-                iService.BeginStop(null);
+                iService.BeginStop((IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
-        public void SeekSecondsAbsolute(uint aValue)
+        public void SeekSecondsAbsolute(uint aValue, Action aAction)
         {
             lock (iLock)
             {
@@ -273,11 +302,20 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.SeekSecondsAbsolute");
                 }
 
-                iService.BeginSeekSecondAbsolute(aValue, null);
+                iService.BeginSeekSecondAbsolute(aValue, (IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
-        public void SeekSecondsRelative(int aValue)
+        public void SeekSecondsRelative(int aValue, Action aAction)
         {
             lock (iLock)
             {
@@ -286,11 +324,20 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.SeekSecondsRelative");
                 }
 
-                iService.BeginSeekSecondRelative(aValue, null);
+                iService.BeginSeekSecondRelative(aValue, (IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
-        public void SetId(uint aId, string aUri)
+        public void SetId(uint aId, string aUri, Action aAction)
         {
             lock (iLock)
             {
@@ -299,11 +346,20 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.SetId");
                 }
 
-                iService.BeginSetId(aId, aUri, null);
+                iService.BeginSetId(aId, aUri, (IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
-        public void SetChannel(string aUri, string aMetadata)
+        public void SetChannel(string aUri, string aMetadata, Action aAction)
         {
             lock (iLock)
             {
@@ -312,7 +368,16 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.SetChannel");
                 }
 
-                iService.BeginSetChannel(aUri, aMetadata, null);
+                iService.BeginSetChannel(aUri, aMetadata, (IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
@@ -405,6 +470,7 @@ namespace OpenHome.Av
         private object iLock;
         private bool iDisposed;
 
+        private IWatchableThread iThread;
         private CpProxyAvOpenhomeOrgRadio1 iService;
 
         private Watchable<uint> iId;
@@ -417,10 +483,12 @@ namespace OpenHome.Av
     {
         public MockServiceOpenHomeOrgRadio1(IWatchableThread aThread, string aServiceId, uint aId, IList<uint> aIdArray, IInfoMetadata aMetadata, string aTransportState)
         {
-            iId = new Watchable<uint>(aThread, string.Format("Id({0})", aServiceId), aId);
-            iIdArray = new Watchable<IList<uint>>(aThread, string.Format("IdArray({0})", aServiceId), aIdArray);
-            iMetadata = new Watchable<IInfoMetadata>(aThread, string.Format("Metadata({0})", aServiceId), aMetadata);
-            iTransportState = new Watchable<string>(aThread, string.Format("TransportState({0})", aServiceId), aTransportState);
+            iThread = aThread;
+
+            iId = new Watchable<uint>(iThread, string.Format("Id({0})", aServiceId), aId);
+            iIdArray = new Watchable<IList<uint>>(iThread, string.Format("IdArray({0})", aServiceId), aIdArray);
+            iMetadata = new Watchable<IInfoMetadata>(iThread, string.Format("Metadata({0})", aServiceId), aMetadata);
+            iTransportState = new Watchable<string>(iThread, string.Format("TransportState({0})", aServiceId), aTransportState);
         }
 
         public void Dispose()
@@ -470,37 +538,86 @@ namespace OpenHome.Av
             }
         }
 
-        public void Play()
+        public void Play(Action aAction)
         {
             iTransportState.Update("Playing");
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
 
-        public void Pause()
+        public void Pause(Action aAction)
         {
             iTransportState.Update("Paused");
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
 
-        public void Stop()
+        public void Stop(Action aAction)
         {
             iTransportState.Update("Stopped");
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
 
-        public void SeekSecondsAbsolute(uint aValue)
+        public void SeekSecondsAbsolute(uint aValue, Action aAction)
         {
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
 
-        public void SeekSecondsRelative(int aValue)
+        public void SeekSecondsRelative(int aValue, Action aAction)
         {
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
 
-        public void SetId(uint aId, string aUri)
+        public void SetId(uint aId, string aUri, Action aAction)
         {
             iId.Update(aId);
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
 
-        public void SetChannel(string aUri, string aMetadata)
+        public void SetChannel(string aUri, string aMetadata, Action aAction)
         {
             iMetadata.Update(new InfoMetadata(aMetadata, aUri));
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
 
         public string Read(uint aId)
@@ -551,6 +668,8 @@ namespace OpenHome.Av
                 throw new NotSupportedException();
             }
         }
+
+        private IWatchableThread iThread;
 
         private Watchable<uint> iId;
         private Watchable<IList<uint>> iIdArray;
@@ -758,39 +877,39 @@ namespace OpenHome.Av
             get { return iService.ProtocolInfo; }
         }
 
-        public void Play()
+        public void Play(Action aAction)
         {
-            iService.Play();
+            iService.Play(aAction);
         }
 
-        public void Pause()
+        public void Pause(Action aAction)
         {
-            iService.Pause();
+            iService.Pause(aAction);
         }
 
-        public void Stop()
+        public void Stop(Action aAction)
         {
-            iService.Stop();
+            iService.Stop(aAction);
         }
 
-        public void SeekSecondsAbsolute(uint aValue)
+        public void SeekSecondsAbsolute(uint aValue, Action aAction)
         {
-            iService.SeekSecondsAbsolute(aValue);
+            iService.SeekSecondsAbsolute(aValue, aAction);
         }
 
-        public void SeekSecondsRelative(int aValue)
+        public void SeekSecondsRelative(int aValue, Action aAction)
         {
-            iService.SeekSecondsRelative(aValue);
+            iService.SeekSecondsRelative(aValue, aAction);
         }
 
-        public void SetId(uint aId, string aUri)
+        public void SetId(uint aId, string aUri, Action aAction)
         {
-            iService.SetId(aId, aUri);
+            iService.SetId(aId, aUri, aAction);
         }
 
-        public void SetChannel(string aUri, string aMetadata)
+        public void SetChannel(string aUri, string aMetadata, Action aAction)
         {
-            iService.SetChannel(aUri, aMetadata);
+            iService.SetChannel(aUri, aMetadata, aAction);
         }
 
         public string Read(uint aId)

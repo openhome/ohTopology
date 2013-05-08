@@ -25,17 +25,11 @@ namespace OpenHome.Av
         IWatchableDevice Device { get; }
     }
 
-    public interface IInvokableService : IDisposable
-    {
-        IWatchableDevice Device { get; }
-    }
-
     public interface IWatchableDevice
     {
         string Udn { get; }
         bool GetAttribute(string aKey, out string aValue);
         void Create<T>(Action<IWatchableDevice, T> aAction) where T : IService;
-        //T Create<T, U>() where T : IInvokableService;
     }
 
     public interface IManagableWatchableDevice : IWatchableDevice

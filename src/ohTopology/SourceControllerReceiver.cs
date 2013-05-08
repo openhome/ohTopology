@@ -111,7 +111,7 @@ namespace OpenHome.Av
 
         public void Play()
         {
-            iReceiver.Play();
+            iReceiver.Play(null);
         }
 
         public void Pause()
@@ -121,7 +121,7 @@ namespace OpenHome.Av
 
         public void Stop()
         {
-            iReceiver.Stop();
+            iReceiver.Stop(null);
         }
 
         public bool CanSkip

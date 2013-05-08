@@ -37,43 +37,64 @@ namespace OpenHome.Av
 
     internal class InvokerPlaylist : IInvoker
     {
-        public InvokerPlaylist()
-        {
-        }
-
         public void Play(IEnumerable<ITopology4Source> aSources, string aUri, string aMetadata)
         {
+            uint id = uint.Parse(aUri);
+            foreach (ITopology4Source s in aSources)
+            {
+                if (s.Type == "Playlist")
+                {
+                    s.Device.Create<ServicePlaylist>((IWatchableDevice device, ServicePlaylist playlist) =>
+                    {
+                        playlist.SeekId(id, null);
+                        playlist.Dispose();
+                    });
+                    return;
+                }
+            }
         }
     }
 
     internal class InvokerRadio : IInvoker
     {
-        public InvokerRadio()
-        {
-        }
-
         public void Play(IEnumerable<ITopology4Source> aSources, string aUri, string aMetadata)
         {
+            foreach (ITopology4Source s in aSources)
+            {
+                if (s.Type == "Radio")
+                {
+                    s.Device.Create<ServiceRadio>((IWatchableDevice device, ServiceRadio radio) =>
+                    {
+                        radio.SetChannel(aUri, aMetadata, () => { radio.Play(null); });
+                        radio.Dispose();
+                    });
+                    return;
+                }
+            }
         }
     }
 
     internal class InvokerReceiver : IInvoker
     {
-        public InvokerReceiver()
-        {
-        }
-
         public void Play(IEnumerable<ITopology4Source> aSources, string aUri, string aMetadata)
         {
+            foreach (ITopology4Source s in aSources)
+            {
+                if (s.Type == "Receiver")
+                {
+                    s.Device.Create<ServiceReceiver>((IWatchableDevice device, ServiceReceiver receiver) =>
+                    {
+                        receiver.SetSender(aUri, aMetadata, () => { receiver.Play(null); });
+                        receiver.Dispose();
+                    });
+                    return;
+                }
+            }
         }
     }
 
     internal class InvokerExternal : IInvoker
     {
-        public InvokerExternal()
-        {
-        }
-
         public void Play(IEnumerable<ITopology4Source> aSources, string aUri, string aMetadata)
         {
             uint index = uint.Parse(aUri);

@@ -205,7 +205,7 @@ namespace OpenHome.Av
         {
             if (iProduct != null)
             {
-                iProduct.SetStandby(aValue);
+                iProduct.SetStandby(aValue, null);
             }
         }
 
@@ -213,7 +213,7 @@ namespace OpenHome.Av
         {
             if (iProduct != null)
             {
-                iProduct.SetSourceIndex(aValue);
+                iProduct.SetSourceIndex(aValue, null);
             }
         }
 

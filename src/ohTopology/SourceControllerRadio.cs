@@ -112,17 +112,17 @@ namespace OpenHome.Av
 
         public void Play()
         {
-            iRadio.Play();
+            iRadio.Play(null);
         }
 
         public void Pause()
         {
-            iRadio.Pause();
+            iRadio.Pause(null);
         }
 
         public void Stop()
         {
-            iRadio.Stop();
+            iRadio.Stop(null);
         }
 
         public bool CanSkip
@@ -153,7 +153,7 @@ namespace OpenHome.Av
 
         public void Seek(uint aSeconds)
         {
-            iRadio.SeekSecondsAbsolute(aSeconds);
+            iRadio.SeekSecondsAbsolute(aSeconds, null);
         }
 
         public void ItemOpen(string aId, string aValue)

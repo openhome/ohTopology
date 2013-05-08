@@ -65,22 +65,22 @@ namespace OpenHome.Av
 
         public void SetMute(bool aValue)
         {
-            iVolume.SetMute(aValue);
+            iVolume.SetMute(aValue, null);
         }
 
         public void SetVolume(uint aValue)
         {
-            iVolume.SetVolume(aValue);
+            iVolume.SetVolume(aValue, null);
         }
 
         public void VolumeInc()
         {
-            iVolume.VolumeInc();
+            iVolume.VolumeInc(null);
         }
 
         public void VolumeDec()
         {
-            iVolume.VolumeDec();
+            iVolume.VolumeDec(null);
         }
 
         public void ItemOpen(string aId, bool aValue)

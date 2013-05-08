@@ -19,12 +19,12 @@ namespace OpenHome.Av
         IWatchable<uint> VolumeSteps { get; }
         IWatchable<uint> VolumeUnity { get; }
 
-        void SetBalance(int aValue);
-        void SetFade(int aValue);
-        void SetMute(bool aValue);
-        void SetVolume(uint aValue);
-        void VolumeDec();
-        void VolumeInc();
+        void SetBalance(int aValue, Action aAction);
+        void SetFade(int aValue, Action aAction);
+        void SetMute(bool aValue, Action aAction);
+        void SetVolume(uint aValue, Action aAction);
+        void VolumeDec(Action aAction);
+        void VolumeInc(Action aAction);
     }
 
     public interface IVolume : IServiceOpenHomeOrgVolume1
@@ -133,34 +133,34 @@ namespace OpenHome.Av
             }
         }
 
-        public void SetBalance(int aValue)
+        public void SetBalance(int aValue, Action aAction)
         {
-            Service.SetBalance(aValue);
+            Service.SetBalance(aValue, aAction);
         }
 
-        public void SetFade(int aValue)
+        public void SetFade(int aValue, Action aAction)
         {
-            Service.SetFade(aValue);
+            Service.SetFade(aValue, aAction);
         }
 
-        public void SetMute(bool aValue)
+        public void SetMute(bool aValue, Action aAction)
         {
-            Service.SetMute(aValue);
+            Service.SetMute(aValue, aAction);
         }
 
-        public void SetVolume(uint aValue)
+        public void SetVolume(uint aValue, Action aAction)
         {
-            Service.SetVolume(aValue);
+            Service.SetVolume(aValue, aAction);
         }
 
-        public void VolumeDec()
+        public void VolumeDec(Action aAction)
         {
-            Service.VolumeDec();
+            Service.VolumeDec(aAction);
         }
 
-        public void VolumeInc()
+        public void VolumeInc(Action aAction)
         {
-            Service.VolumeInc();
+            Service.VolumeInc(aAction);
         }
 
         protected uint iBalanceMax;
@@ -172,6 +172,8 @@ namespace OpenHome.Av
     {
         public ServiceOpenHomeOrgVolume1(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgVolume1 aService)
         {
+            iThread = aThread;
+
             iLock = new object();
             iDisposed = false;
 
@@ -188,14 +190,14 @@ namespace OpenHome.Av
                 iService.SetPropertyVolumeStepsChanged(HandleVolumeStepsChanged);
                 iService.SetPropertyVolumeUnityChanged(HandleVolumeUnityChanged);
 
-                iBalance = new Watchable<int>(aThread, string.Format("Balance({0})", aId), iService.PropertyBalance());
-                iFade = new Watchable<int>(aThread, string.Format("Fade({0})", aId), iService.PropertyFade());
-                iMute = new Watchable<bool>(aThread, string.Format("Mute({0})", aId), iService.PropertyMute());
-                iValue = new Watchable<uint>(aThread, string.Format("Value({0})", aId), iService.PropertyVolume());
-                iVolumeLimit = new Watchable<uint>(aThread, string.Format("VolumeLimit({0})", aId), iService.PropertyVolumeLimit());
+                iBalance = new Watchable<int>(iThread, string.Format("Balance({0})", aId), iService.PropertyBalance());
+                iFade = new Watchable<int>(iThread, string.Format("Fade({0})", aId), iService.PropertyFade());
+                iMute = new Watchable<bool>(iThread, string.Format("Mute({0})", aId), iService.PropertyMute());
+                iValue = new Watchable<uint>(iThread, string.Format("Value({0})", aId), iService.PropertyVolume());
+                iVolumeLimit = new Watchable<uint>(iThread, string.Format("VolumeLimit({0})", aId), iService.PropertyVolumeLimit());
                 iVolumeMilliDbPerStep = new Watchable<uint>(aThread, string.Format("VolumeMilliDbPerStep({0})", aId), iService.PropertyVolumeMilliDbPerStep());
-                iVolumeSteps = new Watchable<uint>(aThread, string.Format("VolumeSteps({0})", aId), iService.PropertyVolumeSteps());
-                iVolumeUnity = new Watchable<uint>(aThread, string.Format("VolumeUnity({0})", aId), iService.PropertyVolumeUnity());
+                iVolumeSteps = new Watchable<uint>(iThread, string.Format("VolumeSteps({0})", aId), iService.PropertyVolumeSteps());
+                iVolumeUnity = new Watchable<uint>(iThread, string.Format("VolumeUnity({0})", aId), iService.PropertyVolumeUnity());
             }
         }
 
@@ -302,7 +304,7 @@ namespace OpenHome.Av
             }
         }
 
-        public void SetBalance(int aValue)
+        public void SetBalance(int aValue, Action aAction)
         {
             lock (iLock)
             {
@@ -311,11 +313,20 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgVolume1.SetBalance");
                 }
 
-                iService.BeginSetBalance(aValue, null);
+                iService.BeginSetBalance(aValue, (IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
-        public void SetFade(int aValue)
+        public void SetFade(int aValue, Action aAction)
         {
             lock (iLock)
             {
@@ -324,11 +335,20 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgVolume1.SetFade");
                 }
 
-                iService.BeginSetFade(aValue, null);
+                iService.BeginSetFade(aValue, (IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
-        public void SetMute(bool aValue)
+        public void SetMute(bool aValue, Action aAction)
         {
             lock (iLock)
             {
@@ -337,11 +357,20 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgVolume1.SetMute");
                 }
 
-                iService.BeginSetMute(aValue, null);
+                iService.BeginSetMute(aValue, (IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
-        public void SetVolume(uint aValue)
+        public void SetVolume(uint aValue, Action aAction)
         {
             lock (iLock)
             {
@@ -350,11 +379,20 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgVolume1.SetVolume");
                 }
 
-                iService.BeginSetVolume(aValue, null);
+                iService.BeginSetVolume(aValue, (IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
-        public void VolumeDec()
+        public void VolumeDec(Action aAction)
         {
             lock (iLock)
             {
@@ -363,11 +401,20 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgVolume1.VolumeDec");
                 }
 
-                iService.BeginVolumeDec(null);
+                iService.BeginVolumeDec((IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
-        public void VolumeInc()
+        public void VolumeInc(Action aAction)
         {
             lock (iLock)
             {
@@ -376,7 +423,16 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgVolume1.VolumeInc");
                 }
 
-                iService.BeginVolumeInc(null);
+                iService.BeginVolumeInc((IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
@@ -487,6 +543,7 @@ namespace OpenHome.Av
         private bool iDisposed;
         private object iLock;
 
+        private IWatchableThread iThread;
         private CpProxyAvOpenhomeOrgVolume1 iService;
 
         private Watchable<int> iBalance;
@@ -504,6 +561,8 @@ namespace OpenHome.Av
         public MockServiceOpenHomeOrgVolume1(IWatchableThread aThread, string aId, int aBalance, uint aBalanceMax, int aFade, uint aFadeMax, bool aMute, uint aValue, uint aVolumeLimit, uint aVolumeMax,
             uint aVolumeMilliDbPerStep, uint aVolumeSteps, uint aVolumeUnity)
         {
+            iThread = aThread;
+
             uint volumeLimit = aVolumeLimit;
             if (volumeLimit > aVolumeMax)
             {
@@ -518,14 +577,14 @@ namespace OpenHome.Av
             }
             iCurrentVolume = value;
 
-            iBalance = new Watchable<int>(aThread, string.Format("Balance({0})", aId), aBalance);
-            iFade = new Watchable<int>(aThread, string.Format("Fade({0})", aId), aFade);
-            iMute = new Watchable<bool>(aThread, string.Format("Mute({0})", aId), aMute);
-            iValue = new Watchable<uint>(aThread, string.Format("Value({0})", aId), value);
-            iVolumeLimit = new Watchable<uint>(aThread, string.Format("VolumeLimit({0})", aId), volumeLimit);
-            iVolumeMilliDbPerStep = new Watchable<uint>(aThread, string.Format("VolumeMilliDbPerStep({0})", aId), aVolumeMilliDbPerStep);
-            iVolumeSteps = new Watchable<uint>(aThread, string.Format("VolumeSteps({0})", aId), aVolumeSteps);
-            iVolumeUnity = new Watchable<uint>(aThread, string.Format("VolumeUnity({0})", aId), aVolumeUnity);
+            iBalance = new Watchable<int>(iThread, string.Format("Balance({0})", aId), aBalance);
+            iFade = new Watchable<int>(iThread, string.Format("Fade({0})", aId), aFade);
+            iMute = new Watchable<bool>(iThread, string.Format("Mute({0})", aId), aMute);
+            iValue = new Watchable<uint>(iThread, string.Format("Value({0})", aId), value);
+            iVolumeLimit = new Watchable<uint>(iThread, string.Format("VolumeLimit({0})", aId), volumeLimit);
+            iVolumeMilliDbPerStep = new Watchable<uint>(iThread, string.Format("VolumeMilliDbPerStep({0})", aId), aVolumeMilliDbPerStep);
+            iVolumeSteps = new Watchable<uint>(iThread, string.Format("VolumeSteps({0})", aId), aVolumeSteps);
+            iVolumeUnity = new Watchable<uint>(iThread, string.Format("VolumeUnity({0})", aId), aVolumeUnity);
         }
 
         public void Dispose()
@@ -619,22 +678,36 @@ namespace OpenHome.Av
             }
         }
 
-        public void SetBalance(int aValue)
+        public void SetBalance(int aValue, Action aAction)
         {
             iBalance.Update(aValue);
         }
 
-        public void SetFade(int aValue)
+        public void SetFade(int aValue, Action aAction)
         {
             iFade.Update(aValue);
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
 
-        public void SetMute(bool aValue)
+        public void SetMute(bool aValue, Action aAction)
         {
             iMute.Update(aValue);
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
 
-        public void SetVolume(uint aValue)
+        public void SetVolume(uint aValue, Action aAction)
         {
             uint value = aValue;
             if (value > iCurrentVolumeLimit)
@@ -647,24 +720,45 @@ namespace OpenHome.Av
                 iCurrentVolume = value;
                 iValue.Update(aValue);
             }
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
 
-        public void VolumeDec()
+        public void VolumeDec(Action aAction)
         {
             if (iCurrentVolume > 0)
             {
                 --iCurrentVolume;
                 iValue.Update(iCurrentVolume);
             }
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
 
-        public void VolumeInc()
+        public void VolumeInc(Action aAction)
         {
             if (iCurrentVolume < iCurrentVolumeLimit)
             {
                 ++iCurrentVolume;
                 iValue.Update(iCurrentVolume);
             }
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
 
         public void Execute(IEnumerable<string> aValue)
@@ -692,17 +786,19 @@ namespace OpenHome.Av
             }
             else if (command == "volumeinc")
             {
-                VolumeInc();
+                VolumeInc(null);
             }
             else if (command == "volumedec")
             {
-                VolumeDec();
+                VolumeDec(null);
             }
             else
             {
                 throw new NotSupportedException();
             }
         }
+
+        private IWatchableThread iThread;
 
         private uint iCurrentVolume;
         private uint iCurrentVolumeLimit;
@@ -927,34 +1023,34 @@ namespace OpenHome.Av
             get { return iService.VolumeMax; }
         }
 
-        public void SetBalance(int aValue)
+        public void SetBalance(int aValue, Action aAction)
         {
-            iService.SetBalance(aValue);
+            iService.SetBalance(aValue, aAction);
         }
 
-        public void SetFade(int aValue)
+        public void SetFade(int aValue, Action aAction)
         {
-            iService.SetFade(aValue);
+            iService.SetFade(aValue, aAction);
         }
 
-        public void SetMute(bool aValue)
+        public void SetMute(bool aValue, Action aAction)
         {
-            iService.SetMute(aValue);
+            iService.SetMute(aValue, aAction);
         }
 
-        public void SetVolume(uint aValue)
+        public void SetVolume(uint aValue, Action aAction)
         {
-            iService.SetVolume(aValue);
+            iService.SetVolume(aValue, aAction);
         }
 
-        public void VolumeDec()
+        public void VolumeDec(Action aAction)
         {
-            iService.VolumeDec();
+            iService.VolumeDec(aAction);
         }
 
-        public void VolumeInc()
+        public void VolumeInc(Action aAction)
         {
-            iService.VolumeInc();
+            iService.VolumeInc(aAction);
         }
 
         private IManagableWatchableDevice iDevice;

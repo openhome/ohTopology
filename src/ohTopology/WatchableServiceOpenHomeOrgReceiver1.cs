@@ -13,9 +13,9 @@ namespace OpenHome.Av
         IWatchable<IInfoMetadata> Metadata { get; }
         IWatchable<string> TransportState { get; }
 
-        void Play();
-        void Stop();
-        void SetSender(string aUri, string aMetadata);
+        void Play(Action aAction);
+        void Stop(Action aAction);
+        void SetSender(string aUri, string aMetadata, Action aAction);
     }
 
     public interface IReceiver : IServiceOpenHomeOrgReceiver1
@@ -58,19 +58,19 @@ namespace OpenHome.Av
             }
         }
 
-        public void Play()
+        public void Play(Action aAction)
         {
-            Service.Play();
+            Service.Play(aAction);
         }
 
-        public void Stop()
+        public void Stop(Action aAction)
         {
-            Service.Stop();
+            Service.Stop(aAction);
         }
 
-        public void SetSender(string aUri, string aMetadata)
+        public void SetSender(string aUri, string aMetadata, Action aAction)
         {
-            Service.SetSender(aUri, aMetadata);
+            Service.SetSender(aUri, aMetadata, aAction);
         }
 
         protected string iProtocolInfo;
@@ -80,6 +80,8 @@ namespace OpenHome.Av
     {
         public ServiceOpenHomeOrgReceiver1(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgReceiver1 aService)
         {
+            iThread = aThread;
+
             iLock = new object();
             iDisposed = false;
 
@@ -90,8 +92,8 @@ namespace OpenHome.Av
                 iService.SetPropertyMetadataChanged(HandleMetadataChanged);
                 iService.SetPropertyTransportStateChanged(HandleTransportStateChanged);
 
-                iMetadata = new Watchable<IInfoMetadata>(aThread, string.Format("Metadata({0})", aId), new InfoMetadata(iService.PropertyMetadata(), iService.PropertyUri()));
-                iTransportState = new Watchable<string>(aThread, string.Format("TransportState({0})", aId), iService.PropertyTransportState());
+                iMetadata = new Watchable<IInfoMetadata>(iThread, string.Format("Metadata({0})", aId), new InfoMetadata(iService.PropertyMetadata(), iService.PropertyUri()));
+                iTransportState = new Watchable<string>(iThread, string.Format("TransportState({0})", aId), iService.PropertyTransportState());
             }
         }
         
@@ -133,7 +135,7 @@ namespace OpenHome.Av
             }
         }
 
-        public void Play()
+        public void Play(Action aAction)
         {
             lock (iLock)
             {
@@ -142,11 +144,20 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgReceiver1.Play");
                 }
 
-                iService.BeginPlay(null);
+                iService.BeginPlay((IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
-        public void Stop()
+        public void Stop(Action aAction)
         {
             lock (iLock)
             {
@@ -155,11 +166,20 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgReceiver1.Stop");
                 }
 
-                iService.BeginStop(null);
+                iService.BeginStop((IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
-        public void SetSender(string aUri, string aMetadata)
+        public void SetSender(string aUri, string aMetadata, Action aAction)
         {
             lock (iLock)
             {
@@ -168,7 +188,16 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgReceiver1.SetSender");
                 }
 
-                iService.BeginSetSender(aUri, aMetadata, null);
+                iService.BeginSetSender(aUri, aMetadata, (IntPtr) =>
+                {
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction();
+                        }
+                    });
+                });
             }
         }
 
@@ -201,6 +230,7 @@ namespace OpenHome.Av
         private object iLock;
         private bool iDisposed;
 
+        private IWatchableThread iThread;
         private CpProxyAvOpenhomeOrgReceiver1 iService;
 
         private Watchable<IInfoMetadata> iMetadata;
@@ -211,8 +241,10 @@ namespace OpenHome.Av
     {
         public MockServiceOpenHomeOrgReceiver1(IWatchableThread aThread, string aId, string aMetadata, string aTransportState, string aUri)
         {
-            iMetadata = new Watchable<IInfoMetadata>(aThread, string.Format("Metadata({0})", aId), new InfoMetadata(aMetadata, aUri));
-            iTransportState = new Watchable<string>(aThread, string.Format("TransportState({0})", aId), aTransportState);
+            iThread = aThread;
+
+            iMetadata = new Watchable<IInfoMetadata>(iThread, string.Format("Metadata({0})", aId), new InfoMetadata(aMetadata, aUri));
+            iTransportState = new Watchable<string>(iThread, string.Format("TransportState({0})", aId), aTransportState);
         }
 
         public void Dispose()
@@ -240,19 +272,40 @@ namespace OpenHome.Av
             }
         }
 
-        public void Play()
+        public void Play(Action aAction)
         {
             iTransportState.Update("Playing");
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
 
-        public void Stop()
+        public void Stop(Action aAction)
         {
             iTransportState.Update("Stopped");
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
 
-        public void SetSender(string aUri, string aMetadata)
+        public void SetSender(string aUri, string aMetadata, Action aAction)
         {
             iMetadata.Update(new InfoMetadata(aMetadata, aUri));
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction();
+                }
+            });
         }
 
         public void Execute(IEnumerable<string> aValue)
@@ -278,6 +331,8 @@ namespace OpenHome.Av
                 throw new NotSupportedException();
             }
         }
+
+        private IWatchableThread iThread;
 
         private Watchable<IInfoMetadata> iMetadata;
         private Watchable<string> iTransportState;
@@ -461,19 +516,19 @@ namespace OpenHome.Av
             get { return iService.TransportState; }
         }
 
-        public void Play()
+        public void Play(Action aAction)
         {
-            iService.Play();
+            iService.Play(aAction);
         }
 
-        public void Stop()
+        public void Stop(Action aAction)
         {
-            iService.Stop();
+            iService.Stop(aAction);
         }
 
-        public void SetSender(string aUri, string aMetadata)
+        public void SetSender(string aUri, string aMetadata, Action aAction)
         {
-            iService.SetSender(aUri, aMetadata);
+            iService.SetSender(aUri, aMetadata, aAction);
         }
 
         private IManagableWatchableDevice iDevice;

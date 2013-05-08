@@ -114,17 +114,17 @@ namespace OpenHome.Av
 
         public void Play()
         {
-            iPlaylist.Play();
+            iPlaylist.Play(null);
         }
 
         public void Pause()
         {
-            iPlaylist.Pause();
+            iPlaylist.Pause(null);
         }
 
         public void Stop()
         {
-            iPlaylist.Stop();
+            iPlaylist.Stop(null);
         }
 
         public bool CanSkip
@@ -137,12 +137,12 @@ namespace OpenHome.Av
 
         public void Previous()
         {
-            iPlaylist.Previous();
+            iPlaylist.Previous(null);
         }
 
         public void Next()
         {
-            iPlaylist.Next();
+            iPlaylist.Next(null);
         }
 
         public IWatchable<bool> CanSeek
@@ -155,7 +155,7 @@ namespace OpenHome.Av
 
         public void Seek(uint aSeconds)
         {
-            iPlaylist.SeekSecondsAbsolute(aSeconds);
+            iPlaylist.SeekSecondsAbsolute(aSeconds, null);
         }
 
         public void ItemOpen(string aId, string aValue)
