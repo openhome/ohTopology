@@ -65,51 +65,6 @@ namespace OpenHome.Av
             iDisposed = true;
         }
 
-        public string Name
-        {
-            get
-            {
-                return iSource.Name;
-            }
-        }
-
-        public IWatchable<bool> HasSourceControl
-        {
-            get
-            {
-                return iHasSourceControl;
-            }
-        }
-
-        public bool HasInfoNext
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        public IWatchable<IInfoMetadata> InfoNext
-        {
-            get { throw new NotSupportedException(); }
-        }
-
-        public IWatchable<string> TransportState
-        {
-            get
-            {
-                return iTransportState;
-            }
-        }
-
-        public IWatchable<bool> CanPause
-        {
-            get
-            {
-                return iCanPause;
-            }
-        }
-
         public void Play()
         {
             iRadio.Play(null);
@@ -125,14 +80,6 @@ namespace OpenHome.Av
             iRadio.Stop(null);
         }
 
-        public bool CanSkip
-        {
-            get
-            {
-                return true;
-            }
-        }
-
         public void Previous()
         {
             throw new NotImplementedException();
@@ -141,14 +88,6 @@ namespace OpenHome.Av
         public void Next()
         {
             throw new NotImplementedException();
-        }
-
-        public IWatchable<bool> CanSeek
-        {
-            get
-            {
-                return iCanSeek;
-            }
         }
 
         public void Seek(uint aSeconds)
@@ -168,6 +107,16 @@ namespace OpenHome.Av
 
         public void ItemClose(string aId, string aValue)
         {
+        }
+
+        public void SetRepeat(bool aValue)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetShuffle(bool aValue)
+        {
+            throw new NotImplementedException();
         }
 
         private object iLock;

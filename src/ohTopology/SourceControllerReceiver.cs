@@ -6,7 +6,9 @@ namespace OpenHome.Av
 {
     public class SourceControllerReceiver : IWatcher<string>, ISourceController
     {
-        public SourceControllerReceiver(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasSourceControl, Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause, Watchable<bool> aCanSkip, Watchable<bool> aCanSeek)
+        public SourceControllerReceiver(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasSourceControl,
+            Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause,
+            Watchable<bool> aCanSkip, Watchable<bool> aCanSeek, Watchable<bool> aHasPlayMode, Watchable<bool> aShuffle, Watchable<bool> aRepeat)
         {
             iDisposed = false;
 
@@ -64,51 +66,6 @@ namespace OpenHome.Av
             iDisposed = true;
         }
 
-        public string Name
-        {
-            get
-            {
-                return iSource.Name;
-            }
-        }
-
-        public IWatchable<bool> HasSourceControl
-        {
-            get
-            {
-                return iHasSourceControl;
-            }
-        }
-
-        public bool HasInfoNext
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        public IWatchable<IInfoMetadata> InfoNext
-        {
-            get { throw new NotSupportedException(); }
-        }
-
-        public IWatchable<string> TransportState
-        {
-            get
-            {
-                return iTransportState;
-            }
-        }
-
-        public IWatchable<bool> CanPause
-        {
-            get
-            {
-                return iCanPause;
-            }
-        }
-
         public void Play()
         {
             iReceiver.Play(null);
@@ -124,14 +81,6 @@ namespace OpenHome.Av
             iReceiver.Stop(null);
         }
 
-        public bool CanSkip
-        {
-            get
-            {
-                return false;
-            }
-        }
-
         public void Previous()
         {
             throw new NotSupportedException();
@@ -142,15 +91,17 @@ namespace OpenHome.Av
             throw new NotSupportedException();
         }
 
-        public IWatchable<bool> CanSeek
+        public void Seek(uint aSeconds)
         {
-            get
-            {
-                return iCanSeek;
-            }
+            throw new NotSupportedException();
         }
 
-        public void Seek(uint aSeconds)
+        public void SetShuffle(bool aValue)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void SetRepeat(bool aValue)
         {
             throw new NotSupportedException();
         }

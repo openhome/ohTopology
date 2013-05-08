@@ -6,30 +6,24 @@ namespace OpenHome.Av
 {
     public interface ISourceController : IDisposable
     {
-        string Name { get; }
-
-        bool HasInfoNext { get; }
-        IWatchable<IInfoMetadata> InfoNext { get; }
-
-        IWatchable<bool> HasSourceControl { get; }
-        IWatchable<string> TransportState { get; }
-
-        IWatchable<bool> CanPause { get; }
         void Play();
         void Pause();
         void Stop();
 
-        bool CanSkip { get; }
         void Previous();
         void Next();
 
-        IWatchable<bool> CanSeek { get; }
         void Seek(uint aSeconds);
+
+        void SetRepeat(bool aValue);
+        void SetShuffle(bool aValue);
     }
 
     public class SourceController
     {
-        public static ISourceController Create(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasSourceControl, Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause, Watchable<bool> aCanSkip, Watchable<bool> aCanSeek)
+        public static ISourceController Create(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasSourceControl,
+            Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause,
+            Watchable<bool> aCanSkip, Watchable<bool> aCanSeek, Watchable<bool> aHasPlayMode, Watchable<bool> aShuffle, Watchable<bool> aRepeat)
         {
             if (aSource.Type == "Playlist")
             {
@@ -41,7 +35,7 @@ namespace OpenHome.Av
             }
             else if (aSource.Type == "Receiver")
             {
-                return new SourceControllerReceiver(aThread, aSource, aHasSourceControl, aHasInfoNext, aInfoNext, aTransportState, aCanPause, aCanSeek, aCanSkip);
+                return new SourceControllerReceiver(aThread, aSource, aHasSourceControl, aHasInfoNext, aInfoNext, aTransportState, aCanPause, aCanSeek, aCanSkip, aHasPlayMode, aShuffle, aRepeat);
             }
             /*else if (aSource.Type == "NetAux" || aSource.Type == "UpnpAv" || aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi")
             {

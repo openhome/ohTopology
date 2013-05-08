@@ -64,54 +64,6 @@ namespace OpenHome.Av
             iDisposed = true;
         }
 
-        public string Name
-        {
-            get
-            {
-                return iSource.Name;
-            }
-        }
-
-        public IWatchable<bool> HasSourceControl
-        {
-            get
-            {
-                return iHasSourceControl;
-            }
-        }
-
-        public bool HasInfoNext
-        {
-            get
-            {
-                return true;
-            }
-        }
-
-        public IWatchable<IInfoMetadata> InfoNext
-        {
-            get 
-            {
-                return iInfoNext;
-            }
-        }
-
-        public IWatchable<string> TransportState
-        {
-            get
-            {
-                return iTransportState;
-            }
-        }
-
-        public IWatchable<bool> CanPause
-        {
-            get
-            {
-                return iCanPause;
-            }
-        }
-
         public void Play()
         {
             iPlaylist.Play(null);
@@ -127,14 +79,6 @@ namespace OpenHome.Av
             iPlaylist.Stop(null);
         }
 
-        public bool CanSkip
-        {
-            get
-            {
-                return true;
-            }
-        }
-
         public void Previous()
         {
             iPlaylist.Previous(null);
@@ -145,17 +89,19 @@ namespace OpenHome.Av
             iPlaylist.Next(null);
         }
 
-        public IWatchable<bool> CanSeek
-        {
-            get
-            {
-                return iCanSeek;
-            }
-        }
-
         public void Seek(uint aSeconds)
         {
             iPlaylist.SeekSecondsAbsolute(aSeconds, null);
+        }
+
+        public void SetRepeat(bool aValue)
+        {
+            iPlaylist.SetRepeat(aValue, null);
+        }
+
+        public void SetShuffle(bool aValue)
+        {
+            iPlaylist.SetShuffle(aValue, null);
         }
 
         public void ItemOpen(string aId, string aValue)

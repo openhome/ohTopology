@@ -289,6 +289,7 @@ namespace OpenHome.Av
 
         // multi-room interface
         IWatchable<bool> IsZoneable { get; }
+        IWatchable<IZone> Zone { get; }
         IWatchableUnordered<IZone> Listeners { get; }
 
         IWatchable<ITopology4Source> Source { get; }
@@ -440,6 +441,14 @@ namespace OpenHome.Av
             get
             {
                 return iHasSender;
+            }
+        }
+
+        public IWatchable<IZone> Zone
+        {
+            get
+            {
+                return null;
             }
         }
 

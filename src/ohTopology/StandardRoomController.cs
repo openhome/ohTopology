@@ -8,7 +8,21 @@ namespace OpenHome.Av
 {
     public interface IStandardRoomController : ISourceController
     {
+        string Name { get; }
+
         IWatchable<bool> Active { get; }
+
+        IWatchable<bool> HasInfoNext { get; }
+        IWatchable<IInfoMetadata> InfoNext { get; }
+
+        IWatchable<bool> HasSourceControl { get; }
+        IWatchable<string> TransportState { get; }
+        IWatchable<bool> CanPause { get; }
+        IWatchable<bool> CanSkip { get; }
+        IWatchable<bool> CanSeek { get; }
+        IWatchable<bool> HasPlayMode { get; }
+        IWatchable<bool> Repeat { get; }
+        IWatchable<bool> Shuffle { get; }
 
         IWatchable<EStandby> Standby { get; }
         void SetStandby(bool aValue);
@@ -47,6 +61,10 @@ namespace OpenHome.Av
             iCanSkip = new Watchable<bool>(iThread, string.Format("CanSkip({0})", aRoom.Name), false);
             iCanSeek = new Watchable<bool>(iThread, string.Format("CanSeek({0})", aRoom.Name), false);
             iTransportState = new Watchable<string>(iThread, string.Format("TransportState({0})", aRoom.Name), string.Empty);
+
+            iHasPlayMode = new Watchable<bool>(iThread, string.Format("HasPlayMode({0})", aRoom.Name), false);
+            iShuffle = new Watchable<bool>(iThread, string.Format("Shuffle({0})", aRoom.Name), false);
+            iRepeat = new Watchable<bool>(iThread, string.Format("Repeat({0})", aRoom.Name), false);
 
             iRoom.Source.AddWatcher(this);
 
@@ -103,6 +121,15 @@ namespace OpenHome.Av
 
             iCanSeek.Dispose();
             iCanSeek = null;
+
+            iHasPlayMode.Dispose();
+            iHasPlayMode = null;
+
+            iShuffle.Dispose();
+            iShuffle = null;
+
+            iRepeat.Dispose();
+            iRepeat = null;
         }
 
         private void SetInactive()
@@ -371,9 +398,33 @@ namespace OpenHome.Av
             });
         }
 
+        public IWatchable<bool> HasPlayMode
+        {
+            get
+            {
+                return iHasPlayMode;
+            }
+        }
+
+        public IWatchable<bool> Repeat
+        {
+            get
+            {
+                return iRepeat;
+            }
+        }
+
+        public IWatchable<bool> Shuffle
+        {
+            get
+            {
+                return iShuffle;
+            }
+        }
+
         public void ItemOpen(string aId, ITopology4Source aValue)
         {
-            iSourceController = SourceController.Create(iThread, aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek);
+            iSourceController = SourceController.Create(iThread, aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek, iHasPlayMode, iShuffle, iRepeat);
 
             if (aValue.Volumes.Count() > 0)
             {
@@ -390,7 +441,7 @@ namespace OpenHome.Av
                 iSourceController = null;
             }
 
-            iSourceController = SourceController.Create(iThread, aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek);
+            iSourceController = SourceController.Create(iThread, aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek, iHasPlayMode, iShuffle, iRepeat);
 
             if (aValue.Volumes.Count() > 0)
             {
@@ -454,5 +505,8 @@ namespace OpenHome.Av
         private Watchable<bool> iCanPause;
         private Watchable<bool> iCanSkip;
         private Watchable<bool> iCanSeek;
+        private Watchable<bool> iHasPlayMode;
+        private Watchable<bool> iShuffle;
+        private Watchable<bool> iRepeat;
     }
 }
