@@ -16,16 +16,16 @@ namespace OpenHome.Av
 
     public class Topology1 : ITopology1, IUnorderedWatcher<IWatchableDevice>, IDisposable
     {
-        public Topology1(IWatchableThread aThread, INetwork aNetwork)
+        public Topology1(INetwork aNetwork)
         {
             iDisposed = false;
 
             iNetwork = aNetwork;
-            iThread = aThread;
+            iThread = aNetwork.WatchableThread;
 
             iPendingSubscriptions = new List<IWatchableDevice>();
             iProductLookup = new Dictionary<IWatchableDevice, ServiceProduct>();
-            iProducts = new WatchableUnordered<ServiceProduct>(aThread);
+            iProducts = new WatchableUnordered<ServiceProduct>(iThread);
 
             iDevices = iNetwork.GetWatchableDeviceCollection<ServiceProduct>();
             iThread.Schedule(() =>

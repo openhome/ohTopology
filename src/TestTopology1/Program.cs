@@ -68,7 +68,7 @@ namespace TestTopology
             MockNetwork network = new FourDsMockNetwork(thread, subscribeThread, mocker);
             mocker.Add("network", network);
 
-            Topology1 topology = new Topology1(thread, network);
+            Topology1 topology = new Topology1(network);
 
             MockableScriptRunner runner = new MockableScriptRunner();
 

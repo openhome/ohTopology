@@ -9,12 +9,13 @@ using OpenHome.Net.ControlPoint;
 
 namespace OpenHome.Av
 {
-    public interface INetwork : IWatchableThread
+    public interface INetwork : IWatchableThread, IDisposable
     {
         void Start();
         void Stop();
         void Refresh();
         WatchableDeviceUnordered GetWatchableDeviceCollection<T>() where T : IService;
+        IWatchableThread WatchableThread { get; }
     }
 
     public class ServiceWatchableDeviceCollection : WatchableDeviceUnordered, IEnumerable<IManagableWatchableDevice>
@@ -127,7 +128,7 @@ namespace OpenHome.Av
         private Dictionary<string, DisposableWatchableDevice> iCpDeviceLookup;
     }
 
-    public class Network : INetwork, IDisposable
+    public class Network : INetwork
     {
         public Network(IWatchableThread aThread, IWatchableThread aSubscribeThread)
         {
@@ -176,6 +177,14 @@ namespace OpenHome.Av
             return iDeviceCollections[typeof(T)];
         }
 
+        public IWatchableThread WatchableThread
+        {
+            get
+            {
+                return iThread;
+            }
+        }
+
         public void Assert()
         {
             iThread.Assert();
@@ -213,7 +222,7 @@ namespace OpenHome.Av
         private Dictionary<Type, ServiceWatchableDeviceCollection> iDeviceCollections;
     }
 
-    public class MockNetwork : INetwork, IMockable, IDisposable
+    public class MockNetwork : INetwork, IMockable
     {
         public MockNetwork(IWatchableThread aThread, IWatchableThread aSubscribeThread, Mockable aMocker)
         {
@@ -356,6 +365,14 @@ namespace OpenHome.Av
             }
 
             return list;
+        }
+
+        public IWatchableThread WatchableThread
+        {
+            get
+            {
+                return iThread;
+            }
         }
 
         public void Execute(IEnumerable<string> aValue)

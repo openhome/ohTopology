@@ -194,7 +194,7 @@ namespace TestTopology2
             MockNetwork network = new FourDsMockNetwork(thread, subscribeThread, mocker);
             mocker.Add("network", network);
 
-            Topology1 topology1 = new Topology1(thread, network);
+            Topology1 topology1 = new Topology1(network);
             Topology2 topology2 = new Topology2(topology1);
 
             MockableScriptRunner runner = new MockableScriptRunner();
