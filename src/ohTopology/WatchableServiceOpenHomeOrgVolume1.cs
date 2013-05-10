@@ -313,8 +313,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgVolume1.SetBalance");
                 }
 
-                iService.BeginSetBalance(aValue, (IntPtr) =>
+                iService.BeginSetBalance(aValue, (IntPtr ptr) =>
                 {
+                    iService.EndSetBalance(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
@@ -335,8 +337,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgVolume1.SetFade");
                 }
 
-                iService.BeginSetFade(aValue, (IntPtr) =>
+                iService.BeginSetFade(aValue, (IntPtr ptr) =>
                 {
+                    iService.EndSetFade(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
@@ -357,8 +361,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgVolume1.SetMute");
                 }
 
-                iService.BeginSetMute(aValue, (IntPtr) =>
+                iService.BeginSetMute(aValue, (IntPtr ptr) =>
                 {
+                    iService.EndSetMute(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
@@ -379,8 +385,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgVolume1.SetVolume");
                 }
 
-                iService.BeginSetVolume(aValue, (IntPtr) =>
+                iService.BeginSetVolume(aValue, (IntPtr ptr) =>
                 {
+                    iService.EndSetVolume(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
@@ -401,8 +409,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgVolume1.VolumeDec");
                 }
 
-                iService.BeginVolumeDec((IntPtr) =>
+                iService.BeginVolumeDec((IntPtr ptr) =>
                 {
+                    iService.EndVolumeDec(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
@@ -423,8 +433,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgVolume1.VolumeInc");
                 }
 
-                iService.BeginVolumeInc((IntPtr) =>
+                iService.BeginVolumeInc((IntPtr ptr) =>
                 {
+                    iService.EndVolumeInc(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)

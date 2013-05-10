@@ -144,8 +144,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgReceiver1.Play");
                 }
 
-                iService.BeginPlay((IntPtr) =>
+                iService.BeginPlay((IntPtr ptr) =>
                 {
+                    iService.EndPlay(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
@@ -166,8 +168,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgReceiver1.Stop");
                 }
 
-                iService.BeginStop((IntPtr) =>
+                iService.BeginStop((IntPtr ptr) =>
                 {
+                    iService.EndStop(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
@@ -188,8 +192,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgReceiver1.SetSender");
                 }
 
-                iService.BeginSetSender(aUri, aMetadata, (IntPtr) =>
+                iService.BeginSetSender(aUri, aMetadata, (IntPtr ptr) =>
                 {
+                    iService.EndSetSender(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)

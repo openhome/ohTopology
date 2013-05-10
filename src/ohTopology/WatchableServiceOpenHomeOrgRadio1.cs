@@ -24,8 +24,8 @@ namespace OpenHome.Av
         void SetId(uint aId, string aUri, Action aAction);
         void SetChannel(string aUri, string aMetadata, Action aAction);
 
-        string Read(uint aId);
-        string ReadList(string aIdList);
+        void Read(uint aId, Action<string> aAction);
+        void ReadList(string aIdList, Action<string> aAction);
     }
 
     public interface IRadio : IServiceOpenHomeOrgRadio1
@@ -128,14 +128,14 @@ namespace OpenHome.Av
             Service.SetChannel(aUri, aMetadata, aAction);
         }
 
-        public string Read(uint aId)
+        public void Read(uint aId, Action<string> aAction)
         {
-            return Service.Read(aId);
+            Service.Read(aId, aAction);
         }
 
-        public string ReadList(string aIdList)
+        public void ReadList(string aIdList, Action<string> aAction)
         {
-            return Service.ReadList(aIdList);
+            Service.ReadList(aIdList, aAction);
         }
 
         protected uint iChannelsMax;
@@ -236,8 +236,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.Play");
                 }
 
-                iService.BeginPlay((IntPtr) =>
+                iService.BeginPlay((IntPtr ptr) =>
                 {
+                    iService.EndPlay(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
@@ -258,8 +260,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.Pause");
                 }
 
-                iService.BeginPause((IntPtr) =>
+                iService.BeginPause((IntPtr ptr) =>
                 {
+                    iService.EndPause(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
@@ -280,8 +284,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.Stop");
                 }
 
-                iService.BeginStop((IntPtr) =>
+                iService.BeginStop((IntPtr ptr) =>
                 {
+                    iService.EndStop(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
@@ -302,8 +308,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.SeekSecondsAbsolute");
                 }
 
-                iService.BeginSeekSecondAbsolute(aValue, (IntPtr) =>
+                iService.BeginSeekSecondAbsolute(aValue, (IntPtr ptr) =>
                 {
+                    iService.EndSeekSecondAbsolute(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
@@ -324,8 +332,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.SeekSecondsRelative");
                 }
 
-                iService.BeginSeekSecondRelative(aValue, (IntPtr) =>
+                iService.BeginSeekSecondRelative(aValue, (IntPtr ptr) =>
                 {
+                    iService.EndSeekSecondRelative(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
@@ -346,8 +356,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.SetId");
                 }
 
-                iService.BeginSetId(aId, aUri, (IntPtr) =>
+                iService.BeginSetId(aId, aUri, (IntPtr ptr) =>
                 {
+                    iService.EndSetId(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
@@ -368,8 +380,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.SetChannel");
                 }
 
-                iService.BeginSetChannel(aUri, aMetadata, (IntPtr) =>
+                iService.BeginSetChannel(aUri, aMetadata, (IntPtr ptr) =>
                 {
+                    iService.EndSetChannel(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
@@ -381,7 +395,7 @@ namespace OpenHome.Av
             }
         }
 
-        public string Read(uint aId)
+        public void Read(uint aId, Action<string> aAction)
         {
             lock (iLock)
             {
@@ -390,13 +404,23 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.Read");
                 }
 
-                string metadata;
-                iService.SyncRead(aId, out metadata);
-                return metadata;
+                iService.BeginRead(aId, (IntPtr ptr) =>
+                {
+                    string metadata;
+                    iService.EndRead(ptr, out metadata);
+
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction(metadata);
+                        }
+                    });
+                });
             }
         }
 
-        public string ReadList(string aIdList)
+        public void ReadList(string aIdList, Action<string> aAction)
         {
             lock (iLock)
             {
@@ -405,9 +429,19 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgRadio1.ReadList");
                 }
 
-                string metadata;
-                iService.SyncReadList(aIdList, out metadata);
-                return metadata;
+                iService.BeginReadList(aIdList, (IntPtr ptr) =>
+                {
+                    string channelList;
+                    iService.EndReadList(ptr, out channelList);
+
+                    iThread.Schedule(() =>
+                    {
+                        if (aAction != null)
+                        {
+                            aAction(channelList);
+                        }
+                    });
+                });
             }
         }
 
@@ -620,14 +654,26 @@ namespace OpenHome.Av
             });
         }
 
-        public string Read(uint aId)
+        public void Read(uint aId, Action<string> aAction)
         {
-            return string.Empty;
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction(string.Empty);
+                }
+            });
         }
 
-        public string ReadList(string aIdList)
+        public void ReadList(string aIdList, Action<string> aAction)
         {
-            return string.Empty;
+            iThread.Schedule(() =>
+            {
+                if (aAction != null)
+                {
+                    aAction(string.Empty);
+                }
+            });
         }
 
         public void Execute(IEnumerable<string> aValue)
@@ -912,14 +958,14 @@ namespace OpenHome.Av
             iService.SetChannel(aUri, aMetadata, aAction);
         }
 
-        public string Read(uint aId)
+        public void Read(uint aId, Action<string> aAction)
         {
-            return iService.Read(aId);
+            iService.Read(aId, aAction);
         }
 
-        public string ReadList(string aIdList)
+        public void ReadList(string aIdList, Action<string> aAction)
         {
-            return iService.ReadList(aIdList);
+            iService.ReadList(aIdList, aAction);
         }
 
         private IManagableWatchableDevice iDevice;

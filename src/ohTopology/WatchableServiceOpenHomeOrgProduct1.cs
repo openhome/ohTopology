@@ -328,8 +328,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgProduct1.SetSourceIndex");
                 }
 
-                iService.BeginSetSourceIndex(aValue, (IntPtr) =>
+                iService.BeginSetSourceIndex(aValue, (IntPtr ptr) =>
                 {
+                    iService.EndSetSourceIndex(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
@@ -350,8 +352,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgProduct1.SetSourceIndexByName");
                 }
 
-                iService.BeginSetSourceIndexByName(aValue, (IntPtr) =>
+                iService.BeginSetSourceIndexByName(aValue, (IntPtr ptr) =>
                 {
+                    iService.EndSetSourceIndexByName(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
@@ -372,8 +376,10 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgProduct1.SetStandby");
                 }
 
-                iService.BeginSetStandby(aValue, (IntPtr) =>
+                iService.BeginSetStandby(aValue, (IntPtr ptr) =>
                 {
+                    iService.EndSetStandby(ptr);
+
                     iThread.Schedule(() =>
                     {
                         if (aAction != null)
