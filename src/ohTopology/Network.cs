@@ -11,8 +11,6 @@ namespace OpenHome.Av
 {
     public interface INetwork : IWatchableThread, IDisposable
     {
-        void Start();
-        void Stop();
         void Refresh();
         WatchableDeviceUnordered GetWatchableDeviceCollection<T>() where T : IService;
         IWatchableThread WatchableThread { get; }
@@ -104,7 +102,11 @@ namespace OpenHome.Av
                     WatchableThread.Schedule(() =>
                     {
                         Remove(device);
-                        device.Dispose();
+
+                        WatchableThread.Schedule(() =>
+                        {
+                            device.Dispose();
+                        });
                     });
                 }
             }
@@ -136,6 +138,10 @@ namespace OpenHome.Av
             iThread = aThread;
 
             iDeviceCollections = new Dictionary<Type, ServiceWatchableDeviceCollection>();
+
+            // add device lists for each type of watchable service
+            iDeviceCollections.Add(typeof(Product), new ServiceWatchableDeviceCollection(iThread, iSubscribeThread, "av.openhome.org", "Product", 1));
+            //iDeviceCollections.Add(typeof(ContentDirectory), new ServiceWatchableDeviceCollection(iThread, "upnp.org", "ContentDirectory", 1));
         }
 
         public void Dispose()
@@ -145,22 +151,6 @@ namespace OpenHome.Av
                 c.Dispose();
             }
 
-            iDeviceCollections.Clear();
-        }
-
-        public void Start()
-        {
-            // add device lists for each type of watchable service
-            iDeviceCollections.Add(typeof(Product), new ServiceWatchableDeviceCollection(iThread, iSubscribeThread, "av.openhome.org", "Product", 1));
-            //iDeviceCollections.Add(typeof(ContentDirectory), new ServiceWatchableDeviceCollection(iThread, "upnp.org", "ContentDirectory", 1));
-        }
-
-        public void Stop()
-        {
-            foreach (ServiceWatchableDeviceCollection c in iDeviceCollections.Values)
-            {
-                c.Dispose();
-            }
             iDeviceCollections.Clear();
         }
 
@@ -255,27 +245,6 @@ namespace OpenHome.Av
 
             iDeviceLists.Clear();
             iDeviceLists = null;
-        }
-
-        public virtual void Start()
-        {
-        }
-
-        public virtual void Stop()
-        {
-            foreach (MockWatchableDevice d in iOnDevices.Values)
-            {
-                d.Dispose();
-            }
-            iOnDevices.Clear();
-
-            foreach (MockWatchableDevice d in iOffDevices.Values)
-            {
-                d.Dispose();
-            }
-            iOffDevices.Clear();
-
-            iDeviceLists.Clear();
         }
 
         public void Refresh()
@@ -524,12 +493,6 @@ namespace OpenHome.Av
         public FourDsMockNetwork(IWatchableThread aThread, IWatchableThread aSubscribeThread, Mockable aMocker)
             : base(aThread, aSubscribeThread, aMocker)
         {
-        }
-
-        public override void Start()
-        {
-            base.Start();
-
             iThread.Schedule(() =>
             {
                 AddDevice(new MockWatchableDs(iThread, iSubscribeThread, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));

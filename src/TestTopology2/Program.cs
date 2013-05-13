@@ -205,8 +205,6 @@ namespace TestTopology2
                 topology2.Groups.AddWatcher(watcher);
             });
 
-            network.Start();
-
             try
             {
             	runner.Run(network, new StreamReader(args[0]), mocker);
@@ -226,7 +224,6 @@ namespace TestTopology2
 
             topology1.Dispose();
 
-            network.Stop();
             network.Dispose();
 
             thread.Dispose();

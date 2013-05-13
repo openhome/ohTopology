@@ -78,8 +78,6 @@ namespace TestTopology
                 topology.Products.AddWatcher(watcher);
             });
 
-            network.Start();
-
             try
             {
                 runner.Run(network, new StreamReader(args[0]), mocker);
@@ -96,7 +94,6 @@ namespace TestTopology
 
             topology.Dispose();
 
-            network.Stop();
             network.Dispose();
 
             thread.Dispose();

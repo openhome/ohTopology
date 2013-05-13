@@ -288,9 +288,12 @@ namespace OpenHome.Av
         IWatchable<RoomMetatext> Metatext { get; }
 
         // multi-room interface
-        IWatchable<bool> IsZoneable { get; }
+        IWatchable<bool> CanSendAudio { get; }
+        //IWatchable<bool> CanReceiveAudio { get; }
         IWatchable<IZone> Zone { get; }
         IWatchableUnordered<IZone> Listeners { get; }
+        //void AddToZone(IStandardRoom aRoom);
+        //void RemoveFromZone(IStandardRoom aRoom);
 
         IWatchable<ITopology4Source> Source { get; }
         IWatchable<IEnumerable<ITopology4Source>> Sources { get; }
@@ -436,7 +439,7 @@ namespace OpenHome.Av
             iRoom.SetStandby(aValue);
         }
 
-        public IWatchable<bool> IsZoneable
+        public IWatchable<bool> CanSendAudio
         {
             get
             {

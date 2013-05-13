@@ -312,8 +312,6 @@ namespace TestTopology4
                 topology4.Rooms.AddWatcher(watcher);
             });
 
-            network.Start();
-
             try
             {
                 runner.Run(network, new StringReader(File.ReadAllText(args[0])), mocker);
@@ -337,7 +335,6 @@ namespace TestTopology4
 
             topology1.Dispose();
 
-            network.Stop();
             network.Dispose();
 
             thread.Dispose();

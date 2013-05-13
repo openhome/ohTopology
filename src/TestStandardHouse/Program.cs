@@ -135,7 +135,7 @@ namespace TestLinnHouse
                     r.Details.RemoveWatcher(this);
                     r.Metadata.RemoveWatcher(this);
                     r.Metatext.RemoveWatcher(this);
-                    r.IsZoneable.RemoveWatcher(this);
+                    r.CanSendAudio.RemoveWatcher(this);
                     //r.Roots.RemoveWatcher(iRootWatcher);
                     //r.Sources.RemoveWatcher(iSourceWatcher);
                 }
@@ -166,7 +166,7 @@ namespace TestLinnHouse
                 aItem.Details.AddWatcher(this);
                 aItem.Metadata.AddWatcher(this);
                 aItem.Metatext.AddWatcher(this);
-                aItem.IsZoneable.AddWatcher(this);
+                aItem.CanSendAudio.AddWatcher(this);
                 //aItem.Roots.AddWatcher(iRootWatcher);
                 //aItem.Sources.AddWatcher(iSourceWatcher);
                 iRoomControllerWatcher.Add(aItem);
@@ -189,7 +189,7 @@ namespace TestLinnHouse
                 aItem.Details.RemoveWatcher(this);
                 aItem.Metadata.RemoveWatcher(this);
                 aItem.Metatext.RemoveWatcher(this);
-                aItem.IsZoneable.RemoveWatcher(this);
+                aItem.CanSendAudio.RemoveWatcher(this);
                 //aItem.Roots.RemoveWatcher(iRootWatcher);
                 //aItem.Sources.RemoveWatcher(iSourceWatcher);
                 iRoomControllerWatcher.Remove(aItem);
@@ -306,8 +306,6 @@ namespace TestLinnHouse
                 house.Rooms.AddWatcher(watcher);
             });
 
-            network.Start();
-
             try
             {
                 runner.Run(network, new StringReader(File.ReadAllText(args[0])), mocker);
@@ -334,7 +332,6 @@ namespace TestLinnHouse
 
             topology1.Dispose();
 
-            network.Stop();
             network.Dispose();
 
             thread.Dispose();

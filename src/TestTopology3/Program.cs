@@ -175,8 +175,6 @@ namespace TestTopology3
                 topology3.Rooms.AddWatcher(watcher);
             });
 
-            network.Start();
-
             try
             {
                 runner.Run(network, new StreamReader(args[0]), mocker);
@@ -198,7 +196,6 @@ namespace TestTopology3
 
             topology1.Dispose();
 
-            network.Stop();
             network.Dispose();
 
             thread.Dispose();

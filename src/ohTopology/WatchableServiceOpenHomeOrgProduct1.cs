@@ -528,12 +528,6 @@ namespace OpenHome.Av
                         iPendingService.Dispose();
                         iPendingService = null;
                     }
-
-                    if (iService != null)
-                    {
-                        iService.Dispose();
-                        iService = null;
-                    }
                 }
             });
         }

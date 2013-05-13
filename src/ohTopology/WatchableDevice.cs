@@ -84,15 +84,15 @@ namespace OpenHome.Av
 
             // add a factory for each type of watchable service
 
-            iFactories.Add(typeof(ServiceProduct), new WatchableProductFactory(aSubscribeThread, aThread));
-            iFactories.Add(typeof(ServiceVolume), new WatchableVolumeFactory(aSubscribeThread, aThread));
-            iFactories.Add(typeof(ServiceInfo), new WatchableInfoFactory(aSubscribeThread, aThread));
-            iFactories.Add(typeof(ServiceTime), new WatchableTimeFactory(aSubscribeThread, aThread));
-            iFactories.Add(typeof(ServiceSender), new WatchableSenderFactory(aSubscribeThread, aThread));
-            iFactories.Add(typeof(ServicePlaylist), new WatchablePlaylistFactory(aSubscribeThread, aThread));
-            iFactories.Add(typeof(ServiceRadio), new WatchableRadioFactory(aSubscribeThread, aThread));
-            iFactories.Add(typeof(ServiceReceiver), new WatchableReceiverFactory(aSubscribeThread, aThread));
-            //iFactories.Add(typeof(ServiceContentDirectory), new WatchableContentDirectoryFactory(aSubscribeThread, aThread));
+            iFactories.Add(typeof(ServiceProduct), new WatchableProductFactory(aThread, aSubscribeThread));
+            iFactories.Add(typeof(ServiceVolume), new WatchableVolumeFactory(aThread, aSubscribeThread));
+            iFactories.Add(typeof(ServiceInfo), new WatchableInfoFactory(aThread, aSubscribeThread));
+            iFactories.Add(typeof(ServiceTime), new WatchableTimeFactory(aThread, aSubscribeThread));
+            iFactories.Add(typeof(ServiceSender), new WatchableSenderFactory(aThread, aSubscribeThread));
+            iFactories.Add(typeof(ServicePlaylist), new WatchablePlaylistFactory(aThread, aSubscribeThread));
+            iFactories.Add(typeof(ServiceRadio), new WatchableRadioFactory(aThread, aSubscribeThread));
+            iFactories.Add(typeof(ServiceReceiver), new WatchableReceiverFactory(aThread, aSubscribeThread));
+            //iFactories.Add(typeof(ServiceContentDirectory), new WatchableContentDirectoryFactory(aThread, aSubscribeThread));
 
             iServices = new Dictionary<Type, IWatchableService>();
             iServiceRefCount = new Dictionary<Type, uint>();
