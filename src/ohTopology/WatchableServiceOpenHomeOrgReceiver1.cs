@@ -15,7 +15,7 @@ namespace OpenHome.Av
 
         void Play(Action aAction);
         void Stop(Action aAction);
-        void SetSender(string aUri, string aMetadata, Action aAction);
+        void SetSender(ISenderMetadata aMetadata, Action aAction);
     }
 
     public interface IReceiver : IServiceOpenHomeOrgReceiver1
@@ -68,9 +68,9 @@ namespace OpenHome.Av
             Service.Stop(aAction);
         }
 
-        public void SetSender(string aUri, string aMetadata, Action aAction)
+        public void SetSender(ISenderMetadata aMetadata, Action aAction)
         {
-            Service.SetSender(aUri, aMetadata, aAction);
+            Service.SetSender(aMetadata, aAction);
         }
 
         protected string iProtocolInfo;
@@ -183,7 +183,7 @@ namespace OpenHome.Av
             }
         }
 
-        public void SetSender(string aUri, string aMetadata, Action aAction)
+        public void SetSender(ISenderMetadata aMetadata, Action aAction)
         {
             lock (iLock)
             {
@@ -192,7 +192,7 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgReceiver1.SetSender");
                 }
 
-                iService.BeginSetSender(aUri, aMetadata, (IntPtr ptr) =>
+                iService.BeginSetSender(aMetadata.Uri, aMetadata.ToString(), (IntPtr ptr) =>
                 {
                     iService.EndSetSender(ptr);
 
@@ -302,9 +302,9 @@ namespace OpenHome.Av
             });
         }
 
-        public void SetSender(string aUri, string aMetadata, Action aAction)
+        public void SetSender(ISenderMetadata aMetadata, Action aAction)
         {
-            iMetadata.Update(new InfoMetadata(aMetadata, aUri));
+            iMetadata.Update(new InfoMetadata(aMetadata.ToString(), aMetadata.Uri));
             iThread.Schedule(() =>
             {
                 if (aAction != null)
@@ -526,9 +526,9 @@ namespace OpenHome.Av
             iService.Stop(aAction);
         }
 
-        public void SetSender(string aUri, string aMetadata, Action aAction)
+        public void SetSender(ISenderMetadata aMetadata, Action aAction)
         {
-            iService.SetSender(aUri, aMetadata, aAction);
+            iService.SetSender(aMetadata, aAction);
         }
 
         private IManagableWatchableDevice iDevice;
