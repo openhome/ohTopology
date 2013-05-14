@@ -140,8 +140,8 @@ namespace OpenHome.Av
             iDeviceCollections = new Dictionary<Type, ServiceWatchableDeviceCollection>();
 
             // add device lists for each type of watchable service
-            iDeviceCollections.Add(typeof(Product), new ServiceWatchableDeviceCollection(iThread, iSubscribeThread, "av.openhome.org", "Product", 1));
-            //iDeviceCollections.Add(typeof(ContentDirectory), new ServiceWatchableDeviceCollection(iThread, "upnp.org", "ContentDirectory", 1));
+            iDeviceCollections.Add(typeof(ServiceProduct), new ServiceWatchableDeviceCollection(iThread, iSubscribeThread, "av.openhome.org", "Product", 1));
+            //iDeviceCollections.Add(typeof(ServiceContentDirectory), new ServiceWatchableDeviceCollection(iThread, "upnp.org", "ContentDirectory", 1));
         }
 
         public void Dispose()
