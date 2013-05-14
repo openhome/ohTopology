@@ -9,12 +9,12 @@ namespace OpenHome.Av
 {
     public class RoomDetails : IInfoDetails
     {
-        internal RoomDetails()
+        public RoomDetails()
         {
             iEnabled = false;
         }
 
-        internal RoomDetails(IInfoDetails aDetails)
+        public RoomDetails(IInfoDetails aDetails)
         {
             iEnabled = true;
             iBitDepth = aDetails.BitDepth;
@@ -273,29 +273,6 @@ namespace OpenHome.Av
         void UnJoin(Action aAction);
     }
 
-    public interface IStandardRoom : IJoinable
-    {
-        string Name { get; }
-        
-        IWatchable<EStandby> Standby { get; }
-        IWatchable<RoomDetails> Details { get; }
-        IWatchable<RoomMetadata> Metadata { get; }
-        IWatchable<RoomMetatext> Metatext { get; }
-
-        // multi-room interface
-        IWatchable<IZone> Zone { get; }
-        IWatchable<bool> Zoneable { get; }
-
-        IWatchable<ITopology4Source> Source { get; }
-        IWatchable<IEnumerable<ITopology4Source>> Sources { get; }
-        IEnumerable<ITopology4Group> Senders { get; }
-
-        void SetStandby(bool aValue);
-        void Play(string aMode, string aUri);
-
-        IWatchableThread WatchableThread { get; }
-    }
-
     public class RoomSenderMetadata : ISenderMetadata
     {
         public RoomSenderMetadata()
@@ -417,6 +394,29 @@ namespace OpenHome.Av
         private string iUdn;
         private StandardRoom iRoom;
         private WatchableUnordered<IStandardRoom> iListeners;
+    }
+
+    public interface IStandardRoom : IJoinable
+    {
+        string Name { get; }
+
+        IWatchable<EStandby> Standby { get; }
+        IWatchable<RoomDetails> Details { get; }
+        IWatchable<RoomMetadata> Metadata { get; }
+        IWatchable<RoomMetatext> Metatext { get; }
+
+        // multi-room interface
+        IWatchable<IZone> Zone { get; }
+        IWatchable<bool> Zoneable { get; }
+
+        IWatchable<ITopology4Source> Source { get; }
+        IWatchable<IEnumerable<ITopology4Source>> Sources { get; }
+        IEnumerable<ITopology4Group> Senders { get; }
+
+        void SetStandby(bool aValue);
+        void Play(string aMode, string aUri);
+
+        IWatchableThread WatchableThread { get; }
     }
 
     public class StandardRoom : IStandardRoom, ITopologyObject, IWatcher<IEnumerable<ITopology4Root>>, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IDisposable

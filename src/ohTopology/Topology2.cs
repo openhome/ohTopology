@@ -15,7 +15,7 @@ namespace OpenHome.Av
         bool Visible { get; }
     }
 
-    public class Topology2Source : ITopology2Source
+    class Topology2Source : ITopology2Source
     {
         public Topology2Source(uint aIndex, string aName, string aType, bool aVisible)
         {
@@ -66,7 +66,7 @@ namespace OpenHome.Av
         void SetSourceIndex(uint aValue);
     }
 
-    public class Topology2Group : ITopology2Group, IWatcher<string>, ITopologyObject
+    class Topology2Group : ITopology2Group, IWatcher<string>, ITopologyObject
     {
         public Topology2Group(IWatchableThread aThread, string aId, ServiceProduct aProduct)
         {

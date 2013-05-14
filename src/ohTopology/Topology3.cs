@@ -10,7 +10,7 @@ namespace OpenHome.Av
     {
     }
 
-    public class Topology3Group : ITopology3Group, ITopologyObject
+    class Topology3Group : ITopology3Group, ITopologyObject
     {
         public Topology3Group(ITopology2Group aGroup)
         {
@@ -172,7 +172,7 @@ namespace OpenHome.Av
         void SetStandby(bool aValue);
     }
 
-    public class Topology3Room : ITopology3Room, ITopologyObject
+    class Topology3Room : ITopology3Room, ITopologyObject
     {
         public Topology3Room(IWatchableThread aThread, string aName, ITopology3Group aGroup)
         {

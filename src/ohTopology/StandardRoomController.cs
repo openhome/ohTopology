@@ -55,7 +55,7 @@ namespace OpenHome.Av
 
             iHasSourceControl = new Watchable<bool>(iThread, string.Format("HasSourceControl({0})", aRoom.Name), false);
             iHasInfoNext = new Watchable<bool>(iThread, string.Format("HasInfoNext({0})", aRoom.Name), false);
-            iInfoNext = new Watchable<IInfoMetadata>(iThread, string.Format("InfoNext({0})", iRoom.Name), new RoomMetadata());
+            iInfoNext = new Watchable<IInfoMetadata>(iThread, string.Format("InfoNext({0})", aRoom.Name), new RoomMetadata());
 
             iCanPause = new Watchable<bool>(iThread, string.Format("CanPause({0})", aRoom.Name), false);
             iCanSkip = new Watchable<bool>(iThread, string.Format("CanSkip({0})", aRoom.Name), false);
