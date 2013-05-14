@@ -130,9 +130,9 @@ namespace OpenHome.Av
         private Dictionary<string, DisposableWatchableDevice> iCpDeviceLookup;
     }
 
-    public class Network : INetwork
+    public class Network : INetwork, IMockable
     {
-        public Network(IWatchableThread aThread, IWatchableThread aSubscribeThread)
+        public Network(IWatchableThread aThread, IWatchableThread aSubscribeThread, Mockable aMocker)
         {
             iSubscribeThread = aSubscribeThread;
             iThread = aThread;
@@ -173,6 +173,10 @@ namespace OpenHome.Av
             {
                 return iThread;
             }
+        }
+
+        public void Execute(IEnumerable<string> aValue)
+        {
         }
 
         public void Assert()
