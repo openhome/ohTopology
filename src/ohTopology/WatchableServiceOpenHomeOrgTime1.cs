@@ -46,6 +46,8 @@ namespace OpenHome.Av
     {
         public ServiceOpenHomeOrgTime1(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgTime1 aService)
         {
+            iThread = aThread;
+
             iLock = new object();
             iDisposed = false;
 
@@ -108,7 +110,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iDuration.Update(iService.PropertyDuration());
+                iThread.Schedule(() =>
+                {
+                    iDuration.Update(iService.PropertyDuration());
+                });
             }
         }
 
@@ -121,13 +126,17 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iSeconds.Update(iService.PropertySeconds());
+                iThread.Schedule(() =>
+                {
+                    iSeconds.Update(iService.PropertySeconds());
+                });
             }
         }
 
         private object iLock;
         private bool iDisposed;
 
+        private IWatchableThread iThread;
         private CpProxyAvOpenhomeOrgTime1 iService;
 
         private Watchable<uint> iDuration;

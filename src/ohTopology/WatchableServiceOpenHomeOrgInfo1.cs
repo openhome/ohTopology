@@ -190,6 +190,8 @@ namespace OpenHome.Av
     {
         public ServiceOpenHomeOrgInfo1(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgInfo1 aService)
         {
+            iThread = aThread;
+
             iLock = new object();
             iDisposed = false;
 
@@ -270,15 +272,18 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iDetails.Update(
-                    new InfoDetails(
-                        iService.PropertyBitDepth(),
-                        iService.PropertyBitRate(),
-                        iService.PropertyCodecName(),
-                        iService.PropertyDuration(),
-                        iService.PropertyLossless(),
-                        iService.PropertySampleRate()
-                    ));
+                iThread.Schedule(() =>
+                {
+                    iDetails.Update(
+                        new InfoDetails(
+                            iService.PropertyBitDepth(),
+                            iService.PropertyBitRate(),
+                            iService.PropertyCodecName(),
+                            iService.PropertyDuration(),
+                            iService.PropertyLossless(),
+                            iService.PropertySampleRate()
+                        ));
+                });
             }
         }
 
@@ -291,11 +296,14 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iMetadata.Update(
-                    new InfoMetadata(
-                        iService.PropertyMetadata(),
-                        iService.PropertyUri()
-                    ));
+                iThread.Schedule(() =>
+                {
+                    iMetadata.Update(
+                        new InfoMetadata(
+                            iService.PropertyMetadata(),
+                            iService.PropertyUri()
+                        ));
+                });
             }
         }
 
@@ -308,13 +316,17 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iMetatext.Update(new InfoMetatext(iService.PropertyMetatext()));
+                iThread.Schedule(() =>
+                {
+                    iMetatext.Update(new InfoMetatext(iService.PropertyMetatext()));
+                });
             }
         }
 
         private object iLock;
         private bool iDisposed;
 
+        private IWatchableThread iThread;
         private CpProxyAvOpenhomeOrgInfo1 iService;
 
         private Watchable<IInfoDetails> iDetails;

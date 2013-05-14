@@ -132,6 +132,8 @@ namespace OpenHome.Av
     {
         public ServiceOpenHomeOrgSender1(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgSender1 aService)
         {
+            iThread = aThread;
+
             iLock = new object();
             iDisposed = false;
 
@@ -207,7 +209,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iAudio.Update(iService.PropertyAudio());
+                iThread.Schedule(() =>
+                {
+                    iAudio.Update(iService.PropertyAudio());
+                });
             }
         }
 
@@ -220,7 +225,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iMetadata.Update(new SenderMetadata(iService.PropertyMetadata()));
+                iThread.Schedule(() =>
+                {
+                    iMetadata.Update(new SenderMetadata(iService.PropertyMetadata()));
+                });
             }
         }
 
@@ -233,13 +241,17 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iStatus.Update(iService.PropertyStatus());
+                iThread.Schedule(() =>
+                {
+                    iStatus.Update(iService.PropertyStatus());
+                });
             }
         }
 
         private object iLock;
         private bool iDisposed;
 
+        private IWatchableThread iThread;
         private CpProxyAvOpenhomeOrgSender1 iService;
 
         private Watchable<bool> iAudio;

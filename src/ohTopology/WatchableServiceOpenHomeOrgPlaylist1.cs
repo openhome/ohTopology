@@ -686,7 +686,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iId.Update(iService.PropertyId());
+                iThread.Schedule(() =>
+                {
+                    iId.Update(iService.PropertyId());
+                });
             }
         }
 
@@ -699,7 +702,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iIdArray.Update(ByteArray.Unpack(iService.PropertyIdArray()));
+                iThread.Schedule(() =>
+                {
+                    iIdArray.Update(ByteArray.Unpack(iService.PropertyIdArray()));
+                });
             }
         }
 
@@ -712,7 +718,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iTransportState.Update(iService.PropertyTransportState());
+                iThread.Schedule(() =>
+                {
+                    iTransportState.Update(iService.PropertyTransportState());
+                });
             }
         }
 
@@ -725,7 +734,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iRepeat.Update(iService.PropertyRepeat());
+                iThread.Schedule(() =>
+                {
+                    iRepeat.Update(iService.PropertyRepeat());
+                });
             }
         }
 
@@ -738,7 +750,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iShuffle.Update(iService.PropertyShuffle());
+                iThread.Schedule(() =>
+                {
+                    iShuffle.Update(iService.PropertyShuffle());
+                });
             }
         }
 

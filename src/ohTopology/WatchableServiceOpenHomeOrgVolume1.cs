@@ -457,7 +457,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iVolumeUnity.Update(iService.PropertyVolumeUnity());
+                iThread.Schedule(() =>
+                {
+                    iVolumeUnity.Update(iService.PropertyVolumeUnity());
+                });
             }
         }
 
@@ -470,7 +473,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iVolumeSteps.Update(iService.PropertyVolumeSteps());
+                iThread.Schedule(() =>
+                {
+                    iVolumeSteps.Update(iService.PropertyVolumeSteps());
+                });
             }
         }
 
@@ -483,7 +489,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iVolumeMilliDbPerStep.Update(iService.PropertyVolumeMilliDbPerStep());
+                iThread.Schedule(() =>
+                {
+                    iVolumeMilliDbPerStep.Update(iService.PropertyVolumeMilliDbPerStep());
+                });
             }
         }
 
@@ -496,7 +505,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iVolumeLimit.Update(iService.PropertyVolumeLimit());
+                iThread.Schedule(() =>
+                {
+                    iVolumeLimit.Update(iService.PropertyVolumeLimit());
+                });
             }
         }
 
@@ -509,7 +521,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iValue.Update(iService.PropertyVolume());
+                iThread.Schedule(() =>
+                {
+                    iValue.Update(iService.PropertyVolume());
+                });
             }
         }
 
@@ -522,7 +537,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iMute.Update(iService.PropertyMute());
+                iThread.Schedule(() =>
+                {
+                    iMute.Update(iService.PropertyMute());
+                });
             }
         }
 
@@ -535,7 +553,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iFade.Update(iService.PropertyFade());
+                iThread.Schedule(() =>
+                {
+                    iFade.Update(iService.PropertyFade());
+                });
             }
         }
 
@@ -548,7 +569,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iBalance.Update(iService.PropertyBalance());
+                iThread.Schedule(() =>
+                {
+                    iBalance.Update(iService.PropertyBalance());
+                });
             }
         }
 

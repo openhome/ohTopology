@@ -216,7 +216,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iMetadata.Update(new InfoMetadata(iService.PropertyMetadata(), iService.PropertyUri()));
+                iThread.Schedule(() =>
+                {
+                    iMetadata.Update(new InfoMetadata(iService.PropertyMetadata(), iService.PropertyUri()));
+                });
             }
         }
 
@@ -229,7 +232,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iTransportState.Update(iService.PropertyTransportState());
+                iThread.Schedule(() =>
+                {
+                    iTransportState.Update(iService.PropertyTransportState());
+                });
             }
         }
 
