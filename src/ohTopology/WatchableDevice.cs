@@ -37,31 +37,6 @@ namespace OpenHome.Av
         void Unsubscribe<T>() where T : IService;
     }
 
-    public class WatchableDeviceUnordered : WatchableUnordered<IWatchableDevice>
-    {
-        public WatchableDeviceUnordered(IWatchableThread aThread)
-            : base(aThread)
-        {
-            iList = new List<IWatchableDevice>();
-        }
-
-        internal new void Add(IWatchableDevice aValue)
-        {
-            iList.Add(aValue);
-
-            base.Add(aValue);
-        }
-
-        internal new void Remove(IWatchableDevice aValue)
-        {
-            iList.Remove(aValue);
-
-            base.Remove(aValue);
-        }
-
-        private List<IWatchableDevice> iList;
-    }
-
     public abstract class WatchableDevice : IManagableWatchableDevice
     {
         public abstract string Udn { get; }

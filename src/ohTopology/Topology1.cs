@@ -46,7 +46,6 @@ namespace OpenHome.Av
                 iDevices.RemoveWatcher(this);
                 iPendingSubscriptions.Clear();
             });
-            iDevices.Dispose();
             iDevices = null;
 
             // dispose of all products, which will in turn unsubscribe
@@ -139,7 +138,7 @@ namespace OpenHome.Av
         private List<IWatchableDevice> iPendingSubscriptions;
         private Dictionary<IWatchableDevice, ServiceProduct> iProductLookup;
         private WatchableUnordered<ServiceProduct> iProducts;
-        
-        private WatchableDeviceUnordered iDevices;
+
+        private IWatchableUnordered<IWatchableDevice> iDevices;
     }
 }
