@@ -132,7 +132,7 @@ namespace OpenHome.Av
 
     public class Network : INetwork, IMockable
     {
-        public Network(IWatchableThread aThread, IWatchableThread aSubscribeThread, Mockable aMocker)
+        public Network(IWatchableThread aThread, IWatchableThread aSubscribeThread)
         {
             iSubscribeThread = aSubscribeThread;
             iThread = aThread;
@@ -218,13 +218,12 @@ namespace OpenHome.Av
 
     public class MockNetwork : INetwork, IMockable
     {
-        public MockNetwork(IWatchableThread aThread, IWatchableThread aSubscribeThread, Mockable aMocker)
+        public MockNetwork(IWatchableThread aThread, IWatchableThread aSubscribeThread)
         {
             iLock = new object();
 
             iSubscribeThread = aSubscribeThread;
             iThread = aThread;
-            iMocker = aMocker;
 
             iOnDevices = new Dictionary<string, MockWatchableDevice>();
             iOffDevices = new Dictionary<string, MockWatchableDevice>();
@@ -261,7 +260,6 @@ namespace OpenHome.Av
             {
                 iOffDevices.Remove(aDevice.Udn);
                 iOnDevices.Add(aDevice.Udn, aDevice);
-                iMocker.Add(aDevice.Udn, aDevice);
 
                 foreach (KeyValuePair<Type, List<WatchableDeviceUnordered>> k in iDeviceLists)
                 {
@@ -295,7 +293,6 @@ namespace OpenHome.Av
             {
                 iOnDevices.Remove(aDevice.Udn);
                 iOffDevices.Add(aDevice.Udn, aDevice);
-                iMocker.Remove(aDevice.Udn);
 
                 foreach (KeyValuePair<Type, List<WatchableDeviceUnordered>> k in iDeviceLists)
                 {
@@ -485,8 +482,6 @@ namespace OpenHome.Av
         protected IWatchableThread iThread;
         protected IWatchableThread iSubscribeThread;
 
-        private Mockable iMocker;
-
         private Dictionary<string, MockWatchableDevice> iOnDevices;
         private Dictionary<string, MockWatchableDevice> iOffDevices;
         private Dictionary<Type, List<WatchableDeviceUnordered>> iDeviceLists;
@@ -494,8 +489,8 @@ namespace OpenHome.Av
 
     public class FourDsMockNetwork : MockNetwork
     {
-        public FourDsMockNetwork(IWatchableThread aThread, IWatchableThread aSubscribeThread, Mockable aMocker)
-            : base(aThread, aSubscribeThread, aMocker)
+        public FourDsMockNetwork(IWatchableThread aThread, IWatchableThread aSubscribeThread)
+            : base(aThread, aSubscribeThread)
         {
             iThread.Schedule(() =>
             {
