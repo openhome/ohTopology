@@ -36,7 +36,7 @@ namespace OpenHome.Av
         void VolumeDec();
     }
 
-    public class StandardRoomController : IWatcher<ITopology4Source>, IDisposable
+    public class StandardRoomController : IWatcher<ITopology4Source>, IStandardRoomController, IDisposable
     {
         public StandardRoomController(IStandardRoom aRoom)
         {
@@ -174,6 +174,34 @@ namespace OpenHome.Av
             });
         }
 
+        public void SetRepeat(bool aValue)
+        {
+            iThread.Schedule(() =>
+            {
+                if (iActive.Value)
+                {
+                    if (iHasSourceControl.Value)
+                    {
+                        iSourceController.SetRepeat(aValue);
+                    }
+                }
+            });
+        }
+
+        public void SetShuffle(bool aValue)
+        {
+            iThread.Schedule(() =>
+            {
+                if (iActive.Value)
+                {
+                    if (iHasSourceControl.Value)
+                    {
+                        iSourceController.SetShuffle(aValue);
+                    }
+                }
+            });
+        }
+
         public IWatchable<bool> HasVolume
         {
             get
@@ -203,7 +231,10 @@ namespace OpenHome.Av
             {
                 if (iActive.Value)
                 {
-                    iVolumeController.SetMute(aMute);
+                    if (iHasVolume.Value)
+                    {
+                        iVolumeController.SetMute(aMute);
+                    }
                 }
             });
         }
