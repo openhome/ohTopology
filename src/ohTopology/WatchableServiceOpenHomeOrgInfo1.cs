@@ -190,6 +190,8 @@ namespace OpenHome.Av
     {
         public ServiceOpenHomeOrgInfo1(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgInfo1 aService)
         {
+            iThread = aThread;
+
             iLock = new object();
             iDisposed = false;
 
@@ -270,15 +272,18 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iDetails.Update(
-                    new InfoDetails(
-                        iService.PropertyBitDepth(),
-                        iService.PropertyBitRate(),
-                        iService.PropertyCodecName(),
-                        iService.PropertyDuration(),
-                        iService.PropertyLossless(),
-                        iService.PropertySampleRate()
-                    ));
+                iThread.Schedule(() =>
+                {
+                    iDetails.Update(
+                        new InfoDetails(
+                            iService.PropertyBitDepth(),
+                            iService.PropertyBitRate(),
+                            iService.PropertyCodecName(),
+                            iService.PropertyDuration(),
+                            iService.PropertyLossless(),
+                            iService.PropertySampleRate()
+                        ));
+                });
             }
         }
 
@@ -291,11 +296,14 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iMetadata.Update(
-                    new InfoMetadata(
-                        iService.PropertyMetadata(),
-                        iService.PropertyUri()
-                    ));
+                iThread.Schedule(() =>
+                {
+                    iMetadata.Update(
+                        new InfoMetadata(
+                            iService.PropertyMetadata(),
+                            iService.PropertyUri()
+                        ));
+                });
             }
         }
 
@@ -308,13 +316,17 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iMetatext.Update(new InfoMetatext(iService.PropertyMetatext()));
+                iThread.Schedule(() =>
+                {
+                    iMetatext.Update(new InfoMetatext(iService.PropertyMetatext()));
+                });
             }
         }
 
         private object iLock;
         private bool iDisposed;
 
+        private IWatchableThread iThread;
         private CpProxyAvOpenhomeOrgInfo1 iService;
 
         private Watchable<IInfoDetails> iDetails;
@@ -423,6 +435,7 @@ namespace OpenHome.Av
         {
             iLock = new object();
             iDisposed = false;
+            iPendingSubscribes = new List<Action<IWatchableService>>();
 
             iThread = aThread;
             iSubscribeThread = aSubscribeThread;
@@ -441,23 +454,38 @@ namespace OpenHome.Av
         {
             iSubscribeThread.Schedule(() =>
             {
-                if (!iDisposed && iService == null && iPendingService == null)
+                lock (iLock)
                 {
-                    WatchableDevice d = aDevice as WatchableDevice;
-                    iPendingService = new CpProxyAvOpenhomeOrgInfo1(d.Device);
-                    iPendingService.SetPropertyInitialEvent(delegate
+                    if (!iDisposed)
                     {
-                        lock (iLock)
+                        if (iPendingService == null)
                         {
-                            if (iPendingService != null)
+                            WatchableDevice d = aDevice as WatchableDevice;
+                            iPendingService = new CpProxyAvOpenhomeOrgInfo1(d.Device);
+                            iPendingService.SetPropertyInitialEvent(delegate
                             {
-                                iService = new WatchableInfo(iThread, string.Format("Info({0})", aDevice.Udn), iPendingService);
-                                iPendingService = null;
-                                aCallback(iService);
-                            }
+                                lock (iLock)
+                                {
+                                    if (iPendingService != null)
+                                    {
+                                        iService = new WatchableInfo(iThread, string.Format("Info({0})", aDevice.Udn), iPendingService);
+                                        iPendingService = null;
+                                        aCallback(iService);
+                                        foreach (Action<IWatchableService> c in iPendingSubscribes)
+                                        {
+                                            c(iService);
+                                        }
+                                        iPendingSubscribes.Clear();
+                                    }
+                                }
+                            });
+                            iPendingService.Subscribe();
                         }
-                    });
-                    iPendingService.Subscribe();
+                        else
+                        {
+                            iPendingSubscribes.Add(aCallback);
+                        }
+                    }
                 }
             });
         }
@@ -483,6 +511,7 @@ namespace OpenHome.Av
         private CpProxyAvOpenhomeOrgInfo1 iPendingService;
         private WatchableInfo iService;
         private IWatchableThread iThread;
+        private List<Action<IWatchableService>> iPendingSubscribes;
     }
 
     public class WatchableInfo : Info

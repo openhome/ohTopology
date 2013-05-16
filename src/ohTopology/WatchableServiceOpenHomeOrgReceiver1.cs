@@ -15,7 +15,7 @@ namespace OpenHome.Av
 
         void Play(Action aAction);
         void Stop(Action aAction);
-        void SetSender(string aUri, string aMetadata, Action aAction);
+        void SetSender(ISenderMetadata aMetadata, Action aAction);
     }
 
     public interface IReceiver : IServiceOpenHomeOrgReceiver1
@@ -68,9 +68,9 @@ namespace OpenHome.Av
             Service.Stop(aAction);
         }
 
-        public void SetSender(string aUri, string aMetadata, Action aAction)
+        public void SetSender(ISenderMetadata aMetadata, Action aAction)
         {
-            Service.SetSender(aUri, aMetadata, aAction);
+            Service.SetSender(aMetadata, aAction);
         }
 
         protected string iProtocolInfo;
@@ -183,7 +183,7 @@ namespace OpenHome.Av
             }
         }
 
-        public void SetSender(string aUri, string aMetadata, Action aAction)
+        public void SetSender(ISenderMetadata aMetadata, Action aAction)
         {
             lock (iLock)
             {
@@ -192,7 +192,7 @@ namespace OpenHome.Av
                     throw new ObjectDisposedException("ServiceOpenHomeOrgReceiver1.SetSender");
                 }
 
-                iService.BeginSetSender(aUri, aMetadata, (IntPtr ptr) =>
+                iService.BeginSetSender(aMetadata.Uri, aMetadata.ToString(), (IntPtr ptr) =>
                 {
                     iService.EndSetSender(ptr);
 
@@ -216,7 +216,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iMetadata.Update(new InfoMetadata(iService.PropertyMetadata(), iService.PropertyUri()));
+                iThread.Schedule(() =>
+                {
+                    iMetadata.Update(new InfoMetadata(iService.PropertyMetadata(), iService.PropertyUri()));
+                });
             }
         }
 
@@ -229,7 +232,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iTransportState.Update(iService.PropertyTransportState());
+                iThread.Schedule(() =>
+                {
+                    iTransportState.Update(iService.PropertyTransportState());
+                });
             }
         }
 
@@ -302,9 +308,9 @@ namespace OpenHome.Av
             });
         }
 
-        public void SetSender(string aUri, string aMetadata, Action aAction)
+        public void SetSender(ISenderMetadata aMetadata, Action aAction)
         {
-            iMetadata.Update(new InfoMetadata(aMetadata, aUri));
+            iMetadata.Update(new InfoMetadata(aMetadata.ToString(), aMetadata.Uri));
             iThread.Schedule(() =>
             {
                 if (aAction != null)
@@ -350,6 +356,7 @@ namespace OpenHome.Av
         {
             iLock = new object();
             iDisposed = false;
+            iPendingSubscribes = new List<Action<IWatchableService>>();
 
             iThread = aThread;
             iSubscribeThread = aSubscribeThread;
@@ -368,23 +375,38 @@ namespace OpenHome.Av
         {
             iSubscribeThread.Schedule(() =>
             {
-                if (!iDisposed && iService == null && iPendingService == null)
+                lock (iLock)
                 {
-                    WatchableDevice d = aDevice as WatchableDevice;
-                    iPendingService = new CpProxyAvOpenhomeOrgReceiver1(d.Device);
-                    iPendingService.SetPropertyInitialEvent(delegate
+                    if (!iDisposed)
                     {
-                        lock (iLock)
+                        if (iPendingService == null)
                         {
-                            if (iPendingService != null)
+                            WatchableDevice d = aDevice as WatchableDevice;
+                            iPendingService = new CpProxyAvOpenhomeOrgReceiver1(d.Device);
+                            iPendingService.SetPropertyInitialEvent(delegate
                             {
-                                iService = new WatchableReceiver(iThread, string.Format("Receiver({0})", aDevice.Udn), iPendingService);
-                                iPendingService = null;
-                                aCallback(iService);
-                            }
+                                lock (iLock)
+                                {
+                                    if (iPendingService != null)
+                                    {
+                                        iService = new WatchableReceiver(iThread, string.Format("Receiver({0})", aDevice.Udn), iPendingService);
+                                        iPendingService = null;
+                                        aCallback(iService);
+                                        foreach (Action<IWatchableService> c in iPendingSubscribes)
+                                        {
+                                            c(iService);
+                                        }
+                                        iPendingSubscribes.Clear();
+                                    }
+                                }
+                            });
+                            iPendingService.Subscribe();
                         }
-                    });
-                    iPendingService.Subscribe();
+                        else
+                        {
+                            iPendingSubscribes.Add(aCallback);
+                        }
+                    }
                 }
             });
         }
@@ -410,6 +432,7 @@ namespace OpenHome.Av
         private CpProxyAvOpenhomeOrgReceiver1 iPendingService;
         private WatchableReceiver iService;
         private IWatchableThread iThread;
+        private List<Action<IWatchableService>> iPendingSubscribes;
     }
 
     public class WatchableReceiver : Receiver
@@ -526,9 +549,9 @@ namespace OpenHome.Av
             iService.Stop(aAction);
         }
 
-        public void SetSender(string aUri, string aMetadata, Action aAction)
+        public void SetSender(ISenderMetadata aMetadata, Action aAction)
         {
-            iService.SetSender(aUri, aMetadata, aAction);
+            iService.SetSender(aMetadata, aAction);
         }
 
         private IManagableWatchableDevice iDevice;

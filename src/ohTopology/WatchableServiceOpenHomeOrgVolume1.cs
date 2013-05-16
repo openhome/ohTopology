@@ -457,7 +457,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iVolumeUnity.Update(iService.PropertyVolumeUnity());
+                iThread.Schedule(() =>
+                {
+                    iVolumeUnity.Update(iService.PropertyVolumeUnity());
+                });
             }
         }
 
@@ -470,7 +473,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iVolumeSteps.Update(iService.PropertyVolumeSteps());
+                iThread.Schedule(() =>
+                {
+                    iVolumeSteps.Update(iService.PropertyVolumeSteps());
+                });
             }
         }
 
@@ -483,7 +489,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iVolumeMilliDbPerStep.Update(iService.PropertyVolumeMilliDbPerStep());
+                iThread.Schedule(() =>
+                {
+                    iVolumeMilliDbPerStep.Update(iService.PropertyVolumeMilliDbPerStep());
+                });
             }
         }
 
@@ -496,7 +505,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iVolumeLimit.Update(iService.PropertyVolumeLimit());
+                iThread.Schedule(() =>
+                {
+                    iVolumeLimit.Update(iService.PropertyVolumeLimit());
+                });
             }
         }
 
@@ -509,7 +521,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iValue.Update(iService.PropertyVolume());
+                iThread.Schedule(() =>
+                {
+                    iValue.Update(iService.PropertyVolume());
+                });
             }
         }
 
@@ -522,7 +537,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iMute.Update(iService.PropertyMute());
+                iThread.Schedule(() =>
+                {
+                    iMute.Update(iService.PropertyMute());
+                });
             }
         }
 
@@ -535,7 +553,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iFade.Update(iService.PropertyFade());
+                iThread.Schedule(() =>
+                {
+                    iFade.Update(iService.PropertyFade());
+                });
             }
         }
 
@@ -548,7 +569,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iBalance.Update(iService.PropertyBalance());
+                iThread.Schedule(() =>
+                {
+                    iBalance.Update(iService.PropertyBalance());
+                });
             }
         }
 
@@ -831,6 +855,7 @@ namespace OpenHome.Av
         {
             iLock = new object();
             iDisposed = false;
+            iPendingSubscribes = new List<Action<IWatchableService>>();
 
             iThread = aThread;
             iSubscribeThread = aSubscribeThread;
@@ -849,23 +874,38 @@ namespace OpenHome.Av
         {
             iSubscribeThread.Schedule(() =>
             {
-                if (!iDisposed && iService == null && iPendingService == null)
+                lock (iLock)
                 {
-                    WatchableDevice d = aDevice as WatchableDevice;
-                    iPendingService = new CpProxyAvOpenhomeOrgVolume1(d.Device);
-                    iPendingService.SetPropertyInitialEvent(delegate
+                    if (!iDisposed)
                     {
-                        lock (iLock)
+                        if (iPendingService == null)
                         {
-                            if (iPendingService != null)
+                            WatchableDevice d = aDevice as WatchableDevice;
+                            iPendingService = new CpProxyAvOpenhomeOrgVolume1(d.Device);
+                            iPendingService.SetPropertyInitialEvent(delegate
                             {
-                                iService = new WatchableVolume(iThread, string.Format("Volume({0})", aDevice.Udn), iPendingService);
-                                iPendingService = null;
-                                aCallback(iService);
-                            }
+                                lock (iLock)
+                                {
+                                    if (iPendingService != null)
+                                    {
+                                        iService = new WatchableVolume(iThread, string.Format("Volume({0})", aDevice.Udn), iPendingService);
+                                        iPendingService = null;
+                                        aCallback(iService);
+                                        foreach (Action<IWatchableService> c in iPendingSubscribes)
+                                        {
+                                            c(iService);
+                                        }
+                                        iPendingSubscribes.Clear();
+                                    }
+                                }
+                            });
+                            iPendingService.Subscribe();
                         }
-                    });
-                    iPendingService.Subscribe();
+                        else
+                        {
+                            iPendingSubscribes.Add(aCallback);
+                        }
+                    }
                 }
             });
         }
@@ -891,6 +931,7 @@ namespace OpenHome.Av
         private CpProxyAvOpenhomeOrgVolume1 iPendingService;
         private WatchableVolume iService;
         private IWatchableThread iThread;
+        private List<Action<IWatchableService>> iPendingSubscribes;
     }
 
     public class WatchableVolume : Volume

@@ -54,7 +54,7 @@ namespace OpenHome.Av
         }
     }
 
-    public class Topology4Source : ITopology4Source
+    class Topology4Source : ITopology4Source
     {
         public Topology4Source(Topology4Group aGroup, ITopology2Source aSource)
         {
@@ -161,7 +161,7 @@ namespace OpenHome.Av
         IWatchable<IEnumerable<ITopology4Group>> Senders { get; }
     }
 
-    public class Topology4Group : ITopology4Root, IWatcher<uint>, IWatcher<string>, ITopologyObject, IDisposable
+    class Topology4Group : ITopology4Root, IWatcher<uint>, IWatcher<string>, ITopologyObject, IDisposable
     {
         public Topology4Group(IWatchableThread aThread, string aName, ITopology3Group aGroup, IEnumerable<ITopology2Source> aSources)
         {
@@ -518,7 +518,7 @@ namespace OpenHome.Av
         void SetStandby(bool aValue);
     }
 
-    public class Topology4Room : ITopology4Room, ITopologyObject, IUnorderedWatcher<ITopology3Group>, IWatcher<bool>, IWatcher<string>, IWatcher<ITopology2Source>, IDisposable
+    class Topology4Room : ITopology4Room, ITopologyObject, IUnorderedWatcher<ITopology3Group>, IWatcher<bool>, IWatcher<string>, IWatcher<ITopology2Source>, IDisposable
     {
         public Topology4Room(IWatchableThread aThread, ITopology3Room aRoom)
         {

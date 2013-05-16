@@ -4,7 +4,7 @@ expect Standby(Kitchen)(Proxy): eOn
 expect Details(Kitchen): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Kitchen): Active=False, Metadata=, Uri=
 expect Metatext(Kitchen): Active=False, Metatext=
-expect HasSender(Kitchen): False
+expect Zone(Kitchen): False 
 expect Active(Kitchen): True
 expect HasVolume(Kitchen): False
 expect HasSourceControl(Kitchen): False
@@ -17,7 +17,7 @@ expect Standby(Sitting Room)(Proxy): eOn
 expect Details(Sitting Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Sitting Room): Active=False, Metadata=, Uri=
 expect Metatext(Sitting Room): Active=False, Metatext=
-expect HasSender(Sitting Room): False
+expect Zone(Sitting Room): False 
 expect Active(Sitting Room): True
 expect HasVolume(Sitting Room): False
 expect HasSourceControl(Sitting Room): False
@@ -30,7 +30,7 @@ expect Standby(Bedroom)(Proxy): eOn
 expect Details(Bedroom): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Bedroom): Active=False, Metadata=, Uri=
 expect Metatext(Bedroom): Active=False, Metatext=
-expect HasSender(Bedroom): False
+expect Zone(Bedroom): False 
 expect Active(Bedroom): True
 expect HasVolume(Bedroom): False
 expect HasSourceControl(Bedroom): False
@@ -43,7 +43,7 @@ expect Standby(Dining Room)(Proxy): eOn
 expect Details(Dining Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Dining Room): Active=False, Metadata=, Uri=
 expect Metatext(Dining Room): Active=False, Metatext=
-expect HasSender(Dining Room): False
+expect Zone(Dining Room): False 
 expect Active(Dining Room): True
 expect HasVolume(Dining Room): False
 expect HasSourceControl(Dining Room): False
@@ -51,7 +51,7 @@ expect Mute(Dining Room): False
 expect Volume(Dining Room): 0
 expect TransportState(Dining Room): 
 
-expect HasSender(Kitchen): False -> True
+expect Zone(Kitchen): False -> True 4c494e4e-0026-0f99-1111-ef000004013f
 expect Details(Kitchen) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Kitchen) Updated: Active=True, Metadata=, Uri=
 expect Metatext(Kitchen) Updated: Active=True, Metatext=
@@ -61,7 +61,7 @@ expect HasSourceControl(Kitchen): False -> True
 expect Volume(Kitchen): 0 -> 50
 expect HasVolume(Kitchen): False -> True
 
-expect HasSender(Sitting Room): False -> True
+expect Zone(Sitting Room): False -> True 4c494e4e-0026-0f99-1112-ef000004013f
 expect Details(Sitting Room) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Sitting Room) Updated: Active=True, Metadata=, Uri=
 expect Metatext(Sitting Room) Updated: Active=True, Metatext=
@@ -71,7 +71,7 @@ expect HasSourceControl(Sitting Room): False -> True
 expect Volume(Sitting Room): 0 -> 50
 expect HasVolume(Sitting Room): False -> True
 
-expect HasSender(Bedroom): False -> True
+expect Zone(Bedroom): False -> True 4c494e4e-0026-0f99-1113-ef000004013f
 expect Details(Bedroom) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Bedroom) Updated: Active=True, Metadata=, Uri=
 expect Metatext(Bedroom) Updated: Active=True, Metatext=
@@ -81,7 +81,7 @@ expect HasSourceControl(Bedroom): False -> True
 expect Volume(Bedroom): 0 -> 50
 expect HasVolume(Bedroom): False -> True
 
-expect HasSender(Dining Room): False -> True
+expect Zone(Dining Room): False -> True 4c494e4e-0026-0f99-1114-ef000004013f
 expect Details(Dining Room) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Dining Room) Updated: Active=True, Metadata=, Uri=
 expect Metatext(Dining Room) Updated: Active=True, Metatext=
@@ -99,7 +99,7 @@ expect Standby(Main Room)(Proxy): eOn
 expect Details(Main Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Main Room): Active=False, Metadata=, Uri=
 expect Metatext(Main Room): Active=False, Metatext=
-expect HasSender(Main Room): False
+expect Zone(Main Room): False 
 expect Active(Main Room): True
 expect HasVolume(Main Room): False
 expect HasSourceControl(Main Room): False
@@ -107,7 +107,7 @@ expect Mute(Main Room): False
 expect Volume(Main Room): 0
 expect TransportState(Main Room): 
 
-expect HasSender(Main Room): False -> True
+expect Zone(Main Room): False -> True 67
 expect Details(Main Room) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Main Room) Updated: Active=True, Metadata=, Uri=
 expect Metatext(Main Room) Updated: Active=True, Metatext=
@@ -144,7 +144,7 @@ expect Standby(Main Room)(Proxy): eOn
 expect Details(Main Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
 expect Metadata(Main Room): Active=False, Metadata=, Uri=
 expect Metatext(Main Room): Active=False, Metatext=
-expect HasSender(Main Room): False
+expect Zone(Main Room): False 
 expect Active(Main Room): True
 expect HasVolume(Main Room): False
 expect HasSourceControl(Main Room): False
@@ -152,7 +152,7 @@ expect Mute(Main Room): False
 expect Volume(Main Room): 0
 expect TransportState(Main Room): 
 
-expect HasSender(Main Room): False -> True
+expect Zone(Main Room): False -> True 67
 expect Details(Main Room) Updated: Active=True, BitDepth=50, BitRate=100, CodeName=flac, Duration=500, Lossless=True, SampleRate=44000
 expect Metadata(Main Room) Updated: Active=True, Metadata=blah, Uri=http://blah
 expect Metatext(Main Room) Updated: Active=True, Metatext=testing
@@ -164,7 +164,7 @@ empty
 
 // add another ds to Main Room
 mock network add ds 68
-expect HasSender(Main Room): True -> False
+expect Zone(Main Room): True -> False 
 expect HasSourceControl(Main Room): True -> False
 expect HasSourceControl(Main Room): False -> True
 empty
@@ -185,7 +185,7 @@ expect Details(Main Room) Updated: Active=False, BitDepth=0, BitRate=0, CodeName
 expect Metadata(Main Room) Updated: Active=False, Metadata=, Uri=
 expect Metatext(Main Room) Updated: Active=False, Metatext=
 expect HasSourceControl(Main Room): True -> False
-expect HasSender(Main Room): False -> True
+expect Zone(Main Room): False -> True 67
 expect Details(Main Room) Updated: Active=True, BitDepth=1, BitRate=2, CodeName=mp3, Duration=3, Lossless=False, SampleRate=4
 expect Metadata(Main Room) Updated: Active=True, Metadata=Ds68, Uri=http://Ds68
 expect Metatext(Main Room) Updated: Active=True, Metatext=Ds68

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Xml;
 
 using OpenHome.Os.App;
 using OpenHome.Net.ControlPoint.Proxies;
@@ -8,10 +9,17 @@ using OpenHome.Os;
 
 namespace OpenHome.Av
 {
+    public interface ISenderMetadata
+    {
+        string Name { get; }
+        string Uri { get; }
+        string ArtworkUri { get; }
+    }
+
     public interface IServiceOpenHomeOrgSender1
     {
         IWatchable<bool> Audio { get; }
-        IWatchable<string> Metadata { get; }
+        IWatchable<ISenderMetadata> Metadata { get; }
         IWatchable<string> Status { get; }
     }
 
@@ -19,6 +27,50 @@ namespace OpenHome.Av
     {
         string Attributes { get; }
         string PresentationUrl { get;}
+    }
+
+    public class SenderMetadata : ISenderMetadata
+    {
+        public SenderMetadata(string aMetadata)
+        {
+            XmlDocument doc = new XmlDocument();
+            XmlNamespaceManager nsManager = new XmlNamespaceManager(doc.NameTable);
+            nsManager.AddNamespace("didl", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+            nsManager.AddNamespace("upnp", "urn:schemas-upnp-org:metadata-1-0/upnp/");
+            nsManager.AddNamespace("dc", "http://purl.org/dc/elements/1.1/");
+            doc.LoadXml(aMetadata);
+
+            XmlNode name = doc.FirstChild.SelectSingleNode("didl:item/dc:title", nsManager);
+            iName = name.FirstChild.Value;
+            XmlNode uri = doc.FirstChild.SelectSingleNode("didl:item/didl:res", nsManager);
+            iUri = uri.FirstChild.Value;
+            XmlNode artworkUri = doc.FirstChild.SelectSingleNode("didl:item/upnp:albumArtURI", nsManager);
+            iArtworkUri = artworkUri.FirstChild.Value;
+        }
+
+        public string Name
+        {
+            get { return iName; }
+        }
+
+        public string Uri
+        {
+            get { return iUri; }
+        }
+
+        public string ArtworkUri
+        {
+            get { return iArtworkUri; }
+        }
+
+        public override string ToString()
+        {
+            return base.ToString();
+        }
+
+        private string iName;
+        private string iUri;
+        private string iArtworkUri;
     }
 
     public abstract class Sender : ISender, IWatchableService
@@ -40,7 +92,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<string> Metadata
+        public IWatchable<ISenderMetadata> Metadata
         {
             get
             {
@@ -80,6 +132,8 @@ namespace OpenHome.Av
     {
         public ServiceOpenHomeOrgSender1(IWatchableThread aThread, string aId, CpProxyAvOpenhomeOrgSender1 aService)
         {
+            iThread = aThread;
+
             iLock = new object();
             iDisposed = false;
 
@@ -92,7 +146,7 @@ namespace OpenHome.Av
                 iService.SetPropertyStatusChanged(HandleStatusChanged);
 
                 iAudio = new Watchable<bool>(aThread, string.Format("Audio({0})", aId), iService.PropertyAudio());
-                iMetadata = new Watchable<string>(aThread, string.Format("Metadata({0})", aId), iService.PropertyMetadata());
+                iMetadata = new Watchable<ISenderMetadata>(aThread, string.Format("Metadata({0})", aId), new SenderMetadata(iService.PropertyMetadata()));
                 iStatus = new Watchable<string>(aThread, string.Format("Status({0})", aId), iService.PropertyStatus());
             }
         }
@@ -130,7 +184,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<string> Metadata
+        public IWatchable<ISenderMetadata> Metadata
         {
             get
             {
@@ -155,7 +209,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iAudio.Update(iService.PropertyAudio());
+                iThread.Schedule(() =>
+                {
+                    iAudio.Update(iService.PropertyAudio());
+                });
             }
         }
 
@@ -168,7 +225,10 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iMetadata.Update(iService.PropertyMetadata());
+                iThread.Schedule(() =>
+                {
+                    iMetadata.Update(new SenderMetadata(iService.PropertyMetadata()));
+                });
             }
         }
 
@@ -181,26 +241,30 @@ namespace OpenHome.Av
                     return;
                 }
 
-                iStatus.Update(iService.PropertyStatus());
+                iThread.Schedule(() =>
+                {
+                    iStatus.Update(iService.PropertyStatus());
+                });
             }
         }
 
         private object iLock;
         private bool iDisposed;
 
+        private IWatchableThread iThread;
         private CpProxyAvOpenhomeOrgSender1 iService;
 
         private Watchable<bool> iAudio;
-        private Watchable<string> iMetadata;
+        private Watchable<ISenderMetadata> iMetadata;
         private Watchable<string> iStatus;
     }
 
     public class MockServiceOpenHomeOrgSender1 : IServiceOpenHomeOrgSender1, IMockable, IDisposable
     {
-        public MockServiceOpenHomeOrgSender1(IWatchableThread aThread, string aId, bool aAudio, string aMetadata, string aStatus)
+        public MockServiceOpenHomeOrgSender1(IWatchableThread aThread, string aId, bool aAudio, ISenderMetadata aMetadata, string aStatus)
         {
             iAudio = new Watchable<bool>(aThread, string.Format("Audio({0})", aId), aAudio);
-            iMetadata = new Watchable<string>(aThread, string.Format("Metadata({0})", aId), aMetadata);
+            iMetadata = new Watchable<ISenderMetadata>(aThread, string.Format("Metadata({0})", aId), aMetadata);
             iStatus = new Watchable<string>(aThread, string.Format("Status({0})", aId), aStatus);
         }
 
@@ -224,7 +288,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<string> Metadata
+        public IWatchable<ISenderMetadata> Metadata
         {
             get
             {
@@ -251,7 +315,7 @@ namespace OpenHome.Av
             else if (command == "metadata")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-                iMetadata.Update(value.First());
+                iMetadata.Update(new SenderMetadata(value.First()));
             }
             else if (command == "status")
             {
@@ -265,7 +329,7 @@ namespace OpenHome.Av
         }
 
         private Watchable<bool> iAudio;
-        private Watchable<string> iMetadata;
+        private Watchable<ISenderMetadata> iMetadata;
         private Watchable<string> iStatus;
     }
 
@@ -275,6 +339,7 @@ namespace OpenHome.Av
         {
             iLock = new object();
             iDisposed = false;
+            iPendingSubscribes = new List<Action<IWatchableService>>();
 
             iThread = aThread;
             iSubscribeThread = aSubscribeThread;
@@ -293,23 +358,38 @@ namespace OpenHome.Av
         {
             iSubscribeThread.Schedule(() =>
             {
-                if (!iDisposed && iService == null && iPendingService == null)
+                lock (iLock)
                 {
-                    WatchableDevice d = aDevice as WatchableDevice;
-                    iPendingService = new CpProxyAvOpenhomeOrgSender1(d.Device);
-                    iPendingService.SetPropertyInitialEvent(delegate
+                    if (!iDisposed)
                     {
-                        lock (iLock)
+                        if (iPendingService == null)
                         {
-                            if (iPendingService != null)
+                            WatchableDevice d = aDevice as WatchableDevice;
+                            iPendingService = new CpProxyAvOpenhomeOrgSender1(d.Device);
+                            iPendingService.SetPropertyInitialEvent(delegate
                             {
-                                iService = new WatchableSender(iThread, string.Format("Sender({0})", aDevice.Udn), iPendingService);
-                                iPendingService = null;
-                                aCallback(iService);
-                            }
+                                lock (iLock)
+                                {
+                                    if (iPendingService != null)
+                                    {
+                                        iService = new WatchableSender(iThread, string.Format("Sender({0})", aDevice.Udn), iPendingService);
+                                        iPendingService = null;
+                                        aCallback(iService);
+                                        foreach (Action<IWatchableService> c in iPendingSubscribes)
+                                        {
+                                            c(iService);
+                                        }
+                                        iPendingSubscribes.Clear();
+                                    }
+                                }
+                            });
+                            iPendingService.Subscribe();
                         }
-                    });
-                    iPendingService.Subscribe();
+                        else
+                        {
+                            iPendingSubscribes.Add(aCallback);
+                        }
+                    }
                 }
             });
         }
@@ -335,6 +415,7 @@ namespace OpenHome.Av
         private CpProxyAvOpenhomeOrgSender1 iPendingService;
         private WatchableSender iService;
         private IWatchableThread iThread;
+        private List<Action<IWatchableService>> iPendingSubscribes;
     }
 
     public class WatchableSender : Sender
@@ -366,7 +447,7 @@ namespace OpenHome.Av
         
     public class MockWatchableSender : Sender, IMockable
     {
-        public MockWatchableSender(IWatchableThread aThread, string aId, string aAttributes, bool aAudio, string aMetadata, string aPresentationUrl, string aStatus)
+        public MockWatchableSender(IWatchableThread aThread, string aId, string aAttributes, bool aAudio, ISenderMetadata aMetadata, string aPresentationUrl, string aStatus)
         {
             iAttributes = aAttributes;
             iPresentationUrl = aPresentationUrl;
@@ -448,7 +529,7 @@ namespace OpenHome.Av
             get { return iService.Audio; }
         }
 
-        public IWatchable<string> Metadata
+        public IWatchable<ISenderMetadata> Metadata
         {
             get { return iService.Metadata; }
         }
