@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,23 +12,27 @@ using OpenHome.MediaServer;
 
 namespace OpenHome.Av
 {
-    public interface IMediaServerValue
+    public interface IMediaValue
     {
         string Value { get; }
         IEnumerable<string> Values { get; }
     }
 
-    public interface IMediaServerDatum
+    public interface IMediaMetadata : IEnumerable<KeyValuePair<ITag, IMediaValue>>
+    {
+        IMediaValue this[ITag aTag] { get; }
+    }
+
+    public interface IMediaDatum : IMediaMetadata
     {
         IEnumerable<ITag> Type { get; }
-        IMediaServerValue this[ITag aTag] { get; }
     }
 
     public interface IMediaServerFragment
     {
         uint Index { get; }
         uint Sequence { get; }
-        IEnumerable<IMediaServerDatum> Data { get; }
+        IEnumerable<IMediaDatum> Data { get; }
     }
 
     public interface IMediaServerSnapshot
@@ -46,10 +51,10 @@ namespace OpenHome.Av
     public interface IMediaServerSession : IDisposable
     {
         Task<IMediaServerContainer> Query(string aValue);
-        Task<IMediaServerContainer> Browse(IMediaServerDatum aDatum); // null = home
+        Task<IMediaServerContainer> Browse(IMediaDatum aDatum); // null = home
     }
 
-    public interface IMediaServer
+    public interface IServiceMediaServer
     {
         string Name { get; }
         string Attributes { get; }
@@ -68,6 +73,97 @@ namespace OpenHome.Av
         bool SupportsQuery { get; }
         bool SupportsBrowse { get; }
         Task<IMediaServerSession> CreateSession();
+    }
+
+    public class MediaServerValue : IMediaValue
+    {
+        private readonly string iValue;
+        private readonly List<string> iValues;
+
+        public MediaServerValue(string aValue)
+        {
+            iValue = aValue;
+            iValues = new List<string>(new string[] { aValue });
+        }
+
+        public MediaServerValue(IEnumerable<string> aValues)
+        {
+            iValue = aValues.First();
+            iValues = new List<string>(aValues);
+        }
+
+        // IMediaServerValue
+
+        public string Value
+        {
+            get { return (iValue); }
+        }
+
+        public IEnumerable<string> Values
+        {
+            get { return (iValues); }
+        }
+    }
+
+    public class MediaMetadata : IMediaMetadata
+    {
+        private Dictionary<ITag, IMediaValue> iMetadata;
+
+        public MediaMetadata()
+        {
+            iMetadata = new Dictionary<ITag, IMediaValue>();
+        }
+
+        public void Add(ITag aTag, string aValue)
+        {
+            IMediaValue value = null;
+
+            iMetadata.TryGetValue(aTag, out value);
+
+            if (value == null)
+            {
+                iMetadata[aTag] = new MediaServerValue(aValue);
+            }
+            else
+            {
+                iMetadata[aTag] = new MediaServerValue(value.Values.Concat(new string[] { aValue }));
+            }
+        }
+
+        public IDictionary<ITag, IMediaValue> Metadata
+        {
+            get
+            {
+                return (iMetadata);
+            }
+        }
+
+        // IMediaServerMetadata
+
+        public IMediaValue this[ITag aTag]
+        {
+            get
+            {
+                IMediaValue value = null;
+                iMetadata.TryGetValue(aTag, out value);
+                return (value);
+            }
+        }
+
+
+        // IEnumerable<KeyValuePair<ITag, IMediaServer>>
+
+        public IEnumerator<KeyValuePair<ITag, IMediaValue>> GetEnumerator()
+        {
+            return (iMetadata.GetEnumerator());
+        }
+
+        // IEnumerable Members
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return (iMetadata.GetEnumerator());
+        }
     }
 
     /*

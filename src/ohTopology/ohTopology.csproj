@@ -58,6 +58,9 @@
     <Reference Include="CpUpnpOrgContentDirectory1.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpUpnpOrgContentDirectory1.net.dll</HintPath>
     </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>..\..\dependencies\AnyPlatform\ohOs2\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
     <Reference Include="ohMediaServer.Shared">
       <HintPath>..\..\dependencies\AnyPlatform\ohMediaServer\ohMediaServer.Shared.dll</HintPath>
     </Reference>
@@ -70,6 +73,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ByteArray.cs" />
@@ -104,6 +108,11 @@
     <Compile Include="WatchableServiceOpenHomeOrgSender1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgTime1.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgVolume1.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="MockMediaServer.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="..\SharedSettings.targets" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
