@@ -23,7 +23,10 @@ namespace OpenHome.Av
         public MockWatchableMediaServer(IWatchableThread aThread, IWatchableThread aSubscribeThread, string aUdn, string aAppRoot)
             : base(aSubscribeThread, aThread, aUdn)
         {
-            Add<ServiceMediaServer>(new MockWatchableVolume(aThread, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
+            Add<IServiceMediaServer>(new ServiceFactoryMediaServerMock(aThread, new string[] {"browse", "query"},
+                "", "OpenHome", "OpenHome", "http://www.openhome.org",
+                "", "OpenHome", "OpenHome", "http://www.openhome.org",
+                "", "OpenHome", "OpenHome", "http://www.openhome.org"));
 
             iTagManager = new TagManager();
             iMetadata = ReadMetadata(aAppRoot);

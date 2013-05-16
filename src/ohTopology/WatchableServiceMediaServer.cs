@@ -54,10 +54,9 @@ namespace OpenHome.Av
         Task<IMediaServerContainer> Browse(IMediaDatum aDatum); // null = home
     }
 
-    public interface IServiceMediaServer
+    public interface IServiceMediaServer : IService
     {
-        string Name { get; }
-        string Attributes { get; }
+        IEnumerable<string> Attributes { get; }
         string ManufacturerImageUri { get; }
         string ManufacturerInfo { get; }
         string ManufacturerName { get; }
@@ -70,8 +69,6 @@ namespace OpenHome.Av
         string ProductInfo { get; }
         string ProductName { get; }
         string ProductUrl { get; }
-        bool SupportsQuery { get; }
-        bool SupportsBrowse { get; }
         Task<IMediaServerSession> CreateSession();
     }
 
@@ -165,6 +162,337 @@ namespace OpenHome.Av
             return (iMetadata.GetEnumerator());
         }
     }
+
+    public class ServiceFactoryMediaServer
+    {
+        private readonly IWatchableThread iWatchableThread;
+        private readonly IEnumerable<string> iAttributes;
+        private readonly string iManufacturerImageUri;
+        private readonly string iManufacturerInfo;
+        private readonly string iManufacturerName;
+        private readonly string iManufacturerUrl;
+        private readonly string iModelImageUri;
+        private readonly string iModelInfo;
+        private readonly string iModelName;
+        private readonly string iModelUrl;
+        private readonly string iProductImageUri;
+        private readonly string iProductInfo;
+        private readonly string iProductName;
+        private readonly string iProductUrl;
+
+        protected ServiceFactoryMediaServer(IWatchableThread aWatchableThread, IEnumerable<string> aAttributes, 
+            string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl,
+            string aModelImageUri, string aModelInfo, string aModelName, string aModelUrl,
+            string aProductImageUri, string aProductInfo, string aProductName, string aProductUrl
+            )
+        {
+            iWatchableThread = aWatchableThread;
+            iAttributes = aAttributes;
+            iManufacturerImageUri = aManufacturerImageUri;
+            iManufacturerInfo = aManufacturerInfo;
+            iManufacturerName = aManufacturerName;
+            iManufacturerUrl = aManufacturerUrl;
+            iModelImageUri = aModelImageUri;
+            iModelInfo = aModelInfo;
+            iModelName = aModelName;
+            iModelUrl = aModelUrl;
+            iProductImageUri = aProductImageUri;
+            iProductInfo = aProductInfo;
+            iProductName = aProductName;
+            iProductUrl = aProductUrl;
+        }
+
+        // IService
+
+        public IWatchableDevice Device { get { return (null); } } // TODO REmove this once it is removed from IService
+
+        // IServiceMediaServer
+
+        public IEnumerable<string> Attributes
+        {
+            get { return (iAttributes); }
+        }
+
+        public string ManufacturerImageUri
+        {
+            get { return (iManufacturerImageUri); }
+        }
+
+        public string ManufacturerInfo
+        {
+            get { return (iManufacturerInfo); }
+        }
+
+        public string ManufacturerName
+        {
+            get { return (iManufacturerName); }
+        }
+
+        public string ManufacturerUrl
+        {
+            get { return (iManufacturerUrl); }
+        }
+
+        public string ModelImageUri
+        {
+            get { return (iModelImageUri); }
+        }
+
+        public string ModelInfo
+        {
+            get { return (iModelInfo); }
+        }
+
+        public string ModelName
+        {
+            get { return (iModelName); }
+        }
+
+        public string ModelUrl
+        {
+            get { return (iModelUrl); }
+        }
+
+        public string ProductImageUri
+        {
+            get { return (iProductImageUri); }
+        }
+
+        public string ProductInfo
+        {
+            get { return (iProductInfo); }
+        }
+
+        public string ProductName
+        {
+            get { return (iProductName); }
+        }
+
+        public string ProductUrl
+        {
+            get { return (iProductUrl); }
+        }
+
+        public Task<IMediaServerSession> CreateSession()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    internal class ServiceMediaServerMock : IServiceMediaServer
+    {
+        ServiceFactoryMediaServerMock iFactory;
+
+        public ServiceMediaServerMock(ServiceFactoryMediaServerMock aFactory)
+        {
+        }
+
+        // IService
+
+        public IWatchableDevice Device { get { return (null); } } // TODO REmove this once it is removed from IService
+
+        // IServiceMediaServer
+
+        public IEnumerable<string> Attributes
+        {
+            get { return (iFactory.Attributes); }
+        }
+
+        public string ManufacturerImageUri
+        {
+            get { return (iFactory.ManufacturerImageUri); }
+        }
+
+        public string ManufacturerInfo
+        {
+            get { return (iFactory.ManufacturerInfo); }
+        }
+
+        public string ManufacturerName
+        {
+            get { return (iFactory.ManufacturerName); }
+        }
+
+        public string ManufacturerUrl
+        {
+            get { return (iFactory.ManufacturerUrl); }
+        }
+
+        public string ModelImageUri
+        {
+            get { return (iFactory.ModelImageUri); }
+        }
+
+        public string ModelInfo
+        {
+            get { return (iFactory.ModelInfo); }
+        }
+
+        public string ModelName
+        {
+            get { return (iFactory.ModelName); }
+        }
+
+        public string ModelUrl
+        {
+            get { return (iFactory.ModelUrl); }
+        }
+
+        public string ProductImageUri
+        {
+            get { return (iFactory.ProductImageUri); }
+        }
+
+        public string ProductInfo
+        {
+            get { return (iFactory.ProductInfo); }
+        }
+
+        public string ProductName
+        {
+            get { return (iFactory.ProductName); }
+        }
+
+        public string ProductUrl
+        {
+            get { return (iFactory.ProductUrl); }
+        }
+
+        public Task<IMediaServerSession> CreateSession()
+        {
+            return (iFactory.CreateSession());
+        }
+
+        // IDisposable
+
+        public void Dispose()
+        {
+            iFactory.Destroy(this);
+        }
+    }
+
+    public class ServiceFactoryMediaServerMock : ServiceFactoryMediaServer, IWatchableService
+    {
+        public ServiceFactoryMediaServerMock(IWatchableThread aWatchableThread, IEnumerable<string> aAttributes, 
+            string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl,
+            string aModelImageUri, string aModelInfo, string aModelName, string aModelUrl,
+            string aProductImageUri, string aProductInfo, string aProductName, string aProductUrl)
+            : base(aWatchableThread, aAttributes,
+            aManufacturerImageUri, aManufacturerInfo, aManufacturerName, aManufacturerUrl,
+            aModelImageUri, aModelInfo, aModelName, aModelUrl,
+            aProductImageUri, aProductInfo, aProductName, aProductUrl)
+        {
+        }
+
+        internal void Destroy(IServiceMediaServer aService)
+        {
+        }
+
+        // IServiceFactory
+
+        public IService Create(IManagableWatchableDevice aDevice)
+        {
+            return (new ServiceMediaServerMock(this));
+        }
+
+        // IDispose
+
+        public void Dispose()
+        {
+        }
+    }
+
+
+
+    public class WatchableMediaServerFactory : IWatchableServiceFactory
+    {
+        private readonly IWatchableThread iWatchableThread;
+        private readonly IWatchableThread iSubscribeThread;
+
+        private readonly object iLock;
+        private CpProxyAvOpenhomeOrgReceiver1 iPendingService;
+        
+        private WatchableReceiver iService;
+        private List<Action<IWatchableService>> iPendingSubscribes;
+
+        private bool iDisposed;
+
+        public WatchableMediaServerFactory(IWatchableThread aWatchableThread, IWatchableThread aSubscribeThread)
+        {
+            iWatchableThread = aWatchableThread;
+            iSubscribeThread = aSubscribeThread;
+
+            iLock = new object();
+            iPendingSubscribes = new List<Action<IWatchableService>>();
+
+            iDisposed = false;
+        }
+
+        public void Dispose()
+        {
+            iSubscribeThread.Execute(() =>
+            {
+                Unsubscribe();
+                iDisposed = true;
+            });
+        }
+
+        public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
+        {
+            iSubscribeThread.Schedule(() =>
+            {
+                lock (iLock)
+                {
+                    if (!iDisposed)
+                    {
+                        if (iPendingService == null)
+                        {
+                            WatchableDevice d = aDevice as WatchableDevice;
+                            iPendingService = new CpProxyAvOpenhomeOrgReceiver1(d.Device);
+                            iPendingService.SetPropertyInitialEvent(delegate
+                            {
+                                lock (iLock)
+                                {
+                                    if (iPendingService != null)
+                                    {
+                                        iService = new WatchableReceiver(iWatchableThread, string.Format("Receiver({0})", aDevice.Udn), iPendingService);
+                                        iPendingService = null;
+                                        aCallback(iService);
+                                        foreach (Action<IWatchableService> c in iPendingSubscribes)
+                                        {
+                                            c(iService);
+                                        }
+                                        iPendingSubscribes.Clear();
+                                    }
+                                }
+                            });
+                            iPendingService.Subscribe();
+                        }
+                        else
+                        {
+                            iPendingSubscribes.Add(aCallback);
+                        }
+                    }
+                }
+            });
+        }
+
+        public void Unsubscribe()
+        {
+            iSubscribeThread.Schedule(() =>
+            {
+                lock (iLock)
+                {
+                    if (iPendingService != null)
+                    {
+                        iPendingService.Dispose();
+                        iPendingService = null;
+                    }
+                }
+            });
+        }
+    }
+
 
     /*
     public class ServiceAvOpenHomeOrgMediaServer1 : IServiceMediaServer

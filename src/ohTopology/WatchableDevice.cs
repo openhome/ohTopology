@@ -14,6 +14,8 @@ namespace OpenHome.Av
         IService Create(IManagableWatchableDevice aDevice);
     }
 
+    // The following will be harmonised with IServiceFactory
+
     public interface IWatchableServiceFactory : IDisposable
     {
         void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback);
@@ -22,7 +24,7 @@ namespace OpenHome.Av
 
     public interface IService : IDisposable
     {
-        IWatchableDevice Device { get; }
+        IWatchableDevice Device { get; } // soon to disappear
     }
 
     public interface IWatchableDevice
@@ -67,7 +69,7 @@ namespace OpenHome.Av
             iFactories.Add(typeof(ServicePlaylist), new WatchablePlaylistFactory(aThread, aSubscribeThread));
             iFactories.Add(typeof(ServiceRadio), new WatchableRadioFactory(aThread, aSubscribeThread));
             iFactories.Add(typeof(ServiceReceiver), new WatchableReceiverFactory(aThread, aSubscribeThread));
-            //iFactories.Add(typeof(ServiceContentDirectory), new WatchableContentDirectoryFactory(aThread, aSubscribeThread));
+            //iFactories.Add(typeof(ServiceMediaServer), new WatchableMediaServerFactory(aThread, aSubscribeThread));
 
             iServices = new Dictionary<Type, IWatchableService>();
             iServiceRefCount = new Dictionary<Type, uint>();
