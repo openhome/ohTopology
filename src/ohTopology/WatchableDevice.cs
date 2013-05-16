@@ -150,8 +150,15 @@ namespace OpenHome.Av
                     {
                         lock (iLock)
                         {
-                            iServices.Add(typeof(T), aService);
-                            iServiceRefCount.Add(typeof(T), 1);
+                            if (!iServices.ContainsKey(typeof(T)))
+                            {
+                                iServices.Add(typeof(T), aService);
+                                iServiceRefCount.Add(typeof(T), 1);
+                            }
+                            else
+                            {
+                                ++iServiceRefCount[typeof(T)];
+                            }
                         }
 
                         iThread.Schedule(() =>
@@ -177,8 +184,6 @@ namespace OpenHome.Av
             IWatchableService service;
             if (iServices.TryGetValue(aType, out service))
             {
-                ++iServiceRefCount[aType];
-
                 return service;
             }
 

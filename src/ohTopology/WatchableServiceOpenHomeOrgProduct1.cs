@@ -490,6 +490,7 @@ namespace OpenHome.Av
         {
             iLock = new object();
             iDisposed = false;
+            iPendingSubscribes = new List<Action<IWatchableService>>();
 
             iThread = aThread;
             iSubscribeThread = aSubscribeThread;
@@ -508,23 +509,38 @@ namespace OpenHome.Av
         {
             iSubscribeThread.Schedule(() =>
             {
-                if (!iDisposed && iService == null && iPendingService == null)
+                lock(iLock)
                 {
-                    WatchableDevice d = aDevice as WatchableDevice;
-                    iPendingService = new CpProxyAvOpenhomeOrgProduct1(d.Device);
-                    iPendingService.SetPropertyInitialEvent(delegate
+                    if (!iDisposed)
                     {
-                        lock (iLock)
+                        if (iPendingService == null)
                         {
-                            if (iPendingService != null)
+                            WatchableDevice d = aDevice as WatchableDevice;
+                            iPendingService = new CpProxyAvOpenhomeOrgProduct1(d.Device);
+                            iPendingService.SetPropertyInitialEvent(delegate
                             {
-                                iService = new WatchableProduct(iThread, string.Format("{0}", aDevice.Udn), iPendingService);
-                                iPendingService = null;
-                                aCallback(iService);
-                            }
+                                lock (iLock)
+                                {
+                                    if (iPendingService != null)
+                                    {
+                                        iService = new WatchableProduct(iThread, string.Format("{0}", aDevice.Udn), iPendingService);
+                                        iPendingService = null;
+                                        aCallback(iService);
+                                        foreach (Action<IWatchableService> c in iPendingSubscribes)
+                                        {
+                                            c(iService);
+                                        }
+                                        iPendingSubscribes.Clear();
+                                    }
+                                }
+                            });
+                            iPendingService.Subscribe();
                         }
-                    });
-                    iPendingService.Subscribe();
+                        else
+                        {
+                            iPendingSubscribes.Add(aCallback);
+                        }
+                    }
                 }
             });
         }
@@ -550,6 +566,7 @@ namespace OpenHome.Av
         private CpProxyAvOpenhomeOrgProduct1 iPendingService;
         private WatchableProduct iService;
         private IWatchableThread iThread;
+        private List<Action<IWatchableService>> iPendingSubscribes;
     }
 
     public class WatchableProduct : Product
