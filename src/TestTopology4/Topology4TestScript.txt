@@ -1,4 +1,7 @@
-﻿// test network is populated with 4 devices
+﻿// setup type of network
+mock network medium
+
+// test network is populated with 4 devices
 expect Room Added Kitchen
 expect Standby(Kitchen): eOn
 expect Added: 0: Group=Sneaky Music DS, Name=Playlist, Type=Playlist, Visible=True, HasInfo=True, HasTime=True, Device=4c494e4e-0026-0f99-1111-ef000004013f, Volume=4c494e4e-0026-0f99-1111-ef000004013f 

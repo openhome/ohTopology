@@ -1,4 +1,7 @@
-﻿// test network is populated with 4 devices
+﻿// setup type of network
+mock network medium
+
+// test network is populated with 4 devices
 expect Room Added Kitchen
 expect Group Added Kitchen:Sneaky Music DS
 expect Room Added Sitting Room

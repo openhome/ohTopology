@@ -1,4 +1,7 @@
-﻿// test network is populated with 4 devices
+﻿// setup type of network
+mock network medium
+
+// test network is populated with 4 devices
 expect Group Added		Kitchen:Sneaky Music DS
 expect ===============================================
 expect 0. Playlist Playlist True
@@ -61,22 +64,22 @@ empty
 
 // test group room name changes
 mock network update ds 67 product room Bathroom
-expect Room(67)(Proxy) changed from Main Room to Bathroom
+expect Room(ServiceProduct(67))(Proxy) changed from Main Room to Bathroom
 empty
 
 // test group name changes
 mock network update ds 67 product name Majik DS
-expect Name(67)(Proxy) changed from Mock DS to Majik DS
+expect Name(ServiceProduct(67))(Proxy) changed from Mock DS to Majik DS
 empty
 
 // test group standby changes
 mock network update ds 67 product standby false
-expect Standby(67)(Proxy) changed from True to False
+expect Standby(ServiceProduct(67))(Proxy) changed from True to False
 empty
 
 // test group source index changes
 mock network update ds 67 product sourceindex 2
-expect SourceIndex(67)(Proxy) changed from 0 to 2
+expect SourceIndex(ServiceProduct(67))(Proxy) changed from 0 to 2
 empty
 
 // test group source name changes

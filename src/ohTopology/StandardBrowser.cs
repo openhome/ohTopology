@@ -177,8 +177,11 @@ namespace OpenHome.Av
             iMetadata = aMetadata;
             iMetatext = aMetatext;
 
-            iDevice.Create<ServiceInfo>((IWatchableDevice device, ServiceInfo info) =>
+            Task<ProxyInfo> task = iDevice.Create<ProxyInfo>();
+            aThread.Schedule(() =>
             {
+                ProxyInfo info = task.Result;
+
                 if (!iDisposed)
                 {
                     iInfo = info;
@@ -207,6 +210,7 @@ namespace OpenHome.Av
                 iInfo.Metadata.RemoveWatcher(this);
                 iInfo.Metatext.RemoveWatcher(this);
 
+                iInfo.Dispose();
                 iInfo = null;
             }
 
@@ -259,7 +263,7 @@ namespace OpenHome.Av
         }
 
         private bool iDisposed;
-        private ServiceInfo iInfo;
+        private ProxyInfo iInfo;
 
         private IWatchableDevice iDevice;
         private Watchable<RoomDetails> iDetails;
@@ -596,9 +600,12 @@ namespace OpenHome.Av
                 {
                     if (s.Type == "Playlist")
                     {
-                        s.Device.Create<ServicePlaylist>((IWatchableDevice device, ServicePlaylist playlist) =>
+                        Task<ProxyPlaylist> task = s.Device.Create<ProxyPlaylist>();
+                        iThread.Schedule(() =>
                         {
-                            playlist.SeekId(id, null);
+                            ProxyPlaylist playlist = task.Result;
+
+                            playlist.SeekId(id);
                             playlist.Dispose();
                         });
                         return;
@@ -616,29 +623,25 @@ namespace OpenHome.Av
                 {
                     if (s.Type == "Receiver")
                     {
-                        s.Device.Create<ServiceReceiver>((IWatchableDevice device1, ServiceReceiver receiver) =>
+                        Task<ProxyReceiver> taskReceiver = s.Device.Create<ProxyReceiver>();
+                        ITopology4Group g = iHouse.Sender(udn);
+                        Task<ProxySender> taskSender = g.Device.Create<ProxySender>();
+
+                        iThread.Schedule(() =>
                         {
+                            ProxyReceiver receiver = taskReceiver.Result;
+                            ProxySender sender = taskSender.Result;
                             if (!iDisposed)
                             {
-                                ITopology4Group g = iHouse.Sender(udn);
-                                g.Device.Create<ServiceSender>((IWatchableDevice device2, ServiceSender sender) =>
-                                {
-                                    if (!iDisposed)
-                                    {
-                                        receiver.SetSender(sender.Metadata.Value, () => { receiver.Play(null); });
-                                        receiver.Dispose();
-                                        sender.Dispose();
-                                    }
-                                    else
-                                    {
-                                        receiver.Dispose();
-                                        sender.Dispose();
-                                    }
-                                });
+                                Task action = receiver.SetSender(sender.Metadata.Value);
+                                action.ContinueWith((Task) => { receiver.Play(); });
+                                receiver.Dispose();
+                                sender.Dispose();
                             }
                             else
                             {
                                 receiver.Dispose();
+                                sender.Dispose();
                             }
                         });
                         return;

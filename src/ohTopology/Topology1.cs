@@ -10,7 +10,7 @@ namespace OpenHome.Av
 {
     public interface ITopology1
     {
-        IWatchableUnordered<ServiceProduct> Products { get; }
+        IWatchableUnordered<ProxyProduct> Products { get; }
         IWatchableThread WatchableThread { get; }
     }
 
@@ -24,10 +24,10 @@ namespace OpenHome.Av
             iThread = aNetwork.WatchableThread;
 
             iPendingSubscriptions = new List<IWatchableDevice>();
-            iProductLookup = new Dictionary<IWatchableDevice, ServiceProduct>();
-            iProducts = new WatchableUnordered<ServiceProduct>(iThread);
+            iProductLookup = new Dictionary<IWatchableDevice, ProxyProduct>();
+            iProducts = new WatchableUnordered<ProxyProduct>(iThread);
 
-            iDevices = iNetwork.GetWatchableDeviceCollection<ServiceProduct>();
+            iDevices = iNetwork.Create<ProxyProduct>();
             iThread.Schedule(() =>
             {
                 iDevices.AddWatcher(this);
@@ -49,7 +49,7 @@ namespace OpenHome.Av
             iDevices = null;
 
             // dispose of all products, which will in turn unsubscribe
-            foreach (ServiceProduct p in iProductLookup.Values)
+            foreach (ProxyProduct p in iProductLookup.Values)
             {
                 p.Dispose();
             }
@@ -61,7 +61,7 @@ namespace OpenHome.Av
             iDisposed = true;
         }
 
-        public IWatchableUnordered<ServiceProduct> Products
+        public IWatchableUnordered<ProxyProduct> Products
         {
             get
             {
@@ -92,12 +92,15 @@ namespace OpenHome.Av
         public void UnorderedAdd(IWatchableDevice aItem)
         {
             iPendingSubscriptions.Add(aItem);
-            aItem.Create<ServiceProduct>((IWatchableDevice device, ServiceProduct product) =>
+            Task<ProxyProduct> task = aItem.Create<ProxyProduct>();
+            iThread.Schedule(() =>
             {
+                ProxyProduct product = task.Result;
+
                 if (iPendingSubscriptions.Contains(aItem))
                 {
                     iProducts.Add(product);
-                    iProductLookup.Add(product.Device, product);
+                    iProductLookup.Add(aItem, product);
                     iPendingSubscriptions.Remove(aItem);
                 }
                 else
@@ -115,7 +118,7 @@ namespace OpenHome.Av
                 return;
             }
 
-            ServiceProduct product;
+            ProxyProduct product;
             if (iProductLookup.TryGetValue(aItem, out product))
             {
                 // schedule higher layer notification
@@ -136,8 +139,8 @@ namespace OpenHome.Av
         private IWatchableThread iThread;
 
         private List<IWatchableDevice> iPendingSubscriptions;
-        private Dictionary<IWatchableDevice, ServiceProduct> iProductLookup;
-        private WatchableUnordered<ServiceProduct> iProducts;
+        private Dictionary<IWatchableDevice, ProxyProduct> iProductLookup;
+        private WatchableUnordered<ProxyProduct> iProducts;
 
         private IWatchableUnordered<IWatchableDevice> iDevices;
     }

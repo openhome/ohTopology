@@ -1,4 +1,7 @@
-﻿// test network is populated with 4 devices
+﻿// setup type of network
+mock network medium
+
+// test network is populated with 4 devices
 expect product added 4c494e4e-0026-0f99-1111-ef000004013f
 expect product added 4c494e4e-0026-0f99-1112-ef000004013f
 expect product added 4c494e4e-0026-0f99-1113-ef000004013f

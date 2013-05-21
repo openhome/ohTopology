@@ -68,7 +68,7 @@ namespace OpenHome.Av
 
     class Topology2Group : ITopology2Group, IWatcher<string>, ITopologyObject
     {
-        public Topology2Group(IWatchableThread aThread, string aId, ServiceProduct aProduct)
+        public Topology2Group(IWatchableThread aThread, string aId, ProxyProduct aProduct)
         {
             iDisposed = false;
             iThread = aThread;
@@ -205,7 +205,7 @@ namespace OpenHome.Av
         {
             if (iProduct != null)
             {
-                iProduct.SetStandby(aValue, null);
+                iProduct.SetStandby(aValue);
             }
         }
 
@@ -213,7 +213,7 @@ namespace OpenHome.Av
         {
             if (iProduct != null)
             {
-                iProduct.SetSourceIndex(aValue, null);
+                iProduct.SetSourceIndex(aValue);
             }
         }
 
@@ -289,7 +289,7 @@ namespace OpenHome.Av
         private bool iDisposed;
         private IWatchableThread iThread;
         private string iId;
-        private ServiceProduct iProduct;
+        private ProxyProduct iProduct;
         private string iAttributes;
         private IWatchableDevice iDevice;
         private WatchableProxy<string> iRoom;
@@ -306,7 +306,7 @@ namespace OpenHome.Av
         IWatchableThread WatchableThread { get; }
     }
 
-    public class Topology2 : ITopology2, IUnorderedWatcher<ServiceProduct>, IDisposable
+    public class Topology2 : ITopology2, IUnorderedWatcher<ProxyProduct>, IDisposable
     {
         public Topology2(ITopology1 aTopology1)
         {
@@ -317,7 +317,7 @@ namespace OpenHome.Av
 
             iGroups = new WatchableUnordered<ITopology2Group>(iThread);
 
-            iGroupLookup = new Dictionary<ServiceProduct, Topology2Group>();
+            iGroupLookup = new Dictionary<ProxyProduct, Topology2Group>();
 
             iThread.Schedule(() =>
             {
@@ -383,14 +383,14 @@ namespace OpenHome.Av
         {
         }
 
-        public void UnorderedAdd(ServiceProduct aItem)
+        public void UnorderedAdd(ProxyProduct aItem)
         {
             Topology2Group group = new Topology2Group(iThread, aItem.Device.Udn, aItem);
             iGroupLookup.Add(aItem, group);
             iGroups.Add(group);
         }
 
-        public void UnorderedRemove(ServiceProduct aItem)
+        public void UnorderedRemove(ProxyProduct aItem)
         {
             Topology2Group group;
             if (iGroupLookup.TryGetValue(aItem, out group))
@@ -414,7 +414,7 @@ namespace OpenHome.Av
 
         private IWatchableThread iThread;
         private ITopology1 iTopology1;
-        private Dictionary<ServiceProduct, Topology2Group> iGroupLookup;
+        private Dictionary<ProxyProduct, Topology2Group> iGroupLookup;
         private WatchableUnordered<ITopology2Group> iGroups;
     }
 }

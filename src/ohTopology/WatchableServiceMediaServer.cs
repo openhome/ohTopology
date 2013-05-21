@@ -54,7 +54,7 @@ namespace OpenHome.Av
         Task<IMediaServerContainer> Browse(IMediaDatum aDatum); // null = home
     }
 
-    public interface IServiceMediaServer : IService
+    public interface IServiceMediaServer : IProxy
     {
         IEnumerable<string> Attributes { get; }
         string ManufacturerImageUri { get; }
@@ -371,7 +371,7 @@ namespace OpenHome.Av
         }
     }
 
-    public class ServiceFactoryMediaServerMock : ServiceFactoryMediaServer, IWatchableService
+    public class ServiceFactoryMediaServerMock : ServiceFactoryMediaServer, IServiceFactory
     {
         public ServiceFactoryMediaServerMock(IWatchableThread aWatchableThread, IEnumerable<string> aAttributes, 
             string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl,
@@ -390,7 +390,7 @@ namespace OpenHome.Av
 
         // IServiceFactory
 
-        public IService Create(IManagableWatchableDevice aDevice)
+        public IProxy Create(IManagableWatchableDevice aDevice)
         {
             return (new ServiceMediaServerMock(this));
         }
@@ -413,7 +413,7 @@ namespace OpenHome.Av
         private CpProxyAvOpenhomeOrgReceiver1 iPendingService;
         
         private WatchableReceiver iService;
-        private List<Action<IWatchableService>> iPendingSubscribes;
+        private List<Action<IServiceFactory>> iPendingSubscribes;
 
         private bool iDisposed;
 
@@ -423,7 +423,7 @@ namespace OpenHome.Av
             iSubscribeThread = aSubscribeThread;
 
             iLock = new object();
-            iPendingSubscribes = new List<Action<IWatchableService>>();
+            iPendingSubscribes = new List<Action<IServiceFactory>>();
 
             iDisposed = false;
         }
@@ -437,7 +437,7 @@ namespace OpenHome.Av
             });
         }
 
-        public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
+        public void Subscribe(IWatchableDevice aDevice, Action<IServiceFactory> aCallback)
         {
             iSubscribeThread.Schedule(() =>
             {
@@ -458,7 +458,7 @@ namespace OpenHome.Av
                                         iService = new WatchableReceiver(iWatchableThread, string.Format("Receiver({0})", aDevice.Udn), iPendingService);
                                         iPendingService = null;
                                         aCallback(iService);
-                                        foreach (Action<IWatchableService> c in iPendingSubscribes)
+                                        foreach (Action<IServiceFactory> c in iPendingSubscribes)
                                         {
                                             c(iService);
                                         }

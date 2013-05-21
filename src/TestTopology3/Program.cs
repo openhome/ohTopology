@@ -160,7 +160,7 @@ namespace TestTopology3
 
             Mockable mocker = new Mockable();
 
-            MockNetwork network = new FourDsMockNetwork(thread, subscribeThread);
+            Network network = new Network(thread, subscribeThread);
             mocker.Add("network", network);
 
             Topology1 topology1 = new Topology1(network);

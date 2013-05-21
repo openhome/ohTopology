@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using OpenHome.Os.App;
 
@@ -18,8 +19,11 @@ namespace OpenHome.Av
             iCanSeek = aCanSeek;
             iTransportState = aTransportState;
 
-            aSource.Device.Create<ServicePlaylist>((IWatchableDevice device, ServicePlaylist playlist) =>
+            Task<ProxyPlaylist> task = aSource.Device.Create<ProxyPlaylist>();
+            aThread.Schedule(() =>
             {
+                ProxyPlaylist playlist = task.Result;
+
                 if (!iDisposed)
                 {
                     iPlaylist = playlist;
@@ -66,42 +70,42 @@ namespace OpenHome.Av
 
         public void Play()
         {
-            iPlaylist.Play(null);
+            iPlaylist.Play();
         }
 
         public void Pause()
         {
-            iPlaylist.Pause(null);
+            iPlaylist.Pause();
         }
 
         public void Stop()
         {
-            iPlaylist.Stop(null);
+            iPlaylist.Stop();
         }
 
         public void Previous()
         {
-            iPlaylist.Previous(null);
+            iPlaylist.Previous();
         }
 
         public void Next()
         {
-            iPlaylist.Next(null);
+            iPlaylist.Next();
         }
 
         public void Seek(uint aSeconds)
         {
-            iPlaylist.SeekSecondsAbsolute(aSeconds, null);
+            iPlaylist.SeekSecondAbsolute(aSeconds);
         }
 
         public void SetRepeat(bool aValue)
         {
-            iPlaylist.SetRepeat(aValue, null);
+            iPlaylist.SetRepeat(aValue);
         }
 
         public void SetShuffle(bool aValue)
         {
-            iPlaylist.SetShuffle(aValue, null);
+            iPlaylist.SetShuffle(aValue);
         }
 
         public void ItemOpen(string aId, string aValue)
@@ -121,7 +125,7 @@ namespace OpenHome.Av
         private bool iDisposed;
 
         private ITopology4Source iSource;
-        private ServicePlaylist iPlaylist;
+        private ProxyPlaylist iPlaylist;
 
         private Watchable<bool> iHasSourceControl;
         private Watchable<IInfoMetadata> iInfoNext;

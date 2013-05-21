@@ -84,9 +84,8 @@
     <Compile Include="StandardRoomController.cs" />
     <Compile Include="StandardRoomWatchers.cs" />
     <Compile Include="VolumeController.cs" />
-    <Compile Include="WatchableServiceMediaServer.cs" />
-    <Compile Include="WatchableDeviceMediaServer.cs" />
-    <Compile Include="WatchableDeviceDsm.cs" />
+    <None Include="WatchableServiceMediaServer.cs" />
+    <None Include="WatchableDeviceMediaServer.cs" />
     <Compile Include="WatchableDeviceDs.cs" />
     <Compile Include="Library.cs" />
     <Compile Include="StandardBrowser.cs" />
@@ -99,14 +98,14 @@
     <Compile Include="Topology3.cs" />
     <Compile Include="Topology4.cs" />
     <Compile Include="WatchableDevice.cs" />
-    <Compile Include="WatchableServiceOpenHomeOrgInfo1.cs" />
-    <Compile Include="WatchableServiceOpenHomeOrgPlaylist1.cs" />
-    <Compile Include="WatchableServiceOpenHomeOrgProduct1.cs" />
-    <Compile Include="WatchableServiceOpenHomeOrgRadio1.cs" />
-    <Compile Include="WatchableServiceOpenHomeOrgReceiver1.cs" />
-    <Compile Include="WatchableServiceOpenHomeOrgSender1.cs" />
+    <Compile Include="WatchableServiceInfo.cs" />
+    <Compile Include="WatchableServicePlaylist.cs" />
+    <Compile Include="WatchableServiceProduct.cs" />
+    <Compile Include="WatchableServiceRadio.cs" />
+    <Compile Include="WatchableServiceReceiver.cs" />
+    <Compile Include="WatchableServiceSender.cs" />
     <Compile Include="WatchableServiceOpenHomeOrgTime1.cs" />
-    <Compile Include="WatchableServiceOpenHomeOrgVolume1.cs" />
+    <Compile Include="WatchableServiceVolume.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="MockMediaServer.zip">
