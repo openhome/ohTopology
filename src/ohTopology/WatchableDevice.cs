@@ -145,13 +145,13 @@ namespace OpenHome.Av
                     device.Add<ProxyInfo>(new ServiceInfoNetwork(aNetwork, aDevice));
                 }
             }
-            /*if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Time", out value))
+            if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Time", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxyTime>(new ServiceTime(aNetwork, string.Format("ServiceTime{0}", aDevice.Udn()), aDevice));
+                    device.Add<ProxyTime>(new ServiceTimeNetwork(aNetwork, aDevice));
                 }
-            }*/
+            }
             if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Sender", out value))
             {
                 if (uint.Parse(value) == 1)

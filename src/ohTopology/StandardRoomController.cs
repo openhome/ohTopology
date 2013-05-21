@@ -77,9 +77,12 @@ namespace OpenHome.Av
             {
                 if (iIsActive)
                 {
-                    iStandby.Detach();
+                    iThread.Execute(() =>
+                    {
+                        iStandby.Detach();
 
-                    iRoom.Source.RemoveWatcher(this);
+                        iRoom.Source.RemoveWatcher(this);
+                    });
                     iRoom.UnJoin(SetInactive);
                 }
             }

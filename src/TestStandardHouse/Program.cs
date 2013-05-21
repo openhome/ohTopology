@@ -26,6 +26,7 @@ namespace TestLinnHouse
                 iRunner = aRunner;
 
                 iRoomControllerLookup = new Dictionary<IStandardRoom, StandardRoomController>();
+                iRoomTimeLookup = new Dictionary<IStandardRoom, StandardRoomTime>();
             }
 
             public void Dispose()
@@ -36,6 +37,7 @@ namespace TestLinnHouse
                     Remove(r);
                 }
                 iRoomControllerLookup = null;
+                iRoomTimeLookup = null;
             }
 
             public void Add(IStandardRoom aRoom)
@@ -50,6 +52,15 @@ namespace TestLinnHouse
                 controller.TransportState.AddWatcher(this);
 
                 iRoomControllerLookup.Add(aRoom, controller);
+
+                StandardRoomTime time = new StandardRoomTime(aRoom);
+
+                time.Active.AddWatcher(this);
+                time.HasTime.AddWatcher(this);
+                time.Duration.AddWatcher(this);
+                time.Seconds.AddWatcher(this);
+
+                iRoomTimeLookup.Add(aRoom, time);
             }
 
             public void Remove(IStandardRoom aRoom)
@@ -65,6 +76,16 @@ namespace TestLinnHouse
                 controller.TransportState.RemoveWatcher(this);
 
                 controller.Dispose();
+
+                StandardRoomTime time = iRoomTimeLookup[aRoom];
+                iRoomTimeLookup.Remove(aRoom);
+
+                time.Active.RemoveWatcher(this);
+                time.HasTime.RemoveWatcher(this);
+                time.Duration.RemoveWatcher(this);
+                time.Seconds.RemoveWatcher(this);
+
+                time.Dispose();
             }
 
             public void ItemOpen(string aId, bool aValue)
@@ -112,6 +133,7 @@ namespace TestLinnHouse
             private MockableScriptRunner iRunner;
 
             private Dictionary<IStandardRoom, StandardRoomController> iRoomControllerLookup;
+            private Dictionary<IStandardRoom, StandardRoomTime> iRoomTimeLookup;
         }
 
         class RoomWatcher : IOrderedWatcher<IStandardRoom>, IWatcher<EStandby>, IWatcher<IZone>, IWatcher<RoomDetails>, IWatcher<RoomMetadata>, IWatcher<RoomMetatext>, IDisposable

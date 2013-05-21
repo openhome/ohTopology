@@ -67,7 +67,6 @@ namespace OpenHome.Av
         public ServiceTimeNetwork(INetwork aNetwork, CpDevice aDevice)
             : base(aNetwork)
         {
-            iNetwork = aNetwork;
             iSubscribe = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgTime1(aDevice);
 
@@ -107,7 +106,7 @@ namespace OpenHome.Av
 
         private void HandleDurationChanged()
         {
-            iNetwork.Schedule(() =>
+            Network.Schedule(() =>
             {
                 iDuration.Update(iService.PropertyDuration());
             });
@@ -115,13 +114,12 @@ namespace OpenHome.Av
 
         private void HandleSecondsChanged()
         {
-            iNetwork.Schedule(() =>
+            Network.Schedule(() =>
             {
                 iSeconds.Update(iService.PropertySeconds());
             });
         }
 
-        private INetwork iNetwork;
         private ManualResetEvent iSubscribe;
         private CpProxyAvOpenhomeOrgTime1 iService;
     }
