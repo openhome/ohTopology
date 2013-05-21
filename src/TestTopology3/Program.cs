@@ -19,24 +19,15 @@ namespace TestTopology3
             }
         }
 
-        class GroupWatcher : IUnorderedWatcher<ITopology3Group>, IWatcher<string>, IDisposable
+        class GroupWatcher : IUnorderedWatcher<ITopology3Group>, IDisposable
         {
             public GroupWatcher(MockableScriptRunner aRunner)
             {
                 iRunner = aRunner;
-                iStringLookup = new Dictionary<string, string>();
-                iGroups = new List<ITopology3Group>();
             }
 
             public void Dispose()
             {
-                foreach (ITopology3Group group in iGroups)
-                {
-                    group.Room.RemoveWatcher(this);
-                    group.Name.RemoveWatcher(this);
-                }
-
-                iStringLookup = null;
             }
 
             public void UnorderedOpen()
@@ -53,43 +44,15 @@ namespace TestTopology3
 
             public void UnorderedAdd(ITopology3Group aItem)
             {
-                iGroups.Add(aItem);
-                aItem.Room.AddWatcher(this);
-                aItem.Name.AddWatcher(this);
-
-                iRunner.Result(string.Format("Group Added {0}:{1}", iStringLookup[aItem.Room.Id], iStringLookup[aItem.Name.Id]));
+                iRunner.Result(string.Format("Group Added {0}", aItem.Device.Udn));
             }
 
             public void UnorderedRemove(ITopology3Group aItem)
             {
-                iGroups.Remove(aItem);
-                aItem.Room.RemoveWatcher(this);
-                aItem.Name.RemoveWatcher(this);
-
-                iRunner.Result(string.Format("Group Removed {0}:{1}", iStringLookup[aItem.Room.Id], iStringLookup[aItem.Name.Id]));
-
-                iStringLookup.Remove(aItem.Room.Id);
-                iStringLookup.Remove(aItem.Name.Id);
-            }
-
-            public void ItemOpen(string aId, string aValue)
-            {
-                iStringLookup.Add(aId, aValue);
-            }
-
-            public void ItemUpdate(string aId, string aValue, string aPrevious)
-            {
-                // ignore name changes
-            }
-
-            public void ItemClose(string aId, string aValue)
-            {
-                // key pair removed in UnorderedRemove
+                iRunner.Result(string.Format("Group Removed {0}", aItem.Device.Udn));
             }
 
             private MockableScriptRunner iRunner;
-            private Dictionary<string, string> iStringLookup;
-            private List<ITopology3Group> iGroups;
         }
 
         class RoomWatcher : IUnorderedWatcher<ITopology3Room>, IDisposable
@@ -160,7 +123,7 @@ namespace TestTopology3
 
             Mockable mocker = new Mockable();
 
-            MockNetwork network = new FourDsMockNetwork(thread, subscribeThread);
+            Network network = new Network(thread, subscribeThread);
             mocker.Add("network", network);
 
             Topology1 topology1 = new Topology1(network);

@@ -161,7 +161,7 @@ namespace OpenHome.Av
         public void Result(string aValue)
         {
             iResultQueue.Enqueue(aValue);
-            //Console.WriteLine(aValue);
+            Console.WriteLine(aValue);
         }
 
         private void Assert(string aActual, string aExpected)
@@ -192,4 +192,151 @@ namespace OpenHome.Av
 
         private Queue<string> iResultQueue;
     }
+
+    public class ResultWatcherFactory : IDisposable
+    {
+        private readonly MockableScriptRunner iRunner;
+        private readonly Dictionary<string, List<IDisposable>> iWatchers;
+
+        public ResultWatcherFactory(MockableScriptRunner aRunner)
+        {
+            iRunner = aRunner;
+            iWatchers = new Dictionary<string, List<IDisposable>>();
+        }
+
+        public void Create<T>(string aId, IWatchable<T> aWatchable, Func<T, string> aFunction)
+        {
+            List<IDisposable> watchers;
+
+            if (!iWatchers.TryGetValue(aId, out watchers))
+            {
+                watchers = new List<IDisposable>();
+                iWatchers.Add(aId, watchers);
+            }
+
+            watchers.Add(new ResultWatcher<T>(iRunner, aId, aWatchable, aFunction));
+        }
+
+        public void Create<T>(string aId, IWatchableUnordered<T> aWatchable, Func<T, string> aFunction)
+        {
+            List<IDisposable> watchers;
+
+            if (!iWatchers.TryGetValue(aId, out watchers))
+            {
+                watchers = new List<IDisposable>();
+                iWatchers.Add(aId, watchers);
+            }
+
+            watchers.Add(new ResultUnorderedWatcher<T>(iRunner, aId, aWatchable, aFunction));
+        }
+
+        public void Destroy(string aId)
+        {
+            iWatchers[aId].ForEach(w => w.Dispose());
+            iWatchers.Remove(aId);
+        }
+
+        // IDisposable
+
+        public void Dispose()
+        {
+            foreach (var entry in iWatchers)
+            {
+                entry.Value.ForEach(w => w.Dispose());
+            }
+        }
+    }
+
+    public class ResultWatcher<T> : IWatcher<T>, IDisposable
+    {
+        private readonly MockableScriptRunner iRunner;
+        private readonly string iId;
+        private IWatchable<T> iWatchable;
+        private readonly Func<T, string> iFunction;
+
+        public ResultWatcher(MockableScriptRunner aRunner, string aId, IWatchable<T> aWatchable, Func<T, string> aFunction)
+        {
+            iRunner = aRunner;
+            iId = aId;
+            iWatchable = aWatchable;
+            iFunction = aFunction;
+
+            iWatchable.AddWatcher(this);
+        }
+
+        // IWatcher<T>
+
+        public void ItemOpen(string aId, T aValue)
+        {
+            iRunner.Result(iId + " open " + iFunction(aValue));
+        }
+
+        public void ItemUpdate(string aId, T aValue, T aPrevious)
+        {
+            iRunner.Result(iId + " update " + iFunction(aValue));
+        }
+
+        public void ItemClose(string aId, T aValue)
+        {
+            //iRunner.Result(iUdn + " " + iFunction(aValue, "close"));
+        }
+
+        // IDisposable
+
+        public void Dispose()
+        {
+            iWatchable.RemoveWatcher(this);
+        }
+    }
+
+    public class ResultUnorderedWatcher<T> : IUnorderedWatcher<T>, IDisposable
+    {
+        private readonly MockableScriptRunner iRunner;
+        private readonly string iId;
+        private IWatchableUnordered<T> iWatchable;
+        private readonly Func<T, string> iFunction;
+
+        public ResultUnorderedWatcher(MockableScriptRunner aRunner, string aId, IWatchableUnordered<T> aWatchable, Func<T, string> aFunction)
+        {
+            iRunner = aRunner;
+            iId = aId;
+            iWatchable = aWatchable;
+            iFunction = aFunction;
+
+            iWatchable.AddWatcher(this);
+        }
+
+        // IUnorderedWatcher<T>
+
+        public void UnorderedOpen()
+        {
+        }
+
+        public void UnorderedInitialised()
+        {
+        }
+
+        public void UnorderedAdd(T aItem)
+        {
+            iRunner.Result(iId + " add " + iFunction(aItem));
+        }
+
+        public void UnorderedRemove(T aItem)
+        {
+            iRunner.Result(iId + " remove " + iFunction(aItem));
+        }
+
+        public void UnorderedClose()
+        {
+        }
+
+        // IDisposable
+
+        public void Dispose()
+        {
+            iWatchable.RemoveWatcher(this);
+        }
+    }
+
+
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using OpenHome.Os.App;
 
@@ -16,8 +17,11 @@ namespace OpenHome.Av
             iMute = aMute;
             iValue = aValue;
 
-            iDevice.Create<ServiceVolume>((IWatchableDevice device, ServiceVolume volume) =>
+            Task<IProxyVolume> task = iDevice.Create<IProxyVolume>();
+            aThread.Schedule(() =>
             {
+                IProxyVolume volume = task.Result;
+
                 if (!iDisposed)
                 {
                     iVolume = volume;
@@ -65,22 +69,22 @@ namespace OpenHome.Av
 
         public void SetMute(bool aValue)
         {
-            iVolume.SetMute(aValue, null);
+            iVolume.SetMute(aValue);
         }
 
         public void SetVolume(uint aValue)
         {
-            iVolume.SetVolume(aValue, null);
+            iVolume.SetVolume(aValue);
         }
 
         public void VolumeInc()
         {
-            iVolume.VolumeInc(null);
+            iVolume.VolumeInc();
         }
 
         public void VolumeDec()
         {
-            iVolume.VolumeDec(null);
+            iVolume.VolumeDec();
         }
 
         public void ItemOpen(string aId, bool aValue)
@@ -112,7 +116,7 @@ namespace OpenHome.Av
         }
 
         private bool iDisposed;
-        private ServiceVolume iVolume;
+        private IProxyVolume iVolume;
 
         private IWatchableDevice iDevice;
         private Watchable<bool> iHasVolume;

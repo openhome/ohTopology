@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using OpenHome.Os.App;
 
@@ -188,20 +189,20 @@ namespace OpenHome.Av
 
             if (iGroup.Attributes.Contains("Sender"))
             {
-                iGroup.Device.Create<ServiceSender>((IWatchableDevice device, ServiceSender sender) =>
+                Task<ProxySender> task = iGroup.Device.Create<ProxySender>();
+                iThread.Schedule(() =>
                 {
-                    lock (iLock)
-                    {
-                        if (!iDetached)
-                        {
-                            iSender = sender;
+                    ProxySender sender = task.Result;
 
-                            iSender.Status.AddWatcher(this);
-                        }
-                        else
-                        {
-                            sender.Dispose();
-                        }
+                    if (!iDetached)
+                    {
+                        iSender = sender;
+
+                        iSender.Status.AddWatcher(this);
+                    }
+                    else
+                    {
+                        sender.Dispose();
                     }
                 });
             }
@@ -497,7 +498,7 @@ namespace OpenHome.Av
         private Topology4Group iParent;
         private List<Topology4Group> iChildren;
 
-        private ServiceSender iSender;
+        private ProxySender iSender;
         private bool iHasSender;
         private Watchable<IEnumerable<ITopology4Group>> iSenders;
 

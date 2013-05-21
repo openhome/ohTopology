@@ -19,7 +19,7 @@ namespace TestTopology
             }
         }
 
-        class ProductWatcher : IUnorderedWatcher<ServiceProduct>
+        class ProductWatcher : IUnorderedWatcher<IProxyProduct>
         {
             public ProductWatcher(MockableScriptRunner aRunner)
             {
@@ -30,22 +30,22 @@ namespace TestTopology
             {
             }
 
-            public void UnorderedClose()
-            {
-            }
-
             public void UnorderedInitialised()
             {
             }
 
-            public void UnorderedAdd(ServiceProduct aItem)
+            public void UnorderedAdd(IProxyProduct aItem)
             {
                 iRunner.Result("product added " + aItem.Device.Udn);
             }
 
-            public void UnorderedRemove(ServiceProduct aItem)
+            public void UnorderedRemove(IProxyProduct aItem)
             {
                 iRunner.Result("product removed " + aItem.Device.Udn);
+            }
+
+            public void UnorderedClose()
+            {
             }
 
             private MockableScriptRunner iRunner;
@@ -65,7 +65,7 @@ namespace TestTopology
 
             Mockable mocker = new Mockable();
 
-            MockNetwork network = new FourDsMockNetwork(thread, subscribeThread);
+            Network network = new Network(thread, subscribeThread);
             mocker.Add("network", network);
 
             Topology1 topology = new Topology1(network);

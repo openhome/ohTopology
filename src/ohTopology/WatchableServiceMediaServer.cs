@@ -62,7 +62,7 @@ namespace OpenHome.Av
         Task<IMediaServerContainer> Browse(IMediaDatum aDatum); // null = home
     }
 
-    public interface IProxyMediaServer : IService
+    public interface IProxyMediaServer : IProxy
     {
         IEnumerable<string> Attributes { get; }
         string ManufacturerImageUri { get; }
@@ -242,136 +242,14 @@ namespace OpenHome.Av
         }
     }
 
-    public class ServiceMediaServer
+    internal class ProxyMediaServer : Proxy<ServiceMediaServer>, IProxyMediaServer
     {
-        private readonly IWatchableThread iWatchableThread;
-        private readonly IEnumerable<string> iAttributes;
-        private readonly string iManufacturerImageUri;
-        private readonly string iManufacturerInfo;
-        private readonly string iManufacturerName;
-        private readonly string iManufacturerUrl;
-        private readonly string iModelImageUri;
-        private readonly string iModelInfo;
-        private readonly string iModelName;
-        private readonly string iModelUrl;
-        private readonly string iProductImageUri;
-        private readonly string iProductInfo;
-        private readonly string iProductName;
-        private readonly string iProductUrl;
-
-        protected ServiceMediaServer(IWatchableThread aWatchableThread, IEnumerable<string> aAttributes, 
-            string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl,
-            string aModelImageUri, string aModelInfo, string aModelName, string aModelUrl,
-            string aProductImageUri, string aProductInfo, string aProductName, string aProductUrl
-            )
+        public ProxyMediaServer(IWatchableDevice aDevice, ServiceMediaServerMock aService)
+            : base(aDevice, aService)
         {
-            iWatchableThread = aWatchableThread;
-            iAttributes = aAttributes;
-            iManufacturerImageUri = aManufacturerImageUri;
-            iManufacturerInfo = aManufacturerInfo;
-            iManufacturerName = aManufacturerName;
-            iManufacturerUrl = aManufacturerUrl;
-            iModelImageUri = aModelImageUri;
-            iModelInfo = aModelInfo;
-            iModelName = aModelName;
-            iModelUrl = aModelUrl;
-            iProductImageUri = aProductImageUri;
-            iProductInfo = aProductInfo;
-            iProductName = aProductName;
-            iProductUrl = aProductUrl;
         }
 
-        internal IWatchableThread WatchableThread
-        {
-            get { return (iWatchableThread); }
-        }
-
-        // IService
-
-        public IWatchableDevice Device { get { return (null); } } // TODO REmove this once it is removed from IService
-
-        // IServiceMediaServer
-
-        public IEnumerable<string> Attributes
-        {
-            get { return (iAttributes); }
-        }
-
-        public string ManufacturerImageUri
-        {
-            get { return (iManufacturerImageUri); }
-        }
-
-        public string ManufacturerInfo
-        {
-            get { return (iManufacturerInfo); }
-        }
-
-        public string ManufacturerName
-        {
-            get { return (iManufacturerName); }
-        }
-
-        public string ManufacturerUrl
-        {
-            get { return (iManufacturerUrl); }
-        }
-
-        public string ModelImageUri
-        {
-            get { return (iModelImageUri); }
-        }
-
-        public string ModelInfo
-        {
-            get { return (iModelInfo); }
-        }
-
-        public string ModelName
-        {
-            get { return (iModelName); }
-        }
-
-        public string ModelUrl
-        {
-            get { return (iModelUrl); }
-        }
-
-        public string ProductImageUri
-        {
-            get { return (iProductImageUri); }
-        }
-
-        public string ProductInfo
-        {
-            get { return (iProductInfo); }
-        }
-
-        public string ProductName
-        {
-            get { return (iProductName); }
-        }
-
-        public string ProductUrl
-        {
-            get { return (iProductUrl); }
-        }
-    }
-
-    internal class ProxyMediaServerMock : IProxyMediaServer
-    {
-        private readonly ServiceMediaServerMock iService;
-
-        public ProxyMediaServerMock(ServiceMediaServerMock aService)
-        {
-            iService = aService;
-        }
-
-        // IService
-
-        public IWatchableDevice Device { get { return (null); } } // TODO REmove this once it is removed from IService
-
-        // IServiceMediaServer
+        // IProxyMediaServer
 
         public IEnumerable<string> Attributes
         {
@@ -442,36 +320,147 @@ namespace OpenHome.Av
         {
             return (iService.CreateSession());
         }
-
-        // IDisposable
-
-        public void Dispose()
-        {
-            iService.Destroy(this);
-        }
     }
 
-    public class ServiceMediaServerMock : ServiceMediaServer, IWatchableService
+    public abstract class ServiceMediaServer : Service
+    {
+        private readonly IEnumerable<string> iAttributes;
+        private readonly string iManufacturerImageUri;
+        private readonly string iManufacturerInfo;
+        private readonly string iManufacturerName;
+        private readonly string iManufacturerUrl;
+        private readonly string iModelImageUri;
+        private readonly string iModelInfo;
+        private readonly string iModelName;
+        private readonly string iModelUrl;
+        private readonly string iProductImageUri;
+        private readonly string iProductInfo;
+        private readonly string iProductName;
+        private readonly string iProductUrl;
+
+        protected ServiceMediaServer(INetwork aNetwork, IEnumerable<string> aAttributes, 
+            string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl,
+            string aModelImageUri, string aModelInfo, string aModelName, string aModelUrl,
+            string aProductImageUri, string aProductInfo, string aProductName, string aProductUrl)
+            : base (aNetwork)
+        {
+            iAttributes = aAttributes;
+            iManufacturerImageUri = aManufacturerImageUri;
+            iManufacturerInfo = aManufacturerInfo;
+            iManufacturerName = aManufacturerName;
+            iManufacturerUrl = aManufacturerUrl;
+            iModelImageUri = aModelImageUri;
+            iModelInfo = aModelInfo;
+            iModelName = aModelName;
+            iModelUrl = aModelUrl;
+            iProductImageUri = aProductImageUri;
+            iProductInfo = aProductInfo;
+            iProductName = aProductName;
+            iProductUrl = aProductUrl;
+        }
+
+        // IProxyMediaServer
+
+        public IEnumerable<string> Attributes
+        {
+            get { return (iAttributes); }
+        }
+
+        public string ManufacturerImageUri
+        {
+            get { return (iManufacturerImageUri); }
+        }
+
+        public string ManufacturerInfo
+        {
+            get { return (iManufacturerInfo); }
+        }
+
+        public string ManufacturerName
+        {
+            get { return (iManufacturerName); }
+        }
+
+        public string ManufacturerUrl
+        {
+            get { return (iManufacturerUrl); }
+        }
+
+        public string ModelImageUri
+        {
+            get { return (iModelImageUri); }
+        }
+
+        public string ModelInfo
+        {
+            get { return (iModelInfo); }
+        }
+
+        public string ModelName
+        {
+            get { return (iModelName); }
+        }
+
+        public string ModelUrl
+        {
+            get { return (iModelUrl); }
+        }
+
+        public string ProductImageUri
+        {
+            get { return (iProductImageUri); }
+        }
+
+        public string ProductInfo
+        {
+            get { return (iProductInfo); }
+        }
+
+        public string ProductName
+        {
+            get { return (iProductName); }
+        }
+
+        public string ProductUrl
+        {
+            get { return (iProductUrl); }
+        }
+
+        public abstract Task<IMediaServerSession> CreateSession();
+    }
+
+    public class ServiceMediaServerMock : ServiceMediaServer
     {
         private readonly ITagManager iTagManager;
         private readonly IEnumerable<IMediaMetadata> iMetadata;
-        private readonly List<IProxyMediaServer> iProxies;
         private readonly List<IMediaServerSession> iSessions;
         
-        public ServiceMediaServerMock(IWatchableThread aWatchableThread, IEnumerable<string> aAttributes, 
+        public ServiceMediaServerMock(INetwork aNetwork, IEnumerable<string> aAttributes, 
             string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl,
             string aModelImageUri, string aModelInfo, string aModelName, string aModelUrl,
             string aProductImageUri, string aProductInfo, string aProductName, string aProductUrl,
             string aAppRoot)
-            : base(aWatchableThread, aAttributes,
+            : base(aNetwork, aAttributes,
             aManufacturerImageUri, aManufacturerInfo, aManufacturerName, aManufacturerUrl,
             aModelImageUri, aModelInfo, aModelName, aModelUrl,
             aProductImageUri, aProductInfo, aProductName, aProductUrl)
         {
             iTagManager = new TagManager();
             iMetadata = ReadMetadata(aAppRoot);
-            iProxies = new List<IProxyMediaServer>();
             iSessions = new List<IMediaServerSession>();
+        }
+
+        public override IProxy OnCreate(IWatchableDevice aDevice)
+        {
+            return (new ProxyMediaServer(aDevice, this));
+        }
+
+        protected override void  OnSubscribe()
+        {
+        }
+
+        protected override void  OnUnsubscribe()
+        {
         }
 
         private IEnumerable<IMediaMetadata> ReadMetadata(string aAppRoot)
@@ -538,7 +527,7 @@ namespace OpenHome.Av
             return (results);
         }
 
-        internal Task<IMediaServerSession> CreateSession()
+        public override Task<IMediaServerSession> CreateSession()
         {
             return (Task.Factory.StartNew<IMediaServerSession>(() =>
             {
@@ -558,30 +547,16 @@ namespace OpenHome.Av
             get { return (iMetadata); }
         }
 
-        internal void Destroy(IProxyMediaServer aProxy)
-        {
-            iProxies.Remove(aProxy);
-        }
-
         internal void Destroy(IMediaServerSession aSession)
         {
             iSessions.Remove(aSession);
         }
 
-        // IServiceFactory
-
-        public IService Create(IManagableWatchableDevice aDevice)
-        {
-            var proxy = new ProxyMediaServerMock(this);
-            iProxies.Add(proxy);
-            return (proxy);
-        }
-
         // IDispose
 
-        public void Dispose()
+        public override void Dispose()
         {
-            Do.Assert(iProxies.Count == 0);
+            base.Dispose();
             Do.Assert(iSessions.Count == 0);
         }
     }
@@ -589,6 +564,7 @@ namespace OpenHome.Av
     internal class MediaServerSessionMock : IMediaServerSession
     {
         private readonly ServiceMediaServerMock iService;
+
         private readonly List<IMediaDatum> iRoot;
 
         private IMediaServerContainer iContainer;
@@ -613,14 +589,14 @@ namespace OpenHome.Av
 
         private IMediaDatum GetRootContainerArtists()
         {
-            var datum = new MediaDatum(TagManager.Container.Title, TagManager.Audio.Artist, TagManager.Audio.Album);
+            var datum = new MediaDatum(TagManager.Container.Title);
             datum.Add(TagManager.Container.Title, "Artists");
             return (datum);
         }
 
         private IMediaDatum GetRootContainerAlbums()
         {
-            var datum = new MediaDatum(TagManager.Container.Title, TagManager.Audio.Album);
+            var datum = new MediaDatum(TagManager.Container.Title);
             datum.Add(TagManager.Container.Title, "Albums");
             return (datum);
         }
@@ -637,7 +613,7 @@ namespace OpenHome.Av
             return (Task.Factory.StartNew<IMediaServerContainer>(() =>
             {
                 var metadata = iService.Metadata.Select((m) => new MediaDatum(m));
-                iContainer = new MediaServerContainerMock(iService.WatchableThread, new MediaServerSnapshotMock(metadata));
+                iContainer = new MediaServerContainerMock(iService.Network, new MediaServerSnapshotMock(metadata));
                 return (iContainer);
             }));
         }
@@ -657,34 +633,19 @@ namespace OpenHome.Av
 
             return (Task.Factory.StartNew<IMediaServerContainer>(() =>
             {
-                iContainer = new MediaServerContainerMock(iService.WatchableThread, new MediaServerSnapshotMock(containers));
+                iContainer = new MediaServerContainerMock(iService.Network, new MediaServerSnapshotMock(containers));
                 return (iContainer);
             }));
         }
 
         private Task<IMediaServerContainer> BrowseRootAlbums()
         {
-            return (Task.Factory.StartNew<IMediaServerContainer>(() =>
-            {
-                var metadata = iService.Metadata.Select((m) => new MediaDatum(m));
-                iContainer = new MediaServerContainerMock(iService.WatchableThread, new MediaServerSnapshotMock(metadata));
-                return (iContainer);
-            }));
+            return (null);
         }
 
         private Task<IMediaServerContainer> BrowseRootGenres()
         {
-            return (Task.Factory.StartNew<IMediaServerContainer>(() =>
-            {
-                var metadata = iService.Metadata.Select((m) => new MediaDatum(m));
-                iContainer = new MediaServerContainerMock(iService.WatchableThread, new MediaServerSnapshotMock(metadata));
-                return (iContainer);
-            }));
-        }
-
-        internal IWatchableThread WatchableThread
-        {
-            get { return (iService.WatchableThread); }
+            return (null);
         }
 
         internal ITagManager TagManager
@@ -714,7 +675,7 @@ namespace OpenHome.Av
             {
                 return (Task.Factory.StartNew<IMediaServerContainer>(() =>
                 {
-                    iContainer = new MediaServerContainerMock(iService.WatchableThread, new MediaServerSnapshotMock(iRoot));
+                    iContainer = new MediaServerContainerMock(iService.Network, new MediaServerSnapshotMock(iRoot));
                     return (iContainer);
                 }));
             }
@@ -764,9 +725,9 @@ namespace OpenHome.Av
     {
         private readonly Watchable<IMediaServerSnapshot> iSnapshot;
 
-        public MediaServerContainerMock(IWatchableThread aWatchableThread, IMediaServerSnapshot aSnapshot)
+        public MediaServerContainerMock(INetwork aNetwork, IMediaServerSnapshot aSnapshot)
         {
-            iSnapshot = new Watchable<IMediaServerSnapshot>(aWatchableThread, "snapshot", aSnapshot);
+            iSnapshot = new Watchable<IMediaServerSnapshot>(aNetwork.WatchableThread, "snapshot", aSnapshot);
         }
 
         // IMediaServerContainer

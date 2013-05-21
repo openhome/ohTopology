@@ -1,3 +1,6 @@
+// setup type of network
+mock network medium
+
 // test network is populated with 4 devices
 expect Room Added: Kitchen at 0
 expect Standby(Kitchen)(Proxy): eOn
@@ -203,6 +206,8 @@ expect Metadata(Main Room) Updated: Active=True, Metadata=blah, Uri=http://blah
 expect Metatext(Main Room) Updated: Active=True, Metatext=testing
 expect HasSourceControl(Main Room): False -> True
 empty
+
+break
 
 mock network update ds 67 radio transportstate Playing
 expect TransportState(Main Room): Stopped -> Playing

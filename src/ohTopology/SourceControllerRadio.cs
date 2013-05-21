@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using OpenHome.Os.App;
 
@@ -18,8 +19,11 @@ namespace OpenHome.Av
             iCanSeek = aCanSeek;
             iTransportState = aTransportState;
 
-            aSource.Device.Create<ServiceRadio>((IWatchableDevice device, ServiceRadio radio) =>
+            Task<ProxyRadio> task = aSource.Device.Create<ProxyRadio>();
+            aThread.Schedule(() =>
             {
+                ProxyRadio radio = task.Result;
+
                 if (!iDisposed)
                 {
                     iRadio = radio;
@@ -67,17 +71,17 @@ namespace OpenHome.Av
 
         public void Play()
         {
-            iRadio.Play(null);
+            iRadio.Play();
         }
 
         public void Pause()
         {
-            iRadio.Pause(null);
+            iRadio.Pause();
         }
 
         public void Stop()
         {
-            iRadio.Stop(null);
+            iRadio.Stop();
         }
 
         public void Previous()
@@ -92,7 +96,7 @@ namespace OpenHome.Av
 
         public void Seek(uint aSeconds)
         {
-            iRadio.SeekSecondsAbsolute(aSeconds, null);
+            iRadio.SeekSecondAbsolute(aSeconds);
         }
 
         public void ItemOpen(string aId, string aValue)
@@ -123,7 +127,7 @@ namespace OpenHome.Av
         private bool iDisposed;
 
         private ITopology4Source iSource;
-        private ServiceRadio iRadio;
+        private ProxyRadio iRadio;
 
         private Watchable<bool> iHasSourceControl;
         private Watchable<bool> iCanPause;

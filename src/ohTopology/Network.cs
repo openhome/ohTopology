@@ -9,339 +9,194 @@ using OpenHome.Net.ControlPoint;
 
 namespace OpenHome.Av
 {
-    public interface INetwork : IWatchableThread, IDisposable
+    public abstract class DeviceInjector : IDisposable
     {
-        void Refresh();
-        IWatchableUnordered<IWatchableDevice> GetWatchableDeviceCollection<T>() where T : IService;
-        IWatchableThread WatchableThread { get; }
-    }
-
-    public class ServiceWatchableDeviceCollection : WatchableUnordered<IWatchableDevice>, IEnumerable<IManagableWatchableDevice>
-    {
-        public ServiceWatchableDeviceCollection(IWatchableThread aThread, IWatchableThread aSubscribeThread, string aDomainName, string aServiceType, uint aVersion)
-            : base(aThread)
+        protected DeviceInjector(Network aNetwork)
         {
-            iSubscribeThread = aSubscribeThread;
-            iLock = new object();
-            iDisposed = false;
+            iNetwork = aNetwork;
 
-            iCpDeviceList = new CpDeviceListUpnpServiceType(aDomainName, aServiceType, aVersion, Added, Removed);
-            iCpDeviceLookup = new Dictionary<string, DisposableWatchableDevice>();
+            iCpDeviceLookup = new Dictionary<CpDevice, WatchableDevice>();
         }
 
-        public new void Dispose()
+        public void Dispose()
         {
-            lock (iLock)
+            iDeviceList.Dispose();
+            iDeviceList = null;
+
+            iNetwork.Execute(() =>
             {
-                if (iDisposed)
+                foreach (WatchableDevice d in iCpDeviceLookup.Values)
                 {
-                    throw new ObjectDisposedException("ServiceWatchableDeviceCollection.Dispose");
+                    d.Dispose();
                 }
+            });
+            iCpDeviceLookup.Clear();
+            iCpDeviceLookup = null;
+        }
 
-                base.Dispose();
+        protected void Added(CpDeviceList aList, CpDevice aDevice)
+        {
+            iNetwork.Schedule(() =>
+            {
+                WatchableDevice device = WatchableDevice.Create(iNetwork, aDevice);
+                iNetwork.Add(device);
+            });
+        }
 
-                iCpDeviceList.Dispose();
-                iCpDeviceList = null;
+        protected void Removed(CpDeviceList aList, CpDevice aDevice)
+        {
+            iNetwork.Schedule(() =>
+            {
+                WatchableDevice device = iCpDeviceLookup[aDevice];
+                iCpDeviceLookup.Remove(aDevice);
+                iNetwork.Remove(device);
 
-                foreach (DisposableWatchableDevice device in iCpDeviceLookup.Values)
+                iNetwork.Schedule(() =>
                 {
                     device.Dispose();
-                }
-                iCpDeviceLookup = null;
-
-                iDisposed = true;
-            }
-        }
-
-        public void Refresh()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("ServiceWatchableDeviceCollection.Refresh");
-                }
-
-                iCpDeviceList.Refresh();
-            }
-        }
-
-        private void Added(CpDeviceList aList, CpDevice aDevice)
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                DisposableWatchableDevice device = new DisposableWatchableDevice(WatchableThread, iSubscribeThread, aDevice);
-                iCpDeviceLookup.Add(aDevice.Udn(), device);
-
-                WatchableThread.Schedule(() =>
-                {
-                    Add(device);
                 });
-            }
+            });
         }
 
-        private void Removed(CpDeviceList aList, CpDevice aDevice)
+        protected CpDeviceListUpnpServiceType iDeviceList;
+
+        private Network iNetwork;
+        private Dictionary<CpDevice, WatchableDevice> iCpDeviceLookup;
+    }
+
+    public class ProductDeviceInjector : DeviceInjector
+    {
+        public ProductDeviceInjector(Network aNetwork)
+            : base(aNetwork)
         {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    return;
-                }
-
-                DisposableWatchableDevice device;
-                if (iCpDeviceLookup.TryGetValue(aDevice.Udn(), out device))
-                {
-                    iCpDeviceLookup.Remove(aDevice.Udn());
-
-                    WatchableThread.Schedule(() =>
-                    {
-                        Remove(device);
-
-                        WatchableThread.Schedule(() =>
-                        {
-                            device.Dispose();
-                        });
-                    });
-                }
-            }
+            iDeviceList = new CpDeviceListUpnpServiceType("av.openhome.org", "Product", 1, Added, Removed);
         }
+    }
 
-        public IEnumerator<IManagableWatchableDevice> GetEnumerator()
+    public class ContentDirectoryDeviceInjector : DeviceInjector
+    {
+        public ContentDirectoryDeviceInjector(Network aNetwork)
+            : base(aNetwork)
         {
-            return iCpDeviceLookup.Values.GetEnumerator();
+            iDeviceList = new CpDeviceListUpnpServiceType("upnp.org", "ContentDirectory", 1, Added, Removed);
         }
+    }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return iCpDeviceLookup.Values.GetEnumerator();
-        }
-
-        private object iLock;
-        private bool iDisposed;
-        private IWatchableThread iSubscribeThread;
-
-        private CpDeviceList iCpDeviceList;
-        private Dictionary<string, DisposableWatchableDevice> iCpDeviceLookup;
+    public interface INetwork : IWatchableThread, IDisposable
+    {
+        IWatchableThread WatchableThread { get; }
+        IWatchableThread SubscribeThread { get; }
+        IWatchableUnordered<IWatchableDevice> Create<T>() where T : IProxy;
+        //void Refresh();
     }
 
     public class Network : INetwork, IMockable
     {
         public Network(IWatchableThread aThread, IWatchableThread aSubscribeThread)
         {
-            iSubscribeThread = aSubscribeThread;
-            iThread = aThread;
-
-            iDeviceCollections = new Dictionary<Type, ServiceWatchableDeviceCollection>();
-
-            // add device lists for each type of watchable service
-            iDeviceCollections.Add(typeof(ServiceProduct), new ServiceWatchableDeviceCollection(iThread, iSubscribeThread, "av.openhome.org", "Product", 1));
-            //iDeviceCollections.Add(typeof(ServiceContentDirectory), new ServiceWatchableDeviceCollection(iThread, "upnp.org", "ContentDirectory", 1));
-        }
-
-        public void Dispose()
-        {
-            foreach (ServiceWatchableDeviceCollection c in iDeviceCollections.Values)
-            {
-                c.Dispose();
-            }
-
-            iDeviceCollections.Clear();
-        }
-
-        public void Refresh()
-        {
-            foreach (ServiceWatchableDeviceCollection c in iDeviceCollections.Values)
-            {
-                c.Refresh();
-            }
-        }
-
-        public IWatchableUnordered<IWatchableDevice> GetWatchableDeviceCollection<T>() where T : IService
-        {
-            return iDeviceCollections[typeof(T)];
-        }
-
-        public IWatchableThread WatchableThread
-        {
-            get
-            {
-                return iThread;
-            }
-        }
-
-        public void Execute(IEnumerable<string> aValue)
-        {
-        }
-
-        public void Assert()
-        {
-            iThread.Assert();
-        }
-
-        public void Schedule(Action aAction)
-        {
-            iThread.Schedule(aAction);
-        }
-
-        public void Execute(Action aAction)
-        {
-            iThread.Execute(aAction);
-        }
-
-        public void Wait()
-        {
-            iThread.Wait(() =>
-            {
-                iSubscribeThread.Wait();
-            });
-        }
-
-        public void Wait(Action aAction)
-        {
-            iThread.Wait(() =>
-            {
-                iSubscribeThread.Wait(aAction);
-            });
-        }
-
-        private IWatchableThread iThread;
-        private IWatchableThread iSubscribeThread;
-
-        private Dictionary<Type, ServiceWatchableDeviceCollection> iDeviceCollections;
-    }
-
-    public class MockNetwork : INetwork, IMockable
-    {
-        public MockNetwork(IWatchableThread aThread, IWatchableThread aSubscribeThread)
-        {
             iLock = new object();
 
             iSubscribeThread = aSubscribeThread;
             iThread = aThread;
 
-            iOnDevices = new Dictionary<string, MockWatchableDevice>();
-            iOffDevices = new Dictionary<string, MockWatchableDevice>();
-            iDeviceLists = new Dictionary<Type, List<WatchableUnordered<IWatchableDevice>>>();
+            iDevices = new List<WatchableDevice>();
+            iMockDevices = new Dictionary<string, WatchableDevice>();
+            iDeviceLists = new Dictionary<Type, WatchableUnordered<IWatchableDevice>>();
         }
 
         public void Dispose()
         {
-            foreach (MockWatchableDevice d in iOnDevices.Values)
+            iDevices.Clear();
+            iDevices = null;
+
+            foreach (WatchableDevice d in iMockDevices.Values)
             {
                 d.Dispose();
             }
-            iOnDevices.Clear();
-            iOnDevices = null;
+            iMockDevices.Clear();
+            iMockDevices = null;
 
-            foreach (MockWatchableDevice d in iOffDevices.Values)
+            foreach (WatchableUnordered<IWatchableDevice> l in iDeviceLists.Values)
             {
-                d.Dispose();
-            }
-            iOffDevices.Clear();
-            iOffDevices = null;
-
-            foreach (List<WatchableUnordered<IWatchableDevice>> l in iDeviceLists.Values)
-            {
-                foreach (WatchableUnordered<IWatchableDevice> w in l)
-                {
-                    w.Dispose();
-                }
+                l.Dispose();
             }
             iDeviceLists.Clear();
             iDeviceLists = null;
         }
 
-        public void Refresh()
-        {
-        }
-
-        public void AddDevice(MockWatchableDevice aDevice)
+        public void Add(WatchableDevice aDevice)
         {
             lock (iLock)
             {
-                iOffDevices.Remove(aDevice.Udn);
-                iOnDevices.Add(aDevice.Udn, aDevice);
+                iDevices.Add(aDevice);
 
-                foreach (KeyValuePair<Type, List<WatchableUnordered<IWatchableDevice>>> k in iDeviceLists)
+                foreach (KeyValuePair<Type, WatchableUnordered<IWatchableDevice>> kvp in iDeviceLists)
                 {
-                    if (aDevice.HasService(k.Key))
+                    if (aDevice.HasService(kvp.Key))
                     {
-                        foreach (WatchableUnordered<IWatchableDevice> c in k.Value)
-                        {
-                            c.Add(aDevice);
-                        }
+                        kvp.Value.Add(aDevice);
                     }
                 }
             }
         }
 
-        internal void RemoveDevice(string aUdn)
+        private void CreateAndAdd(WatchableDevice aDevice)
         {
-            lock (iLock)
-            {
-                MockWatchableDevice device;
-
-                if(iOnDevices.TryGetValue(aUdn, out device))
-                {
-                    RemoveDevice(device);
-                }
-            }
+            iMockDevices.Add(aDevice.Udn, aDevice);
+            Add(aDevice);
         }
 
-        public void RemoveDevice(MockWatchableDevice aDevice)
+        public void Remove(WatchableDevice aDevice)
         {
             lock (iLock)
             {
-                iOnDevices.Remove(aDevice.Udn);
-                iOffDevices.Add(aDevice.Udn, aDevice);
+                iDevices.Remove(aDevice);
 
-                foreach (KeyValuePair<Type, List<WatchableUnordered<IWatchableDevice>>> k in iDeviceLists)
+                foreach (KeyValuePair<Type, WatchableUnordered<IWatchableDevice>> l in iDeviceLists)
                 {
-                    if (aDevice.HasService(k.Key))
+                    if (aDevice.HasService(l.Key))
                     {
-                        foreach (WatchableUnordered<IWatchableDevice> c in k.Value)
-                        {
-                            c.Remove(aDevice);
-                        }
+                        l.Value.Remove(aDevice);
                     }
                 }
             }
         }
 
-        public IWatchableUnordered<IWatchableDevice> GetWatchableDeviceCollection<T>() where T : IService
+        private void Remove(string aUdn)
         {
-            Type key = typeof(T);
+            WatchableDevice device;
 
-            WatchableUnordered<IWatchableDevice> list = new WatchableUnordered<IWatchableDevice>(iThread);
-
-            if (iDeviceLists.ContainsKey(key))
+            if (iMockDevices.TryGetValue(aUdn, out device))
             {
-                iDeviceLists[key].Add(list);
+                Remove(device);
             }
-            else
-            {
-                iDeviceLists.Add(key, new List<WatchableUnordered<IWatchableDevice>>(new WatchableUnordered<IWatchableDevice>[] { list }));
+        }
 
-                foreach (MockWatchableDevice d in iOnDevices.Values)
+        public IWatchableUnordered<IWatchableDevice> Create<T>() where T : IProxy
+        {
+            lock (iLock)
+            {
+                Type key = typeof(T);
+
+                WatchableUnordered<IWatchableDevice> list;
+                if (iDeviceLists.TryGetValue(key, out list))
                 {
-                    if (d.HasService(key))
+                    return list;
+                }
+                else
+                {
+                    list = new WatchableUnordered<IWatchableDevice>(iThread);
+                    iDeviceLists.Add(key, list);
+                    foreach (WatchableDevice d in iDevices)
                     {
-                        iThread.Schedule(() =>
+                        if (d.HasService(key))
                         {
                             list.Add(d);
-                        });
-
+                        }
                     }
+                    return list;
                 }
             }
-
-            return list;
         }
 
         public IWatchableThread WatchableThread
@@ -349,6 +204,14 @@ namespace OpenHome.Av
             get
             {
                 return iThread;
+            }
+        }
+
+        public IWatchableThread SubscribeThread
+        {
+            get
+            {
+                return iSubscribeThread;
             }
         }
 
@@ -356,7 +219,22 @@ namespace OpenHome.Av
         {
             string command = aValue.First().ToLowerInvariant();
 
-            if (command == "add")
+            if (command == "small")
+            {
+                CreateAndAdd(MockWatchableDevice.CreateDsm(this, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
+            }
+            else if (command == "medium")
+            {
+                CreateAndAdd(MockWatchableDevice.CreateDs(this, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));
+                CreateAndAdd(MockWatchableDevice.CreateDsm(this, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
+                CreateAndAdd(MockWatchableDevice.CreateDsm(this, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
+                CreateAndAdd(MockWatchableDevice.CreateDs(this, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
+            }
+            else if (command == "large")
+            {
+                throw new NotImplementedException();
+            }
+            else if (command == "add")
             {
                 IEnumerable<string> value = aValue.Skip(1);
 
@@ -368,22 +246,19 @@ namespace OpenHome.Av
 
                     string udn = value.First();
 
-                    MockWatchableDevice device;
+                    WatchableDevice device;
 
-                    if (iOffDevices.TryGetValue(udn, out device))
+                    if (iMockDevices.TryGetValue(udn, out device))
                     {
-                        AddDevice(device);
-
-                        return;
+                        Add(device);
                     }
-
-                    if (type == "ds")
+                    else if (type == "ds")
                     {
-                        AddDevice(new MockWatchableDs(iThread, iSubscribeThread, udn));
+                        CreateAndAdd(MockWatchableDevice.CreateDs(this, udn));
                     }
-                    else if(type == "dsm")
+                    else if (type == "dsm")
                     {
-                        AddDevice(new MockWatchableDsm(iThread, iSubscribeThread, udn));
+                        CreateAndAdd(MockWatchableDevice.CreateDsm(this, udn));
                     }
                     /*
                     else if (type == "mediaserver")
@@ -406,7 +281,7 @@ namespace OpenHome.Av
                 if (type == "ds" || type == "dsm" || type == "mediaserver")
                 {
                     value = value.Skip(1);
-                    RemoveDevice(value.First());
+                    Remove(value.First());
                 }
                 else
                 {
@@ -427,22 +302,15 @@ namespace OpenHome.Av
                     {
                         string udn = value.First();
 
-                        MockWatchableDevice device;
+                        WatchableDevice device;
 
-                        if (iOnDevices.TryGetValue(udn, out device))
+                        if (iMockDevices.TryGetValue(udn, out device))
                         {
                             device.Execute(value.Skip(1));
                         }
                         else
                         {
-                            if (iOffDevices.TryGetValue(udn, out device))
-                            {
-                                device.Execute(value.Skip(1));
-                            }
-                            else
-                            {
-                                throw new KeyNotFoundException();
-                            }
+                            throw new KeyNotFoundException();
                         }
                     }
                 }
@@ -489,23 +357,8 @@ namespace OpenHome.Av
         protected IWatchableThread iThread;
         protected IWatchableThread iSubscribeThread;
 
-        private Dictionary<string, MockWatchableDevice> iOnDevices;
-        private Dictionary<string, MockWatchableDevice> iOffDevices;
-        private Dictionary<Type, List<WatchableUnordered<IWatchableDevice>>> iDeviceLists;
-    }
-
-    public class FourDsMockNetwork : MockNetwork
-    {
-        public FourDsMockNetwork(IWatchableThread aThread, IWatchableThread aSubscribeThread)
-            : base(aThread, aSubscribeThread)
-        {
-            iThread.Schedule(() =>
-            {
-                AddDevice(new MockWatchableDs(iThread, iSubscribeThread, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));
-                AddDevice(new MockWatchableDsm(iThread, iSubscribeThread, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
-                AddDevice(new MockWatchableDsm(iThread, iSubscribeThread, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
-                AddDevice(new MockWatchableDs(iThread, iSubscribeThread, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
-            });
-        }
+        private List<WatchableDevice> iDevices;
+        private Dictionary<string, WatchableDevice> iMockDevices;
+        private Dictionary<Type, WatchableUnordered<IWatchableDevice>> iDeviceLists;
     }
 }

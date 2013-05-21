@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using OpenHome.Os.App;
 
@@ -19,8 +20,11 @@ namespace OpenHome.Av
             iCanSeek = aCanSeek;
             iTransportState = aTransportState;
 
-            aSource.Device.Create<ServiceReceiver>((IWatchableDevice device, ServiceReceiver receiver) =>
+            Task<IProxyReceiver> task = aSource.Device.Create<IProxyReceiver>();
+            aThread.Schedule(() =>
             {
+                IProxyReceiver receiver = task.Result;
+
                 if (!iDisposed)
                 {
                     iReceiver = receiver;
@@ -68,7 +72,7 @@ namespace OpenHome.Av
 
         public void Play()
         {
-            iReceiver.Play(null);
+            iReceiver.Play();
         }
 
         public void Pause()
@@ -78,7 +82,7 @@ namespace OpenHome.Av
 
         public void Stop()
         {
-            iReceiver.Stop(null);
+            iReceiver.Stop();
         }
 
         public void Previous()
@@ -123,7 +127,7 @@ namespace OpenHome.Av
         private bool iDisposed;
 
         private ITopology4Source iSource;
-        private ServiceReceiver iReceiver;
+        private IProxyReceiver iReceiver;
 
         private Watchable<bool> iHasSourceControl;
         private Watchable<bool> iCanPause;

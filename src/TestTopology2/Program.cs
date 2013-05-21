@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Linq;
 
 using OpenHome.Os;
 using OpenHome.Os.App;
@@ -19,63 +20,17 @@ namespace TestTopology2
             }
         }
 
-        class SourceWatcher : IWatcher<ITopology2Source>, IDisposable
-        {
-            public SourceWatcher(MockableScriptRunner aRunner)
-            {
-                iRunner = aRunner;
-            }
-
-            public void Dispose()
-            {
-            }
-
-            public void ItemOpen(string aId, ITopology2Source aValue)
-            {
-                iRunner.Result(string.Format("{0}. {1} {2} {3}", aValue.Index, aValue.Name, aValue.Type, aValue.Visible));
-            }
-
-            public void ItemUpdate(string aId, ITopology2Source aValue, ITopology2Source aPrevious)
-            {
-                iRunner.Result(string.Format("{0}. {1} {2} {3} -> {4} {5} {6}", aValue.Index, aPrevious.Name, aPrevious.Type, aPrevious.Visible, aValue.Name, aValue.Type, aValue.Visible));
-            }
-
-            public void ItemClose(string aId, ITopology2Source aValue)
-            {
-            }
-
-            private MockableScriptRunner iRunner;
-        }
-
-        class GroupWatcher : IUnorderedWatcher<ITopology2Group>, IWatcher<string>, IWatcher<uint>, IWatcher<bool>, IDisposable
+        class GroupWatcher : IUnorderedWatcher<ITopology2Group>, IDisposable
         {
             public GroupWatcher(MockableScriptRunner aRunner)
             {
                 iRunner = aRunner;
-
-                iWatcher = new SourceWatcher(aRunner);
-
-                iStringLookup = new Dictionary<string, string>();
-                iList = new List<ITopology2Group>();
+                iFactory = new ResultWatcherFactory(aRunner);
             }
 
             public void Dispose()
             {
-                foreach (ITopology2Group g in iList)
-                {
-                    foreach (IWatchable<ITopology2Source> s in g.Sources)
-                    {
-                        s.RemoveWatcher(iWatcher);
-                    }
-
-                    g.Room.RemoveWatcher(this);
-                    g.Name.RemoveWatcher(this);
-                    g.SourceIndex.RemoveWatcher(this);
-                    g.Standby.RemoveWatcher(this);
-                }
-                iList = null;
-
-                iStringLookup = null;
+                iFactory.Dispose();
             }
 
             public void UnorderedOpen()
@@ -92,89 +47,26 @@ namespace TestTopology2
 
             public void UnorderedAdd(ITopology2Group aItem)
             {
-                aItem.Room.AddWatcher(this);
-                aItem.Name.AddWatcher(this);
-                aItem.SourceIndex.AddWatcher(this);
-                aItem.Standby.AddWatcher(this);
-                iList.Add(aItem);
-
-                iRunner.Result(string.Format("Group Added\t\t{0}:{1}", iStringLookup[aItem.Room.Id], iStringLookup[aItem.Name.Id]));
-                iRunner.Result("===============================================");
+                iRunner.Result(aItem.Device.Udn + " Group Added");
+                iFactory.Create<string>(aItem.Device.Udn, aItem.Room, v => "Room " + v );
+                iFactory.Create<string>(aItem.Device.Udn, aItem.Name, v => "Name " + v );
+                iFactory.Create<uint>(aItem.Device.Udn, aItem.SourceIndex, v => "SourceIndex " + v );
+                iFactory.Create<bool>(aItem.Device.Udn, aItem.Standby, v => "Standby " + v );
 
                 foreach (IWatchable<ITopology2Source> s in aItem.Sources)
                 {
-                    s.AddWatcher(iWatcher);
+                    iFactory.Create<ITopology2Source>(aItem.Device.Udn, s, v => "Source " + v.Index + " " + v.Name + " " + v.Type + " " + v.Visible);
                 }
-
-                iRunner.Result("===============================================");
             }
 
             public void UnorderedRemove(ITopology2Group aItem)
             {
-                aItem.Room.RemoveWatcher(this);
-                aItem.Name.RemoveWatcher(this);
-                aItem.SourceIndex.RemoveWatcher(this);
-                aItem.Standby.RemoveWatcher(this);
-                iList.Remove(aItem);
-
-                foreach (IWatchable<ITopology2Source> s in aItem.Sources)
-                {
-                    s.RemoveWatcher(iWatcher);
-                }
-
-                iRunner.Result(string.Format("Group Removed\t\t{0}:{1}", iStringLookup[aItem.Room.Id], iStringLookup[aItem.Name.Id]));
-                iStringLookup.Remove(aItem.Room.Id);
-                iStringLookup.Remove(aItem.Name.Id);
+                iFactory.Destroy(aItem.Device.Udn);
+                iRunner.Result(aItem.Device.Udn + " Group Removed");
             }
 
-            public void ItemOpen(string aId, string aValue)
-            {
-                iStringLookup.Add(aId, aValue);
-            }
-
-            public void ItemUpdate(string aId, string aValue, string aPrevious)
-            {
-                iStringLookup[aId] = aValue;
-
-                iRunner.Result(string.Format("{0} changed from {1} to {2}", aId, aPrevious, aValue));
-            }
-
-            public void ItemClose(string aId, string aValue)
-            {
-                // key pair removed in UnorderedRemove
-            }
-
-            public void ItemOpen(string aId, uint aValue)
-            {
-            }
-
-            public void ItemUpdate(string aId, uint aValue, uint aPrevious)
-            {
-                iRunner.Result(string.Format("{0} changed from {1} to {2}", aId, aPrevious, aValue));
-            }
-
-            public void ItemClose(string aId, uint aValue)
-            {
-            }
-
-            public void ItemOpen(string aId, bool aValue)
-            {
-            }
-
-            public void ItemUpdate(string aId, bool aValue, bool aPrevious)
-            {
-                iRunner.Result(string.Format("{0} changed from {1} to {2}", aId, aPrevious, aValue));
-            }
-
-            public void ItemClose(string aId, bool aValue)
-            {
-            }
-
-            private MockableScriptRunner iRunner;
-
-            private SourceWatcher iWatcher;
-            private List<ITopology2Group> iList;
-            private Dictionary<string, string> iStringLookup;
+            private readonly MockableScriptRunner iRunner;
+            private readonly ResultWatcherFactory iFactory;
         }
 
         static int Main(string[] args)
@@ -191,7 +83,7 @@ namespace TestTopology2
 
             Mockable mocker = new Mockable();
 
-            MockNetwork network = new FourDsMockNetwork(thread, subscribeThread);
+            Network network = new Network(thread, subscribeThread);
             mocker.Add("network", network);
 
             Topology1 topology1 = new Topology1(network);

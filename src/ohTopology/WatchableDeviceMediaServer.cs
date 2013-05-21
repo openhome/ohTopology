@@ -9,12 +9,12 @@ using OpenHome.Net.ControlPoint;
 
 namespace OpenHome.Av
 {
-    public class MockWatchableMediaServer : MockWatchableDevice
+    public class MockWatchableMediaServer : WatchableDevice
     {
-        public MockWatchableMediaServer(IWatchableThread aThread, IWatchableThread aSubscribeThread, string aUdn, string aAppRoot)
-            : base(aSubscribeThread, aThread, aUdn)
+        public MockWatchableMediaServer(INetwork aNetwork, string aUdn, string aAppRoot)
+            : base(aUdn)
         {
-            Add<IProxyMediaServer>(new ServiceMediaServerMock(aThread, new string[] {"browse", "query"},
+            Add<IProxyMediaServer>(new ServiceMediaServerMock(aNetwork, new string[] {"browse", "query"},
                 "", "OpenHome", "OpenHome", "http://www.openhome.org",
                 "", "OpenHome", "OpenHome", "http://www.openhome.org",
                 "", "OpenHome", "OpenHome", "http://www.openhome.org",
@@ -23,12 +23,6 @@ namespace OpenHome.Av
             // content directory service
             //MockWatchableContentDirectory contentDirectory = new MockWatchableContentDirectory(aThread, aUdn, 0, "");
             //Add<ContentDirectory>(contentDirectory);
-        }
-
-        // IMockable
-
-        public override void Execute(IEnumerable<string> aValue)
-        {
         }
     }
 }

@@ -9,59 +9,302 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public interface IWatchableService : IDisposable
+    public interface IService : IMockable, IDisposable
     {
-        IService Create(IManagableWatchableDevice aDevice);
-    }
-
-    // The following will be harmonised with IServiceFactory
-
-    public interface IWatchableServiceFactory : IDisposable
-    {
-        void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback);
+        Task<T> Create<T>(IWatchableDevice aDevice) where T : IProxy;
+        void Subscribe();
         void Unsubscribe();
     }
 
-    public interface IService : IDisposable
+    public abstract class Service : IService
     {
-        IWatchableDevice Device { get; } // soon to disappear
+        private readonly INetwork iNetwork;
+
+        private uint iRefCount;
+
+        protected Service(INetwork aNetwork)
+        {
+            iNetwork = aNetwork;
+            iRefCount = 0;
+        }
+
+        public INetwork Network
+        {
+            get
+            {
+                return (iNetwork);
+            }
+        }
+
+        public virtual void Dispose()
+        {
+            if (iRefCount > 0)
+            {
+                throw new Exception("Disposing of Service with outstanding subscriptions");
+            }
+        }
+
+        public Task<T> Create<T>(IWatchableDevice aDevice) where T : IProxy
+        {
+            Task<T> task = Task.Factory.StartNew<T>(() =>
+            {
+                Subscribe();
+                return (T)OnCreate(aDevice);
+            });
+            return task;
+        }
+
+        public abstract IProxy OnCreate(IWatchableDevice aDevice);
+
+        public void Subscribe()
+        {
+            if (iRefCount == 0)
+            {
+                OnSubscribe();
+            }
+            ++iRefCount;
+        }
+
+        protected abstract void OnSubscribe();
+
+        public void Unsubscribe()
+        {
+            --iRefCount;
+            if (iRefCount == 0)
+            {
+                OnUnsubscribe();
+            }
+        }
+
+        protected abstract void OnUnsubscribe();
+
+        // IMockable
+
+        public virtual void Execute(IEnumerable<string> aCommand)
+        {
+        }
+    }
+
+    public interface IProxy : IDisposable
+    {
+        IWatchableDevice Device { get; }
+    }
+
+    public class Proxy<T> where T : Service
+    {
+        private readonly IWatchableDevice iDevice;
+        protected readonly T iService;
+
+        protected Proxy(IWatchableDevice aDevice, T aService)
+        {
+            iDevice = aDevice;
+            iService = aService;
+        }
+
+        // IProxy
+
+        public IWatchableDevice Device
+        {
+            get
+            {
+                return (iDevice);
+            }
+        }
+
+        // IDisposable
+
+        public void Dispose()
+        {
+            iService.Unsubscribe();
+        }
     }
 
     public interface IWatchableDevice
     {
         string Udn { get; }
-        bool GetAttribute(string aKey, out string aValue);
-        void Create<T>(Action<IWatchableDevice, T> aAction) where T : IService;
+        Task<T> Create<T>() where T : IProxy;
     }
 
-    public interface IManagableWatchableDevice : IWatchableDevice
+    public class WatchableDevice : IWatchableDevice, IMockable, IDisposable
     {
-        void Unsubscribe<T>() where T : IService;
-    }
-
-    public abstract class WatchableDevice : IManagableWatchableDevice
-    {
-        public abstract string Udn { get; }
-        public abstract CpDevice Device { get; }
-        public abstract bool GetAttribute(string aKey, out string aValue);
-
-        public abstract void Create<T>(Action<IWatchableDevice, T> aAction) where T : IService;
-        public abstract void Unsubscribe<T>() where T : IService;
-    }
-
-    public class DisposableWatchableDevice : WatchableDevice, IDisposable
-    {
-        public DisposableWatchableDevice(IWatchableThread aThread, IWatchableThread aSubscribeThread, CpDevice aDevice)
+        public static WatchableDevice Create(INetwork aNetwork, CpDevice aDevice)
         {
-            iLock = new object();
-            iDisposed = false;
-            iThread = aThread;
+            WatchableDevice device = new WatchableDevice(aDevice.Udn());
+            string value;
+            if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Product", out value))
+            {
+                if (uint.Parse(value) == 1)
+                {
+                    device.Add<ProxyProduct>(new ServiceProductNetwork(aNetwork, aDevice));
+                }
+            }
+            if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Info", out value))
+            {
+                if (uint.Parse(value) == 1)
+                {
+                    device.Add<ProxyInfo>(new ServiceInfoNetwork(aNetwork, aDevice));
+                }
+            }
+            /*if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Time", out value))
+            {
+                if (uint.Parse(value) == 1)
+                {
+                    device.Add<ProxyTime>(new ServiceTime(aNetwork, string.Format("ServiceTime{0}", aDevice.Udn()), aDevice));
+                }
+            }*/
+            if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Sender", out value))
+            {
+                if (uint.Parse(value) == 1)
+                {
+                    device.Add<ProxySender>(new ServiceSenderNetwork(aNetwork, aDevice));
+                }
+            }
+            if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Volume", out value))
+            {
+                if (uint.Parse(value) == 1)
+                {
+                    device.Add<ProxyVolume>(new ServiceVolumeNetwork(aNetwork, aDevice));
+                }
+            }
+            if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Playlist", out value))
+            {
+                if (uint.Parse(value) == 1)
+                {
+                    device.Add<ProxyPlaylist>(new ServicePlaylistNetwork(aNetwork, aDevice));
+                }
+            }
+            if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Radio", out value))
+            {
+                if (uint.Parse(value) == 1)
+                {
+                    device.Add<ProxyRadio>(new ServiceRadioNetwork(aNetwork, aDevice));
+                }
+            }
+            if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Receiver", out value))
+            {
+                if (uint.Parse(value) == 1)
+                {
+                    device.Add<ProxyReceiver>(new ServiceReceiverNetwork(aNetwork, aDevice));
+                }
+            }
+            return device;
+        }
 
-            iFactories = new Dictionary<Type, IWatchableServiceFactory>();
+        public WatchableDevice(string aUdn)
+        {
+            iUdn = aUdn;
+
+            iDisposed = false;
+            iServices = new Dictionary<Type, IService>();
+        }
+
+        public virtual void Dispose()
+        {
+            if (iDisposed)
+            {
+                throw new ObjectDisposedException("WatchableDevice.Dispose");
+            }
+
+            foreach (IService s in iServices.Values)
+            {
+                s.Dispose();
+            }
+            iServices.Clear();
+            iServices = null;
+
+            iDisposed = true;
+        }
+
+        public string Udn
+        {
+            get
+            {
+                return iUdn;
+            }
+        }
+
+        public void Add<T>(IService aService) where T : IProxy
+        {
+            iServices.Add(typeof(T), aService);
+        }
+
+        public bool HasService(Type aServiceType)
+        {
+            return iServices.ContainsKey(aServiceType);
+        }
+
+        public Task<T> Create<T>() where T : IProxy
+        {
+            return iServices[typeof(T)].Create<T>(this);
+        }
+
+        private IService GetService(string aType)
+        {
+            if (aType == "product")
+            {
+                return iServices[typeof(IProxyProduct)];
+            }
+            else if (aType == "info")
+            {
+                return iServices[typeof(IProxyInfo)];
+            }
+            else if (aType == "time")
+            {
+                return iServices[typeof(IProxyTime)];
+            }
+            else if (aType == "sender")
+            {
+                return iServices[typeof(IProxySender)];
+            }
+            else if (aType == "volume")
+            {
+                return iServices[typeof(IProxyVolume)];
+            }
+            else if (aType == "playlist")
+            {
+                return iServices[typeof(IProxyPlaylist)];
+            }
+            else if (aType == "radio")
+            {
+                return iServices[typeof(IProxyRadio)];
+            }
+            else if (aType == "receiver")
+            {
+                return iServices[typeof(IProxyReceiver)];
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
+        }
+
+        // IMockable
+
+        public void Execute(IEnumerable<string> aValue)
+        {
+            GetService(aValue.First()).Execute(aValue.Skip(1));
+        }
+
+        private string iUdn;
+        private bool iDisposed;
+
+        protected Dictionary<Type, IService> iServices;
+    }
+
+    /*internal class RealWatchableDevice : WatchableDevice
+    {
+        public RealWatchableDevice(INetwork aNetwork, CpDevice aDevice)
+            : base(aNetwork.WatchableSubscribeThread)
+        {
+            /*iFactories = new Dictionary<Type, IWatchableServiceFactory>();
 
             // add a factory for each type of watchable service
 
-            iFactories.Add(typeof(ServiceProduct), new WatchableProductFactory(aThread, aSubscribeThread));
+            string value;
+            if (iDevice.GetAttribute("Upnp.Service.av-openhome-org.Product", out value))
+            {
+                iFactories.Add(typeof(ServiceProduct), new WatchableProductFactory(aThread, aSubscribeThread));
+            }
             iFactories.Add(typeof(ServiceVolume), new WatchableVolumeFactory(aThread, aSubscribeThread));
             iFactories.Add(typeof(ServiceInfo), new WatchableInfoFactory(aThread, aSubscribeThread));
             iFactories.Add(typeof(ServiceTime), new WatchableTimeFactory(aThread, aSubscribeThread));
@@ -77,251 +320,5 @@ namespace OpenHome.Av
             iDevice = aDevice;
             iDevice.AddRef();
         }
-
-        public void Dispose()
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("DisposableWatchableDevice.Dispose");
-                }
-
-                foreach (IWatchableService s in iServices.Values)
-                {
-                    s.Dispose();
-                }
-                iServices.Clear();
-                iServices = null;
-
-                iServiceRefCount.Clear();
-                iServiceRefCount = null;
-
-                foreach (IWatchableServiceFactory f in iFactories.Values)
-                {
-                    f.Dispose();
-                }
-                iFactories.Clear();
-                iFactories = null;
-
-                iDevice.RemoveRef();
-                iDevice = null;
-
-                iDisposed = true;
-            }
-        }
-
-        public override string Udn
-        {
-            get
-            {
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("WatchableDevice.Udn");
-                    }
-
-                    return iDevice.Udn();
-                }
-            }
-        }
-
-        public override bool GetAttribute(string aKey, out string aValue)
-        {
-            lock (iLock)
-            {
-                if (iDisposed)
-                {
-                    throw new ObjectDisposedException("WatchableDevice.GetAttribute");
-                }
-
-                return iDevice.GetAttribute(aKey, out aValue);
-            }
-        }
-
-        public override void Create<T>(Action<IWatchableDevice, T> aAction)
-        {
-            lock (iLock)
-            {
-                IWatchableService service = GetService(typeof(T));
-                if (service == null)
-                {
-                    IWatchableServiceFactory factory = iFactories[typeof(T)];
-                    factory.Subscribe(this, (IWatchableService aService) =>
-                    {
-                        lock (iLock)
-                        {
-                            if (!iServices.ContainsKey(typeof(T)))
-                            {
-                                iServices.Add(typeof(T), aService);
-                                iServiceRefCount.Add(typeof(T), 1);
-                            }
-                            else
-                            {
-                                ++iServiceRefCount[typeof(T)];
-                            }
-                        }
-
-                        iThread.Schedule(() =>
-                        {
-                            aAction(this, (T)aService.Create(this));
-                        });
-                    });
-                }
-                else
-                {
-                    ++iServiceRefCount[typeof(T)];
-
-                    iThread.Schedule(() =>
-                    {
-                        aAction(this, (T)service.Create(this));
-                    });
-                }
-            }
-        }
-
-        private IWatchableService GetService(Type aType)
-        {
-            IWatchableService service;
-            if (iServices.TryGetValue(aType, out service))
-            {
-                return service;
-            }
-
-            return null;
-        }
-
-        public override void Unsubscribe<T>()
-        {
-            lock (iLock)
-            {
-                IWatchableService service;
-                if (iServices.TryGetValue(typeof(T), out service))
-                {
-                    --iServiceRefCount[typeof(T)];
-
-                    if (iServiceRefCount[typeof(T)] == 0)
-                    {
-                        service.Dispose();
-
-                        iServices.Remove(typeof(T));
-                        iServiceRefCount.Remove(typeof(T));
-                    }
-                }
-                else
-                {
-                    // service could be pending subscribe
-                    IWatchableServiceFactory factory = iFactories[typeof(T)];
-                    factory.Unsubscribe();
-                }
-            }
-        }
-
-        public override CpDevice Device
-        {
-            get
-            {
-                lock (iLock)
-                {
-                    if (iDisposed)
-                    {
-                        throw new ObjectDisposedException("WatchableDevice.Device");
-                    }
-
-                    return iDevice;
-                }
-            }
-        }
-
-        protected object iLock;
-        protected bool iDisposed;
-
-        private IWatchableThread iThread;
-
-        protected CpDevice iDevice;
-
-        private Dictionary<Type, IWatchableServiceFactory> iFactories;
-
-        private Dictionary<Type, IWatchableService> iServices;
-        private Dictionary<Type, uint> iServiceRefCount;
-    }
-
-    public class MockWatchableDevice : IManagableWatchableDevice, IMockable, IDisposable
-    {
-        public MockWatchableDevice(IWatchableThread aThread, IWatchableThread aSubscribeThread, string aUdn)
-        {
-            iThread = aThread;
-            iUdn = aUdn;
-
-            iSubscribeThread = aSubscribeThread;
-            iServices = new Dictionary<Type, IWatchableService>();
-        }
-
-        public void Dispose()
-        {
-            foreach (IWatchableService s in iServices.Values)
-            {
-                s.Dispose();
-            }
-            iServices.Clear();
-            iServices = null;
-        }
-
-        public string Udn
-        {
-            get
-            {
-                return iUdn;
-            }
-        }
-
-        public bool GetAttribute(string aKey, out string aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Create<T>(Action<IWatchableDevice, T> aAction) where T : IService
-        {
-            iSubscribeThread.Schedule(() =>
-            {
-                IWatchableService service;
-                if (iServices.TryGetValue(typeof(T), out service))
-                {
-                    iThread.Schedule(() =>
-                    {
-                        aAction(this, (T)service.Create(this));
-                    });
-                }
-                else
-                {
-                    throw new NotSupportedException();
-                }
-            });
-        }
-
-        public void Unsubscribe<T>() where T : IService
-        {
-        }
-
-        public void Add<T>(IWatchableService aService) where T : IService
-        {
-            iServices.Add(typeof(T), aService);
-        }
-
-        internal bool HasService(Type aType)
-        {
-            return (iServices.ContainsKey(aType));
-        }
-
-        public virtual void Execute(IEnumerable<string> aValue)
-        {
-        }
-
-        private string iUdn;
-        private IWatchableThread iThread;
-        private IWatchableThread iSubscribeThread; 
-
-        protected Dictionary<Type, IWatchableService> iServices;
-    }
+    }*/
 }

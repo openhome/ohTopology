@@ -21,7 +21,7 @@ namespace TestMediaServer
         {
             iWatchableThread = aWatchableThread;
 
-            iMediaServers = aNetwork.GetWatchableDeviceCollection<IProxyMediaServer>();
+            iMediaServers = aNetwork.Create<IProxyMediaServer>();
 
             iWatchableThread.Execute(() =>
             {
@@ -85,11 +85,11 @@ namespace TestMediaServer
         {
         }
 
-        public void UnorderedAdd(IWatchableDevice aItem)
+        public void UnorderedAdd(IWatchableDevice aDevice)
         {
-            aItem.Create<IProxyMediaServer>((d, p) =>
+            aDevice.Create<IProxyMediaServer>().ContinueWith((t) =>
             {
-                iProxy = p;
+                iProxy = t.Result;
             });
         }
 
@@ -130,11 +130,9 @@ namespace TestMediaServer
             WatchableThread watchableThread = new WatchableThread(reporter);
             WatchableThread subscribeThread = new WatchableThread(reporter);
 
-            using (var network = new MockNetwork(watchableThread, subscribeThread))
+            using (var network = new Network(watchableThread, subscribeThread))
             {
-                network.AddDevice(new MockWatchableMediaServer(watchableThread, subscribeThread, "4c494e4e-0026-0f99-1111-111111111111", "."));
-
-                var ms = new MockWatchableMediaServer(watchableThread, subscribeThread, "ABCDEFGHIJKLM", ".");
+                network.Add(new MockWatchableMediaServer(network, "4c494e4e-0026-0f99-1111-111111111111", "."));
 
                 using (var client = new Client(watchableThread, network))
                 {

@@ -1,43 +1,46 @@
-﻿// test network is populated with 4 devices
+﻿// setup type of network
+mock network medium
+
+// test network is populated with 4 devices
 expect Room Added Kitchen
-expect Group Added Kitchen:Sneaky Music DS
+expect Group Added 4c494e4e-0026-0f99-1111-ef000004013f
 expect Room Added Sitting Room
-expect Group Added Sitting Room:Klimax DSM
+expect Group Added 4c494e4e-0026-0f99-1112-ef000004013f
 expect Room Added Bedroom
-expect Group Added Bedroom:Kiko DSM
+expect Group Added 4c494e4e-0026-0f99-1113-ef000004013f
 expect Room Added Dining Room
-expect Group Added Dining Room:Majik DS
+expect Group Added 4c494e4e-0026-0f99-1114-ef000004013f
 empty
 
 // test room and group is added when ds appears on network
 mock network add ds 67
 expect Room Added Main Room
-expect Group Added Main Room:Mock DS
+expect Group Added 67
 empty
 
 // test group moves room when room name changes
 mock network update ds 67 product room Bathroom
-expect Group Removed Main Room:Mock DS
+expect Group Removed 67
 expect Room Removed Main Room
 expect Room Added Bathroom
-expect Group Added Bathroom:Mock DS
+expect Group Added 67
 empty
 
 // test group is added to existing room and no new room is created
 mock network add ds 68
 expect Room Added Main Room
-expect Group Added Main Room:Mock DS
+expect Group Added 68
 empty
 mock network update ds 68 product room Bathroom
-expect Group Removed Main Room:Mock DS
+expect Group Removed 68
 expect Room Removed Main Room
-expect Group Added Bathroom:Mock DS
+expect Group Added 68
 empty
 
 // test room is remove when last group is removed
 mock network remove ds 67
-expect Group Removed Bathroom:Mock DS
+expect Group Removed 67
 mock network remove ds 68
-expect Group Removed Bathroom:Mock DS
+expect Group Removed 68
 expect Room Removed Bathroom
 empty
