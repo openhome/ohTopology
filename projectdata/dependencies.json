@@ -23,9 +23,9 @@
         "dest": "dependencies/AnyPlatform/ohNet",
         "strip-archive-dirs":1
     },
-    {   "name": "ohOs2",
-        "archive-path": "http://openhome.org/releases/artifacts/ohOs2/ohOs2-0.0.383-AnyPlatform-Release.tar.gz",
-        "dest": "dependencies/AnyPlatform/ohOs2",
+    {   "name": "ohOs",
+        "archive-path": "http://openhome.org/releases/artifacts/ohOs2/ohOs2-0.0.385-AnyPlatform-Release.tar.gz",
+        "dest": "dependencies/AnyPlatform/ohOs",
         "strip-archive-dirs":1
     },
 	{   "name": "ohOs.App.V1",
@@ -34,7 +34,7 @@
         "strip-archive-dirs":1
     },
 	{   "name": "ohMediaServer",
-        "archive-path": "http://openhome.org/releases/artifacts/ohMediaServer/ohMediaServer-0.0.114-AnyPlatform-Release.tar.gz",
+        "archive-path": "http://openhome.org/releases/artifacts/ohMediaServer/ohMediaServer-0.0.222-AnyPlatform-Release.tar.gz",
         "dest": "dependencies/AnyPlatform/ohMediaServer",
         "strip-archive-dirs":1
     },

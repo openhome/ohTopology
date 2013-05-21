@@ -3,11 +3,19 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.IO;
+
+using System.Xml;
+using System.Xml.Linq;
+
+using ICSharpCode.SharpZipLib.Core;
+using ICSharpCode.SharpZipLib.Zip;
 
 using OpenHome.Os.App;
+using OpenHome.MediaServer;
+
 using OpenHome.Net.ControlPoint;
 using OpenHome.Net.ControlPoint.Proxies;
-using OpenHome.MediaServer;
 
 
 namespace OpenHome.Av
@@ -54,7 +62,7 @@ namespace OpenHome.Av
         Task<IMediaServerContainer> Browse(IMediaDatum aDatum); // null = home
     }
 
-    public interface IServiceMediaServer : IService
+    public interface IProxyMediaServer : IService
     {
         IEnumerable<string> Attributes { get; }
         string ManufacturerImageUri { get; }
@@ -102,13 +110,18 @@ namespace OpenHome.Av
         }
     }
 
-    public class MediaMetadata : IMediaMetadata
+    public class MediaDictionary
     {
-        private Dictionary<ITag, IMediaValue> iMetadata;
+        protected Dictionary<ITag, IMediaValue> iMetadata;
 
-        public MediaMetadata()
+        protected MediaDictionary()
         {
             iMetadata = new Dictionary<ITag, IMediaValue>();
+        }
+
+        protected MediaDictionary(IMediaMetadata aMetadata)
+        {
+            iMetadata = new Dictionary<ITag, IMediaValue>(aMetadata.ToDictionary(x => x.Key, x => x.Value));
         }
 
         public void Add(ITag aTag, string aValue)
@@ -127,14 +140,6 @@ namespace OpenHome.Av
             }
         }
 
-        public IDictionary<ITag, IMediaValue> Metadata
-        {
-            get
-            {
-                return (iMetadata);
-            }
-        }
-
         // IMediaServerMetadata
 
         public IMediaValue this[ITag aTag]
@@ -146,7 +151,13 @@ namespace OpenHome.Av
                 return (value);
             }
         }
+    }
 
+    public class MediaMetadata : MediaDictionary, IMediaMetadata
+    {
+        public MediaMetadata()
+        {
+        }
 
         // IEnumerable<KeyValuePair<ITag, IMediaServer>>
 
@@ -163,7 +174,75 @@ namespace OpenHome.Av
         }
     }
 
-    public class ServiceFactoryMediaServer
+    public class MediaDatum : MediaDictionary, IMediaDatum
+    {
+        private readonly ITag[] iType;
+
+        public MediaDatum(params ITag[] aType)
+        {
+            iType = aType;
+        }
+
+        public MediaDatum(IMediaMetadata aMetadata, params ITag[] aType)
+            : base(aMetadata)
+        {
+            iType = aType;
+        }
+
+        // IMediaDatum Members
+
+        public IEnumerable<ITag> Type
+        {
+            get { return (iType); }
+        }
+
+        // IEnumerable<KeyValuePair<ITag, IMediaServer>>
+
+        public IEnumerator<KeyValuePair<ITag, IMediaValue>> GetEnumerator()
+        {
+            return (iMetadata.GetEnumerator());
+        }
+
+        // IEnumerable Members
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class MediaServerFragment : IMediaServerFragment
+    {
+        private readonly uint iIndex;
+        private readonly uint iSequence;
+        private readonly IEnumerable<IMediaDatum> iData;
+
+        public MediaServerFragment(uint aIndex, uint aSequence, IEnumerable<IMediaDatum> aData)
+        {
+            iIndex = aIndex;
+            iSequence = aSequence;
+            iData = aData;
+        }
+
+        // IMediaServerFragment
+
+        public uint Index
+        {
+            get { return (iIndex); }
+        }
+
+        public uint Sequence
+        {
+            get { return (iSequence); }
+        }
+
+        public IEnumerable<IMediaDatum> Data
+        {
+            get { return (iData); }
+        }
+    }
+
+    public class ServiceMediaServer
     {
         private readonly IWatchableThread iWatchableThread;
         private readonly IEnumerable<string> iAttributes;
@@ -180,7 +259,7 @@ namespace OpenHome.Av
         private readonly string iProductName;
         private readonly string iProductUrl;
 
-        protected ServiceFactoryMediaServer(IWatchableThread aWatchableThread, IEnumerable<string> aAttributes, 
+        protected ServiceMediaServer(IWatchableThread aWatchableThread, IEnumerable<string> aAttributes, 
             string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl,
             string aModelImageUri, string aModelInfo, string aModelName, string aModelUrl,
             string aProductImageUri, string aProductInfo, string aProductName, string aProductUrl
@@ -200,6 +279,11 @@ namespace OpenHome.Av
             iProductInfo = aProductInfo;
             iProductName = aProductName;
             iProductUrl = aProductUrl;
+        }
+
+        internal IWatchableThread WatchableThread
+        {
+            get { return (iWatchableThread); }
         }
 
         // IService
@@ -272,19 +356,15 @@ namespace OpenHome.Av
         {
             get { return (iProductUrl); }
         }
-
-        public Task<IMediaServerSession> CreateSession()
-        {
-            throw new NotImplementedException();
-        }
     }
 
-    internal class ServiceMediaServerMock : IServiceMediaServer
+    internal class ProxyMediaServerMock : IProxyMediaServer
     {
-        ServiceFactoryMediaServerMock iFactory;
+        private readonly ServiceMediaServerMock iService;
 
-        public ServiceMediaServerMock(ServiceFactoryMediaServerMock aFactory)
+        public ProxyMediaServerMock(ServiceMediaServerMock aService)
         {
+            iService = aService;
         }
 
         // IService
@@ -295,224 +375,447 @@ namespace OpenHome.Av
 
         public IEnumerable<string> Attributes
         {
-            get { return (iFactory.Attributes); }
+            get { return (iService.Attributes); }
         }
 
         public string ManufacturerImageUri
         {
-            get { return (iFactory.ManufacturerImageUri); }
+            get { return (iService.ManufacturerImageUri); }
         }
 
         public string ManufacturerInfo
         {
-            get { return (iFactory.ManufacturerInfo); }
+            get { return (iService.ManufacturerInfo); }
         }
 
         public string ManufacturerName
         {
-            get { return (iFactory.ManufacturerName); }
+            get { return (iService.ManufacturerName); }
         }
 
         public string ManufacturerUrl
         {
-            get { return (iFactory.ManufacturerUrl); }
+            get { return (iService.ManufacturerUrl); }
         }
 
         public string ModelImageUri
         {
-            get { return (iFactory.ModelImageUri); }
+            get { return (iService.ModelImageUri); }
         }
 
         public string ModelInfo
         {
-            get { return (iFactory.ModelInfo); }
+            get { return (iService.ModelInfo); }
         }
 
         public string ModelName
         {
-            get { return (iFactory.ModelName); }
+            get { return (iService.ModelName); }
         }
 
         public string ModelUrl
         {
-            get { return (iFactory.ModelUrl); }
+            get { return (iService.ModelUrl); }
         }
 
         public string ProductImageUri
         {
-            get { return (iFactory.ProductImageUri); }
+            get { return (iService.ProductImageUri); }
         }
 
         public string ProductInfo
         {
-            get { return (iFactory.ProductInfo); }
+            get { return (iService.ProductInfo); }
         }
 
         public string ProductName
         {
-            get { return (iFactory.ProductName); }
+            get { return (iService.ProductName); }
         }
 
         public string ProductUrl
         {
-            get { return (iFactory.ProductUrl); }
+            get { return (iService.ProductUrl); }
         }
 
         public Task<IMediaServerSession> CreateSession()
         {
-            return (iFactory.CreateSession());
+            return (iService.CreateSession());
         }
 
         // IDisposable
 
         public void Dispose()
         {
-            iFactory.Destroy(this);
+            iService.Destroy(this);
         }
     }
 
-    public class ServiceFactoryMediaServerMock : ServiceFactoryMediaServer, IWatchableService
+    public class ServiceMediaServerMock : ServiceMediaServer, IWatchableService
     {
-        public ServiceFactoryMediaServerMock(IWatchableThread aWatchableThread, IEnumerable<string> aAttributes, 
+        private readonly ITagManager iTagManager;
+        private readonly IEnumerable<IMediaMetadata> iMetadata;
+        private readonly List<IProxyMediaServer> iProxies;
+        private readonly List<IMediaServerSession> iSessions;
+        
+        public ServiceMediaServerMock(IWatchableThread aWatchableThread, IEnumerable<string> aAttributes, 
             string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl,
             string aModelImageUri, string aModelInfo, string aModelName, string aModelUrl,
-            string aProductImageUri, string aProductInfo, string aProductName, string aProductUrl)
+            string aProductImageUri, string aProductInfo, string aProductName, string aProductUrl,
+            string aAppRoot)
             : base(aWatchableThread, aAttributes,
             aManufacturerImageUri, aManufacturerInfo, aManufacturerName, aManufacturerUrl,
             aModelImageUri, aModelInfo, aModelName, aModelUrl,
             aProductImageUri, aProductInfo, aProductName, aProductUrl)
         {
+            iTagManager = new TagManager();
+            iMetadata = ReadMetadata(aAppRoot);
+            iProxies = new List<IProxyMediaServer>();
+            iSessions = new List<IMediaServerSession>();
         }
 
-        internal void Destroy(IServiceMediaServer aService)
+        private IEnumerable<IMediaMetadata> ReadMetadata(string aAppRoot)
         {
+            var path = Path.Combine(aAppRoot, "MockMediaServer.zip");
+
+            using (var file = File.Open(path, FileMode.Open))
+            {
+                var zip = new ZipFile(file);
+
+                var entries = zip.GetEnumerator();
+
+                entries.MoveNext();
+
+                var entry = entries.Current as ZipEntry;
+
+                Do.Assert(entry.Name == "MockMediaServer.xml");
+
+                Stream stream = zip.GetInputStream(entry);
+
+                return (ReadMetadata(stream));
+            }
+        }
+
+        private IEnumerable<IMediaMetadata> ReadMetadata(Stream aStream)
+        {
+            var reader = XmlReader.Create(aStream);
+
+            var xml = XDocument.Load(reader);
+
+            var items = from item in xml.Descendants("item") select new
+            {
+                Metadata = item.Descendants("metadatum")
+            };
+
+            var results = new List<IMediaMetadata>();
+
+            foreach (var item in items)
+            {
+                var metadata = new MediaMetadata();
+
+                var xmetadata = from metadatum in item.Metadata select new
+                {
+                    Tag = metadatum.Attribute("tag"),
+                    Values = metadatum.Descendants("value")
+                };
+
+                foreach (var metadatum in xmetadata)
+                {
+                    ITag tag = iTagManager.Audio[metadatum.Tag.Value];
+
+                    if (tag != null)
+                    {
+                        foreach (var value in metadatum.Values)
+                        {
+                            metadata.Add(tag, value.Value);
+                        }
+                    }
+                }
+
+                results.Add(metadata);
+            }
+
+            return (results);
+        }
+
+        internal Task<IMediaServerSession> CreateSession()
+        {
+            return (Task.Factory.StartNew<IMediaServerSession>(() =>
+            {
+                var session = new MediaServerSessionMock(this);
+                iSessions.Add(session);
+                return (session);
+            }));
+        }
+
+        internal ITagManager TagManager
+        {
+            get { return (iTagManager); }
+        }
+
+        internal IEnumerable<IMediaMetadata> Metadata
+        {
+            get { return (iMetadata); }
+        }
+
+        internal void Destroy(IProxyMediaServer aProxy)
+        {
+            iProxies.Remove(aProxy);
+        }
+
+        internal void Destroy(IMediaServerSession aSession)
+        {
+            iSessions.Remove(aSession);
         }
 
         // IServiceFactory
 
         public IService Create(IManagableWatchableDevice aDevice)
         {
-            return (new ServiceMediaServerMock(this));
+            var proxy = new ProxyMediaServerMock(this);
+            iProxies.Add(proxy);
+            return (proxy);
         }
 
         // IDispose
 
         public void Dispose()
         {
+            Do.Assert(iProxies.Count == 0);
+            Do.Assert(iSessions.Count == 0);
         }
     }
 
-
-
-    public class WatchableMediaServerFactory : IWatchableServiceFactory
+    internal class MediaServerSessionMock : IMediaServerSession
     {
-        private readonly IWatchableThread iWatchableThread;
-        private readonly IWatchableThread iSubscribeThread;
+        private readonly ServiceMediaServerMock iService;
+        private readonly List<IMediaDatum> iRoot;
 
-        private readonly object iLock;
-        private CpProxyAvOpenhomeOrgReceiver1 iPendingService;
-        
-        private WatchableReceiver iService;
-        private List<Action<IWatchableService>> iPendingSubscribes;
+        private IMediaServerContainer iContainer;
 
-        private bool iDisposed;
-
-        public WatchableMediaServerFactory(IWatchableThread aWatchableThread, IWatchableThread aSubscribeThread)
+        public MediaServerSessionMock(ServiceMediaServerMock aService)
         {
-            iWatchableThread = aWatchableThread;
-            iSubscribeThread = aSubscribeThread;
-
-            iLock = new object();
-            iPendingSubscribes = new List<Action<IWatchableService>>();
-
-            iDisposed = false;
-        }
-
-        public void Dispose()
-        {
-            iSubscribeThread.Execute(() =>
-            {
-                Unsubscribe();
-                iDisposed = true;
-            });
-        }
-
-        public void Subscribe(IWatchableDevice aDevice, Action<IWatchableService> aCallback)
-        {
-            iSubscribeThread.Schedule(() =>
-            {
-                lock (iLock)
-                {
-                    if (!iDisposed)
-                    {
-                        if (iPendingService == null)
-                        {
-                            WatchableDevice d = aDevice as WatchableDevice;
-                            iPendingService = new CpProxyAvOpenhomeOrgReceiver1(d.Device);
-                            iPendingService.SetPropertyInitialEvent(delegate
-                            {
-                                lock (iLock)
-                                {
-                                    if (iPendingService != null)
-                                    {
-                                        iService = new WatchableReceiver(iWatchableThread, string.Format("Receiver({0})", aDevice.Udn), iPendingService);
-                                        iPendingService = null;
-                                        aCallback(iService);
-                                        foreach (Action<IWatchableService> c in iPendingSubscribes)
-                                        {
-                                            c(iService);
-                                        }
-                                        iPendingSubscribes.Clear();
-                                    }
-                                }
-                            });
-                            iPendingService.Subscribe();
-                        }
-                        else
-                        {
-                            iPendingSubscribes.Add(aCallback);
-                        }
-                    }
-                }
-            });
-        }
-
-        public void Unsubscribe()
-        {
-            iSubscribeThread.Schedule(() =>
-            {
-                lock (iLock)
-                {
-                    if (iPendingService != null)
-                    {
-                        iPendingService.Dispose();
-                        iPendingService = null;
-                    }
-                }
-            });
-        }
-    }
-
-
-    /*
-    public class ServiceAvOpenHomeOrgMediaServer1 : IServiceMediaServer
-    {
-        private readonly IWatchableThread iWatchableThread;
-        private readonly CpProxyAvOpenhomeOrgMediaServer1 iService;
-
-        public ServiceAvOpenHomeOrgMediaServer1(IWatchableThread aWatchableThread, CpProxyAvOpenhomeOrgMediaServer1 aService)
-        {
-            iWatchableThread = aWatchableThread;
             iService = aService;
-            iService.Subscribe();
-        }        
+
+            iRoot = new List<IMediaDatum>();
+            iRoot.Add(GetRootContainerTracks());
+            iRoot.Add(GetRootContainerArtists());
+            iRoot.Add(GetRootContainerAlbums());
+            iRoot.Add(GetRootContainerGenres());
+        }
+
+        private IMediaDatum GetRootContainerTracks()
+        {
+            var datum = new MediaDatum(TagManager.Container.Title);
+            datum.Add(TagManager.Container.Title, "Tracks");
+            return (datum);
+        }
+
+        private IMediaDatum GetRootContainerArtists()
+        {
+            var datum = new MediaDatum(TagManager.Container.Title, TagManager.Audio.Artist, TagManager.Audio.Album);
+            datum.Add(TagManager.Container.Title, "Artists");
+            return (datum);
+        }
+
+        private IMediaDatum GetRootContainerAlbums()
+        {
+            var datum = new MediaDatum(TagManager.Container.Title, TagManager.Audio.Album);
+            datum.Add(TagManager.Container.Title, "Albums");
+            return (datum);
+        }
+
+        private IMediaDatum GetRootContainerGenres()
+        {
+            var datum = new MediaDatum(TagManager.Container.Title, TagManager.Audio.Genre);
+            datum.Add(TagManager.Container.Title, "Genre");
+            return (datum);
+        }
+
+        private Task<IMediaServerContainer> BrowseRootTracks()
+        {
+            return (Task.Factory.StartNew<IMediaServerContainer>(() =>
+            {
+                var metadata = iService.Metadata.Select((m) => new MediaDatum(m));
+                iContainer = new MediaServerContainerMock(iService.WatchableThread, new MediaServerSnapshotMock(metadata));
+                return (iContainer);
+            }));
+        }
+
+        private Task<IMediaServerContainer> BrowseRootArtists()
+        {
+            var containers = Metadata.Select(m => m[TagManager.Audio.Artist])
+                .Select(v => v.Value)
+                .Distinct()
+                .OrderBy(v => v)
+                .Select(v =>
+                {
+                    var datum = new MediaDatum(TagManager.Audio.Artist, TagManager.Audio.Album);
+                    datum.Add(TagManager.Audio.Artist, v);
+                    return (datum);
+                });
+
+            return (Task.Factory.StartNew<IMediaServerContainer>(() =>
+            {
+                iContainer = new MediaServerContainerMock(iService.WatchableThread, new MediaServerSnapshotMock(containers));
+                return (iContainer);
+            }));
+        }
+
+        private Task<IMediaServerContainer> BrowseRootAlbums()
+        {
+            return (Task.Factory.StartNew<IMediaServerContainer>(() =>
+            {
+                var metadata = iService.Metadata.Select((m) => new MediaDatum(m));
+                iContainer = new MediaServerContainerMock(iService.WatchableThread, new MediaServerSnapshotMock(metadata));
+                return (iContainer);
+            }));
+        }
+
+        private Task<IMediaServerContainer> BrowseRootGenres()
+        {
+            return (Task.Factory.StartNew<IMediaServerContainer>(() =>
+            {
+                var metadata = iService.Metadata.Select((m) => new MediaDatum(m));
+                iContainer = new MediaServerContainerMock(iService.WatchableThread, new MediaServerSnapshotMock(metadata));
+                return (iContainer);
+            }));
+        }
+
+        internal IWatchableThread WatchableThread
+        {
+            get { return (iService.WatchableThread); }
+        }
+
+        internal ITagManager TagManager
+        {
+            get { return (iService.TagManager); }
+        }
+
+        internal IEnumerable<IMediaMetadata> Metadata
+        {
+            get { return (iService.Metadata); }
+        }
+
+        internal void Destroy(IMediaServerContainer aContainer)
+        {
+        }
+
+        // IMediaServerSession
+
+        public Task<IMediaServerContainer> Query(string aValue)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IMediaServerContainer> Browse(IMediaDatum aDatum)
+        {
+            if (aDatum == null)
+            {
+                return (Task.Factory.StartNew<IMediaServerContainer>(() =>
+                {
+                    iContainer = new MediaServerContainerMock(iService.WatchableThread, new MediaServerSnapshotMock(iRoot));
+                    return (iContainer);
+                }));
+            }
+
+            Do.Assert(aDatum.Type.Any());
+
+
+            if (aDatum.Type.First() == TagManager.Container.Title)
+            {
+                // Top Level Container
+
+                if (aDatum.Type.Skip(1).Any())
+                {
+                    ITag tag = aDatum.Type.Skip(1).First();
+
+                    if (tag == TagManager.Audio.Artist)
+                    {
+                        return (BrowseRootArtists());
+                    }
+
+                    if (tag == TagManager.Audio.Album)
+                    {
+                        return (BrowseRootAlbums());
+                    }
+
+                    if (tag == TagManager.Audio.Genre)
+                    {
+                        return (BrowseRootGenres());
+                    }
+
+                    Do.Assert(false);
+                }
+            }
+
+            return (BrowseRootTracks());
+        }
+
+        // Disposable
 
         public void Dispose()
         {
-            iService.Dispose();
+            iService.Destroy(this);
         }
     }
-    */
+
+    internal class MediaServerContainerMock : IMediaServerContainer
+    {
+        private readonly Watchable<IMediaServerSnapshot> iSnapshot;
+
+        public MediaServerContainerMock(IWatchableThread aWatchableThread, IMediaServerSnapshot aSnapshot)
+        {
+            iSnapshot = new Watchable<IMediaServerSnapshot>(aWatchableThread, "snapshot", aSnapshot);
+        }
+
+        // IMediaServerContainer
+
+        public IWatchable<IMediaServerSnapshot> Snapshot
+        {
+            get { return (iSnapshot); }
+        }
+    }
+
+
+    internal class MediaServerSnapshotMock : IMediaServerSnapshot
+    {
+        private readonly IEnumerable<IMediaDatum> iData;
+        private readonly IEnumerable<uint> iAlphaMap;
+
+        public MediaServerSnapshotMock(IEnumerable<IMediaDatum> aData)
+        {
+            iData = aData;
+            iAlphaMap = null;
+        }
+
+        // IMediaServerSnapshot
+
+        public uint Total
+        {
+            get { return ((uint)iData.Count()); }
+        }
+
+        public uint Sequence
+        {
+            get { return (0); }
+        }
+
+        public IEnumerable<uint> AlphaMap
+        {
+            get { return (iAlphaMap); }
+        }
+
+        public Task<IMediaServerFragment> Read(uint aIndex, uint aCount)
+        {
+            Do.Assert(aIndex + aCount < Total);
+
+            return (Task.Factory.StartNew<IMediaServerFragment>(() =>
+            {
+                return (new MediaServerFragment(aIndex, 0, iData.Skip((int)aIndex).Take((int)aCount)));
+            }));
+        }
+    }
 
     /*
     public class ServiceUpnpOrgContentDirectory1 : IServiceMediaServer
@@ -606,171 +909,6 @@ namespace OpenHome.Av
         private CpProxyUpnpOrgContentDirectory1 iService;
 
         private Watchable<uint> iUpdateCount;
-    }
-    */
-
-    /*
-    public class MockServiceMediaServer : IServiceMediaServer, IMockable
-    {
-        public MockServiceMediaServer(IWatchableThread aThread, string aId, uint aUpdateCount)
-        {
-            iThread = aThread;
-            iUpdateCount = new Watchable<uint>(aThread, string.Format("UpdateCount({0})", aId), aUpdateCount);
-        }
-
-        public void Dispose()
-        {
-        }
-
-        public IWatchable<uint> UpdateCount
-        {
-            get
-            {
-                return iUpdateCount;
-            }
-        }
-
-        public void Browse(string aId, Action<IServiceMediaServerBrowseResult> aCallback)
-        {
-            iThread.Schedule(() =>
-            {
-                aCallback(null);
-            });
-        }
-
-        public void Execute(IEnumerable<string> aValue)
-        {
-            
-            string command = aValue.First().ToLowerInvariant();
-            
-            if (command == "balance")
-            {
-                IEnumerable<string> value = aValue.Skip(1);
-                iBalance.Update(int.Parse(value.First()));
-            }
-            else if (command == "fade")
-            {
-                IEnumerable<string> value = aValue.Skip(1);
-                iFade.Update(int.Parse(value.First()));
-            }
-            else if (command == "mute")
-            {
-                IEnumerable<string> value = aValue.Skip(1);
-                iMute.Update(bool.Parse(value.First()));
-            }
-            else if (command == "volume")
-            {
-                IEnumerable<string> value = aValue.Skip(1);
-                iVolume.Update(uint.Parse(value.First()));
-            }
-            else if (command == "volumeinc")
-            {
-                VolumeInc();
-            }
-            else if (command == "volumedec")
-            {
-                VolumeDec();
-            }
-            else
-            {
-                throw new NotSupportedException();
-            }
-        }
-
-        private IWatchableThread iThread;
-
-        private Watchable<uint> iUpdateCount;
-    }
-    */
-
-    /*
-    public class WatchableContentDirectoryFactory : IWatchableServiceFactory
-    {
-        public WatchableContentDirectoryFactory(IWatchableThread aThread)
-        {
-            iThread = aThread;
-
-            iService = null;
-        }
-
-        public void Subscribe(WatchableDevice aDevice, Action<IWatchableService> aCallback)
-        {
-            if (iService == null && iPendingService == null)
-            {
-                iPendingService = new CpProxyUpnpOrgContentDirectory1(aDevice.Device);
-                iPendingService.SetPropertyInitialEvent(delegate
-                {
-                    iThread.Schedule(() =>
-                    {
-                        iService = new WatchableContentDirectory(iThread, string.Format("ContentDirectory({0})", aDevice.Udn), iPendingService);
-                        iPendingService = null;
-                        aCallback(iService);
-                    });
-                });
-                iPendingService.Subscribe();
-            }
-        }
-
-        public void Unsubscribe()
-        {
-            if (iPendingService != null)
-            {
-                iPendingService.Dispose();
-                iPendingService = null;
-            }
-
-            if (iService != null)
-            {
-                iService.Dispose();
-                iService = null;
-            }
-        }
-
-        private CpProxyUpnpOrgContentDirectory1 iPendingService;
-        private WatchableContentDirectory iService;
-        private IWatchableThread iThread;
-    }
-
-    public class WatchableContentDirectory : ContentDirectory
-    {
-        public WatchableContentDirectory(IWatchableThread aThread, string aId, CpProxyUpnpOrgContentDirectory1 aService)
-            : base(aId, new ServiceUpnpOrgContentDirectory1(aThread, aId, aService))
-        {
-            iCpService = aService;
-        }
-
-        public override void Dispose()
-        {
-            if (iCpService != null)
-            {
-                iCpService.Dispose();
-            }
-        }
-
-        private CpProxyUpnpOrgContentDirectory1 iCpService;
-    }
-
-    public class MockWatchableContentDirectory : ContentDirectory, IMockable
-    {
-        public MockWatchableContentDirectory(IWatchableThread aThread, string aId, uint aSystemUpdateId, string aContainerUpdateIds)
-            : base(aId, new MockServiceUpnpOrgContentDirectory1(aThread, aId, aSystemUpdateId, aContainerUpdateIds))
-        {
-        }
-
-        public MockWatchableContentDirectory(IWatchableThread aThread, string aId)
-            : base(aId, new MockServiceUpnpOrgContentDirectory1(aThread, aId, 0, string.Empty))
-        {
-        }
-
-        public override void Dispose()
-        {
-        }
-
-        public void Execute(IEnumerable<string> aValue)
-        {
-            MockServiceUpnpOrgContentDirectory1 i = iService as MockServiceUpnpOrgContentDirectory1;
-            i.Execute(aValue);
-        }
     }
     */
 }

@@ -29,8 +29,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ohOs">
-      <HintPath>..\..\dependencies\AnyPlatform\ohOs2\ohOs.dll</HintPath>
+    <Reference Include="ohOs, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\dependencies\AnyPlatform\ohOs\ohOs.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="ohOs.App.V1">
