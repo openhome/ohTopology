@@ -26,7 +26,7 @@ namespace TestMediaServer
             WatchableThread watchablethread = new WatchableThread(reporter);
             WatchableThread subscribeThread = new WatchableThread(reporter);
 
-            var ms = new MockWatchableMediaServer(watchablethread, subscribeThread, "ABCDEFGHIJKLM", ".");
+            //var ms = new MockWatchableMediaServer(watchablethread, subscribeThread, "ABCDEFGHIJKLM", ".");
         }
     }
 }

@@ -36,25 +36,25 @@ namespace OpenHome.Av
                 "", "Linn High Fidelity System Component", ""));
 
             // volume service
-            device.Add<ProxyVolume>(new ServiceVolumeMock(aNetwork, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
+            device.Add<ProxyVolume>(new ServiceVolumeMock(aNetwork, string.Format("ServiceVolume({0})", aUdn), 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
 
             // info service
-            device.Add<ProxyInfo>(new ServiceInfoMock(aNetwork, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
+            device.Add<ProxyInfo>(new ServiceInfoMock(aNetwork, string.Format("ServiceInfo({0})", aUdn), new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
 
             // time service
-            device.Add<ProxyTime>(new ServiceTimeMock(aNetwork, aUdn, 0, 0));
+            device.Add<ProxyTime>(new ServiceTimeMock(aNetwork, string.Format("ServiceTime({0})", aUdn), 0, 0));
 
             // sender service
-            device.Add<ProxySender>(new ServiceSenderMock(aNetwork, aUdn, aAttributes, string.Empty, false, new SenderMetadata("<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>Main Room:Mock DS</dc:title><res protocolInfo=\"ohz:*:*:u\">ohz://239.255.255.250:51972/" + aUdn + "</res><upnp:albumArtURI>http://10.2.10.27/images/Icon.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"), "Enabled"));
+            device.Add<ProxySender>(new ServiceSenderMock(aNetwork, string.Format("ServiceSender({0})", aUdn), aAttributes, string.Empty, false, new SenderMetadata("<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>Main Room:Mock DS</dc:title><res protocolInfo=\"ohz:*:*:u\">ohz://239.255.255.250:51972/" + aUdn + "</res><upnp:albumArtURI>http://10.2.10.27/images/Icon.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"), "Enabled"));
 
             // receiver service
-            device.Add<ProxyReceiver>(new ServiceReceiverMock(aNetwork, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
+            device.Add<ProxyReceiver>(new ServiceReceiverMock(aNetwork, string.Format("ServiceReceiver({0})", aUdn), string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
 
             // radio service
-            device.Add<ProxyRadio>(new ServiceRadioMock(aNetwork, aUdn, 0, new List<uint>(), new InfoMetadata(), string.Empty, "Stopped", 100));
+            device.Add<ProxyRadio>(new ServiceRadioMock(aNetwork, string.Format("ServiceRadio({0})", aUdn), 0, new List<uint>(), new InfoMetadata(), string.Empty, "Stopped", 100));
 
             // playlist service
-            device.Add<ProxyPlaylist>(new ServicePlaylistMock(aNetwork, aUdn, 0, new List<uint>(), false, false, "Stopped", string.Empty, 1000));
+            device.Add<ProxyPlaylist>(new ServicePlaylistMock(aNetwork, string.Format("ServicePlaylist({0})", aUdn), 0, new List<uint>(), false, false, "Stopped", string.Empty, 1000));
 
             return device;
         }
@@ -91,25 +91,25 @@ namespace OpenHome.Av
                 "", "Linn High Fidelity System Component", ""));
 
             // volume service
-            device.Add<ProxyVolume>(new ServiceVolumeMock(aNetwork, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
+            device.Add<ProxyVolume>(new ServiceVolumeMock(aNetwork, string.Format("ServiceVolume({0})", aUdn), 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
 
             // info service
-            device.Add<ProxyInfo>(new ServiceInfoMock(aNetwork, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
+            device.Add<ProxyInfo>(new ServiceInfoMock(aNetwork, string.Format("ServiceInfo({0})", aUdn), new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
 
             // time service
-            device.Add<ProxyTime>(new ServiceTimeMock(aNetwork, aUdn, 0, 0));
+            device.Add<ProxyTime>(new ServiceTimeMock(aNetwork, string.Format("ServiceTime({0})", aUdn), 0, 0));
 
             // sender service
-            device.Add<ProxySender>(new ServiceSenderMock(aNetwork, aUdn, aAttributes, string.Empty, false, new SenderMetadata("<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>Main Room:Mock DSM</dc:title><res protocolInfo=\"ohz:*:*:u\">ohz://239.255.255.250:51972/" + aUdn + "</res><upnp:albumArtURI>http://10.2.10.27/images/Icon.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"), "Enabled"));
+            device.Add<ProxySender>(new ServiceSenderMock(aNetwork, string.Format("ServiceSender({0})", aUdn), aAttributes, string.Empty, false, new SenderMetadata("<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>Main Room:Mock DSM</dc:title><res protocolInfo=\"ohz:*:*:u\">ohz://239.255.255.250:51972/" + aUdn + "</res><upnp:albumArtURI>http://10.2.10.27/images/Icon.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"), "Enabled"));
 
             // receiver service
-            device.Add<ProxyReceiver>(new ServiceReceiverMock(aNetwork, aUdn, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
+            device.Add<ProxyReceiver>(new ServiceReceiverMock(aNetwork, string.Format("ServiceReceiver({0})", aUdn), string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
 
             // radio service
-            device.Add<ProxyRadio>(new ServiceRadioMock(aNetwork, aUdn, 0, new List<uint>(), new InfoMetadata(), string.Empty, "Stopped", 100));
+            device.Add<ProxyRadio>(new ServiceRadioMock(aNetwork, string.Format("ServiceRadio({0})", aUdn), 0, new List<uint>(), new InfoMetadata(), string.Empty, "Stopped", 100));
 
             // playlist service
-            device.Add<ProxyPlaylist>(new ServicePlaylistMock(aNetwork, aUdn, 0, new List<uint>(), false, false, "Stopped", string.Empty, 1000));
+            device.Add<ProxyPlaylist>(new ServicePlaylistMock(aNetwork, string.Format("ServicePlaylist({0})", aUdn), 0, new List<uint>(), false, false, "Stopped", string.Empty, 1000));
             
             return device;
         }

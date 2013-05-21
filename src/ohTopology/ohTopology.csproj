@@ -85,8 +85,8 @@
     <Compile Include="StandardRoomTime.cs" />
     <Compile Include="StandardRoomWatchers.cs" />
     <Compile Include="VolumeController.cs" />
-    <Compile Include="WatchableServiceMediaServer.cs" />
-    <Compile Include="WatchableDeviceMediaServer.cs" />
+    <None Include="WatchableServiceMediaServer.cs" />
+    <None Include="WatchableDeviceMediaServer.cs" />
     <Compile Include="WatchableDeviceMock.cs" />
     <Compile Include="Library.cs" />
     <Compile Include="StandardBrowser.cs" />
