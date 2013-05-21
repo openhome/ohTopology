@@ -26,7 +26,7 @@ namespace ohCollectMediaTree
                 {
                     using (var program = new Program(aArgs[0], aArgs[1], aArgs[2]))
                     {
-                        program.Run();
+                        //program.Run();
                     }
                 }
                 catch (Exception e)
@@ -52,7 +52,7 @@ namespace ohCollectMediaTree
             iTagManager = new TagManager();
         }
 
-        public void Run()
+        /*public void Run()
         {
             Console.WriteLine("Collecting ... ");
 
@@ -183,7 +183,7 @@ namespace ohCollectMediaTree
                 Console.WriteLine("Not enough albums for a mock media server");
             }
 
-        }
+        }*/
 
         // IDisposable
 
@@ -192,7 +192,7 @@ namespace ohCollectMediaTree
         }
     }
 
-    public static class MetadataExtensions
+    /*public static class MetadataExtensions
     {
         public static void Serialise(this IEnumerable<IMediaMetadata> aItems, Stream aStream)
         {
@@ -230,5 +230,5 @@ namespace ohCollectMediaTree
                 writer.WriteEndElement();
             }
         }
-    }
+    }*/
 }
