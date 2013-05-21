@@ -15,7 +15,7 @@ using OpenHome.MediaServer;
 
 namespace OpenHome.Av
 {
-    public class MockWatchableMediaServer : MockWatchableDevice
+    public class MockWatchableMediaServer : WatchableDeviceMock
     {
         private readonly ITagManager iTagManager;
         private readonly List<IMediaMetadata> iMetadata;

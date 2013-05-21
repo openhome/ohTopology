@@ -87,7 +87,7 @@
     <Compile Include="VolumeController.cs" />
     <Compile Include="WatchableServiceMediaServer.cs" />
     <Compile Include="WatchableDeviceMediaServer.cs" />
-    <Compile Include="WatchableDeviceDs.cs" />
+    <Compile Include="WatchableDeviceMock.cs" />
     <Compile Include="Library.cs" />
     <Compile Include="StandardBrowser.cs" />
     <Compile Include="Mockable.cs" />

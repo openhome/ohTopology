@@ -9,16 +9,16 @@ using OpenHome.Os;
 
 namespace OpenHome.Av
 {
-    public class MockWatchableDevice : WatchableDevice, IMockable
+    public class WatchableDeviceMock : WatchableDevice, IMockable
     {
-        public static MockWatchableDevice CreateDs(INetwork aNetwork, string aUdn)
+        public static WatchableDeviceMock CreateDs(INetwork aNetwork, string aUdn)
         {
             return CreateDs(aNetwork, aUdn, "Main Room", "Mock DS", "Info Time Volume Sender");
         }
 
-        public static MockWatchableDevice CreateDs(INetwork aNetwork, string aUdn, string aRoom, string aName, string aAttributes)
+        public static WatchableDeviceMock CreateDs(INetwork aNetwork, string aUdn, string aRoom, string aName, string aAttributes)
         {
-            MockWatchableDevice device = new MockWatchableDevice(aUdn);
+            WatchableDeviceMock device = new WatchableDeviceMock(aUdn);
             // add a factory for each type of watchable service
 
             // product service
@@ -59,14 +59,14 @@ namespace OpenHome.Av
             return device;
         }
 
-        public static MockWatchableDevice CreateDsm(INetwork aNetwork, string aUdn)
+        public static WatchableDeviceMock CreateDsm(INetwork aNetwork, string aUdn)
         {
             return CreateDsm(aNetwork, aUdn, "Main Room", "Mock Dsm", "Info Time Volume Sender");
         }
 
-        public static MockWatchableDevice CreateDsm(INetwork aNetwork, string aUdn, string aRoom, string aName, string aAttributes)
+        public static WatchableDeviceMock CreateDsm(INetwork aNetwork, string aUdn, string aRoom, string aName, string aAttributes)
         {
-            MockWatchableDevice device = new MockWatchableDevice(aUdn);
+            WatchableDeviceMock device = new WatchableDeviceMock(aUdn);
             // add a factory for each type of watchable service
 
             // product service
@@ -114,7 +114,7 @@ namespace OpenHome.Av
             return device;
         }
 
-        public MockWatchableDevice(string aUdn)
+        public WatchableDeviceMock(string aUdn)
             : base(aUdn)
         {
         }

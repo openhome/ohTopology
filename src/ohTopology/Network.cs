@@ -100,7 +100,7 @@ namespace OpenHome.Av
             iThread = aThread;
 
             iDevices = new List<WatchableDevice>();
-            iMockDevices = new Dictionary<string, MockWatchableDevice>();
+            iMockDevices = new Dictionary<string, WatchableDeviceMock>();
             iDeviceLists = new Dictionary<Type, WatchableUnordered<IWatchableDevice>>();
         }
 
@@ -109,7 +109,7 @@ namespace OpenHome.Av
             iDevices.Clear();
             iDevices = null;
 
-            foreach (MockWatchableDevice d in iMockDevices.Values)
+            foreach (WatchableDeviceMock d in iMockDevices.Values)
             {
                 d.Dispose();
             }
@@ -140,7 +140,7 @@ namespace OpenHome.Av
             }
         }
 
-        private void Add(MockWatchableDevice aDevice)
+        private void Add(WatchableDeviceMock aDevice)
         {
             iMockDevices.Add(aDevice.Udn, aDevice);
             Add(aDevice as WatchableDevice);
@@ -164,7 +164,7 @@ namespace OpenHome.Av
 
         private void Remove(string aUdn)
         {
-            MockWatchableDevice device;
+            WatchableDeviceMock device;
 
             if (iMockDevices.TryGetValue(aUdn, out device))
             {
@@ -221,14 +221,14 @@ namespace OpenHome.Av
 
             if (command == "small")
             {
-                Add(MockWatchableDevice.CreateDsm(this, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
+                Add(WatchableDeviceMock.CreateDsm(this, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
             }
             else if (command == "medium")
             {
-                Add(MockWatchableDevice.CreateDs(this, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));
-                Add(MockWatchableDevice.CreateDsm(this, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
-                Add(MockWatchableDevice.CreateDsm(this, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
-                Add(MockWatchableDevice.CreateDs(this, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
+                Add(WatchableDeviceMock.CreateDs(this, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));
+                Add(WatchableDeviceMock.CreateDsm(this, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
+                Add(WatchableDeviceMock.CreateDsm(this, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
+                Add(WatchableDeviceMock.CreateDs(this, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
             }
             else if (command == "large")
             {
@@ -246,7 +246,7 @@ namespace OpenHome.Av
 
                     string udn = value.First();
 
-                    MockWatchableDevice device;
+                    WatchableDeviceMock device;
 
                     if (iMockDevices.TryGetValue(udn, out device))
                     {
@@ -254,11 +254,11 @@ namespace OpenHome.Av
                     }
                     else if (type == "ds")
                     {
-                        Add(MockWatchableDevice.CreateDs(this, udn));
+                        Add(WatchableDeviceMock.CreateDs(this, udn));
                     }
                     else if (type == "dsm")
                     {
-                        Add(MockWatchableDevice.CreateDsm(this, udn));
+                        Add(WatchableDeviceMock.CreateDsm(this, udn));
                     }
                     /*
                     else if (type == "mediaserver")
@@ -302,7 +302,7 @@ namespace OpenHome.Av
                     {
                         string udn = value.First();
 
-                        MockWatchableDevice device;
+                        WatchableDeviceMock device;
 
                         if (iMockDevices.TryGetValue(udn, out device))
                         {
@@ -358,7 +358,7 @@ namespace OpenHome.Av
         protected IWatchableThread iSubscribeThread;
 
         private List<WatchableDevice> iDevices;
-        private Dictionary<string, MockWatchableDevice> iMockDevices;
+        private Dictionary<string, WatchableDeviceMock> iMockDevices;
         private Dictionary<Type, WatchableUnordered<IWatchableDevice>> iDeviceLists;
     }
 }
