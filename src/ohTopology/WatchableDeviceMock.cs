@@ -42,7 +42,7 @@ namespace OpenHome.Av
             device.Add<ProxyInfo>(new ServiceInfoMock(aNetwork, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
 
             // time service
-            //Add<ServiceTime>(new MockWatchableTime(aThread, aUdn, 0, 0));
+            device.Add<ProxyTime>(new ServiceTimeMock(aNetwork, aUdn, 0, 0));
 
             // sender service
             device.Add<ProxySender>(new ServiceSenderMock(aNetwork, aUdn, aAttributes, string.Empty, false, new SenderMetadata("<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>Main Room:Mock DS</dc:title><res protocolInfo=\"ohz:*:*:u\">ohz://239.255.255.250:51972/" + aUdn + "</res><upnp:albumArtURI>http://10.2.10.27/images/Icon.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"), "Enabled"));
@@ -97,7 +97,7 @@ namespace OpenHome.Av
             device.Add<ProxyInfo>(new ServiceInfoMock(aNetwork, aUdn, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
 
             // time service
-            //Add<ServiceTime>(new MockWatchableTime(aThread, aUdn, 0, 0));
+            device.Add<ProxyTime>(new ServiceTimeMock(aNetwork, aUdn, 0, 0));
 
             // sender service
             device.Add<ProxySender>(new ServiceSenderMock(aNetwork, aUdn, aAttributes, string.Empty, false, new SenderMetadata("<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>Main Room:Mock DSM</dc:title><res protocolInfo=\"ohz:*:*:u\">ohz://239.255.255.250:51972/" + aUdn + "</res><upnp:albumArtURI>http://10.2.10.27/images/Icon.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"), "Enabled"));
@@ -132,11 +132,11 @@ namespace OpenHome.Av
                 ServiceInfoMock i = iServices[typeof(ProxyInfo)] as ServiceInfoMock;
                 i.Execute(aValue.Skip(1));
             }
-            /*else if (command == "time")
+            else if (command == "time")
             {
                 ServiceTimeMock t = iServices[typeof(ProxyTime)] as ServiceTimeMock;
                 t.Execute(aValue.Skip(1));
-            }*/
+            }
             else if (command == "sender")
             {
                 ServiceSenderMock s = iServices[typeof(ProxySender)] as ServiceSenderMock;

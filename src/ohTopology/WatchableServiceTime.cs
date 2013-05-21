@@ -17,9 +17,9 @@ namespace OpenHome.Av
         IWatchable<uint> Seconds { get; }
     }
 
-    public abstract class Time : Service, IServiceTime
+    public abstract class ServiceTime : Service, IServiceTime
     {
-        protected Time(INetwork aNetwork, string aId)
+        protected ServiceTime(INetwork aNetwork, string aId)
         {
             iDuration = new Watchable<uint>(aNetwork, string.Format("Duration({0})", aId), 0);
             iSeconds = new Watchable<uint>(aNetwork, string.Format("Seconds({0})", aId), 0);
@@ -61,9 +61,9 @@ namespace OpenHome.Av
         protected Watchable<uint> iSeconds;
     }
 
-    public class ServiceOpenHomeOrgTime1 : Time
+    public class ServiceTimeNetwork : ServiceTime
     {
-        public ServiceOpenHomeOrgTime1(INetwork aNetwork, string aId, CpDevice aDevice)
+        public ServiceTimeNetwork(INetwork aNetwork, string aId, CpDevice aDevice)
             : base(aNetwork, aId)
         {
             iNetwork = aNetwork;
@@ -125,9 +125,9 @@ namespace OpenHome.Av
         private CpProxyAvOpenhomeOrgTime1 iService;
     }
 
-    public class MockServiceOpenHomeOrgTime1 : Time, IMockable
+    public class ServiceTimeMock : ServiceTime, IMockable
     {
-        public MockServiceOpenHomeOrgTime1(INetwork aNetwork, string aId, uint aSeconds, uint aDuration)
+        public ServiceTimeMock(INetwork aNetwork, string aId, uint aSeconds, uint aDuration)
             : base(aNetwork, aId)
         {
             iNetwork = aNetwork;
@@ -171,7 +171,7 @@ namespace OpenHome.Av
 
     public class ProxyTime : IServiceTime, IProxy
     {
-        public ProxyTime(Time aService, IWatchableDevice aDevice)
+        public ProxyTime(ServiceTime aService, IWatchableDevice aDevice)
         {
             iService = aService;
             iDevice = aDevice;
@@ -198,7 +198,7 @@ namespace OpenHome.Av
             get { return iService.Seconds; }
         }
 
-        private Time iService;
+        private ServiceTime iService;
         private IWatchableDevice iDevice;
     }
 }
