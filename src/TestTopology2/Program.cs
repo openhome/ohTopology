@@ -48,10 +48,10 @@ namespace TestTopology2
             public void UnorderedAdd(ITopology2Group aItem)
             {
                 iRunner.Result(aItem.Device.Udn + " Group Added");
-                iFactory.Create<string>(aItem.Device.Udn, aItem.Room, v => "Room " + v );
-                iFactory.Create<string>(aItem.Device.Udn, aItem.Name, v => "Name " + v );
-                iFactory.Create<uint>(aItem.Device.Udn, aItem.SourceIndex, v => "SourceIndex " + v );
-                iFactory.Create<bool>(aItem.Device.Udn, aItem.Standby, v => "Standby " + v );
+                iFactory.Create<string>(aItem.Device.Udn, aItem.Room, v => "Room " + v);
+                iFactory.Create<string>(aItem.Device.Udn, aItem.Name, v => "Name " + v);
+                iFactory.Create<uint>(aItem.Device.Udn, aItem.SourceIndex, v => "SourceIndex " + v);
+                iFactory.Create<bool>(aItem.Device.Udn, aItem.Standby, v => "Standby " + v);
 
                 foreach (IWatchable<ITopology2Source> s in aItem.Sources)
                 {

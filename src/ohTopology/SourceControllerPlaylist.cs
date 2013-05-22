@@ -19,10 +19,10 @@ namespace OpenHome.Av
             iCanSeek = aCanSeek;
             iTransportState = aTransportState;
 
-            Task<ProxyPlaylist> task = aSource.Device.Create<ProxyPlaylist>();
+            Task<IProxyPlaylist> task = aSource.Device.Create<IProxyPlaylist>();
             aThread.Schedule(() =>
             {
-                ProxyPlaylist playlist = task.Result;
+                IProxyPlaylist playlist = task.Result;
 
                 if (!iDisposed)
                 {
@@ -125,7 +125,7 @@ namespace OpenHome.Av
         private bool iDisposed;
 
         private ITopology4Source iSource;
-        private ProxyPlaylist iPlaylist;
+        private IProxyPlaylist iPlaylist;
 
         private Watchable<bool> iHasSourceControl;
         private Watchable<IInfoMetadata> iInfoNext;

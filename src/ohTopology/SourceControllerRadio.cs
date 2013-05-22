@@ -19,10 +19,10 @@ namespace OpenHome.Av
             iCanSeek = aCanSeek;
             iTransportState = aTransportState;
 
-            Task<ProxyRadio> task = aSource.Device.Create<ProxyRadio>();
+            Task<IProxyRadio> task = aSource.Device.Create<IProxyRadio>();
             aThread.Schedule(() =>
             {
-                ProxyRadio radio = task.Result;
+                IProxyRadio radio = task.Result;
 
                 if (!iDisposed)
                 {
@@ -127,7 +127,7 @@ namespace OpenHome.Av
         private bool iDisposed;
 
         private ITopology4Source iSource;
-        private ProxyRadio iRadio;
+        private IProxyRadio iRadio;
 
         private Watchable<bool> iHasSourceControl;
         private Watchable<bool> iCanPause;

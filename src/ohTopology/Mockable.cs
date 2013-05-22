@@ -86,9 +86,16 @@ namespace OpenHome.Av
         {
             bool wait = true;
 
+            string lastline = aStream.ReadLine();
             while (true)
             {
-                string line = aStream.ReadLine();
+                string line = lastline;
+                lastline = aStream.ReadLine();
+                while (lastline != null && lastline != string.Empty && !lastline.StartsWith("//") && !lastline.StartsWith("mock") && !lastline.StartsWith("expect") && !lastline.StartsWith("empty") && !lastline.StartsWith("break"))
+                {
+                    line += "\n" + lastline;
+                    lastline = aStream.ReadLine();
+                }
             
                 if (line == null)
                 {
@@ -161,7 +168,7 @@ namespace OpenHome.Av
         public void Result(string aValue)
         {
             iResultQueue.Enqueue(aValue);
-            Console.WriteLine(aValue);
+            //Console.WriteLine(aValue);
         }
 
         private void Assert(string aActual, string aExpected)
