@@ -59,7 +59,7 @@
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpUpnpOrgContentDirectory1.net.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>..\..\dependencies\AnyPlatform\ohOs2\ICSharpCode.SharpZipLib.dll</HintPath>
+      <HintPath>..\..\dependencies\AnyPlatform\ohOs\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
     <Reference Include="ohMediaServer.Shared">
       <HintPath>..\..\dependencies\AnyPlatform\ohMediaServer\ohMediaServer.Shared.dll</HintPath>

@@ -423,7 +423,7 @@ namespace OpenHome.Av
         IWatchableThread WatchableThread { get; }
     }
 
-    public class StandardRoom : IStandardRoom, ITopologyObject, IWatcher<IEnumerable<ITopology4Root>>, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IDisposable
+    public class StandardRoom : IStandardRoom, IWatcher<IEnumerable<ITopology4Root>>, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IDisposable
     {
         public StandardRoom(IWatchableThread aThread, StandardHouse aHouse, ITopology4Room aRoom)
         {
@@ -448,9 +448,12 @@ namespace OpenHome.Av
             iRoom.Roots.AddWatcher(this);
         }
 
-        public void Detach()
+        public void Dispose()
         {
-            iRoom.Roots.RemoveWatcher(this);
+            iThread.Execute(() =>
+            {
+                iRoom.Roots.RemoveWatcher(this);
+            });
 
             List<Action> linked = new List<Action>(iJoiners);
             foreach (Action a in linked)
@@ -462,10 +465,7 @@ namespace OpenHome.Av
                 throw new Exception("iJoiners.Count > 0");
             }
             iJoiners = null;
-        }
 
-        public void Dispose()
-        {
             iDetails.Dispose();
             iDetails = null;
 
@@ -912,16 +912,12 @@ namespace OpenHome.Av
 
                 foreach (StandardRoom room in iRooms)
                 {
-                    room.Detach();
+                    room.Dispose();
                 }
             });
             iWatchableRooms.Dispose();
             iWatchableRooms = null;
 
-            foreach (StandardRoom room in iRooms)
-            {
-                room.Dispose();
-            }
             iRoomLookup.Clear();
             iRoomLookup = null;
 
@@ -992,9 +988,6 @@ namespace OpenHome.Av
             iRoomLookup.Remove(aRoom);
             iRooms.RemoveAt(index);
             iWatchableRooms.Remove(room, (uint)index);
-
-            // detach the room from topology L5
-            room.Detach();
 
             // schedule the Room object for disposal
             iThread.Schedule(() =>
