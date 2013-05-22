@@ -19,7 +19,7 @@ namespace TestTopology3
             }
         }
 
-        class GroupWatcher : IUnorderedWatcher<ITopology3Group>, IDisposable
+        class GroupWatcher : IUnorderedWatcher<ITopology2Group>, IDisposable
         {
             public GroupWatcher(MockableScriptRunner aRunner)
             {
@@ -42,12 +42,12 @@ namespace TestTopology3
             {
             }
 
-            public void UnorderedAdd(ITopology3Group aItem)
+            public void UnorderedAdd(ITopology2Group aItem)
             {
                 iRunner.Result(string.Format("Group Added {0}", aItem.Device.Udn));
             }
 
-            public void UnorderedRemove(ITopology3Group aItem)
+            public void UnorderedRemove(ITopology2Group aItem)
             {
                 iRunner.Result(string.Format("Group Removed {0}", aItem.Device.Udn));
             }
@@ -57,24 +57,16 @@ namespace TestTopology3
 
         class RoomWatcher : IUnorderedWatcher<ITopology3Room>, IDisposable
         {
+            private readonly MockableScriptRunner iRunner;
+            private readonly ResultWatcherFactory iFactory;
+
             public RoomWatcher(MockableScriptRunner aRunner)
             {
                 iRunner = aRunner;
-
-                iWatcher = new GroupWatcher(aRunner);
-
-                iList = new List<ITopology3Room>();
+                iFactory = new ResultWatcherFactory(iRunner);
             }
 
-            public void Dispose()
-            {
-                foreach (ITopology3Room r in iList)
-                {
-                    r.Groups.RemoveWatcher(iWatcher);
-                }
-
-                iWatcher.Dispose();
-            }            
+            // IUnorderedWatcher<ITopology3Room>
 
             public void UnorderedOpen()
             {
@@ -91,22 +83,21 @@ namespace TestTopology3
             public void UnorderedAdd(ITopology3Room aItem)
             {
                 iRunner.Result("Room Added " + aItem.Name);
-
-                iList.Add(aItem);
-                aItem.Groups.AddWatcher(iWatcher);
+                iFactory.Create<ITopology2Group>(aItem.Name, aItem.Groups, v => v.Id);
             }
 
             public void UnorderedRemove(ITopology3Room aItem)
             {
+                iFactory.Destroy(aItem.Name);
                 iRunner.Result("Room Removed " + aItem.Name);
-
-                iList.Remove(aItem);
-                aItem.Groups.RemoveWatcher(iWatcher);
             }
 
-            private MockableScriptRunner iRunner;
-            private GroupWatcher iWatcher;
-            private List<ITopology3Room> iList;
+            // IDisposable
+
+            public void Dispose()
+            {
+                iFactory.Dispose();
+            }
         }
 
         static int Main(string[] args)

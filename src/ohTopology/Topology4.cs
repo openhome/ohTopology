@@ -164,7 +164,7 @@ namespace OpenHome.Av
 
     class Topology4Group : ITopology4Root, IWatcher<uint>, IWatcher<string>, ITopologyObject, IDisposable
     {
-        public Topology4Group(IWatchableThread aThread, string aName, ITopology3Group aGroup, IEnumerable<ITopology2Source> aSources)
+        public Topology4Group(IWatchableThread aThread, string aName, ITopology2Group aGroup, IEnumerable<ITopology2Source> aSources)
         {
             iThread = aThread;
             iName = aName;
@@ -490,7 +490,7 @@ namespace OpenHome.Av
         private object iLock;
         private bool iDetached;
         private IWatchableThread iThread;
-        private ITopology3Group iGroup;
+        private ITopology2Group iGroup;
 
         private string iName;
 
@@ -519,7 +519,7 @@ namespace OpenHome.Av
         void SetStandby(bool aValue);
     }
 
-    class Topology4Room : ITopology4Room, ITopologyObject, IUnorderedWatcher<ITopology3Group>, IWatcher<bool>, IWatcher<string>, IWatcher<ITopology2Source>, IDisposable
+    class Topology4Room : ITopology4Room, ITopologyObject, IUnorderedWatcher<ITopology2Group>, IWatcher<bool>, IWatcher<string>, IWatcher<ITopology2Source>, IDisposable
     {
         public Topology4Room(IWatchableThread aThread, ITopology3Room aRoom)
         {
@@ -534,9 +534,9 @@ namespace OpenHome.Av
             iWatchableRoots = new Watchable<IEnumerable<ITopology4Root>>(iThread, "Topology4Roots", new List<ITopology4Root>());
             iWatchableSources = new Watchable<IEnumerable<ITopology4Source>>(iThread, "Topology4Sources", new List<ITopology4Source>());
 
-            iGroup3NameLookup = new Dictionary<ITopology3Group, string>();
-            iGroup3SourcesLookup = new Dictionary<ITopology3Group, List<ITopology2Source>>();
-            iGroups = new List<ITopology3Group>();
+            iGroup3NameLookup = new Dictionary<ITopology2Group, string>();
+            iGroup3SourcesLookup = new Dictionary<ITopology2Group, List<ITopology2Source>>();
+            iGroups = new List<ITopology2Group>();
             iGroup4s = new List<Topology4Group>();
             iRoots = new List<Topology4Group>();
 
@@ -545,7 +545,7 @@ namespace OpenHome.Av
 
         public void Detach()
         {
-            foreach(ITopology3Group g in iGroups)
+            foreach(ITopology2Group g in iGroups)
             {
                 g.Name.RemoveWatcher(this);
                 g.Standby.RemoveWatcher(this);
@@ -644,7 +644,7 @@ namespace OpenHome.Av
         {
         }
 
-        public void UnorderedAdd(ITopology3Group aItem)
+        public void UnorderedAdd(ITopology2Group aItem)
         {
             iGroups.Add(aItem);
 
@@ -659,7 +659,7 @@ namespace OpenHome.Av
             CreateTree();
         }
 
-        public void UnorderedRemove(ITopology3Group aItem)
+        public void UnorderedRemove(ITopology2Group aItem)
         {
             iGroups.Remove(aItem);
 
@@ -679,7 +679,7 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, string aValue)
         {
-            foreach (ITopology3Group g in iGroups)
+            foreach (ITopology2Group g in iGroups)
             {
                 if (g.Name.Id == aId)
                 {
@@ -692,7 +692,7 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, string aValue, string aPrevious)
         {
-            foreach (ITopology3Group g in iGroups)
+            foreach (ITopology2Group g in iGroups)
             {
                 if (g.Name.Id == aId)
                 {
@@ -707,7 +707,7 @@ namespace OpenHome.Av
 
         public void ItemClose(string aId, string aValue)
         {
-            foreach (ITopology3Group g in iGroups)
+            foreach (ITopology2Group g in iGroups)
             {
                 if (g.Name.Id == aId)
                 {
@@ -720,7 +720,7 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, ITopology2Source aValue)
         {
-            foreach (ITopology3Group g in iGroups)
+            foreach (ITopology2Group g in iGroups)
             {
                 foreach (IWatchable<ITopology2Source> s in g.Sources)
                 {
@@ -735,7 +735,7 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, ITopology2Source aValue, ITopology2Source aPrevious)
         {
-            foreach (ITopology3Group g in iGroups)
+            foreach (ITopology2Group g in iGroups)
             {
                 for (int i = 0; i < g.Sources.Count(); ++i)
                 {
@@ -762,7 +762,7 @@ namespace OpenHome.Av
             iGroup4s.Clear();
             iRoots.Clear();
 
-            foreach (ITopology3Group g in iGroups)
+            foreach (ITopology2Group g in iGroups)
             {
                 InsertIntoTree(new Topology4Group(iThread, iGroup3NameLookup[g], g, iGroup3SourcesLookup[g]));
             }
@@ -902,9 +902,9 @@ namespace OpenHome.Av
         private Watchable<IEnumerable<ITopology4Root>> iWatchableRoots;
         private Watchable<IEnumerable<ITopology4Source>> iWatchableSources;
 
-        private Dictionary<ITopology3Group, string> iGroup3NameLookup;
-        private Dictionary<ITopology3Group, List<ITopology2Source>> iGroup3SourcesLookup;
-        private List<ITopology3Group> iGroups;
+        private Dictionary<ITopology2Group, string> iGroup3NameLookup;
+        private Dictionary<ITopology2Group, List<ITopology2Source>> iGroup3SourcesLookup;
+        private List<ITopology2Group> iGroups;
         private List<Topology4Group> iGroup4s;
         private List<Topology4Group> iRoots;
     }
