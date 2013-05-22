@@ -7,13 +7,14 @@ namespace OpenHome.Av
 {
     public interface IStandardRoomTime : IDisposable
     {
+        string Name { get; }
         IWatchable<bool> Active { get; }
         IWatchable<bool> HasTime { get; }
         IWatchable<uint> Duration { get; }
         IWatchable<uint> Seconds { get; }
     }
 
-    public class StandardRoomTime : IWatcher<ITopology4Source>, IWatcher<uint>
+    public class StandardRoomTime : IWatcher<ITopology4Source>, IWatcher<uint>, IStandardRoomTime
     {
         public StandardRoomTime(IStandardRoom aRoom)
         {
@@ -59,6 +60,14 @@ namespace OpenHome.Av
 
                 iRoom.Source.RemoveWatcher(this);
                 iRoom.UnJoin(SetInactive);
+            }
+        }
+
+        public string Name
+        {
+            get
+            {
+                return iRoom.Name;
             }
         }
 
@@ -138,10 +147,10 @@ namespace OpenHome.Av
 
         private void Subscribe(IWatchableDevice aDevice)
         {
-            Task<ProxyTime> task = aDevice.Create<ProxyTime>();
+            Task<IProxyTime> task = aDevice.Create<IProxyTime>();
             iThread.Schedule(() =>
             {
-                ProxyTime time = task.Result;
+                IProxyTime time = task.Result;
 
                 iTime = time;
                 iTime.Duration.AddWatcher(this);
@@ -164,11 +173,11 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, uint aValue)
         {
-            if (aId == string.Format("Duration(ServiceTime({0}))", iTime.Device.Udn))
+            if (aId == "Duration")
             {
                 iDuration.Update(aValue);
             }
-            if (aId == string.Format("Seconds(ServiceTime({0}))", iTime.Device.Udn))
+            if (aId == "Seconds")
             {
                 iSeconds.Update(aValue);
             }
@@ -176,11 +185,11 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, uint aValue, uint aPrevious)
         {
-            if (aId == string.Format("Duration(ServiceTime({0}))", iTime.Device.Udn))
+            if (aId == "Duration")
             {
                 iDuration.Update(aValue);
             }
-            if (aId == string.Format("Seconds(ServiceTime({0}))", iTime.Device.Udn))
+            if (aId == "Seconds")
             {
                 iSeconds.Update(aValue);
             }
@@ -197,7 +206,7 @@ namespace OpenHome.Av
         private bool iIsActive;
         private Watchable<bool> iActive;
 
-        private ProxyTime iTime;
+        private IProxyTime iTime;
         private Watchable<bool> iHasTime;
         private Watchable<uint> iDuration;
         private Watchable<uint> iSeconds;

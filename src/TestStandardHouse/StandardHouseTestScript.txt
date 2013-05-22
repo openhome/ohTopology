@@ -3,161 +3,149 @@ mock network medium
 
 // test network is populated with 4 devices
 expect Room Added: Kitchen at 0
-expect Standby(Kitchen)(Proxy): eOn
-expect Details(Kitchen): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Kitchen): Active=False, Metadata=, Uri=
-expect Metatext(Kitchen): Active=False, Metatext=
-expect Zone(Kitchen): False 
-expect Active(Kitchen): True
-expect HasVolume(Kitchen): False
-expect HasSourceControl(Kitchen): False
-expect Mute(Kitchen): False
-expect Volume(Kitchen): 0
-expect TransportState(Kitchen): 
-expect Active(Kitchen): True
-expect HasTime(Kitchen): False
-expect Duration(Kitchen): 0
-expect Seconds(Kitchen): 0
-
+expect Kitchen open Standby eOn
+expect Kitchen open Details False 0 0  0 False 0
+expect Kitchen open Metadata False  
+expect Kitchen open Metatext False 
+expect Kitchen open Zone False 
+expect Kitchen open Controller Active True
+expect Kitchen open HasVolume False
+expect Kitchen open HasSourceControl False
+expect Kitchen open Mute False
+expect Kitchen open Volume 0
+expect Kitchen open TransportState 
+expect Kitchen open Time Active True
+expect Kitchen open HasTime False
+expect Kitchen open Duration 0
+expect Kitchen open Seconds 0
 expect Room Added: Sitting Room at 1
-expect Standby(Sitting Room)(Proxy): eOn
-expect Details(Sitting Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Sitting Room): Active=False, Metadata=, Uri=
-expect Metatext(Sitting Room): Active=False, Metatext=
-expect Zone(Sitting Room): False 
-expect Active(Sitting Room): True
-expect HasVolume(Sitting Room): False
-expect HasSourceControl(Sitting Room): False
-expect Mute(Sitting Room): False
-expect Volume(Sitting Room): 0
-expect TransportState(Sitting Room): 
-expect Active(Sitting Room): True
-expect HasTime(Sitting Room): False
-expect Duration(Sitting Room): 0
-expect Seconds(Sitting Room): 0
-
+expect Sitting Room open Standby eOn
+expect Sitting Room open Details False 0 0  0 False 0
+expect Sitting Room open Metadata False  
+expect Sitting Room open Metatext False 
+expect Sitting Room open Zone False 
+expect Sitting Room open Controller Active True
+expect Sitting Room open HasVolume False
+expect Sitting Room open HasSourceControl False
+expect Sitting Room open Mute False
+expect Sitting Room open Volume 0
+expect Sitting Room open TransportState 
+expect Sitting Room open Time Active True
+expect Sitting Room open HasTime False
+expect Sitting Room open Duration 0
+expect Sitting Room open Seconds 0
 expect Room Added: Bedroom at 0
-expect Standby(Bedroom)(Proxy): eOn
-expect Details(Bedroom): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Bedroom): Active=False, Metadata=, Uri=
-expect Metatext(Bedroom): Active=False, Metatext=
-expect Zone(Bedroom): False 
-expect Active(Bedroom): True
-expect HasVolume(Bedroom): False
-expect HasSourceControl(Bedroom): False
-expect Mute(Bedroom): False
-expect Volume(Bedroom): 0
-expect TransportState(Bedroom): 
-expect Active(Bedroom): True
-expect HasTime(Bedroom): False
-expect Duration(Bedroom): 0
-expect Seconds(Bedroom): 0
-
+expect Bedroom open Standby eOn
+expect Bedroom open Details False 0 0  0 False 0
+expect Bedroom open Metadata False  
+expect Bedroom open Metatext False 
+expect Bedroom open Zone False 
+expect Bedroom open Controller Active True
+expect Bedroom open HasVolume False
+expect Bedroom open HasSourceControl False
+expect Bedroom open Mute False
+expect Bedroom open Volume 0
+expect Bedroom open TransportState 
+expect Bedroom open Time Active True
+expect Bedroom open HasTime False
+expect Bedroom open Duration 0
+expect Bedroom open Seconds 0
 expect Room Added: Dining Room at 1
-expect Standby(Dining Room)(Proxy): eOn
-expect Details(Dining Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Dining Room): Active=False, Metadata=, Uri=
-expect Metatext(Dining Room): Active=False, Metatext=
-expect Zone(Dining Room): False 
-expect Active(Dining Room): True
-expect HasVolume(Dining Room): False
-expect HasSourceControl(Dining Room): False
-expect Mute(Dining Room): False
-expect Volume(Dining Room): 0
-expect TransportState(Dining Room): 
-expect Active(Dining Room): True
-expect HasTime(Dining Room): False
-expect Duration(Dining Room): 0
-expect Seconds(Dining Room): 0
-
-expect Zone(Kitchen): False -> True 4c494e4e-0026-0f99-1111-ef000004013f
-expect Details(Kitchen) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Kitchen) Updated: Active=True, Metadata=, Uri=
-expect Metatext(Kitchen) Updated: Active=True, Metatext=
-
-expect TransportState(Kitchen):  -> Stopped
-expect HasSourceControl(Kitchen): False -> True
-expect Volume(Kitchen): 0 -> 50
-expect HasVolume(Kitchen): False -> True
-expect HasTime(Kitchen): False -> True
-
-expect Zone(Sitting Room): False -> True 4c494e4e-0026-0f99-1112-ef000004013f
-expect Details(Sitting Room) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Sitting Room) Updated: Active=True, Metadata=, Uri=
-expect Metatext(Sitting Room) Updated: Active=True, Metatext=
-
-expect TransportState(Sitting Room):  -> Stopped
-expect HasSourceControl(Sitting Room): False -> True
-expect Volume(Sitting Room): 0 -> 50
-expect HasVolume(Sitting Room): False -> True
-expect HasTime(Sitting Room): False -> True
-
-expect Zone(Bedroom): False -> True 4c494e4e-0026-0f99-1113-ef000004013f
-expect Details(Bedroom) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Bedroom) Updated: Active=True, Metadata=, Uri=
-expect Metatext(Bedroom) Updated: Active=True, Metatext=
-
-expect TransportState(Bedroom):  -> Stopped
-expect HasSourceControl(Bedroom): False -> True
-expect Volume(Bedroom): 0 -> 50
-expect HasVolume(Bedroom): False -> True
-expect HasTime(Bedroom): False -> True
-
-expect Zone(Dining Room): False -> True 4c494e4e-0026-0f99-1114-ef000004013f
-expect Details(Dining Room) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Dining Room) Updated: Active=True, Metadata=, Uri=
-expect Metatext(Dining Room) Updated: Active=True, Metatext=
-
-expect TransportState(Dining Room):  -> Stopped
-expect HasSourceControl(Dining Room): False -> True
-expect Volume(Dining Room): 0 -> 50
-expect HasVolume(Dining Room): False -> True
-expect HasTime(Dining Room): False -> True
+expect Dining Room open Standby eOn
+expect Dining Room open Details False 0 0  0 False 0
+expect Dining Room open Metadata False  
+expect Dining Room open Metatext False 
+expect Dining Room open Zone False 
+expect Dining Room open Controller Active True
+expect Dining Room open HasVolume False
+expect Dining Room open HasSourceControl False
+expect Dining Room open Mute False
+expect Dining Room open Volume 0
+expect Dining Room open TransportState 
+expect Dining Room open Time Active True
+expect Dining Room open HasTime False
+expect Dining Room open Duration 0
+expect Dining Room open Seconds 0
+expect Kitchen update Zone True 4c494e4e-0026-0f99-1111-ef000004013f
+expect Kitchen update Details True 0 0  0 False 0
+expect Kitchen update Metadata True  
+expect Kitchen update Metatext True 
+expect Kitchen update TransportState Stopped
+expect Kitchen update HasSourceControl True
+expect Kitchen update Volume 50
+expect Kitchen update HasVolume True
+expect Kitchen update HasTime True
+expect Sitting Room update Zone True 4c494e4e-0026-0f99-1112-ef000004013f
+expect Sitting Room update Details True 0 0  0 False 0
+expect Sitting Room update Metadata True  
+expect Sitting Room update Metatext True 
+expect Sitting Room update TransportState Stopped
+expect Sitting Room update HasSourceControl True
+expect Sitting Room update Volume 50
+expect Sitting Room update HasVolume True
+expect Sitting Room update HasTime True
+expect Bedroom update Zone True 4c494e4e-0026-0f99-1113-ef000004013f
+expect Bedroom update Details True 0 0  0 False 0
+expect Bedroom update Metadata True  
+expect Bedroom update Metatext True 
+expect Bedroom update TransportState Stopped
+expect Bedroom update HasSourceControl True
+expect Bedroom update Volume 50
+expect Bedroom update HasVolume True
+expect Bedroom update HasTime True
+expect Dining Room update Zone True 4c494e4e-0026-0f99-1114-ef000004013f
+expect Dining Room update Details True 0 0  0 False 0
+expect Dining Room update Metadata True  
+expect Dining Room update Metatext True 
+expect Dining Room update TransportState Stopped
+expect Dining Room update HasSourceControl True
+expect Dining Room update Volume 50
+expect Dining Room update HasVolume True
+expect Dining Room update HasTime True
 empty
 
 // test adding a new room
 mock network add ds 67
 expect Room Added: Main Room at 3
-expect Standby(Main Room)(Proxy): eOn
-expect Details(Main Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Main Room): Active=False, Metadata=, Uri=
-expect Metatext(Main Room): Active=False, Metatext=
-expect Zone(Main Room): False 
-expect Active(Main Room): True
-expect HasVolume(Main Room): False
-expect HasSourceControl(Main Room): False
-expect Mute(Main Room): False
-expect Volume(Main Room): 0
-expect TransportState(Main Room): 
-expect Active(Main Room): True
-expect HasTime(Main Room): False
-expect Duration(Main Room): 0
-expect Seconds(Main Room): 0
-
-expect Zone(Main Room): False -> True 67
-expect Details(Main Room) Updated: Active=True, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Main Room) Updated: Active=True, Metadata=, Uri=
-expect Metatext(Main Room) Updated: Active=True, Metatext=
-expect TransportState(Main Room):  -> Stopped
-expect HasSourceControl(Main Room): False -> True
-expect Volume(Main Room): 0 -> 50
-expect HasVolume(Main Room): False -> True
-expect HasTime(Main Room): False -> True
+expect Main Room open Standby eOn
+expect Main Room open Details False 0 0  0 False 0
+expect Main Room open Metadata False  
+expect Main Room open Metatext False 
+expect Main Room open Zone False 
+expect Main Room open Controller Active True
+expect Main Room open HasVolume False
+expect Main Room open HasSourceControl False
+expect Main Room open Mute False
+expect Main Room open Volume 0
+expect Main Room open TransportState 
+expect Main Room open Time Active True
+expect Main Room open HasTime False
+expect Main Room open Duration 0
+expect Main Room open Seconds 0
+expect Main Room update Zone True 67
+expect Main Room update Details True 0 0  0 False 0
+expect Main Room update Metadata True  
+expect Main Room update Metatext True 
+expect Main Room update TransportState Stopped
+expect Main Room update HasSourceControl True
+expect Main Room update Volume 50
+expect Main Room update HasVolume True
+expect Main Room update HasTime True
 empty
 
 // test changing details
 mock network update ds 67 info details 50 100 flac 500 true 44000
-expect Details(Main Room) Updated: Active=True, BitDepth=50, BitRate=100, CodeName=flac, Duration=500, Lossless=True, SampleRate=44000
+expect Main Room update Details True 50 100 flac 500 True 44000
 empty
 
 // test changing metadata
 mock network update ds 67 info metadata blah http://blah
-expect Metadata(Main Room) Updated: Active=True, Metadata=blah, Uri=http://blah
+expect Main Room update Metadata True blah http://blah
 empty
 
 // test changing metatext
 mock network update ds 67 info metatext testing
-expect Metatext(Main Room) Updated: Active=True, Metatext=testing
+expect Main Room update Metatext True testing
 empty
 
 // test room controller active flag
@@ -168,38 +156,37 @@ empty
 // re-add ds 67
 mock network add ds 67
 expect Room Added: Main Room at 3
-expect Standby(Main Room)(Proxy): eOn
-expect Details(Main Room): Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Main Room): Active=False, Metadata=, Uri=
-expect Metatext(Main Room): Active=False, Metatext=
-expect Zone(Main Room): False 
-expect Active(Main Room): True
-expect HasVolume(Main Room): False
-expect HasSourceControl(Main Room): False
-expect Mute(Main Room): False
-expect Volume(Main Room): 0
-expect TransportState(Main Room): 
-expect Active(Main Room): True
-expect HasTime(Main Room): False
-expect Duration(Main Room): 0
-expect Seconds(Main Room): 0
-
-expect Zone(Main Room): False -> True 67
-expect Details(Main Room) Updated: Active=True, BitDepth=50, BitRate=100, CodeName=flac, Duration=500, Lossless=True, SampleRate=44000
-expect Metadata(Main Room) Updated: Active=True, Metadata=blah, Uri=http://blah
-expect Metatext(Main Room) Updated: Active=True, Metatext=testing
-expect TransportState(Main Room):  -> Stopped
-expect HasSourceControl(Main Room): False -> True
-expect Volume(Main Room): 0 -> 50
-expect HasVolume(Main Room): False -> True
-expect HasTime(Main Room): False -> True
+expect Main Room open Standby eOn
+expect Main Room open Details False 0 0  0 False 0
+expect Main Room open Metadata False  
+expect Main Room open Metatext False 
+expect Main Room open Zone False 
+expect Main Room open Controller Active True
+expect Main Room open HasVolume False
+expect Main Room open HasSourceControl False
+expect Main Room open Mute False
+expect Main Room open Volume 0
+expect Main Room open TransportState 
+expect Main Room open Time Active True
+expect Main Room open HasTime False
+expect Main Room open Duration 0
+expect Main Room open Seconds 0
+expect Main Room update Zone True 67
+expect Main Room update Details True 50 100 flac 500 True 44000
+expect Main Room update Metadata True blah http://blah
+expect Main Room update Metatext True testing
+expect Main Room update TransportState Stopped
+expect Main Room update HasSourceControl True
+expect Main Room update Volume 50
+expect Main Room update HasVolume True
+expect Main Room update HasTime True
 empty
 
 // add another ds to Main Room
 mock network add ds 68
-expect Zone(Main Room): True -> False 
-expect HasSourceControl(Main Room): True -> False
-expect HasSourceControl(Main Room): False -> True
+expect Main Room update Zone False 
+expect Main Room update HasSourceControl False
+expect Main Room update HasSourceControl True
 empty
 
 // set DS 68's info
@@ -210,57 +197,55 @@ empty
 
 // join ds and ensure info changes from DS 67 info to DS 68 info
 mock network update ds 67 product source 0 name Test
-expect HasSourceControl(Main Room): True -> False
-expect HasSourceControl(Main Room): False -> True
+expect Main Room update HasSourceControl False
+expect Main Room update HasSourceControl True
 empty
 mock network update ds 68 product name Test
-expect Details(Main Room) Updated: Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Main Room) Updated: Active=False, Metadata=, Uri=
-expect Metatext(Main Room) Updated: Active=False, Metatext=
-expect HasSourceControl(Main Room): True -> False
-expect HasTime(Main Room): True -> False
-expect Zone(Main Room): False -> True 67
-expect Details(Main Room) Updated: Active=True, BitDepth=1, BitRate=2, CodeName=mp3, Duration=3, Lossless=False, SampleRate=4
-expect Metadata(Main Room) Updated: Active=True, Metadata=Ds68, Uri=http://Ds68
-expect Metatext(Main Room) Updated: Active=True, Metatext=Ds68
-expect HasSourceControl(Main Room): False -> True
-expect HasTime(Main Room): False -> True
+expect Main Room update Details False 0 0  0 False 0
+expect Main Room update Metadata False  
+expect Main Room update Metatext False 
+expect Main Room update HasSourceControl False
+expect Main Room update HasTime False
+expect Main Room update Zone True 67
+expect Main Room update Details True 1 2 mp3 3 False 4
+expect Main Room update Metadata True Ds68 http://Ds68
+expect Main Room update Metatext True Ds68
+expect Main Room update HasSourceControl True
+expect Main Room update HasTime True
 empty
 
 // change to radio source to check create source controller
 mock network update ds 67 product sourceindex 1
-expect Details(Main Room) Updated: Active=False, BitDepth=0, BitRate=0, CodeName=, Duration=0, Lossless=False, SampleRate=0
-expect Metadata(Main Room) Updated: Active=False, Metadata=, Uri=
-expect Metatext(Main Room) Updated: Active=False, Metatext=
-expect HasSourceControl(Main Room): True -> False
-expect HasTime(Main Room): True -> False
-expect Details(Main Room) Updated: Active=True, BitDepth=50, BitRate=100, CodeName=flac, Duration=500, Lossless=True, SampleRate=44000
-expect Metadata(Main Room) Updated: Active=True, Metadata=blah, Uri=http://blah
-expect Metatext(Main Room) Updated: Active=True, Metatext=testing
-expect HasSourceControl(Main Room): False -> True
-expect HasTime(Main Room): False -> True
+expect Main Room update Details False 0 0  0 False 0
+expect Main Room update Metadata False  
+expect Main Room update Metatext False 
+expect Main Room update HasSourceControl False
+expect Main Room update HasTime False
+expect Main Room update Details True 50 100 flac 500 True 44000
+expect Main Room update Metadata True blah http://blah
+expect Main Room update Metatext True testing
+expect Main Room update HasSourceControl True
+expect Main Room update HasTime True
 empty
 
-break
-
 mock network update ds 67 radio transportstate Playing
-expect TransportState(Main Room): Stopped -> Playing
+expect Main Room update TransportState Playing
 empty
 
 mock network update ds 67 product sourceindex 3
-expect HasSourceControl(Main Room): True -> False
-expect TransportState(Main Room): Playing -> Stopped
-expect HasSourceControl(Main Room): False -> True
+expect Main Room update HasSourceControl False
+expect Main Room update TransportState Stopped
+expect Main Room update HasSourceControl True
 empty
 
 mock network update ds 67 time duration 60
-expect Duration(Main Room): 0 -> 60
+expect Main Room update Duration 60
 empty
 
 mock network update ds 67 time seconds 1
-expect Seconds(Main Room): 0 -> 1
+expect Main Room update Seconds 1
 empty
 
 mock network update ds 67 time seconds 10
-expect Seconds(Main Room): 1 -> 10
+expect Main Room update Seconds 10
 empty

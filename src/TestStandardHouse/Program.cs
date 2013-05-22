@@ -19,152 +19,57 @@ namespace TestLinnHouse
             }
         }
 
-        class RoomControllerWatcher : IWatcher<bool>, IWatcher<uint>, IWatcher<string>, IDisposable
+        class RoomControllerWatcher : IDisposable
         {
-            public RoomControllerWatcher(MockableScriptRunner aRunner)
-            {
-                iRunner = aRunner;
+            private ResultWatcherFactory iFactory;
+            private IStandardRoomController iController;
+            private IStandardRoomTime iTime;
 
-                iRoomControllerLookup = new Dictionary<IStandardRoom, StandardRoomController>();
-                iRoomTimeLookup = new Dictionary<IStandardRoom, StandardRoomTime>();
+            public RoomControllerWatcher(MockableScriptRunner aRunner, IStandardRoom aRoom)
+            {
+                iFactory = new ResultWatcherFactory(aRunner);
+                iController = new StandardRoomController(aRoom);
+                iTime = new StandardRoomTime(aRoom);
+
+                iFactory.Create<bool>(iController.Name, iController.Active, v => "Controller Active " + v);
+                iFactory.Create<bool>(iController.Name, iController.HasVolume, v => "HasVolume " + v);
+                iFactory.Create<bool>(iController.Name, iController.HasSourceControl, v => "HasSourceControl " + v);
+                iFactory.Create<bool>(iController.Name, iController.Mute, v => "Mute " + v);
+                iFactory.Create<uint>(iController.Name, iController.Volume, v => "Volume " + v);
+                iFactory.Create<string>(iController.Name, iController.TransportState, v => "TransportState " + v);
+
+                iFactory.Create<bool>(iTime.Name, iTime.Active, v => "Time Active " + v);
+                iFactory.Create<bool>(iTime.Name, iTime.HasTime, v => "HasTime " + v);
+                iFactory.Create<uint>(iTime.Name, iTime.Duration, v => "Duration " + v);
+                iFactory.Create<uint>(iTime.Name, iTime.Seconds, v => "Seconds " + v);
             }
 
             public void Dispose()
             {
-                List<IStandardRoom> rooms = new List<IStandardRoom>(iRoomControllerLookup.Keys);
-                foreach (IStandardRoom r in rooms)
-                {
-                    Remove(r);
-                }
-                iRoomControllerLookup = null;
-                iRoomTimeLookup = null;
+                iFactory.Dispose();
+                iController.Dispose();
+                iTime.Dispose();
             }
-
-            public void Add(IStandardRoom aRoom)
-            {
-                StandardRoomController controller = new StandardRoomController(aRoom);
-
-                controller.Active.AddWatcher(this);
-                controller.HasVolume.AddWatcher(this);
-                controller.HasSourceControl.AddWatcher(this);
-                controller.Mute.AddWatcher(this);
-                controller.Volume.AddWatcher(this);
-                controller.TransportState.AddWatcher(this);
-
-                iRoomControllerLookup.Add(aRoom, controller);
-
-                StandardRoomTime time = new StandardRoomTime(aRoom);
-
-                time.Active.AddWatcher(this);
-                time.HasTime.AddWatcher(this);
-                time.Duration.AddWatcher(this);
-                time.Seconds.AddWatcher(this);
-
-                iRoomTimeLookup.Add(aRoom, time);
-            }
-
-            public void Remove(IStandardRoom aRoom)
-            {
-                StandardRoomController controller = iRoomControllerLookup[aRoom];
-                iRoomControllerLookup.Remove(aRoom);
-
-                controller.Active.RemoveWatcher(this);
-                controller.HasVolume.RemoveWatcher(this);
-                controller.HasSourceControl.RemoveWatcher(this);
-                controller.Mute.RemoveWatcher(this);
-                controller.Volume.RemoveWatcher(this);
-                controller.TransportState.RemoveWatcher(this);
-
-                controller.Dispose();
-
-                StandardRoomTime time = iRoomTimeLookup[aRoom];
-                iRoomTimeLookup.Remove(aRoom);
-
-                time.Active.RemoveWatcher(this);
-                time.HasTime.RemoveWatcher(this);
-                time.Duration.RemoveWatcher(this);
-                time.Seconds.RemoveWatcher(this);
-
-                time.Dispose();
-            }
-
-            public void ItemOpen(string aId, bool aValue)
-            {
-                iRunner.Result(string.Format("{0}: {1}", aId, aValue));
-            }
-
-            public void ItemUpdate(string aId, bool aValue, bool aPrevious)
-            {
-                iRunner.Result(string.Format("{0}: {1} -> {2}", aId, aPrevious, aValue));
-            }
-
-            public void ItemClose(string aId, bool aValue)
-            {
-            }
-
-            public void ItemOpen(string aId, uint aValue)
-            {
-                iRunner.Result(string.Format("{0}: {1}", aId, aValue));
-            }
-
-            public void ItemUpdate(string aId, uint aValue, uint aPrevious)
-            {
-                iRunner.Result(string.Format("{0}: {1} -> {2}", aId, aPrevious, aValue));
-            }
-
-            public void ItemClose(string aId, uint aValue)
-            {
-            }
-
-            public void ItemOpen(string aId, string aValue)
-            {
-                iRunner.Result(string.Format("{0}: {1}", aId, aValue));
-            }
-
-            public void ItemUpdate(string aId, string aValue, string aPrevious)
-            {
-                iRunner.Result(string.Format("{0}: {1} -> {2}", aId, aPrevious, aValue));
-            }
-
-            public void ItemClose(string aId, string aValue)
-            {
-            }
-
-            private MockableScriptRunner iRunner;
-
-            private Dictionary<IStandardRoom, StandardRoomController> iRoomControllerLookup;
-            private Dictionary<IStandardRoom, StandardRoomTime> iRoomTimeLookup;
         }
 
-        class RoomWatcher : IOrderedWatcher<IStandardRoom>, IWatcher<EStandby>, IWatcher<IZone>, IWatcher<RoomDetails>, IWatcher<RoomMetadata>, IWatcher<RoomMetatext>, IDisposable
+        class RoomWatcher : IOrderedWatcher<IStandardRoom>, IDisposable
         {
             public RoomWatcher(MockableScriptRunner aRunner)
             {
                 iRunner = aRunner;
+                iFactory = new ResultWatcherFactory(aRunner);
 
-                //iRootWatcher = new RootWatcher(aRunner);
-                //iSourceWatcher = new SourceWatcher(aRunner);
-                iRoomControllerWatcher = new RoomControllerWatcher(aRunner);
-
-                iList = new List<IStandardRoom>();
+                iWatcherLookup = new Dictionary<IStandardRoom, RoomControllerWatcher>();
             }
 
             public void Dispose()
             {
-                foreach (IStandardRoom r in iList)
+                foreach(var kvp in iWatcherLookup.Values)
                 {
-                    r.Standby.RemoveWatcher(this);
-                    r.Details.RemoveWatcher(this);
-                    r.Metadata.RemoveWatcher(this);
-                    r.Metatext.RemoveWatcher(this);
-                    r.Zone.RemoveWatcher(this);
-                    //r.Roots.RemoveWatcher(iRootWatcher);
-                    //r.Sources.RemoveWatcher(iSourceWatcher);
+                    kvp.Dispose();
                 }
 
-                //iRootWatcher.Dispose();
-                //iSourceWatcher.Dispose();
-                iRoomControllerWatcher.Dispose();
+                iFactory.Dispose();
             }
 
             public void OrderedOpen()
@@ -182,118 +87,32 @@ namespace TestLinnHouse
             public void OrderedAdd(IStandardRoom aItem, uint aIndex)
             {
                 iRunner.Result(string.Format("Room Added: {0} at {1}", aItem.Name, aIndex));
+                iFactory.Create<EStandby>(aItem.Name, aItem.Standby, v => "Standby " + v);
+                iFactory.Create<RoomDetails>(aItem.Name, aItem.Details, v => "Details " + v.Enabled + " " + v.BitDepth + " " + v.BitRate + " " + v.CodecName + " " + v.Duration + " " + v.Lossless + " " + v.SampleRate);
+                iFactory.Create<RoomMetadata>(aItem.Name, aItem.Metadata, v => "Metadata " + v.Enabled + " " + v.Metadata + " " + v.Uri);
+                iFactory.Create<RoomMetatext>(aItem.Name, aItem.Metatext, v => "Metatext " + v.Enabled + " " + v.Metatext);
+                iFactory.Create<IZone>(aItem.Name, aItem.Zone, v => "Zone " + v.Active + " " + v.Udn);
 
-                iList.Insert(aIndex, aItem);
-                aItem.Standby.AddWatcher(this);
-                aItem.Details.AddWatcher(this);
-                aItem.Metadata.AddWatcher(this);
-                aItem.Metatext.AddWatcher(this);
-                aItem.Zone.AddWatcher(this);
-                //aItem.Roots.AddWatcher(iRootWatcher);
-                //aItem.Sources.AddWatcher(iSourceWatcher);
-                iRoomControllerWatcher.Add(aItem);
+                iWatcherLookup.Add(aItem, new RoomControllerWatcher(iRunner, aItem));
             }
 
             public void OrderedMove(IStandardRoom aItem, uint aFrom, uint aTo)
             {
                 iRunner.Result(string.Format("Room Moved: {0} from {1} to {2}", aItem.Name, aFrom, aTo));
-
-                iList.Remove(aItem);
-                iList.Insert(aTo, aItem);
             }
 
             public void OrderedRemove(IStandardRoom aItem, uint aIndex)
             {
                 iRunner.Result(string.Format("Room Removed: {0} at {1}", aItem.Name, aIndex));
+                iFactory.Destroy(aItem.Name);
 
-                iList.Remove(aItem);
-                aItem.Standby.RemoveWatcher(this);
-                aItem.Details.RemoveWatcher(this);
-                aItem.Metadata.RemoveWatcher(this);
-                aItem.Metatext.RemoveWatcher(this);
-                aItem.Zone.RemoveWatcher(this);
-                //aItem.Roots.RemoveWatcher(iRootWatcher);
-                //aItem.Sources.RemoveWatcher(iSourceWatcher);
-                iRoomControllerWatcher.Remove(aItem);
-            }
-
-            public void ItemOpen(string aId, EStandby aValue)
-            {
-                iRunner.Result(string.Format("{0}: {1}", aId, aValue));
-            }
-
-            public void ItemUpdate(string aId, EStandby aValue, EStandby aPrevious)
-            {
-                iRunner.Result(string.Format("{0}: {1} -> {2}", aId, aPrevious, aValue));
-            }
-
-            public void ItemClose(string aId, EStandby aValue)
-            {
-            }
-
-            public void ItemOpen(string aId, IZone aValue)
-            {
-                iRunner.Result(string.Format("{0}: {1} {2}", aId, aValue.Active, aValue.Udn));
-            }
-
-            public void ItemUpdate(string aId, IZone aValue, IZone aPrevious)
-            {
-                iRunner.Result(string.Format("{0}: {1} -> {2} {3}", aId, aPrevious.Active, aValue.Active, aValue.Udn));
-            }
-
-            public void ItemClose(string aId, IZone aValue)
-            {
-            }
-
-            public void ItemOpen(string aId, RoomDetails aValue)
-            {
-                iRunner.Result(string.Format("{0}: Active={1}, BitDepth={2}, BitRate={3}, CodeName={4}, Duration={5}, Lossless={6}, SampleRate={7}",
-                    aId, aValue.Enabled, aValue.BitDepth, aValue.BitRate, aValue.CodecName, aValue.Duration, aValue.Lossless, aValue.SampleRate));
-            }
-
-            public void ItemUpdate(string aId, RoomDetails aValue, RoomDetails aPrevious)
-            {
-                iRunner.Result(string.Format("{0} Updated: Active={1}, BitDepth={2}, BitRate={3}, CodeName={4}, Duration={5}, Lossless={6}, SampleRate={7}",
-                    aId, aValue.Enabled, aValue.BitDepth, aValue.BitRate, aValue.CodecName, aValue.Duration, aValue.Lossless, aValue.SampleRate));
-            }
-
-            public void ItemClose(string aId, RoomDetails aValue)
-            {
-            }
-
-            public void ItemOpen(string aId, RoomMetadata aValue)
-            {
-                iRunner.Result(string.Format("{0}: Active={1}, Metadata={2}, Uri={3}", aId, aValue.Enabled, aValue.Metadata, aValue.Uri));
-            }
-
-            public void ItemUpdate(string aId, RoomMetadata aValue, RoomMetadata aPrevious)
-            {
-                iRunner.Result(string.Format("{0} Updated: Active={1}, Metadata={2}, Uri={3}", aId, aValue.Enabled, aValue.Metadata, aValue.Uri));
-            }
-
-            public void ItemClose(string aId, RoomMetadata aValue)
-            {
-            }
-
-            public void ItemOpen(string aId, RoomMetatext aValue)
-            {
-                iRunner.Result(string.Format("{0}: Active={1}, Metatext={2}", aId, aValue.Enabled, aValue.Metatext));
-            }
-
-            public void ItemUpdate(string aId, RoomMetatext aValue, RoomMetatext aPrevious)
-            {
-                iRunner.Result(string.Format("{0} Updated: Active={1}, Metatext={2}", aId, aValue.Enabled, aValue.Metatext));
-            }
-
-            public void ItemClose(string aId, RoomMetatext aValue)
-            {
+                iWatcherLookup[aItem].Dispose();
+                iWatcherLookup.Remove(aItem);
             }
 
             private MockableScriptRunner iRunner;
-            //private RootWatcher iRootWatcher;
-            //private SourceWatcher iSourceWatcher;
-            private RoomControllerWatcher iRoomControllerWatcher;
-            private List<IStandardRoom> iList;
+            private ResultWatcherFactory iFactory;
+            private Dictionary<IStandardRoom, RoomControllerWatcher> iWatcherLookup;
         }
 
         static int Main(string[] args)

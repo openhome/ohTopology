@@ -177,10 +177,10 @@ namespace OpenHome.Av
             iMetadata = aMetadata;
             iMetatext = aMetatext;
 
-            Task<ProxyInfo> task = iDevice.Create<ProxyInfo>();
+            Task<IProxyInfo> task = iDevice.Create<IProxyInfo>();
             aThread.Schedule(() =>
             {
-                ProxyInfo info = task.Result;
+                IProxyInfo info = task.Result;
 
                 if (!iDisposed)
                 {
@@ -263,7 +263,7 @@ namespace OpenHome.Av
         }
 
         private bool iDisposed;
-        private ProxyInfo iInfo;
+        private IProxyInfo iInfo;
 
         private IWatchableDevice iDevice;
         private Watchable<RoomDetails> iDetails;
@@ -423,7 +423,7 @@ namespace OpenHome.Av
         IWatchableThread WatchableThread { get; }
     }
 
-    public class StandardRoom : IStandardRoom, ITopologyObject, IWatcher<IEnumerable<ITopology4Root>>, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IDisposable
+    public class StandardRoom : IStandardRoom, IWatcher<IEnumerable<ITopology4Root>>, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IDisposable
     {
         public StandardRoom(IWatchableThread aThread, StandardHouse aHouse, ITopology4Room aRoom)
         {
@@ -438,23 +438,22 @@ namespace OpenHome.Av
             iSources = new List<ITopology4Source>();
             iSenders = new List<ITopology4Group>();
 
-            iStandby = new WatchableProxy<EStandby>(iRoom.Standby);
+            iDetails = new Watchable<RoomDetails>(iThread, "Details", new RoomDetails());
+            iMetadata = new Watchable<RoomMetadata>(iThread, "Metadata", new RoomMetadata());
+            iMetatext = new Watchable<RoomMetatext>(iThread, "Metatext", new RoomMetatext());
 
-            iDetails = new Watchable<RoomDetails>(iThread, string.Format("Details({0})", aRoom.Name), new RoomDetails());
-            iMetadata = new Watchable<RoomMetadata>(iThread, string.Format("Metadata({0})", aRoom.Name), new RoomMetadata());
-            iMetatext = new Watchable<RoomMetatext>(iThread, string.Format("Metatext({0})", aRoom.Name), new RoomMetatext());
-
-            iZoneable = new Watchable<bool>(aThread, string.Format("HasReceiver({0})", aRoom.Name), false);
-            iZone = new Watchable<IZone>(aThread, string.Format("Zone({0})", aRoom.Name), new Zone(false, string.Empty, this));
+            iZoneable = new Watchable<bool>(aThread, "HasReceiver", false);
+            iZone = new Watchable<IZone>(aThread, "Zone", new Zone(false, string.Empty, this));
 
             iRoom.Roots.AddWatcher(this);
         }
 
-        public void Detach()
+        public void Dispose()
         {
-            iRoom.Roots.RemoveWatcher(this);
-
-            iStandby.Detach();
+            iThread.Execute(() =>
+            {
+                iRoom.Roots.RemoveWatcher(this);
+            });
 
             List<Action> linked = new List<Action>(iJoiners);
             foreach (Action a in linked)
@@ -466,12 +465,6 @@ namespace OpenHome.Av
                 throw new Exception("iJoiners.Count > 0");
             }
             iJoiners = null;
-        }
-
-        public void Dispose()
-        {
-            iStandby.Dispose();
-            iStandby = null;
 
             iDetails.Dispose();
             iDetails = null;
@@ -508,7 +501,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return iStandby;
+                return iRoom.Standby;
             }
         }
 
@@ -684,7 +677,7 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, IEnumerable<ITopology4Root> aValue)
         {
-            iWatchableSources = new Watchable<IEnumerable<ITopology4Source>>(iThread, string.Format("Sources({0})", iRoom.Name), new List<ITopology4Source>());
+            iWatchableSources = new Watchable<IEnumerable<ITopology4Source>>(iThread, "Sources", new List<ITopology4Source>());
             
             iRoots = aValue;
 
@@ -764,7 +757,7 @@ namespace OpenHome.Av
         private void SelectFirstSource()
         {
             ITopology4Source source = iSources[0];
-            iWatchableSource = new Watchable<ITopology4Source>(iThread, string.Format("Source({0})", iRoom.Name), source);
+            iWatchableSource = new Watchable<ITopology4Source>(iThread, "Source", source);
             iInfoWatcher = new InfoWatcher(iThread, source.Device, iDetails, iMetadata, iMetatext);
             iSource = source;
         }
@@ -883,7 +876,6 @@ namespace OpenHome.Av
         private Watchable<bool> iZoneable;
         private Watchable<IZone> iZone;
 
-        private WatchableProxy<EStandby> iStandby;
         private InfoWatcher iInfoWatcher;
         private Watchable<RoomDetails> iDetails;
         private Watchable<RoomMetadata> iMetadata;
@@ -911,7 +903,7 @@ namespace OpenHome.Av
         {
             if (iTopology4 == null)
             {
-                throw new ObjectDisposedException("LinnHouse.Dispose");
+                throw new ObjectDisposedException("StandardHouse.Dispose");
             }
 
             iThread.Execute(() =>
@@ -920,16 +912,12 @@ namespace OpenHome.Av
 
                 foreach (StandardRoom room in iRooms)
                 {
-                    room.Detach();
+                    room.Dispose();
                 }
             });
             iWatchableRooms.Dispose();
             iWatchableRooms = null;
 
-            foreach (StandardRoom room in iRooms)
-            {
-                room.Dispose();
-            }
             iRoomLookup.Clear();
             iRoomLookup = null;
 
@@ -1000,9 +988,6 @@ namespace OpenHome.Av
             iRoomLookup.Remove(aRoom);
             iRooms.RemoveAt(index);
             iWatchableRooms.Remove(room, (uint)index);
-
-            // detach the room from topology L5
-            room.Detach();
 
             // schedule the Room object for disposal
             iThread.Schedule(() =>

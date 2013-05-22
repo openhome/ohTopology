@@ -45,26 +45,24 @@ namespace OpenHome.Av
 
             iLock = new object();
             iIsActive = true;
-            iActive = new Watchable<bool>(iThread, string.Format("Active({0})", aRoom.Name), true);
+            iActive = new Watchable<bool>(iThread, "Active", true);
 
-            iStandby = new WatchableProxy<EStandby>(aRoom.Standby);
+            iHasVolume = new Watchable<bool>(iThread, "HasVolume", false);
+            iMute = new Watchable<bool>(iThread, "Mute", false);
+            iValue = new Watchable<uint>(iThread, "Volume", 0);
 
-            iHasVolume = new Watchable<bool>(iThread, string.Format("HasVolume({0})", aRoom.Name), false);
-            iMute = new Watchable<bool>(iThread, string.Format("Mute({0})", aRoom.Name), false);
-            iValue = new Watchable<uint>(iThread, string.Format("Volume({0})", aRoom.Name), 0);
+            iHasSourceControl = new Watchable<bool>(iThread, "HasSourceControl", false);
+            iHasInfoNext = new Watchable<bool>(iThread, "HasInfoNext", false);
+            iInfoNext = new Watchable<IInfoMetadata>(iThread, "InfoNext", new RoomMetadata());
 
-            iHasSourceControl = new Watchable<bool>(iThread, string.Format("HasSourceControl({0})", aRoom.Name), false);
-            iHasInfoNext = new Watchable<bool>(iThread, string.Format("HasInfoNext({0})", aRoom.Name), false);
-            iInfoNext = new Watchable<IInfoMetadata>(iThread, string.Format("InfoNext({0})", aRoom.Name), new RoomMetadata());
+            iCanPause = new Watchable<bool>(iThread, "CanPause", false);
+            iCanSkip = new Watchable<bool>(iThread, "CanSkip", false);
+            iCanSeek = new Watchable<bool>(iThread, "CanSeek", false);
+            iTransportState = new Watchable<string>(iThread, "TransportState", string.Empty);
 
-            iCanPause = new Watchable<bool>(iThread, string.Format("CanPause({0})", aRoom.Name), false);
-            iCanSkip = new Watchable<bool>(iThread, string.Format("CanSkip({0})", aRoom.Name), false);
-            iCanSeek = new Watchable<bool>(iThread, string.Format("CanSeek({0})", aRoom.Name), false);
-            iTransportState = new Watchable<string>(iThread, string.Format("TransportState({0})", aRoom.Name), string.Empty);
-
-            iHasPlayMode = new Watchable<bool>(iThread, string.Format("HasPlayMode({0})", aRoom.Name), false);
-            iShuffle = new Watchable<bool>(iThread, string.Format("Shuffle({0})", aRoom.Name), false);
-            iRepeat = new Watchable<bool>(iThread, string.Format("Repeat({0})", aRoom.Name), false);
+            iHasPlayMode = new Watchable<bool>(iThread, "HasPlayMode", false);
+            iShuffle = new Watchable<bool>(iThread, "Shuffle", false);
+            iRepeat = new Watchable<bool>(iThread, "Repeat", false);
 
             iRoom.Source.AddWatcher(this);
 
@@ -79,8 +77,6 @@ namespace OpenHome.Av
                 {
                     iThread.Execute(() =>
                     {
-                        iStandby.Detach();
-
                         iRoom.Source.RemoveWatcher(this);
                     });
                     iRoom.UnJoin(SetInactive);
@@ -91,9 +87,6 @@ namespace OpenHome.Av
 
             iActive.Dispose();
             iActive = null;
-
-            iStandby.Dispose();
-            iStandby = null;
 
             iHasSourceControl.Dispose();
             iHasSourceControl = null;
@@ -143,8 +136,6 @@ namespace OpenHome.Av
 
                 iActive.Update(false);
 
-                iStandby.Detach();
-
                 iRoom.Source.RemoveWatcher(this);
                 iRoom.UnJoin(SetInactive);
             }
@@ -162,7 +153,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return iStandby;
+                return iRoom.Standby;
             }
         }
 
@@ -524,7 +515,6 @@ namespace OpenHome.Av
         private object iLock;
         private bool iIsActive;
         private Watchable<bool> iActive;
-        private WatchableProxy<EStandby> iStandby;
 
         private VolumeController iVolumeController;
         private Watchable<bool> iHasVolume;
