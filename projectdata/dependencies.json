@@ -24,12 +24,12 @@
         "strip-archive-dirs":1
     },
     {   "name": "ohOs",
-        "archive-path": "http://openhome.org/releases/artifacts/ohOs2/ohOs2-0.0.385-AnyPlatform-Release.tar.gz",
+        "archive-path": "http://openhome.org/releases/artifacts/ohOs2/ohOs2-0.0.391-AnyPlatform-Release.tar.gz",
         "dest": "dependencies/AnyPlatform/ohOs",
         "strip-archive-dirs":1
     },
 	{   "name": "ohOs.App.V1",
-        "archive-path": "http://openhome.org/releases/artifacts/ohOs.App.V1/ohOs.App.V1-0.0.383-AnyPlatform-Release.tar.gz",
+        "archive-path": "http://openhome.org/releases/artifacts/ohOs.App.V1/ohOs.App.V1-0.0.391-AnyPlatform-Release.tar.gz",
         "dest": "dependencies/AnyPlatform/ohOs.App.V1",
         "strip-archive-dirs":1
     },

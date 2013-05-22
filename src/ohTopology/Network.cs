@@ -3,8 +3,9 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Collections;
 
-using OpenHome.Os.App;
 using OpenHome.Os;
+using OpenHome.Os.App;
+using OpenHome.MediaServer;
 using OpenHome.Net.ControlPoint;
 
 namespace OpenHome.Av
@@ -86,12 +87,24 @@ namespace OpenHome.Av
     {
         IWatchableThread WatchableThread { get; }
         IWatchableThread SubscribeThread { get; }
+        ITagManager TagManager { get; }
         IWatchableUnordered<IWatchableDevice> Create<T>() where T : IProxy;
         //void Refresh();
     }
 
     public class Network : INetwork, IMockable
     {
+        private object iLock;
+
+        protected readonly IWatchableThread iThread;
+        protected readonly IWatchableThread iSubscribeThread;
+
+        private readonly ITagManager iTagManager;
+
+        private List<WatchableDevice> iDevices;
+        private Dictionary<string, WatchableDevice> iMockDevices;
+        private Dictionary<Type, WatchableUnordered<IWatchableDevice>> iDeviceLists;
+
         public Network(IWatchableThread aThread, IWatchableThread aSubscribeThread)
         {
             iLock = new object();
@@ -99,6 +112,7 @@ namespace OpenHome.Av
             iSubscribeThread = aSubscribeThread;
             iThread = aThread;
 
+            iTagManager = new TagManager();
             iDevices = new List<WatchableDevice>();
             iMockDevices = new Dictionary<string, WatchableDevice>();
             iDeviceLists = new Dictionary<Type, WatchableUnordered<IWatchableDevice>>();
@@ -212,6 +226,14 @@ namespace OpenHome.Av
             get
             {
                 return iSubscribeThread;
+            }
+        }
+
+        public ITagManager TagManager
+        {
+            get
+            {
+                return (iTagManager);
             }
         }
 
@@ -351,14 +373,5 @@ namespace OpenHome.Av
                 iSubscribeThread.Wait(aAction);
             });
         }
-
-        private object iLock;
-
-        protected IWatchableThread iThread;
-        protected IWatchableThread iSubscribeThread;
-
-        private List<WatchableDevice> iDevices;
-        private Dictionary<string, WatchableDevice> iMockDevices;
-        private Dictionary<Type, WatchableUnordered<IWatchableDevice>> iDeviceLists;
     }
 }

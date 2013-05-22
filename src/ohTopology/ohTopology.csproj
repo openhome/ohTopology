@@ -58,8 +58,9 @@
     <Reference Include="CpUpnpOrgContentDirectory1.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpUpnpOrgContentDirectory1.net.dll</HintPath>
     </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>..\..\dependencies\AnyPlatform\ohOs2\ICSharpCode.SharpZipLib.dll</HintPath>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
     <Reference Include="ohMediaServer.Shared">
       <HintPath>..\..\dependencies\AnyPlatform\ohMediaServer\ohMediaServer.Shared.dll</HintPath>
