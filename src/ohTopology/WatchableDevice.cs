@@ -19,13 +19,14 @@ namespace OpenHome.Av
     public abstract class Service : IService
     {
         private readonly INetwork iNetwork;
-
         private uint iRefCount;
+        protected ManualResetEvent iSubscribed;
 
         protected Service(INetwork aNetwork)
         {
             iNetwork = aNetwork;
             iRefCount = 0;
+            iSubscribed = new ManualResetEvent(false);
         }
 
         public INetwork Network
@@ -48,8 +49,14 @@ namespace OpenHome.Av
         {
             Task<T> task = Task.Factory.StartNew<T>(() =>
             {
+                T result = default(T);
                 Subscribe();
-                return (T)OnCreate(aDevice);
+                Network.SubscribeThread.Execute(() =>
+                {
+                    iSubscribed.WaitOne();
+                    result = (T)OnCreate(aDevice);
+                });
+                return result;
             });
             return task;
         }
@@ -58,21 +65,44 @@ namespace OpenHome.Av
 
         public void Subscribe()
         {
-            if (iRefCount == 0)
+            bool subscribe = false;
+
+            lock (iSubscribed)
+            {
+                if (iRefCount == 0)
+                {
+                    subscribe = true;
+                }
+                ++iRefCount;
+            }
+
+            if (subscribe)
             {
                 OnSubscribe();
+                iSubscribed.Set();
             }
-            ++iRefCount;
         }
 
         protected abstract void OnSubscribe();
 
         public void Unsubscribe()
         {
-            --iRefCount;
-            if (iRefCount == 0)
+            bool unsubscribe = false;
+
+            lock (iSubscribed)
+            {
+                --iRefCount;
+                if (iRefCount == 0)
+                {
+                    unsubscribe = true;
+                }
+            }
+
+            if (unsubscribe)
             {
                 OnUnsubscribe();
+                iSubscribed.Reset();
+                Console.WriteLine("Unsubscribed from " + GetType());
             }
         }
 
@@ -135,56 +165,56 @@ namespace OpenHome.Av
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxyProduct>(new ServiceProductNetwork(aNetwork, aDevice));
+                    device.Add<IProxyProduct>(new ServiceProductNetwork(aNetwork, aDevice));
                 }
             }
             if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Info", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxyInfo>(new ServiceInfoNetwork(aNetwork, aDevice));
+                    device.Add<IProxyInfo>(new ServiceInfoNetwork(aNetwork, aDevice));
                 }
             }
             if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Time", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxyTime>(new ServiceTimeNetwork(aNetwork, aDevice));
+                    device.Add<IProxyTime>(new ServiceTimeNetwork(aNetwork, aDevice));
                 }
             }
             if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Sender", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxySender>(new ServiceSenderNetwork(aNetwork, aDevice));
+                    device.Add<IProxySender>(new ServiceSenderNetwork(aNetwork, aDevice));
                 }
             }
             if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Volume", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxyVolume>(new ServiceVolumeNetwork(aNetwork, aDevice));
+                    device.Add<IProxyVolume>(new ServiceVolumeNetwork(aNetwork, aDevice));
                 }
             }
             if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Playlist", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxyPlaylist>(new ServicePlaylistNetwork(aNetwork, aDevice));
+                    device.Add<IProxyPlaylist>(new ServicePlaylistNetwork(aNetwork, aDevice));
                 }
             }
             if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Radio", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxyRadio>(new ServiceRadioNetwork(aNetwork, aDevice));
+                    device.Add<IProxyRadio>(new ServiceRadioNetwork(aNetwork, aDevice));
                 }
             }
             if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Receiver", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxyReceiver>(new ServiceReceiverNetwork(aNetwork, aDevice));
+                    device.Add<IProxyReceiver>(new ServiceReceiverNetwork(aNetwork, aDevice));
                 }
             }
             return device;

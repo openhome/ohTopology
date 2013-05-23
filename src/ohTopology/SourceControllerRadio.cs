@@ -20,27 +20,30 @@ namespace OpenHome.Av
             iTransportState = aTransportState;
 
             Task<IProxyRadio> task = aSource.Device.Create<IProxyRadio>();
-            aThread.Schedule(() =>
+            task.ContinueWith((t) =>
             {
-                IProxyRadio radio = task.Result;
+                IProxyRadio radio = t.Result;
 
-                if (!iDisposed)
+                aThread.Schedule(() =>
                 {
-                    iRadio = radio;
+                    if (!iDisposed)
+                    {
+                        iRadio = radio;
 
-                    aHasInfoNext.Update(false);
-                    aCanSkip.Update(false);
-                    iCanPause.Update(false);
-                    iCanSeek.Update(false);
+                        aHasInfoNext.Update(false);
+                        aCanSkip.Update(false);
+                        iCanPause.Update(false);
+                        iCanSeek.Update(false);
 
-                    iRadio.TransportState.AddWatcher(this);
-                        
-                    iHasSourceControl.Update(true);
-                }
-                else
-                {
-                    radio.Dispose();
-                }
+                        iRadio.TransportState.AddWatcher(this);
+
+                        iHasSourceControl.Update(true);
+                    }
+                    else
+                    {
+                        radio.Dispose();
+                    }
+                });
             });
         }
 
