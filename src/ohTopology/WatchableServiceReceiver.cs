@@ -87,7 +87,7 @@ namespace OpenHome.Av
         public ServiceReceiverNetwork(INetwork aNetwork, CpDevice aDevice)
             : base(aNetwork)
         {
-            iSubscribe = new ManualResetEvent(false);
+            iSubscribed = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgReceiver1(aDevice);
 
             iService.SetPropertyMetadataChanged(HandleMetadataChanged);
@@ -98,8 +98,8 @@ namespace OpenHome.Av
 
         public override void Dispose()
         {
-            iSubscribe.Dispose();
-            iSubscribe = null;
+            iSubscribed.Dispose();
+            iSubscribed = null;
 
             iService.Dispose();
             iService = null;
@@ -107,23 +107,27 @@ namespace OpenHome.Av
             base.Dispose();
         }
 
-        protected override void OnSubscribe()
+        protected override Task OnSubscribe()
         {
-            iService.Subscribe();
-            iSubscribe.WaitOne();
+            Task task = Task.Factory.StartNew(() =>
+            {
+                iService.Subscribe();
+                iSubscribed.WaitOne();
+            });
+            return task;
         }
 
         private void HandleInitialEvent()
         {
             iProtocolInfo = iService.PropertyProtocolInfo();
 
-            iSubscribe.Set();
+            iSubscribed.Set();
         }
 
         protected override void OnUnsubscribe()
         {
             iService.Unsubscribe();
-            iSubscribe.Reset();
+            iSubscribed.Reset();
         }
 
         public override Task Play()
@@ -169,7 +173,7 @@ namespace OpenHome.Av
             });
         }
 
-        private ManualResetEvent iSubscribe;
+        private ManualResetEvent iSubscribed;
         private CpProxyAvOpenhomeOrgReceiver1 iService;
     }
 
@@ -182,17 +186,6 @@ namespace OpenHome.Av
 
             iMetadata.Update(new InfoMetadata(aMetadata, aUri));
             iTransportState.Update(aTransportState);
-        }
-
-        protected override void OnSubscribe()
-        {
-            Network.SubscribeThread.Execute(() =>
-            {
-            });
-        }
-
-        protected override void OnUnsubscribe()
-        {
         }
 
         public override Task Play()

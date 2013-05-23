@@ -19,11 +19,8 @@ namespace OpenHome.Av
             iCanSeek = aCanSeek;
             iTransportState = aTransportState;
 
-            Task<IProxyRadio> task = aSource.Device.Create<IProxyRadio>();
-            task.ContinueWith((t) =>
+            aSource.Device.Create<IProxyRadio>((radio) =>
             {
-                IProxyRadio radio = t.Result;
-
                 aThread.Schedule(() =>
                 {
                     if (!iDisposed)

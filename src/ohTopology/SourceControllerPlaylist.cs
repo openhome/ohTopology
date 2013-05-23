@@ -19,11 +19,8 @@ namespace OpenHome.Av
             iCanSeek = aCanSeek;
             iTransportState = aTransportState;
 
-            Task<IProxyPlaylist> task = aSource.Device.Create<IProxyPlaylist>();
-            task.ContinueWith((t) =>
+            aSource.Device.Create<IProxyPlaylist>((playlist) =>
             {
-                IProxyPlaylist playlist = t.Result;
-
                 aThread.Schedule(() =>
                 {
                     if (!iDisposed)

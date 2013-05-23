@@ -197,7 +197,7 @@ namespace OpenHome.Av
         public ServiceVolumeNetwork(INetwork aNetwork, CpDevice aDevice)
             : base(aNetwork)
         {
-            iSubscribe = new ManualResetEvent(false);
+            iSubscribed = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgVolume1(aDevice);
 
             iService.SetPropertyBalanceChanged(HandleBalanceChanged);
@@ -214,8 +214,8 @@ namespace OpenHome.Av
 
         public override void Dispose()
         {
-            iSubscribe.Dispose();
-            iSubscribe = null;
+            iSubscribed.Dispose();
+            iSubscribed = null;
 
             iService.Dispose();
             iService = null;
@@ -223,21 +223,25 @@ namespace OpenHome.Av
             base.Dispose();
         }
 
-        protected override void OnSubscribe()
+        protected override Task OnSubscribe()
         {
-            iService.Subscribe();
-            iSubscribe.WaitOne();
+            Task task = Task.Factory.StartNew(() =>
+            {
+                iService.Subscribe();
+                iSubscribed.WaitOne();
+            });
+            return task;
         }
 
         private void HandleInitialEvent()
         {
-            iSubscribe.Set();
+            iSubscribed.Set();
         }
 
         protected override void OnUnsubscribe()
         {
             iService.Unsubscribe();
-            iSubscribe.Reset();
+            iSubscribed.Reset();
         }
 
         public override Task SetBalance(int aValue)
@@ -358,7 +362,7 @@ namespace OpenHome.Av
             });
         }
 
-        private ManualResetEvent iSubscribe;
+        private ManualResetEvent iSubscribed;
         private CpProxyAvOpenhomeOrgVolume1 iService;
     }
 
@@ -390,17 +394,6 @@ namespace OpenHome.Av
             iVolumeMilliDbPerStep.Update(aVolumeMilliDbPerStep);
             iVolumeSteps.Update(aVolumeSteps);
             iVolumeUnity.Update(aVolumeUnity);
-        }
-
-        protected override void OnSubscribe()
-        {
-            Network.SubscribeThread.Execute(() =>
-            {
-            });
-        }
-
-        protected override void OnUnsubscribe()
-        {
         }
 
         public override Task SetBalance(int aValue)

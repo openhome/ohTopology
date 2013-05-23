@@ -177,11 +177,8 @@ namespace OpenHome.Av
             iMetadata = aMetadata;
             iMetatext = aMetatext;
 
-            Task<IProxyInfo> task = iDevice.Create<IProxyInfo>();
-            task.ContinueWith((t) =>
+            iDevice.Create<IProxyInfo>((info) =>
             {
-                IProxyInfo info = t.Result;
-
                 aThread.Schedule(() =>
                 {
                     if (!iDisposed)
@@ -596,11 +593,8 @@ namespace OpenHome.Av
                 {
                     if (s.Type == "Playlist")
                     {
-                        Task<ProxyPlaylist> task = s.Device.Create<ProxyPlaylist>();
-                        task.ContinueWith((t) =>
+                        s.Device.Create<ProxyPlaylist>((playlist) =>
                         {
-                            ProxyPlaylist playlist = t.Result;
-
                             iThread.Schedule(() =>
                             {
                                 playlist.SeekId(id);
@@ -622,18 +616,11 @@ namespace OpenHome.Av
                 {
                     if (s.Type == "Receiver")
                     {
-                        Task<ProxyReceiver> taskReceiver = s.Device.Create<ProxyReceiver>();
-                        ITopology4Group g = iHouse.Sender(udn);
-                        Task<ProxySender> taskSender = g.Device.Create<ProxySender>();
-
-                        taskReceiver.ContinueWith((tr) =>
+                        s.Device.Create<ProxyReceiver>((receiver) =>
                         {
-                            ProxyReceiver receiver = tr.Result;
-
-                            taskSender.ContinueWith((ts) =>
+                            ITopology4Group g = iHouse.Sender(udn);
+                            g.Device.Create<ProxySender>((sender) =>
                             {
-                                ProxySender sender = ts.Result;
-
                                 iThread.Schedule(() =>
                                 {
                                     if (!iDisposed)

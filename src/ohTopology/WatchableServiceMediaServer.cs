@@ -306,14 +306,6 @@ namespace OpenHome.Av
             return (new ProxyMediaServer(aDevice, this));
         }
 
-        protected override void  OnSubscribe()
-        {
-        }
-
-        protected override void  OnUnsubscribe()
-        {
-        }
-
         private IEnumerable<IMediaMetadata> ReadMetadata(string aAppRoot)
         {
             var path = Path.Combine(aAppRoot, "MockMediaServer.zip");

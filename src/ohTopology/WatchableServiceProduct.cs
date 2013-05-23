@@ -244,7 +244,7 @@ namespace OpenHome.Av
         public ServiceProductNetwork(INetwork aNetwork, CpDevice aDevice)
             : base(aNetwork)
         {
-            iSubscribe = new ManualResetEvent(false);
+            iSubscribed = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgProduct1(aDevice);
 
             iService.SetPropertyProductRoomChanged(HandleRoomChanged);
@@ -258,8 +258,8 @@ namespace OpenHome.Av
 
         public override void Dispose()
         {
-            iSubscribe.Dispose();
-            iSubscribe = null;
+            iSubscribed.Dispose();
+            iSubscribed = null;
 
             iService.Dispose();
             iService = null;
@@ -267,10 +267,14 @@ namespace OpenHome.Av
             base.Dispose();
         }
 
-        protected override void OnSubscribe()
+        protected override Task OnSubscribe()
         {
-            iService.Subscribe();
-            iSubscribe.WaitOne();
+            Task task = Task.Factory.StartNew(() =>
+            {
+                iService.Subscribe();
+                iSubscribed.WaitOne();
+            });
+            return task;
         }
 
         private void HandleInitialEvent()
@@ -288,13 +292,13 @@ namespace OpenHome.Av
             iProductInfo = iService.PropertyProductInfo();
             iProductUrl = iService.PropertyProductUrl();
 
-            iSubscribe.Set();
+            iSubscribed.Set();
         }
 
         protected override void OnUnsubscribe()
         {
             iService.Unsubscribe();
-            iSubscribe.Reset();
+            iSubscribed.Reset();
         }
 
         public override Task SetSourceIndex(uint aValue)
@@ -364,7 +368,7 @@ namespace OpenHome.Av
             });
         }
 
-        private ManualResetEvent iSubscribe;
+        private ManualResetEvent iSubscribed;
         private CpProxyAvOpenhomeOrgProduct1 iService;
     }
 
@@ -500,17 +504,6 @@ namespace OpenHome.Av
             iSourceIndex.Update(aSourceIndex);
             iSourceXml.Update(iSourceXmlFactory.ToString());
             iStandby.Update(aStandby);
-        }
-
-        protected override void OnSubscribe()
-        {
-            Network.SubscribeThread.Execute(() =>
-            {
-            });
-        }
-
-        protected override void OnUnsubscribe()
-        {
         }
 
         public override void Execute(IEnumerable<string> aValue)

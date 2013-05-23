@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Xml;
+using System.Threading.Tasks;
 using System.Threading;
 
 using OpenHome.Os.App;
@@ -161,7 +162,7 @@ namespace OpenHome.Av
         public ServiceSenderNetwork(INetwork aNetwork, CpDevice aDevice)
             : base(aNetwork)
         {
-            iSubscribe = new ManualResetEvent(false);
+            iSubscribed = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgSender1(aDevice);
 
             iService.SetPropertyAudioChanged(HandleAudioChanged);
@@ -173,8 +174,8 @@ namespace OpenHome.Av
 
         public override void Dispose()
         {
-            iSubscribe.Dispose();
-            iSubscribe = null;
+            iSubscribed.Dispose();
+            iSubscribed = null;
 
             iService.Dispose();
             iService = null;
@@ -182,10 +183,14 @@ namespace OpenHome.Av
             base.Dispose();
         }
 
-        protected override void OnSubscribe()
+        protected override Task OnSubscribe()
         {
-            iService.Subscribe();
-            iSubscribe.WaitOne();
+            Task task = Task.Factory.StartNew(() =>
+            {
+                iService.Subscribe();
+                iSubscribed.WaitOne();
+            });
+            return task;
         }
         
         private void HandleInitialEvent()
@@ -193,13 +198,13 @@ namespace OpenHome.Av
             iAttributes = iService.PropertyAttributes();
             iPresentationUrl = iService.PropertyPresentationUrl();
 
-            iSubscribe.Set();
+            iSubscribed.Set();
         }
 
         protected override void OnUnsubscribe()
         {
             iService.Unsubscribe();
-            iSubscribe.Reset();
+            iSubscribed.Reset();
         }
 
         private void HandleAudioChanged()
@@ -226,7 +231,7 @@ namespace OpenHome.Av
             });
         }
 
-        private ManualResetEvent iSubscribe;
+        private ManualResetEvent iSubscribed;
         private CpProxyAvOpenhomeOrgSender1 iService;
     }
 
@@ -241,17 +246,6 @@ namespace OpenHome.Av
             iAudio.Update(aAudio);
             iMetadata.Update(aMetadata);
             iStatus.Update(aStatus);
-        }
-
-        protected override void OnSubscribe()
-        {
-            Network.SubscribeThread.Execute(() =>
-            {
-            });
-        }
-
-        protected override void OnUnsubscribe()
-        {
         }
 
         public override void Execute(IEnumerable<string> aValue)

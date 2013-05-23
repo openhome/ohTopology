@@ -307,9 +307,9 @@ namespace TestMediaServer
 
         public void UnorderedAdd(IWatchableDevice aDevice)
         {
-            aDevice.Create<IProxyMediaServer>().ContinueWith((t) =>
+            aDevice.Create<IProxyMediaServer>((t) =>
             {
-                iProxy = t.Result;
+                iProxy = t;
             });
         }
 

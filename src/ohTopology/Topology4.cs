@@ -188,11 +188,8 @@ namespace OpenHome.Av
 
             if (iGroup.Attributes.Contains("Sender"))
             {
-                Task<IProxySender> task = iGroup.Device.Create<IProxySender>();
-                task.ContinueWith((t) =>
+                iGroup.Device.Create<IProxySender>((sender) =>
                 {
-                    IProxySender sender = t.Result;
-
                     iThread.Schedule(() =>
                     {
                         if (!iDisposed)

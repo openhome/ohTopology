@@ -92,11 +92,8 @@ namespace OpenHome.Av
         public void UnorderedAdd(IWatchableDevice aItem)
         {
             iPendingSubscriptions.Add(aItem);
-            Task<IProxyProduct> task = aItem.Create<IProxyProduct>();
-            task.ContinueWith((t) =>
+            aItem.Create<IProxyProduct>((product) =>
             {
-                IProxyProduct product = t.Result;
-
                 iThread.Schedule(() =>
                 {
                     if (iPendingSubscriptions.Contains(aItem))

@@ -20,11 +20,8 @@ namespace OpenHome.Av
             iCanSeek = aCanSeek;
             iTransportState = aTransportState;
 
-            Task<IProxyReceiver> task = aSource.Device.Create<IProxyReceiver>();
-            task.ContinueWith((t) =>
+            aSource.Device.Create<IProxyReceiver>((receiver) =>
             {
-                IProxyReceiver receiver = t.Result;
-
                 aThread.Schedule(() =>
                 {
                     if (!iDisposed)
