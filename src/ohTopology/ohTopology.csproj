@@ -78,6 +78,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ByteArray.cs" />
+    <Compile Include="Media.cs" />
     <Compile Include="SourceController.cs" />
     <Compile Include="SourceControllerPlaylist.cs" />
     <Compile Include="SourceControllerRadio.cs" />

@@ -20,22 +20,6 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    public interface IMediaValue
-    {
-        string Value { get; }
-        IEnumerable<string> Values { get; }
-    }
-
-    public interface IMediaMetadata : IEnumerable<KeyValuePair<ITag, IMediaValue>>
-    {
-        IMediaValue this[ITag aTag] { get; }
-    }
-
-    public interface IMediaDatum : IMediaMetadata
-    {
-        IEnumerable<ITag> Type { get; }
-    }
-
     public interface IMediaServerFragment
     {
         uint Index { get; }
@@ -78,163 +62,6 @@ namespace OpenHome.Av
         string ProductName { get; }
         string ProductUrl { get; }
         Task<IMediaServerSession> CreateSession();
-    }
-
-    public class MediaServerValue : IMediaValue
-    {
-        private readonly string iValue;
-        private readonly List<string> iValues;
-
-        public MediaServerValue(string aValue)
-        {
-            iValue = aValue;
-            iValues = new List<string>(new string[] { aValue });
-        }
-
-        public MediaServerValue(IEnumerable<string> aValues)
-        {
-            iValue = aValues.First();
-            iValues = new List<string>(aValues);
-        }
-
-        // IMediaServerValue
-
-        public string Value
-        {
-            get { return (iValue); }
-        }
-
-        public IEnumerable<string> Values
-        {
-            get { return (iValues); }
-        }
-    }
-
-    public class MediaDictionary
-    {
-        protected Dictionary<ITag, IMediaValue> iMetadata;
-
-        protected MediaDictionary()
-        {
-            iMetadata = new Dictionary<ITag, IMediaValue>();
-        }
-
-        protected MediaDictionary(IMediaMetadata aMetadata)
-        {
-            iMetadata = new Dictionary<ITag, IMediaValue>(aMetadata.ToDictionary(x => x.Key, x => x.Value));
-        }
-
-        public void Add(ITag aTag, string aValue)
-        {
-            IMediaValue value = null;
-
-            iMetadata.TryGetValue(aTag, out value);
-
-            if (value == null)
-            {
-                iMetadata[aTag] = new MediaServerValue(aValue);
-            }
-            else
-            {
-                iMetadata[aTag] = new MediaServerValue(value.Values.Concat(new string[] { aValue }));
-            }
-        }
-
-        public void Add(ITag aTag, IMediaValue aValue)
-        {
-            IMediaValue value = null;
-
-            iMetadata.TryGetValue(aTag, out value);
-
-            if (value == null)
-            {
-                iMetadata[aTag] = aValue;
-            }
-            else
-            {
-                iMetadata[aTag] = new MediaServerValue(value.Values.Concat(aValue.Values));
-            }
-        }
-
-        public void Add(ITag aTag, IMediaMetadata aMetadata)
-        {
-            var value = aMetadata[aTag];
-
-            if (value != null)
-            {
-                Add(aTag, value);
-            }
-        }
-
-        // IMediaServerMetadata
-
-        public IMediaValue this[ITag aTag]
-        {
-            get
-            {
-                IMediaValue value = null;
-                iMetadata.TryGetValue(aTag, out value);
-                return (value);
-            }
-        }
-    }
-
-    public class MediaMetadata : MediaDictionary, IMediaMetadata
-    {
-        public MediaMetadata()
-        {
-        }
-
-        // IEnumerable<KeyValuePair<ITag, IMediaServer>>
-
-        public IEnumerator<KeyValuePair<ITag, IMediaValue>> GetEnumerator()
-        {
-            return (iMetadata.GetEnumerator());
-        }
-
-        // IEnumerable Members
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return (iMetadata.GetEnumerator());
-        }
-    }
-
-    public class MediaDatum : MediaDictionary, IMediaDatum
-    {
-        private readonly ITag[] iType;
-
-        public MediaDatum(params ITag[] aType)
-        {
-            iType = aType;
-        }
-
-        public MediaDatum(IMediaMetadata aMetadata, params ITag[] aType)
-            : base(aMetadata)
-        {
-            iType = aType;
-        }
-
-        // IMediaDatum Members
-
-        public IEnumerable<ITag> Type
-        {
-            get { return (iType); }
-        }
-
-        // IEnumerable<KeyValuePair<ITag, IMediaServer>>
-
-        public IEnumerator<KeyValuePair<ITag, IMediaValue>> GetEnumerator()
-        {
-            return (iMetadata.GetEnumerator());
-        }
-
-        // IEnumerable Members
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            throw new NotImplementedException();
-        }
     }
 
     public class MediaServerFragment : IMediaServerFragment
@@ -555,18 +382,10 @@ namespace OpenHome.Av
         {
             return (Task.Factory.StartNew<IMediaServerSession>(() =>
             {
-                var session = new MediaServerSessionMock(this);
+                var session = new MediaServerSessionMock(Network, iMetadata, this);
                 iSessions.Add(session);
                 return (session);
             }));
-        }
-
-        internal IEnumerable<IMediaMetadata> Metadata
-        {
-            get
-            {
-                return (iMetadata);
-            }
         }
 
         internal void Destroy(IMediaServerSession aSession)
@@ -585,69 +404,104 @@ namespace OpenHome.Av
 
     internal class MediaServerSessionMock : IMediaServerSession
     {
+        private readonly INetwork iNetwork;
+        private readonly IEnumerable<IMediaMetadata> iMetadata;
         private readonly ServiceMediaServerMock iService;
-
-        private readonly List<IMediaDatum> iRoot;
+        
         private readonly IEnumerable<IMediaDatum> iArtists;
+        private readonly IEnumerable<IMediaDatum> iAlbums;
+        private readonly IEnumerable<IMediaDatum> iGenres;
+        private readonly List<IMediaDatum> iRoot;
 
         private IMediaServerContainer iContainer;
 
 
-        public MediaServerSessionMock(ServiceMediaServerMock aService)
+        public MediaServerSessionMock(INetwork aNetwork, IEnumerable<IMediaMetadata> aMetadata, ServiceMediaServerMock aService)
         {
+            iNetwork = aNetwork;
+            iMetadata = aMetadata;
             iService = aService;
+
+            iArtists = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Artist] != null)
+                .SelectMany(m => m[iNetwork.TagManager.Audio.Artist].Values)
+                .Distinct()
+                .OrderBy(v => v)
+                .Select(v =>
+                {
+                    var datum = new MediaDatum(iNetwork.TagManager.Audio.Artist, iNetwork.TagManager.Audio.Album);
+                    datum.Add(iNetwork.TagManager.Audio.Artist, v);
+                    return (datum);
+                });
+
+            iAlbums = iMetadata.GroupBy(m => m[iNetwork.TagManager.Audio.Album].Value)
+                .Select(m =>
+                {
+                    var datum = new MediaDatum(iNetwork.TagManager.Audio.Album);
+                    datum.Add(iNetwork.TagManager.Audio.Album, m.Key);
+                    datum.Add(iNetwork.TagManager.Audio.AlbumTitle, m.First());
+                    datum.Add(iNetwork.TagManager.Audio.AlbumArtist, m.First());
+                    datum.Add(iNetwork.TagManager.Audio.AlbumArtworkCodec, m.First());
+                    datum.Add(iNetwork.TagManager.Audio.AlbumArtworkFilename, m.First());
+                    datum.Add(iNetwork.TagManager.Audio.AlbumDiscs, m.First());
+                    return (datum);
+                });
+
+
+            iGenres = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Genre] != null)
+                .SelectMany(m => m[iNetwork.TagManager.Audio.Genre].Values)
+                .Distinct()
+                .OrderBy(v => v)
+                .Select(v =>
+                {
+                    var datum = new MediaDatum(iNetwork.TagManager.Audio.Genre);
+                    datum.Add(iNetwork.TagManager.Audio.Genre, v);
+                    return (datum);
+                });
 
             iRoot = new List<IMediaDatum>();
             iRoot.Add(GetRootContainerTracks());
             iRoot.Add(GetRootContainerArtists());
             iRoot.Add(GetRootContainerAlbums());
             iRoot.Add(GetRootContainerGenres());
-
-            iArtists = Metadata.Select(m => m[Network.TagManager.Audio.Artist].Value)
-                .Distinct()
-                .OrderBy(v => v)
-                .Select(v =>
-                {
-                    var datum = new MediaDatum(Network.TagManager.Audio.Artist, Network.TagManager.Audio.Album);
-                    datum.Add(Network.TagManager.Audio.Artist, v);
-                    return (datum);
-                });
         }
 
         private IMediaDatum GetRootContainerTracks()
         {
-            var datum = new MediaDatum(Network.TagManager.Container.Title);
-            datum.Add(Network.TagManager.Container.Title, "Tracks");
+            var datum = new MediaDatum(iNetwork.TagManager.Container.Title);
+            datum.Add(iNetwork.TagManager.Container.Title, "Tracks");
             return (datum);
         }
 
         private IMediaDatum GetRootContainerArtists()
         {
-            var datum = new MediaDatum(Network.TagManager.Container.Title, Network.TagManager.Audio.Artist, Network.TagManager.Audio.Album);
-            datum.Add(Network.TagManager.Container.Title, "Artists");
+            var datum = new MediaDatum(iNetwork.TagManager.Container.Title, iNetwork.TagManager.Audio.Artist, iNetwork.TagManager.Audio.Album);
+            datum.Add(iNetwork.TagManager.Container.Title, "Artists");
             return (datum);
         }
 
         private IMediaDatum GetRootContainerAlbums()
         {
-            var datum = new MediaDatum(Network.TagManager.Container.Title, Network.TagManager.Audio.Album);
-            datum.Add(Network.TagManager.Container.Title, "Albums");
+            var datum = new MediaDatum(iNetwork.TagManager.Container.Title, iNetwork.TagManager.Audio.Album);
+            datum.Add(iNetwork.TagManager.Container.Title, "Albums");
             return (datum);
         }
 
         private IMediaDatum GetRootContainerGenres()
         {
-            var datum = new MediaDatum(Network.TagManager.Container.Title, Network.TagManager.Audio.Genre);
-            datum.Add(Network.TagManager.Container.Title, "Genres");
+            var datum = new MediaDatum(iNetwork.TagManager.Container.Title, iNetwork.TagManager.Audio.Genre);
+            datum.Add(iNetwork.TagManager.Container.Title, "Genres");
             return (datum);
         }
 
         private Task<IMediaServerContainer> BrowseRootTracks()
         {
+            var tracks = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Title] != null)
+                .OrderBy(m => m[iNetwork.TagManager.Audio.Title].Value)
+                .Select(m => new MediaDatum(m));
+
             return (Task.Factory.StartNew<IMediaServerContainer>(() =>
             {
-                var metadata = iService.Metadata.Select((m) => new MediaDatum(m));
-                iContainer = new MediaServerContainerMock(iService.Network, new MediaServerSnapshotMock(metadata));
+                iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(tracks));
                 return (iContainer);
             }));
         }
@@ -656,66 +510,79 @@ namespace OpenHome.Av
         {
             return (Task.Factory.StartNew<IMediaServerContainer>(() =>
             {
-                iContainer = new MediaServerContainerMock(iService.Network, new MediaServerSnapshotMock(iArtists));
+                iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iArtists));
                 return (iContainer);
             }));
         }
 
         private Task<IMediaServerContainer> BrowseRootAlbums()
         {
-            return (null);
+            return (Task.Factory.StartNew<IMediaServerContainer>(() =>
+            {
+                iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iAlbums));
+                return (iContainer);
+            }));
         }
 
         private Task<IMediaServerContainer> BrowseRootGenres()
         {
-            return (null);
+            return (Task.Factory.StartNew<IMediaServerContainer>(() =>
+            {
+                iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iGenres));
+                return (iContainer);
+            }));
         }
 
         private Task<IMediaServerContainer> BrowseArtistAlbums(string aArtist)
         {
-            var albums = Metadata.Where(m => m[Network.TagManager.Audio.Artist].Value == aArtist)
-                .GroupBy(m => m[Network.TagManager.Audio.Album].Value)
+            var albums = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Artist] != null)
+                .Where(m => m[iNetwork.TagManager.Audio.Artist].Values.Contains(aArtist))
+                .GroupBy(m => m[iNetwork.TagManager.Audio.Album].Value)
                 .Select(m =>
                 {
-                    var datum = new MediaDatum(Network.TagManager.Audio.Album);
-                    datum.Add(Network.TagManager.Audio.Album, m.Key);
-                    datum.Add(Network.TagManager.Audio.AlbumTitle, m.First());
-                    datum.Add(Network.TagManager.Audio.AlbumArtist, m.First());
-                    datum.Add(Network.TagManager.Audio.AlbumArtworkCodec, m.First());
-                    datum.Add(Network.TagManager.Audio.AlbumArtworkFilename, m.First());
-                    datum.Add(Network.TagManager.Audio.AlbumDiscs, m.First());
-                    datum.Add(Network.TagManager.Audio.Artist, aArtist);
+                    var datum = new MediaDatum(iNetwork.TagManager.Audio.Album);
+                    datum.Add(iNetwork.TagManager.Audio.Album, m.Key);
+                    datum.Add(iNetwork.TagManager.Audio.AlbumTitle, m.First());
+                    datum.Add(iNetwork.TagManager.Audio.AlbumArtist, m.First());
+                    datum.Add(iNetwork.TagManager.Audio.AlbumArtworkCodec, m.First());
+                    datum.Add(iNetwork.TagManager.Audio.AlbumArtworkFilename, m.First());
+                    datum.Add(iNetwork.TagManager.Audio.AlbumDiscs, m.First());
+                    datum.Add(iNetwork.TagManager.Audio.Artist, aArtist);
                     return (datum);
                 });
 
             return (Task.Factory.StartNew<IMediaServerContainer>(() =>
             {
-                iContainer = new MediaServerContainerMock(iService.Network, new MediaServerSnapshotMock(albums));
+                iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(albums));
                 return (iContainer);
             }));
         }
 
-        private Task<IMediaServerContainer> BrowseAlbum(string aAlbum)
+        private Task<IMediaServerContainer> BrowseAlbumTracks(string aAlbum)
         {
-            var tracks = Metadata.Where(m => m[Network.TagManager.Audio.Album].Value == aAlbum)
-                .OrderBy(m => uint.Parse(m[Network.TagManager.Audio.Track].Value))
+            var tracks = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Album].Value == aAlbum)
+                .OrderBy(m => uint.Parse(m[iNetwork.TagManager.Audio.Track].Value))
                 .Select(m => new MediaDatum(m));
 
             return (Task.Factory.StartNew<IMediaServerContainer>(() =>
             {
-                iContainer = new MediaServerContainerMock(iService.Network, new MediaServerSnapshotMock(tracks));
+                iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(tracks));
                 return (iContainer);
             }));
         }
 
-        internal INetwork Network
+        private Task<IMediaServerContainer> BrowseGenreTracks(string aGenre)
         {
-            get { return (iService.Network); }
-        }
+            var tracks = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Genre] != null)
+                .Where(m => m[iNetwork.TagManager.Audio.Genre].Values.Contains(aGenre))
+                .OrderBy(m => m[iNetwork.TagManager.Audio.Title].Value)
+                .Select(m => new MediaDatum(m));
 
-        internal IEnumerable<IMediaMetadata> Metadata
-        {
-            get { return (iService.Metadata); }
+            return (Task.Factory.StartNew<IMediaServerContainer>(() =>
+            {
+                iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(tracks));
+                return (iContainer);
+            }));
         }
 
         internal void Destroy(IMediaServerContainer aContainer)
@@ -735,15 +602,14 @@ namespace OpenHome.Av
             {
                 return (Task.Factory.StartNew<IMediaServerContainer>(() =>
                 {
-                    iContainer = new MediaServerContainerMock(iService.Network, new MediaServerSnapshotMock(iRoot));
+                    iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iRoot));
                     return (iContainer);
                 }));
             }
 
             Do.Assert(aDatum.Type.Any());
 
-
-            if (aDatum.Type.First() == Network.TagManager.Container.Title)
+            if (aDatum.Type.First() == iNetwork.TagManager.Container.Title)
             {
                 // Top Level Container
 
@@ -751,44 +617,52 @@ namespace OpenHome.Av
                 {
                     ITag tag = aDatum.Type.Skip(1).First();
 
-                    if (tag == Network.TagManager.Audio.Artist)
+                    if (tag == iNetwork.TagManager.Audio.Artist)
                     {
                         return (BrowseRootArtists());
                     }
 
-                    if (tag == Network.TagManager.Audio.Album)
+                    if (tag == iNetwork.TagManager.Audio.Album)
                     {
                         return (BrowseRootAlbums());
                     }
 
-                    if (tag == Network.TagManager.Audio.Genre)
+                    if (tag == iNetwork.TagManager.Audio.Genre)
                     {
                         return (BrowseRootGenres());
                     }
 
                     Do.Assert(false);
                 }
+
+                return (BrowseRootTracks());
             }
 
-            if (aDatum.Type.First() == Network.TagManager.Audio.Artist)
+            if (aDatum.Type.First() == iNetwork.TagManager.Audio.Artist)
             {
                 // Artist/Album
 
-                var artist = aDatum[Network.TagManager.Audio.Artist].Value;
+                var artist = aDatum[iNetwork.TagManager.Audio.Artist].Value;
 
                 return (BrowseArtistAlbums(artist));
             }
 
-            if (aDatum.Type.First() == Network.TagManager.Audio.Album)
+            if (aDatum.Type.First() == iNetwork.TagManager.Audio.Album)
             {
                 // Artist/Album
 
-                var album = aDatum[Network.TagManager.Audio.Album].Value;
+                var album = aDatum[iNetwork.TagManager.Audio.Album].Value;
 
-                return (BrowseAlbum(album));
+                return (BrowseAlbumTracks(album));
             }
 
-            return (BrowseRootTracks());
+            Do.Assert(aDatum.Type.First() == iNetwork.TagManager.Audio.Genre);
+
+            // Genre/Tracks
+
+            var genre = aDatum[iNetwork.TagManager.Audio.Genre].Value;
+
+            return (BrowseGenreTracks(genre));
         }
 
         // Disposable
@@ -950,4 +824,17 @@ namespace OpenHome.Av
         private Watchable<uint> iUpdateCount;
     }
     */
+
+    public static class ServiceMediaServerExtensions
+    {
+        public static bool SupportsBrowse(this IProxyMediaServer aProxy)
+        {
+            return (aProxy.Attributes.Contains("Browse"));
+        }
+
+        public static bool SupportsQuery(this IProxyMediaServer aProxy)
+        {
+            return (aProxy.Attributes.Contains("Query"));
+        }
+    }
 }
