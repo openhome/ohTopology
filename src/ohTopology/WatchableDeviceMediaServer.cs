@@ -14,7 +14,7 @@ namespace OpenHome.Av
         public MockWatchableMediaServer(INetwork aNetwork, string aUdn, string aAppRoot)
             : base(aUdn)
         {
-            Add<IProxyMediaServer>(new ServiceMediaServerMock(aNetwork, new string[] {"browse", "query"},
+            Add<IProxyMediaServer>(new ServiceMediaServerMock(aNetwork, new string[] {"Browse", "Query"},
                 "", "OpenHome", "OpenHome", "http://www.openhome.org",
                 "", "OpenHome", "OpenHome", "http://www.openhome.org",
                 "", "OpenHome", "OpenHome", "http://www.openhome.org",
