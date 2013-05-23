@@ -192,7 +192,7 @@ namespace OpenHome.Av
         protected Watchable<uint> iVolumeUnity;
     }
 
-    public class ServiceVolumeNetwork : ServiceVolume
+    class ServiceVolumeNetwork : ServiceVolume
     {
         public ServiceVolumeNetwork(INetwork aNetwork, CpDevice aDevice)
             : base(aNetwork)
@@ -362,7 +362,7 @@ namespace OpenHome.Av
         private CpProxyAvOpenhomeOrgVolume1 iService;
     }
 
-    public class ServiceVolumeMock : ServiceVolume, IMockable
+    class ServiceVolumeMock : ServiceVolume, IMockable
     {
         public ServiceVolumeMock(INetwork aNetwork, string aId, int aBalance, uint aBalanceMax, int aFade, uint aFadeMax, bool aMute, uint aValue, uint aVolumeLimit, uint aVolumeMax,
             uint aVolumeMilliDbPerStep, uint aVolumeSteps, uint aVolumeUnity)

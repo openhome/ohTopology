@@ -232,7 +232,7 @@ namespace OpenHome.Av
         protected Watchable<IInfoMetatext> iMetatext;
     }
 
-    public class ServiceInfoNetwork : ServiceInfo
+    class ServiceInfoNetwork : ServiceInfo
     {
         public ServiceInfoNetwork(INetwork aNetwork, CpDevice aDevice)
             : base(aNetwork)
@@ -317,7 +317,7 @@ namespace OpenHome.Av
         private CpProxyAvOpenhomeOrgInfo1 iService;
     }
 
-    public class ServiceInfoMock : ServiceInfo, IMockable
+    class ServiceInfoMock : ServiceInfo, IMockable
     {
         public ServiceInfoMock(INetwork aNetwork, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
             : base(aNetwork)

@@ -82,7 +82,7 @@ namespace OpenHome.Av
         protected Watchable<string> iTransportState;
     }
 
-    public class ServiceReceiverNetwork : ServiceReceiver
+    class ServiceReceiverNetwork : ServiceReceiver
     {
         public ServiceReceiverNetwork(INetwork aNetwork, CpDevice aDevice)
             : base(aNetwork)
@@ -173,7 +173,7 @@ namespace OpenHome.Av
         private CpProxyAvOpenhomeOrgReceiver1 iService;
     }
 
-    public class ServiceReceiverMock : ServiceReceiver, IMockable
+    class ServiceReceiverMock : ServiceReceiver, IMockable
     {
         public ServiceReceiverMock(INetwork aNetwork, string aMetadata, string aProtocolInfo, string aTransportState, string aUri)
             : base(aNetwork)

@@ -62,7 +62,7 @@ namespace OpenHome.Av
         protected Watchable<uint> iSeconds;
     }
 
-    public class ServiceTimeNetwork : ServiceTime
+    class ServiceTimeNetwork : ServiceTime
     {
         public ServiceTimeNetwork(INetwork aNetwork, CpDevice aDevice)
             : base(aNetwork)
@@ -124,7 +124,7 @@ namespace OpenHome.Av
         private CpProxyAvOpenhomeOrgTime1 iService;
     }
 
-    public class ServiceTimeMock : ServiceTime, IMockable
+    class ServiceTimeMock : ServiceTime, IMockable
     {
         public ServiceTimeMock(INetwork aNetwork, uint aSeconds, uint aDuration)
             : base(aNetwork)

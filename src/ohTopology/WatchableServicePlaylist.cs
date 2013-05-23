@@ -163,7 +163,7 @@ namespace OpenHome.Av
         protected Watchable<bool> iShuffle;
     }
 
-    public class ServicePlaylistNetwork : ServicePlaylist
+    class ServicePlaylistNetwork : ServicePlaylist
     {
         public ServicePlaylistNetwork(INetwork aNetwork, CpDevice aDevice)
             : base(aNetwork)
@@ -406,7 +406,7 @@ namespace OpenHome.Av
         private CpProxyAvOpenhomeOrgPlaylist1 iService;
     }
 
-    public class ServicePlaylistMock : ServicePlaylist, IMockable
+    class ServicePlaylistMock : ServicePlaylist, IMockable
     {
         public ServicePlaylistMock(INetwork aNetwork, uint aId, IList<uint> aIdArray, bool aRepeat, bool aShuffle, string aTransportState, string aProtocolInfo, uint aTracksMax)
             : base(aNetwork)

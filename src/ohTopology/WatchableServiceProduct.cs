@@ -239,7 +239,7 @@ namespace OpenHome.Av
         protected Watchable<bool> iStandby;
     }
 
-    internal class ServiceProductNetwork : ServiceProduct
+    class ServiceProductNetwork : ServiceProduct
     {
         public ServiceProductNetwork(INetwork aNetwork, CpDevice aDevice)
             : base(aNetwork)
@@ -473,7 +473,7 @@ namespace OpenHome.Av
         private string iSourceXml;
     }
 
-    internal class ServiceProductMock : ServiceProduct
+    class ServiceProductMock : ServiceProduct
     {
         public ServiceProductMock(INetwork aNetwork, string aRoom, string aName, uint aSourceIndex, SourceXml aSourceXmlFactory, bool aStandby,
             string aAttributes, string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl, string aModelImageUri, string aModelInfo, string aModelName,

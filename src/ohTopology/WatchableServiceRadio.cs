@@ -134,7 +134,7 @@ namespace OpenHome.Av
         protected Watchable<IInfoMetadata> iMetadata;
     }
 
-    public class ServiceRadioNetwork : ServiceRadio
+    class ServiceRadioNetwork : ServiceRadio
     {
         public ServiceRadioNetwork(INetwork aNetwork, CpDevice aDevice)
             : base(aNetwork)
@@ -306,7 +306,7 @@ namespace OpenHome.Av
         private CpProxyAvOpenhomeOrgRadio1 iService;
     }
 
-    public class ServiceRadioMock : ServiceRadio, IMockable
+    class ServiceRadioMock : ServiceRadio, IMockable
     {
         public ServiceRadioMock(INetwork aNetwork, uint aId, IList<uint> aIdArray, IInfoMetadata aMetadata, string aProtocolInfo, string aTransportState, uint aChannelsMax)
             : base(aNetwork)

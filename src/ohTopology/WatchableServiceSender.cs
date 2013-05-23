@@ -156,7 +156,7 @@ namespace OpenHome.Av
         protected Watchable<string> iStatus;
     }
 
-    public class ServiceSenderNetwork : ServiceSender
+    class ServiceSenderNetwork : ServiceSender
     {
         public ServiceSenderNetwork(INetwork aNetwork, CpDevice aDevice)
             : base(aNetwork)
@@ -230,7 +230,7 @@ namespace OpenHome.Av
         private CpProxyAvOpenhomeOrgSender1 iService;
     }
 
-    public class ServiceSenderMock : ServiceSender, IMockable
+    class ServiceSenderMock : ServiceSender, IMockable
     {
         public ServiceSenderMock(INetwork aNetwork, string aAttributes, string aPresentationUrl, bool aAudio, ISenderMetadata aMetadata, string aStatus)
             : base(aNetwork)
