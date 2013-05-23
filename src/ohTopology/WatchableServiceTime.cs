@@ -89,7 +89,6 @@ namespace OpenHome.Av
 
         protected override void OnSubscribe()
         {
-            iSubscribe.Reset();
             iService.Subscribe();
             iSubscribe.WaitOne();
         }
@@ -102,6 +101,7 @@ namespace OpenHome.Av
         protected override void OnUnsubscribe()
         {
             iService.Unsubscribe();
+            iSubscribe.Reset();
         }
 
         private void HandleDurationChanged()

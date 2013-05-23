@@ -247,7 +247,7 @@ namespace OpenHome.Av
             iSubscribe = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgProduct1(aDevice);
 
-            iService.SetPropertyProductNameChanged(HandleRoomChanged);
+            iService.SetPropertyProductRoomChanged(HandleRoomChanged);
             iService.SetPropertyProductNameChanged(HandleNameChanged);
             iService.SetPropertySourceIndexChanged(HandleSourceIndexChanged);
             iService.SetPropertySourceXmlChanged(HandleSourceXmlChanged);
@@ -269,7 +269,6 @@ namespace OpenHome.Av
 
         protected override void OnSubscribe()
         {
-            iSubscribe.Reset();
             iService.Subscribe();
             iSubscribe.WaitOne();
         }
@@ -295,6 +294,7 @@ namespace OpenHome.Av
         protected override void OnUnsubscribe()
         {
             iService.Unsubscribe();
+            iSubscribe.Reset();
         }
 
         public override Task SetSourceIndex(uint aValue)
