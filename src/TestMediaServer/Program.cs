@@ -352,7 +352,7 @@ namespace TestMediaServer
 
             using (var network = new Network(watchableThread, subscribeThread))
             {
-                network.Add(new MockWatchableMediaServer(network, "4c494e4e-0026-0f99-1111-111111111111", "."));
+                network.Add(new MockMediaServer("4c494e4e-0026-0f99-1111-111111111111", network, "."));
 
                 using (var client = new Client(network))
                 {

@@ -62,6 +62,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
+    <Reference Include="ohHttpServer">
+      <HintPath>..\..\dependencies\AnyPlatform\ohOs\ohHttpServer.dll</HintPath>
+    </Reference>
     <Reference Include="ohMediaServer.Shared">
       <HintPath>..\..\dependencies\AnyPlatform\ohMediaServer\ohMediaServer.Shared.dll</HintPath>
     </Reference>
