@@ -78,7 +78,7 @@ namespace OpenHome.Av
             iVolumeUnity = null;
         }
 
-        public override IProxy OnCreate(IWatchableDevice aDevice)
+        public override IProxy OnCreate(IDevice aDevice)
         {
             return new ProxyVolume(aDevice, this);
         }
@@ -529,7 +529,7 @@ namespace OpenHome.Av
 
     public class ProxyVolume : Proxy<ServiceVolume>, IProxyVolume
     {
-        public ProxyVolume(IWatchableDevice aDevice, ServiceVolume aService)
+        public ProxyVolume(IDevice aDevice, ServiceVolume aService)
             : base(aDevice, aService)
         {
         }

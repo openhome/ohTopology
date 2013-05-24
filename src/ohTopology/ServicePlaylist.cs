@@ -74,7 +74,7 @@ namespace OpenHome.Av
             iShuffle = null;
         }
 
-        public override IProxy OnCreate(IWatchableDevice aDevice)
+        public override IProxy OnCreate(IDevice aDevice)
         {
             return new ProxyPlaylist(aDevice, this);
         }
@@ -662,7 +662,7 @@ namespace OpenHome.Av
 
     public class ProxyPlaylist : Proxy<ServicePlaylist>, IProxyPlaylist
     {
-        public ProxyPlaylist(IWatchableDevice aDevice, ServicePlaylist aService)
+        public ProxyPlaylist(IDevice aDevice, ServicePlaylist aService)
             : base(aDevice, aService)
         {
         }

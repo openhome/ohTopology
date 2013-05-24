@@ -145,7 +145,7 @@ namespace OpenHome.Av
             iSeconds = null;
         }
 
-        private void Subscribe(IWatchableDevice aDevice)
+        private void Subscribe(IDevice aDevice)
         {
             aDevice.Create<IProxyTime>((time) =>
             {

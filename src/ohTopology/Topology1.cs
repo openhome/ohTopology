@@ -14,7 +14,7 @@ namespace OpenHome.Av
         IWatchableThread WatchableThread { get; }
     }
 
-    public class Topology1 : ITopology1, IUnorderedWatcher<IWatchableDevice>, IDisposable
+    public class Topology1 : ITopology1, IUnorderedWatcher<IDevice>, IDisposable
     {
         public Topology1(INetwork aNetwork)
         {
@@ -23,8 +23,8 @@ namespace OpenHome.Av
             iNetwork = aNetwork;
             iThread = aNetwork.WatchableThread;
 
-            iPendingSubscriptions = new List<IWatchableDevice>();
-            iProductLookup = new Dictionary<IWatchableDevice, IProxyProduct>();
+            iPendingSubscriptions = new List<IDevice>();
+            iProductLookup = new Dictionary<IDevice, IProxyProduct>();
             iProducts = new WatchableUnordered<IProxyProduct>(iThread);
 
             iDevices = iNetwork.Create<IProxyProduct>();
@@ -89,7 +89,7 @@ namespace OpenHome.Av
         {
         }
 
-        public void UnorderedAdd(IWatchableDevice aItem)
+        public void UnorderedAdd(IDevice aItem)
         {
             iPendingSubscriptions.Add(aItem);
             aItem.Create<IProxyProduct>((product) =>
@@ -110,7 +110,7 @@ namespace OpenHome.Av
             });
         }
 
-        public void UnorderedRemove(IWatchableDevice aItem)
+        public void UnorderedRemove(IDevice aItem)
         {
             if (iPendingSubscriptions.Contains(aItem))
             {
@@ -138,10 +138,10 @@ namespace OpenHome.Av
         private INetwork iNetwork;
         private IWatchableThread iThread;
 
-        private List<IWatchableDevice> iPendingSubscriptions;
-        private Dictionary<IWatchableDevice, IProxyProduct> iProductLookup;
+        private List<IDevice> iPendingSubscriptions;
+        private Dictionary<IDevice, IProxyProduct> iProductLookup;
         private WatchableUnordered<IProxyProduct> iProducts;
 
-        private IWatchableUnordered<IWatchableDevice> iDevices;
+        private IWatchableUnordered<IDevice> iDevices;
     }
 }

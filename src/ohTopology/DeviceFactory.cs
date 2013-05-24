@@ -9,16 +9,16 @@ using OpenHome.Os;
 
 namespace OpenHome.Av
 {
-    public class MockWatchableDevice
+    public class DeviceFactory
     {
-        public static WatchableDevice CreateDs(INetwork aNetwork, string aUdn)
+        public static Device CreateDs(INetwork aNetwork, string aUdn)
         {
             return CreateDs(aNetwork, aUdn, "Main Room", "Mock DS", "Info Time Volume Sender");
         }
 
-        public static WatchableDevice CreateDs(INetwork aNetwork, string aUdn, string aRoom, string aName, string aAttributes)
+        public static Device CreateDs(INetwork aNetwork, string aUdn, string aRoom, string aName, string aAttributes)
         {
-            WatchableDevice device = new WatchableDevice(aUdn);
+            Device device = new Device(aUdn);
             // add a factory for each type of watchable service
 
             // product service
@@ -59,14 +59,14 @@ namespace OpenHome.Av
             return device;
         }
 
-        public static WatchableDevice CreateDsm(INetwork aNetwork, string aUdn)
+        public static Device CreateDsm(INetwork aNetwork, string aUdn)
         {
             return CreateDsm(aNetwork, aUdn, "Main Room", "Mock Dsm", "Info Time Volume Sender");
         }
 
-        public static WatchableDevice CreateDsm(INetwork aNetwork, string aUdn, string aRoom, string aName, string aAttributes)
+        public static Device CreateDsm(INetwork aNetwork, string aUdn, string aRoom, string aName, string aAttributes)
         {
-            WatchableDevice device = new WatchableDevice(aUdn);
+            Device device = new Device(aUdn);
             // add a factory for each type of watchable service
 
             // product service

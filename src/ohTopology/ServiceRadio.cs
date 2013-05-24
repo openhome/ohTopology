@@ -62,7 +62,7 @@ namespace OpenHome.Av
             iMetadata = null;
         }
 
-        public override IProxy OnCreate(IWatchableDevice aDevice)
+        public override IProxy OnCreate(IDevice aDevice)
         {
             return new ProxyRadio(aDevice, this);
         }
@@ -474,7 +474,7 @@ namespace OpenHome.Av
 
     public class ProxyRadio : Proxy<ServiceRadio>, IProxyRadio
     {
-        public ProxyRadio(IWatchableDevice aDevice, ServiceRadio aService)
+        public ProxyRadio(IDevice aDevice, ServiceRadio aService)
             : base(aDevice, aService)
         {
         }

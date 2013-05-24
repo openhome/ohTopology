@@ -168,7 +168,7 @@ namespace OpenHome.Av
 
     class InfoWatcher : IWatcher<IInfoDetails>, IWatcher<IInfoMetadata>, IWatcher<IInfoMetatext>, IDisposable
     {
-        public InfoWatcher(IWatchableThread aThread, IWatchableDevice aDevice, Watchable<RoomDetails> aDetails, Watchable<RoomMetadata> aMetadata, Watchable<RoomMetatext> aMetatext)
+        public InfoWatcher(IWatchableThread aThread, IDevice aDevice, Watchable<RoomDetails> aDetails, Watchable<RoomMetadata> aMetadata, Watchable<RoomMetatext> aMetatext)
         {
             iDisposed = false;
 
@@ -265,7 +265,7 @@ namespace OpenHome.Av
         private bool iDisposed;
         private IProxyInfo iInfo;
 
-        private IWatchableDevice iDevice;
+        private IDevice iDevice;
         private Watchable<RoomDetails> iDetails;
         private Watchable<RoomMetadata> iMetadata;
         private Watchable<RoomMetatext> iMetatext;

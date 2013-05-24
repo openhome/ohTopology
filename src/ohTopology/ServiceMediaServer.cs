@@ -91,7 +91,7 @@ namespace OpenHome.Av
 
     internal class ProxyMediaServer : Proxy<ServiceMediaServer>, IProxyMediaServer
     {
-        public ProxyMediaServer(IWatchableDevice aDevice, ServiceMediaServerMock aService)
+        public ProxyMediaServer(IDevice aDevice, ServiceMediaServerMock aService)
             : base(aDevice, aService)
         {
         }
@@ -299,7 +299,7 @@ namespace OpenHome.Av
             iSessions = new List<IMediaServerSession>();
         }
 
-        public override IProxy OnCreate(IWatchableDevice aDevice)
+        public override IProxy OnCreate(IDevice aDevice)
         {
             return (new ProxyMediaServer(aDevice, this));
         }

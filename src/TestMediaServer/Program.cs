@@ -10,11 +10,11 @@ using OpenHome.MediaServer;
 
 namespace TestMediaServer
 {
-    public class Client : IUnorderedWatcher<IWatchableDevice>, IWatcher<IMediaServerSnapshot>, IDisposable
+    public class Client : IUnorderedWatcher<IDevice>, IWatcher<IMediaServerSnapshot>, IDisposable
     {
         private readonly INetwork iNetwork;
         
-        private IWatchableUnordered<IWatchableDevice> iMediaServers;
+        private IWatchableUnordered<IDevice> iMediaServers;
         
         private IProxyMediaServer iProxy;
         private IMediaServerSnapshot iSnaphot;
@@ -305,7 +305,7 @@ namespace TestMediaServer
         {
         }
 
-        public void UnorderedAdd(IWatchableDevice aDevice)
+        public void UnorderedAdd(IDevice aDevice)
         {
             aDevice.Create<IProxyMediaServer>((t) =>
             {
@@ -317,7 +317,7 @@ namespace TestMediaServer
         {
         }
 
-        public void UnorderedRemove(IWatchableDevice aItem)
+        public void UnorderedRemove(IDevice aItem)
         {
         }
 
@@ -352,7 +352,7 @@ namespace TestMediaServer
 
             using (var network = new Network(watchableThread, subscribeThread))
             {
-                network.Add(new MockMediaServer("4c494e4e-0026-0f99-1111-111111111111", network, "."));
+                network.Add(new DeviceMediaServerMock("4c494e4e-0026-0f99-1111-111111111111", network, "."));
 
                 using (var client = new Client(network))
                 {

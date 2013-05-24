@@ -54,7 +54,7 @@ namespace OpenHome.Av
     {
         string Id { get; }
         string Attributes { get; }
-        IWatchableDevice Device { get; }
+        IDevice Device { get; }
 
         IWatchable<string> Room { get; }
         IWatchable<string> Name { get; }
@@ -118,7 +118,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchableDevice Device
+        public IDevice Device
         {
             get
             {
@@ -270,7 +270,7 @@ namespace OpenHome.Av
         private string iId;
         private IProxyProduct iProduct;
         private string iAttributes;
-        private IWatchableDevice iDevice;
+        private IDevice iDevice;
         private List<ITopology2Source> iSources;
         private List<Watchable<ITopology2Source>> iWatchableSources;
     }

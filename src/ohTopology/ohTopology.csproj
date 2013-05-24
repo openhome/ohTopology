@@ -91,10 +91,9 @@
     <Compile Include="StandardRoomTime.cs" />
     <Compile Include="StandardRoomWatchers.cs" />
     <Compile Include="VolumeController.cs" />
-    <Compile Include="WatchableServiceMediaServer.cs" />
-    <Compile Include="WatchableDeviceMediaServer.cs" />
-    <Compile Include="WatchableDeviceMock.cs" />
-    <Compile Include="Library.cs" />
+    <Compile Include="ServiceMediaServer.cs" />
+    <Compile Include="DeviceMediaServer.cs" />
+    <Compile Include="DeviceFactory.cs" />
     <Compile Include="StandardBrowser.cs" />
     <Compile Include="Mockable.cs" />
     <Compile Include="Network.cs" />
@@ -104,15 +103,15 @@
     <Compile Include="Topology2.cs" />
     <Compile Include="Topology3.cs" />
     <Compile Include="Topology4.cs" />
-    <Compile Include="WatchableDevice.cs" />
-    <Compile Include="WatchableServiceInfo.cs" />
-    <Compile Include="WatchableServicePlaylist.cs" />
-    <Compile Include="WatchableServiceProduct.cs" />
-    <Compile Include="WatchableServiceRadio.cs" />
-    <Compile Include="WatchableServiceReceiver.cs" />
-    <Compile Include="WatchableServiceSender.cs" />
-    <Compile Include="WatchableServiceTime.cs" />
-    <Compile Include="WatchableServiceVolume.cs" />
+    <Compile Include="Device.cs" />
+    <Compile Include="ServiceInfo.cs" />
+    <Compile Include="ServicePlaylist.cs" />
+    <Compile Include="ServiceProduct.cs" />
+    <Compile Include="ServiceRadio.cs" />
+    <Compile Include="ServiceReceiver.cs" />
+    <Compile Include="ServiceSender.cs" />
+    <Compile Include="ServiceTime.cs" />
+    <Compile Include="ServiceVolume.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="MockMediaServer.zip">

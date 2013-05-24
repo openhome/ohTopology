@@ -11,7 +11,7 @@ namespace OpenHome.Av
 {
     public interface IService : IMockable, IDisposable
     {
-        void Create<T>(IWatchableDevice aDevice, Action<T> aCallback) where T : IProxy;
+        void Create<T>(IDevice aDevice, Action<T> aCallback) where T : IProxy;
     }
 
     public abstract class Service : IService
@@ -43,7 +43,7 @@ namespace OpenHome.Av
             }
         }
 
-        public void Create<T>(IWatchableDevice aDevice, Action<T> aCallback) where T : IProxy
+        public void Create<T>(IDevice aDevice, Action<T> aCallback) where T : IProxy
         {
             if (iRefCount == 0)
             {
@@ -68,7 +68,7 @@ namespace OpenHome.Av
             }
         }
 
-        public abstract IProxy OnCreate(IWatchableDevice aDevice);
+        public abstract IProxy OnCreate(IDevice aDevice);
 
         protected virtual Task OnSubscribe()
         {
@@ -95,15 +95,15 @@ namespace OpenHome.Av
 
     public interface IProxy : IDisposable
     {
-        IWatchableDevice Device { get; }
+        IDevice Device { get; }
     }
 
     public class Proxy<T> where T : Service
     {
-        private readonly IWatchableDevice iDevice;
+        private readonly IDevice iDevice;
         protected readonly T iService;
 
-        protected Proxy(IWatchableDevice aDevice, T aService)
+        protected Proxy(IDevice aDevice, T aService)
         {
             iDevice = aDevice;
             iService = aService;
@@ -111,7 +111,7 @@ namespace OpenHome.Av
 
         // IProxy
 
-        public IWatchableDevice Device
+        public IDevice Device
         {
             get
             {
@@ -127,17 +127,17 @@ namespace OpenHome.Av
         }
     }
 
-    public interface IWatchableDevice
+    public interface IDevice
     {
         string Udn { get; }
         void Create<T>(Action<T> aCallback) where T : IProxy;
     }
 
-    public class WatchableDevice : IWatchableDevice, IMockable, IDisposable
+    public class Device : IDevice, IMockable, IDisposable
     {
-        public static WatchableDevice Create(INetwork aNetwork, CpDevice aDevice)
+        public static Device Create(INetwork aNetwork, CpDevice aDevice)
         {
-            WatchableDevice device = new WatchableDevice(aDevice.Udn());
+            Device device = new Device(aDevice.Udn());
             string value;
             if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Product", out value))
             {
@@ -198,7 +198,7 @@ namespace OpenHome.Av
             return device;
         }
 
-        public WatchableDevice(string aUdn)
+        public Device(string aUdn)
         {
             iUdn = aUdn;
 
@@ -298,35 +298,4 @@ namespace OpenHome.Av
 
         protected Dictionary<Type, IService> iServices;
     }
-
-    /*internal class RealWatchableDevice : WatchableDevice
-    {
-        public RealWatchableDevice(INetwork aNetwork, CpDevice aDevice)
-            : base(aNetwork.WatchableSubscribeThread)
-        {
-            /*iFactories = new Dictionary<Type, IWatchableServiceFactory>();
-
-            // add a factory for each type of watchable service
-
-            string value;
-            if (iDevice.GetAttribute("Upnp.Service.av-openhome-org.Product", out value))
-            {
-                iFactories.Add(typeof(ServiceProduct), new WatchableProductFactory(aThread, aSubscribeThread));
-            }
-            iFactories.Add(typeof(ServiceVolume), new WatchableVolumeFactory(aThread, aSubscribeThread));
-            iFactories.Add(typeof(ServiceInfo), new WatchableInfoFactory(aThread, aSubscribeThread));
-            iFactories.Add(typeof(ServiceTime), new WatchableTimeFactory(aThread, aSubscribeThread));
-            iFactories.Add(typeof(ServiceSender), new WatchableSenderFactory(aThread, aSubscribeThread));
-            iFactories.Add(typeof(ServicePlaylist), new WatchablePlaylistFactory(aThread, aSubscribeThread));
-            iFactories.Add(typeof(ServiceRadio), new WatchableRadioFactory(aThread, aSubscribeThread));
-            iFactories.Add(typeof(ServiceReceiver), new WatchableReceiverFactory(aThread, aSubscribeThread));
-            //iFactories.Add(typeof(ServiceMediaServer), new WatchableMediaServerFactory(aThread, aSubscribeThread));
-
-            iServices = new Dictionary<Type, IWatchableService>();
-            iServiceRefCount = new Dictionary<Type, uint>();
-
-            iDevice = aDevice;
-            iDevice.AddRef();
-        }
-    }*/
 }

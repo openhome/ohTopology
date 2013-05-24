@@ -37,7 +37,7 @@ namespace OpenHome.Av
             iSeconds = null;
         }
 
-        public override IProxy OnCreate(IWatchableDevice aDevice)
+        public override IProxy OnCreate(IDevice aDevice)
         {
             return new ProxyTime(aDevice, this);
         }
@@ -159,7 +159,7 @@ namespace OpenHome.Av
 
     public class ProxyTime : Proxy<ServiceTime>, IProxyTime
     {
-        public ProxyTime(IWatchableDevice aDevice, ServiceTime aService)
+        public ProxyTime(IDevice aDevice, ServiceTime aService)
             : base(aDevice, aService)
         {
         }

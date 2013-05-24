@@ -16,7 +16,7 @@ namespace OpenHome.Av
         {
             iNetwork = aNetwork;
 
-            iCpDeviceLookup = new Dictionary<CpDevice, WatchableDevice>();
+            iCpDeviceLookup = new Dictionary<CpDevice, Device>();
         }
 
         public void Dispose()
@@ -26,7 +26,7 @@ namespace OpenHome.Av
 
             iNetwork.Execute(() =>
             {
-                foreach (WatchableDevice d in iCpDeviceLookup.Values)
+                foreach (Device d in iCpDeviceLookup.Values)
                 {
                     d.Dispose();
                 }
@@ -39,7 +39,7 @@ namespace OpenHome.Av
         {
             iNetwork.Schedule(() =>
             {
-                WatchableDevice device = WatchableDevice.Create(iNetwork, aDevice);
+                Device device = Device.Create(iNetwork, aDevice);
                 iNetwork.Add(device);
             });
         }
@@ -48,7 +48,7 @@ namespace OpenHome.Av
         {
             iNetwork.Schedule(() =>
             {
-                WatchableDevice device = iCpDeviceLookup[aDevice];
+                Device device = iCpDeviceLookup[aDevice];
                 iCpDeviceLookup.Remove(aDevice);
                 iNetwork.Remove(device);
 
@@ -62,7 +62,7 @@ namespace OpenHome.Av
         protected CpDeviceListUpnpServiceType iDeviceList;
 
         private Network iNetwork;
-        private Dictionary<CpDevice, WatchableDevice> iCpDeviceLookup;
+        private Dictionary<CpDevice, Device> iCpDeviceLookup;
     }
 
     public class ProductDeviceInjector : DeviceInjector
@@ -88,7 +88,7 @@ namespace OpenHome.Av
         IWatchableThread WatchableThread { get; }
         IWatchableThread SubscribeThread { get; }
         ITagManager TagManager { get; }
-        IWatchableUnordered<IWatchableDevice> Create<T>() where T : IProxy;
+        IWatchableUnordered<IDevice> Create<T>() where T : IProxy;
         //void Refresh();
     }
 
@@ -101,9 +101,9 @@ namespace OpenHome.Av
 
         private readonly ITagManager iTagManager;
 
-        private List<WatchableDevice> iDevices;
-        private Dictionary<string, WatchableDevice> iMockDevices;
-        private Dictionary<Type, WatchableUnordered<IWatchableDevice>> iDeviceLists;
+        private List<Device> iDevices;
+        private Dictionary<string, Device> iMockDevices;
+        private Dictionary<Type, WatchableUnordered<IDevice>> iDeviceLists;
 
         public Network(IWatchableThread aThread, IWatchableThread aSubscribeThread)
         {
@@ -113,9 +113,9 @@ namespace OpenHome.Av
             iThread = aThread;
 
             iTagManager = new TagManager();
-            iDevices = new List<WatchableDevice>();
-            iMockDevices = new Dictionary<string, WatchableDevice>();
-            iDeviceLists = new Dictionary<Type, WatchableUnordered<IWatchableDevice>>();
+            iDevices = new List<Device>();
+            iMockDevices = new Dictionary<string, Device>();
+            iDeviceLists = new Dictionary<Type, WatchableUnordered<IDevice>>();
         }
 
         public void Dispose()
@@ -123,14 +123,14 @@ namespace OpenHome.Av
             iDevices.Clear();
             iDevices = null;
 
-            foreach (WatchableDevice d in iMockDevices.Values)
+            foreach (Device d in iMockDevices.Values)
             {
                 d.Dispose();
             }
             iMockDevices.Clear();
             iMockDevices = null;
 
-            foreach (WatchableUnordered<IWatchableDevice> l in iDeviceLists.Values)
+            foreach (WatchableUnordered<IDevice> l in iDeviceLists.Values)
             {
                 l.Dispose();
             }
@@ -138,13 +138,13 @@ namespace OpenHome.Av
             iDeviceLists = null;
         }
 
-        public void Add(WatchableDevice aDevice)
+        public void Add(Device aDevice)
         {
             lock (iLock)
             {
                 iDevices.Add(aDevice);
 
-                foreach (KeyValuePair<Type, WatchableUnordered<IWatchableDevice>> kvp in iDeviceLists)
+                foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> kvp in iDeviceLists)
                 {
                     if (aDevice.HasService(kvp.Key))
                     {
@@ -154,19 +154,19 @@ namespace OpenHome.Av
             }
         }
 
-        private void CreateAndAdd(WatchableDevice aDevice)
+        private void CreateAndAdd(Device aDevice)
         {
             iMockDevices.Add(aDevice.Udn, aDevice);
             Add(aDevice);
         }
 
-        public void Remove(WatchableDevice aDevice)
+        public void Remove(Device aDevice)
         {
             lock (iLock)
             {
                 iDevices.Remove(aDevice);
 
-                foreach (KeyValuePair<Type, WatchableUnordered<IWatchableDevice>> l in iDeviceLists)
+                foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> l in iDeviceLists)
                 {
                     if (aDevice.HasService(l.Key))
                     {
@@ -178,7 +178,7 @@ namespace OpenHome.Av
 
         private void Remove(string aUdn)
         {
-            WatchableDevice device;
+            Device device;
 
             if (iMockDevices.TryGetValue(aUdn, out device))
             {
@@ -186,22 +186,22 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchableUnordered<IWatchableDevice> Create<T>() where T : IProxy
+        public IWatchableUnordered<IDevice> Create<T>() where T : IProxy
         {
             lock (iLock)
             {
                 Type key = typeof(T);
 
-                WatchableUnordered<IWatchableDevice> list;
+                WatchableUnordered<IDevice> list;
                 if (iDeviceLists.TryGetValue(key, out list))
                 {
                     return list;
                 }
                 else
                 {
-                    list = new WatchableUnordered<IWatchableDevice>(iThread);
+                    list = new WatchableUnordered<IDevice>(iThread);
                     iDeviceLists.Add(key, list);
-                    foreach (WatchableDevice d in iDevices)
+                    foreach (Device d in iDevices)
                     {
                         if (d.HasService(key))
                         {
@@ -243,14 +243,14 @@ namespace OpenHome.Av
 
             if (command == "small")
             {
-                CreateAndAdd(MockWatchableDevice.CreateDsm(this, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
+                CreateAndAdd(DeviceFactory.CreateDsm(this, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
             }
             else if (command == "medium")
             {
-                CreateAndAdd(MockWatchableDevice.CreateDs(this, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));
-                CreateAndAdd(MockWatchableDevice.CreateDsm(this, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
-                CreateAndAdd(MockWatchableDevice.CreateDsm(this, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
-                CreateAndAdd(MockWatchableDevice.CreateDs(this, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
+                CreateAndAdd(DeviceFactory.CreateDs(this, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));
+                CreateAndAdd(DeviceFactory.CreateDsm(this, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
+                CreateAndAdd(DeviceFactory.CreateDsm(this, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
+                CreateAndAdd(DeviceFactory.CreateDs(this, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
             }
             else if (command == "large")
             {
@@ -268,7 +268,7 @@ namespace OpenHome.Av
 
                     string udn = value.First();
 
-                    WatchableDevice device;
+                    Device device;
 
                     if (iMockDevices.TryGetValue(udn, out device))
                     {
@@ -276,11 +276,11 @@ namespace OpenHome.Av
                     }
                     else if (type == "ds")
                     {
-                        CreateAndAdd(MockWatchableDevice.CreateDs(this, udn));
+                        CreateAndAdd(DeviceFactory.CreateDs(this, udn));
                     }
                     else if (type == "dsm")
                     {
-                        CreateAndAdd(MockWatchableDevice.CreateDsm(this, udn));
+                        CreateAndAdd(DeviceFactory.CreateDsm(this, udn));
                     }
                     /*
                     else if (type == "mediaserver")
@@ -324,7 +324,7 @@ namespace OpenHome.Av
                     {
                         string udn = value.First();
 
-                        WatchableDevice device;
+                        Device device;
 
                         if (iMockDevices.TryGetValue(udn, out device))
                         {

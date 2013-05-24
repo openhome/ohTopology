@@ -70,7 +70,7 @@ namespace OpenHome.Av
             iStandby = null;
         }
 
-        public override IProxy OnCreate(IWatchableDevice aDevice)
+        public override IProxy OnCreate(IDevice aDevice)
         {
             return new ProxyProduct(aDevice, this);
         }
@@ -621,7 +621,7 @@ namespace OpenHome.Av
 
     public class ProxyProduct : Proxy<ServiceProduct>, IProxyProduct
     {
-        public ProxyProduct(IWatchableDevice aDevice, ServiceProduct aService)
+        public ProxyProduct(IDevice aDevice, ServiceProduct aService)
             : base(aDevice, aService)
         {
         }

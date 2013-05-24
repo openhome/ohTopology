@@ -43,7 +43,7 @@ namespace OpenHome.Av
             iTransportState = null;
         }
 
-        public override IProxy OnCreate(IWatchableDevice aDevice)
+        public override IProxy OnCreate(IDevice aDevice)
         {
             return new ProxyReceiver(aDevice, this);
         }
@@ -256,7 +256,7 @@ namespace OpenHome.Av
 
     public class ProxyReceiver : Proxy<ServiceReceiver>, IProxyReceiver
     {
-        public ProxyReceiver(IWatchableDevice aDevice, ServiceReceiver aService)
+        public ProxyReceiver(IDevice aDevice, ServiceReceiver aService)
             : base(aDevice, aService)
         {
         }

@@ -17,7 +17,7 @@ namespace OpenHome.Av
         bool Visible { get; }
 
         IEnumerable<ITopology4Group> Volumes { get; }
-        IWatchableDevice Device { get; }
+        IDevice Device { get; }
         bool HasInfo { get; }
         bool HasTime { get; }
 
@@ -113,7 +113,7 @@ namespace OpenHome.Av
             set { iVolumes = value; }
         }
 
-        public IWatchableDevice Device
+        public IDevice Device
         {
             get { return iDevice; }
             set { iDevice = value; }
@@ -144,7 +144,7 @@ namespace OpenHome.Av
         private bool iVisible;
 
         private IEnumerable<ITopology4Group> iVolumes;
-        private IWatchableDevice iDevice;
+        private IDevice iDevice;
         private bool iHasInfo;
         private bool iHasTime;
     }
@@ -152,7 +152,7 @@ namespace OpenHome.Av
     public interface ITopology4Group
     {
         string Name { get; }
-        IWatchableDevice Device { get; }
+        IDevice Device { get; }
     }
     
     public interface ITopology4Root : ITopology4Group
@@ -230,7 +230,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchableDevice Device
+        public IDevice Device
         {
             get
             {

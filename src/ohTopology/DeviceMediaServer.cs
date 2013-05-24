@@ -25,13 +25,13 @@ namespace OpenHome.Av
         string GetAudioUri(IMediaMetadata aMetadata);
     }
 
-    public class MockMediaServer : WatchableDevice, IMockMediaServerUriProvider
+    public class DeviceMediaServerMock : Device, IMockMediaServerUriProvider
     {
         private readonly INetwork iNetwork;
         private readonly IEnumerable<IMediaMetadata> iMetadata;
         private readonly HttpFramework iHttpFramework;
 
-        public MockMediaServer(string aUdn, INetwork aNetwork, string aAppRoot)
+        public DeviceMediaServerMock(string aUdn, INetwork aNetwork, string aAppRoot)
             : base(aUdn)
         {
             iNetwork = aNetwork;

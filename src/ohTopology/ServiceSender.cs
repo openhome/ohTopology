@@ -104,7 +104,7 @@ namespace OpenHome.Av
             iStatus = null;
         }
 
-        public override IProxy OnCreate(IWatchableDevice aDevice)
+        public override IProxy OnCreate(IDevice aDevice)
         {
             return new ProxySender(aDevice, this);
         }
@@ -285,7 +285,7 @@ namespace OpenHome.Av
 
     public class ProxySender : Proxy<ServiceSender>, IProxySender
     {
-        public ProxySender(IWatchableDevice aDevice, ServiceSender aService)
+        public ProxySender(IDevice aDevice, ServiceSender aService)
             : base(aDevice, aService)
         {
         }

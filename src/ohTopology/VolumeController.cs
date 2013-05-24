@@ -7,7 +7,7 @@ namespace OpenHome.Av
 {
     class VolumeController : IWatcher<bool>, IWatcher<uint>, IDisposable
     {
-        public VolumeController(IWatchableThread aThread, IWatchableDevice aDevice, Watchable<bool> aHasVolume, Watchable<bool> aMute, Watchable<uint> aValue)
+        public VolumeController(IWatchableThread aThread, IDevice aDevice, Watchable<bool> aHasVolume, Watchable<bool> aMute, Watchable<uint> aValue)
         {
             iDisposed = false;
 
@@ -59,7 +59,7 @@ namespace OpenHome.Av
             iDisposed = true;
         }
 
-        public IWatchableDevice Device
+        public IDevice Device
         {
             get
             {
@@ -118,7 +118,7 @@ namespace OpenHome.Av
         private bool iDisposed;
         private IProxyVolume iVolume;
 
-        private IWatchableDevice iDevice;
+        private IDevice iDevice;
         private Watchable<bool> iHasVolume;
         private Watchable<bool> iMute;
         private Watchable<uint> iValue;

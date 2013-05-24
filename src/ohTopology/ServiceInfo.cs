@@ -198,7 +198,7 @@ namespace OpenHome.Av
             iMetatext = null;
         }
 
-        public override IProxy OnCreate(IWatchableDevice aDevice)
+        public override IProxy OnCreate(IDevice aDevice)
         {
             return new ProxyInfo(aDevice, this);
         }
@@ -379,7 +379,7 @@ namespace OpenHome.Av
 
     public class ProxyInfo : Proxy<ServiceInfo>, IProxyInfo
     {
-        public ProxyInfo(IWatchableDevice aDevice, ServiceInfo aService)
+        public ProxyInfo(IDevice aDevice, ServiceInfo aService)
             : base(aDevice, aService)
         {
         }
