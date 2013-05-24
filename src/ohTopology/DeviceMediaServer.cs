@@ -7,6 +7,10 @@ using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
 
@@ -30,6 +34,7 @@ namespace OpenHome.Av
         private readonly INetwork iNetwork;
         private readonly IEnumerable<IMediaMetadata> iMetadata;
         private readonly HttpFramework iHttpFramework;
+        private readonly List<Tuple<Color, Color>> iColors;
 
         public DeviceMediaServerMock(string aUdn, INetwork aNetwork, string aAppRoot)
             : base(aUdn)
@@ -38,8 +43,25 @@ namespace OpenHome.Av
             iMetadata = ReadMetadata(aNetwork, aAppRoot);
             iHttpFramework = new HttpFramework(10);
 
+            iColors = new List<Tuple<Color, Color>>();
+            Add(Color.Black, Color.White);
+            Add(Color.White, Color.Black);
+            Add(Color.Cyan, Color.DarkBlue);
+            Add(Color.DarkGoldenrod, Color.LightGray);
+            Add(Color.OrangeRed, Color.PaleGreen);
+            Add(Color.Orchid, Color.DarkGray);
+            Add(Color.DarkKhaki, Color.LightSeaGreen);
+            Add(Color.LightYellow, Color.DarkBlue);
+            Add(Color.LightSteelBlue, Color.Orange);
+            Add(Color.Olive, Color.Moccasin);
+            Add(Color.MistyRose, Color.Navy);
+
+
+            Console.WriteLine(iHttpFramework.Port);
+
             iHttpFramework.AddHttpHandler("artwork", HandleRequestArtwork);
             iHttpFramework.AddHttpHandler("audio", HandleRequestAudio);
+            iHttpFramework.Open();
 
             Add<IProxyMediaServer>(new ServiceMediaServerMock(aNetwork, new string[] {"Browse", "Query"},
                 "", "OpenHome", "OpenHome", "http://www.openhome.org",
@@ -50,6 +72,11 @@ namespace OpenHome.Av
             // content directory service
             //MockWatchableContentDirectory contentDirectory = new MockWatchableContentDirectory(aThread, aUdn, 0, "");
             //Add<ContentDirectory>(contentDirectory);
+        }
+
+        private void Add(Color aBackground, Color aForeground)
+        {
+            iColors.Add(new Tuple<Color, Color>(aForeground, aBackground));
         }
 
         private IEnumerable<IMediaMetadata> ReadMetadata(INetwork aNetwork, string aAppRoot)
@@ -131,9 +158,15 @@ namespace OpenHome.Av
                 return;
             }
 
-            var track = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Album].Value == album).First();
+            var tracks = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Album].Value == album);
 
-            var artist = track[iNetwork.TagManager.Audio.AlbumArtist];
+            if (!tracks.Any())
+            {
+                aEnvironment.FlushSendNotFound();
+                return;
+            }
+
+            var artist = tracks.First()[iNetwork.TagManager.Audio.AlbumArtist];
 
             if (artist == null)
             {
@@ -141,7 +174,7 @@ namespace OpenHome.Av
                 return;
             }
 
-            var title = track[iNetwork.TagManager.Audio.AlbumTitle];
+            var title = tracks.First()[iNetwork.TagManager.Audio.AlbumTitle];
 
             if (title == null)
             {
@@ -149,12 +182,44 @@ namespace OpenHome.Av
                 return;
             }
 
-            aEnvironment.FlushSend(GetAlbumArtworkPng(artist.Value, title.Value), "image./png");
+            aEnvironment.FlushSend(GetAlbumArtworkPng(artist.Value, title.Value), "image/png");
         }
 
         private byte[] GetAlbumArtworkPng(string aArtist, string aTitle)
         {
-            return (null);
+            var combined = aArtist + " " + aTitle;
+
+            var hash = combined.GetHashCode();
+            var rem = hash % iColors.Count;
+            var index = rem < 0 ? -rem : rem;
+            var colors = iColors[index];
+            var background = colors.Item1;
+            var foreground = colors.Item2;
+
+            Bitmap bitmap = new Bitmap(500, 500);
+
+            Graphics graphics = Graphics.FromImage(bitmap);
+
+            using (var brush = new SolidBrush(background))
+            {
+                graphics.FillRectangle(brush, graphics.ClipBounds);
+            }
+
+            using (var font = new Font(FontFamily.GenericSansSerif, 20))
+            {
+                using (var brush = new SolidBrush(foreground))
+                {
+                    graphics.DrawString(aArtist, font, brush, 10, 10);
+                    graphics.DrawString(aTitle, font, brush, 10, 50);
+                }
+            }
+
+            using (MemoryStream stream = new MemoryStream())
+            {
+                bitmap.Save(stream, ImageFormat.Png);
+
+                return (stream.ToArray());
+            }
         }
 
         private Task HandleRequestAudio(IHttpEnvironment aEnvironment)
