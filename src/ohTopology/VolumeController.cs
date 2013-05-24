@@ -17,24 +17,24 @@ namespace OpenHome.Av
             iMute = aMute;
             iValue = aValue;
 
-            Task<IProxyVolume> task = iDevice.Create<IProxyVolume>();
-            aThread.Schedule(() =>
+            iDevice.Create<IProxyVolume>((volume) =>
             {
-                IProxyVolume volume = task.Result;
-
-                if (!iDisposed)
+                aThread.Schedule(() =>
                 {
-                    iVolume = volume;
+                    if (!iDisposed)
+                    {
+                        iVolume = volume;
 
-                    iVolume.Mute.AddWatcher(this);
-                    iVolume.Value.AddWatcher(this);
+                        iVolume.Mute.AddWatcher(this);
+                        iVolume.Value.AddWatcher(this);
 
-                    iHasVolume.Update(true);
-                }
-                else
-                {
-                    volume.Dispose();
-                }
+                        iHasVolume.Update(true);
+                    }
+                    else
+                    {
+                        volume.Dispose();
+                    }
+                });
             });
         }
 

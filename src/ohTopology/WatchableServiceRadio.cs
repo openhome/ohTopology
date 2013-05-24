@@ -134,12 +134,12 @@ namespace OpenHome.Av
         protected Watchable<IInfoMetadata> iMetadata;
     }
 
-    public class ServiceRadioNetwork : ServiceRadio
+    class ServiceRadioNetwork : ServiceRadio
     {
         public ServiceRadioNetwork(INetwork aNetwork, CpDevice aDevice)
             : base(aNetwork)
         {
-            iSubscribe = new ManualResetEvent(false);
+            iSubscribed = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgRadio1(aDevice);
 
             iService.SetPropertyIdChanged(HandleIdChanged);
@@ -152,8 +152,8 @@ namespace OpenHome.Av
 
         public override void Dispose()
         {
-            iSubscribe.Dispose();
-            iSubscribe = null;
+            iSubscribed.Dispose();
+            iSubscribed = null;
 
             iService.Dispose();
             iService = null;
@@ -161,11 +161,14 @@ namespace OpenHome.Av
             base.Dispose();
         }
 
-        protected override void OnSubscribe()
+        protected override Task OnSubscribe()
         {
-            iSubscribe.Reset();
-            iService.Subscribe();
-            iSubscribe.WaitOne();
+            Task task = Task.Factory.StartNew(() =>
+            {
+                iService.Subscribe();
+                iSubscribed.WaitOne();
+            });
+            return task;
         }
 
         private void HandleInitialEvent()
@@ -173,12 +176,13 @@ namespace OpenHome.Av
             iChannelsMax = iService.PropertyChannelsMax();
             iProtocolInfo = iService.PropertyProtocolInfo();
 
-            iSubscribe.Set();
+            iSubscribed.Set();
         }
 
         protected override void OnUnsubscribe()
         {
             iService.Unsubscribe();
+            iSubscribed.Reset();
         }
 
         public override Task Play()
@@ -302,11 +306,11 @@ namespace OpenHome.Av
             });
         }
 
-        private ManualResetEvent iSubscribe;
+        private ManualResetEvent iSubscribed;
         private CpProxyAvOpenhomeOrgRadio1 iService;
     }
 
-    public class ServiceRadioMock : ServiceRadio, IMockable
+    class ServiceRadioMock : ServiceRadio, IMockable
     {
         public ServiceRadioMock(INetwork aNetwork, uint aId, IList<uint> aIdArray, IInfoMetadata aMetadata, string aProtocolInfo, string aTransportState, uint aChannelsMax)
             : base(aNetwork)
@@ -320,17 +324,6 @@ namespace OpenHome.Av
             iIdArray.Update(aIdArray);
             iMetadata.Update(aMetadata);
             iTransportState.Update(aTransportState);
-        }
-
-        protected override void OnSubscribe()
-        {
-            iNetwork.SubscribeThread.Execute(() =>
-            {
-            });
-        }
-
-        protected override void OnUnsubscribe()
-        {
         }
 
         public override Task Play()

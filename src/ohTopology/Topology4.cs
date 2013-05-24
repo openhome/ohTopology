@@ -188,21 +188,21 @@ namespace OpenHome.Av
 
             if (iGroup.Attributes.Contains("Sender"))
             {
-                Task<IProxySender> task = iGroup.Device.Create<IProxySender>();
-                iThread.Schedule(() =>
+                iGroup.Device.Create<IProxySender>((sender) =>
                 {
-                    IProxySender sender = task.Result;
-
-                    if (!iDisposed)
+                    iThread.Schedule(() =>
                     {
-                        iSender = sender;
+                        if (!iDisposed)
+                        {
+                            iSender = sender;
 
-                        iSender.Status.AddWatcher(this);
-                    }
-                    else
-                    {
-                        sender.Dispose();
-                    }
+                            iSender.Status.AddWatcher(this);
+                        }
+                        else
+                        {
+                            sender.Dispose();
+                        }
+                    });
                 });
             }
         }
@@ -211,7 +211,7 @@ namespace OpenHome.Av
         {
             iGroup.SourceIndex.RemoveWatcher(this);
             iGroup = null;
-
+   
             if (iSender != null)
             {
                 iSender.Status.RemoveWatcher(this);
@@ -615,6 +615,9 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
+            iRoom.Groups.RemoveWatcher(this);
+            iRoom = null;
+   
             foreach (var kvp in iGroupLookup)
             {
                 kvp.Key.Standby.RemoveWatcher(this);
@@ -622,8 +625,12 @@ namespace OpenHome.Av
             }
             iGroupLookup = null;
 
-            iRoom.Groups.RemoveWatcher(this);
-            iRoom = null;
+            foreach (Topology4Group g in iGroup4s)
+            {
+                g.Dispose();
+            }
+            iGroup4s.Clear();
+            iGroup4s = null;
 
             iWatchableStandby.Dispose();
             iWatchableStandby = null;
@@ -633,13 +640,6 @@ namespace OpenHome.Av
             
             iWatchableSources.Dispose();
             iWatchableSources = null;
-
-            foreach (Topology4Group g in iGroup4s)
-            {
-                g.Dispose();
-            }
-            iGroup4s.Clear();
-            iGroup4s = null;
 
             iRoots = null;
         }

@@ -147,16 +147,16 @@ namespace OpenHome.Av
 
         private void Subscribe(IWatchableDevice aDevice)
         {
-            Task<IProxyTime> task = aDevice.Create<IProxyTime>();
-            iThread.Schedule(() =>
+            aDevice.Create<IProxyTime>((time) =>
             {
-                IProxyTime time = task.Result;
+                iThread.Schedule(() =>
+                {
+                    iTime = time;
+                    iTime.Duration.AddWatcher(this);
+                    iTime.Seconds.AddWatcher(this);
 
-                iTime = time;
-                iTime.Duration.AddWatcher(this);
-                iTime.Seconds.AddWatcher(this);
-
-                iHasTime.Update(true);
+                    iHasTime.Update(true);
+                });
             });
         }
 

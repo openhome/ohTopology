@@ -163,12 +163,12 @@ namespace OpenHome.Av
         protected Watchable<bool> iShuffle;
     }
 
-    public class ServicePlaylistNetwork : ServicePlaylist
+    class ServicePlaylistNetwork : ServicePlaylist
     {
         public ServicePlaylistNetwork(INetwork aNetwork, CpDevice aDevice)
             : base(aNetwork)
         {
-            iSubscribe = new ManualResetEvent(false);
+            iSubscribed = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgPlaylist1(aDevice);
 
             iService.SetPropertyIdChanged(HandleIdChanged);
@@ -182,8 +182,8 @@ namespace OpenHome.Av
 
         public override void Dispose()
         {
-            iSubscribe.Dispose();
-            iSubscribe = null;
+            iSubscribed.Dispose();
+            iSubscribed = null;
 
             iService.Dispose();
             iService = null;
@@ -191,11 +191,14 @@ namespace OpenHome.Av
             base.Dispose();
         }
 
-        protected override void OnSubscribe()
+        protected override Task OnSubscribe()
         {
-            iSubscribe.Reset();
-            iService.Subscribe();
-            iSubscribe.WaitOne();
+            Task task = Task.Factory.StartNew(() =>
+            {
+                iService.Subscribe();
+                iSubscribed.WaitOne();
+            });
+            return task;
         }
 
         private void HandleInitialEvent()
@@ -203,12 +206,13 @@ namespace OpenHome.Av
             iTracksMax = iService.PropertyTracksMax();
             iProtocolInfo = iService.PropertyProtocolInfo();
 
-            iSubscribe.Set();
+            iSubscribed.Set();
         }
 
         protected override void OnUnsubscribe()
         {
             iService.Unsubscribe();
+            iSubscribed.Reset();
         }
 
         public override Task Play()
@@ -402,11 +406,11 @@ namespace OpenHome.Av
             });
         }
 
-        private ManualResetEvent iSubscribe;
+        private ManualResetEvent iSubscribed;
         private CpProxyAvOpenhomeOrgPlaylist1 iService;
     }
 
-    public class ServicePlaylistMock : ServicePlaylist, IMockable
+    class ServicePlaylistMock : ServicePlaylist, IMockable
     {
         public ServicePlaylistMock(INetwork aNetwork, uint aId, IList<uint> aIdArray, bool aRepeat, bool aShuffle, string aTransportState, string aProtocolInfo, uint aTracksMax)
             : base(aNetwork)
@@ -419,17 +423,6 @@ namespace OpenHome.Av
             iTransportState.Update(aTransportState);
             iRepeat.Update(aRepeat);
             iShuffle.Update(aShuffle);
-        }
-
-        protected override void OnSubscribe()
-        {
-            Network.SubscribeThread.Execute(() =>
-            {
-            });
-        }
-
-        protected override void OnUnsubscribe()
-        {
         }
 
         public override Task Play()

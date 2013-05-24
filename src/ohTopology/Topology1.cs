@@ -49,7 +49,7 @@ namespace OpenHome.Av
             iDevices = null;
 
             // dispose of all products, which will in turn unsubscribe
-            foreach (ProxyProduct p in iProductLookup.Values)
+            foreach (var p in iProductLookup.Values)
             {
                 p.Dispose();
             }
@@ -92,21 +92,21 @@ namespace OpenHome.Av
         public void UnorderedAdd(IWatchableDevice aItem)
         {
             iPendingSubscriptions.Add(aItem);
-            Task<IProxyProduct> task = aItem.Create<IProxyProduct>();
-            iThread.Schedule(() =>
+            aItem.Create<IProxyProduct>((product) =>
             {
-                IProxyProduct product = task.Result;
-
-                if (iPendingSubscriptions.Contains(aItem))
+                iThread.Schedule(() =>
                 {
-                    iProducts.Add(product);
-                    iProductLookup.Add(aItem, product);
-                    iPendingSubscriptions.Remove(aItem);
-                }
-                else
-                {
-                    product.Dispose();
-                }
+                    if (iPendingSubscriptions.Contains(aItem))
+                    {
+                        iProducts.Add(product);
+                        iProductLookup.Add(aItem, product);
+                        iPendingSubscriptions.Remove(aItem);
+                    }
+                    else
+                    {
+                        product.Dispose();
+                    }
+                });
             });
         }
 

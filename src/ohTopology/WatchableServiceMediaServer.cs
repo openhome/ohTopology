@@ -304,14 +304,6 @@ namespace OpenHome.Av
             return (new ProxyMediaServer(aDevice, this));
         }
 
-        protected override void  OnSubscribe()
-        {
-        }
-
-        protected override void  OnUnsubscribe()
-        {
-        }
-
         public override Task<IMediaServerSession> CreateSession()
         {
             return (Task.Factory.StartNew<IMediaServerSession>(() =>

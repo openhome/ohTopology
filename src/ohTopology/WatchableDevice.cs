@@ -11,21 +11,20 @@ namespace OpenHome.Av
 {
     public interface IService : IMockable, IDisposable
     {
-        Task<T> Create<T>(IWatchableDevice aDevice) where T : IProxy;
-        void Subscribe();
-        void Unsubscribe();
+        void Create<T>(IWatchableDevice aDevice, Action<T> aCallback) where T : IProxy;
     }
 
     public abstract class Service : IService
     {
         private readonly INetwork iNetwork;
-
         private uint iRefCount;
+        protected Task iSubscribeTask;
 
         protected Service(INetwork aNetwork)
         {
             iNetwork = aNetwork;
             iRefCount = 0;
+            iSubscribeTask = new Task(() => { });
         }
 
         public INetwork Network
@@ -44,28 +43,37 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<T> Create<T>(IWatchableDevice aDevice) where T : IProxy
+        public void Create<T>(IWatchableDevice aDevice, Action<T> aCallback) where T : IProxy
         {
-            Task<T> task = Task.Factory.StartNew<T>(() =>
+            if (iRefCount == 0)
             {
-                Subscribe();
-                return (T)OnCreate(aDevice);
-            });
-            return task;
+                iSubscribeTask = OnSubscribe();
+            }
+            ++iRefCount;
+
+            if (iSubscribeTask != null)
+            {
+                Task.Factory.StartNew(() =>
+                {
+                    iSubscribeTask.Wait();
+                    Network.Schedule(() =>
+                    {
+                        aCallback((T)OnCreate(aDevice));
+                    });
+                });
+            }
+            else
+            {
+                aCallback((T)OnCreate(aDevice));
+            }
         }
 
         public abstract IProxy OnCreate(IWatchableDevice aDevice);
 
-        public void Subscribe()
+        protected virtual Task OnSubscribe()
         {
-            if (iRefCount == 0)
-            {
-                OnSubscribe();
-            }
-            ++iRefCount;
+            return null;
         }
-
-        protected abstract void OnSubscribe();
 
         public void Unsubscribe()
         {
@@ -76,7 +84,7 @@ namespace OpenHome.Av
             }
         }
 
-        protected abstract void OnUnsubscribe();
+        protected virtual void OnUnsubscribe() { }
 
         // IMockable
 
@@ -122,7 +130,7 @@ namespace OpenHome.Av
     public interface IWatchableDevice
     {
         string Udn { get; }
-        Task<T> Create<T>() where T : IProxy;
+        void Create<T>(Action<T> aCallback) where T : IProxy;
     }
 
     public class WatchableDevice : IWatchableDevice, IMockable, IDisposable
@@ -135,56 +143,56 @@ namespace OpenHome.Av
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxyProduct>(new ServiceProductNetwork(aNetwork, aDevice));
+                    device.Add<IProxyProduct>(new ServiceProductNetwork(aNetwork, aDevice));
                 }
             }
             if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Info", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxyInfo>(new ServiceInfoNetwork(aNetwork, aDevice));
+                    device.Add<IProxyInfo>(new ServiceInfoNetwork(aNetwork, aDevice));
                 }
             }
             if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Time", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxyTime>(new ServiceTimeNetwork(aNetwork, aDevice));
+                    device.Add<IProxyTime>(new ServiceTimeNetwork(aNetwork, aDevice));
                 }
             }
             if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Sender", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxySender>(new ServiceSenderNetwork(aNetwork, aDevice));
+                    device.Add<IProxySender>(new ServiceSenderNetwork(aNetwork, aDevice));
                 }
             }
             if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Volume", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxyVolume>(new ServiceVolumeNetwork(aNetwork, aDevice));
+                    device.Add<IProxyVolume>(new ServiceVolumeNetwork(aNetwork, aDevice));
                 }
             }
             if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Playlist", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxyPlaylist>(new ServicePlaylistNetwork(aNetwork, aDevice));
+                    device.Add<IProxyPlaylist>(new ServicePlaylistNetwork(aNetwork, aDevice));
                 }
             }
             if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Radio", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxyRadio>(new ServiceRadioNetwork(aNetwork, aDevice));
+                    device.Add<IProxyRadio>(new ServiceRadioNetwork(aNetwork, aDevice));
                 }
             }
             if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Receiver", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<ProxyReceiver>(new ServiceReceiverNetwork(aNetwork, aDevice));
+                    device.Add<IProxyReceiver>(new ServiceReceiverNetwork(aNetwork, aDevice));
                 }
             }
             return device;
@@ -233,9 +241,9 @@ namespace OpenHome.Av
             return iServices.ContainsKey(aServiceType);
         }
 
-        public Task<T> Create<T>() where T : IProxy
+        public void Create<T>(Action<T> aCallback) where T : IProxy
         {
-            return iServices[typeof(T)].Create<T>(this);
+            iServices[typeof(T)].Create<T>(this, aCallback);
         }
 
         private IService GetService(string aType)

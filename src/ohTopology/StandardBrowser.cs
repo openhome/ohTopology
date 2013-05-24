@@ -177,23 +177,23 @@ namespace OpenHome.Av
             iMetadata = aMetadata;
             iMetatext = aMetatext;
 
-            Task<IProxyInfo> task = iDevice.Create<IProxyInfo>();
-            aThread.Schedule(() =>
+            iDevice.Create<IProxyInfo>((info) =>
             {
-                IProxyInfo info = task.Result;
-
-                if (!iDisposed)
+                aThread.Schedule(() =>
                 {
-                    iInfo = info;
+                    if (!iDisposed)
+                    {
+                        iInfo = info;
 
-                    iInfo.Details.AddWatcher(this);
-                    iInfo.Metadata.AddWatcher(this);
-                    iInfo.Metatext.AddWatcher(this);
-                }
-                else
-                {
-                    info.Dispose();
-                }
+                        iInfo.Details.AddWatcher(this);
+                        iInfo.Metadata.AddWatcher(this);
+                        iInfo.Metatext.AddWatcher(this);
+                    }
+                    else
+                    {
+                        info.Dispose();
+                    }
+                });
             });
         }
 
@@ -593,13 +593,13 @@ namespace OpenHome.Av
                 {
                     if (s.Type == "Playlist")
                     {
-                        Task<ProxyPlaylist> task = s.Device.Create<ProxyPlaylist>();
-                        iThread.Schedule(() =>
+                        s.Device.Create<ProxyPlaylist>((playlist) =>
                         {
-                            ProxyPlaylist playlist = task.Result;
-
-                            playlist.SeekId(id);
-                            playlist.Dispose();
+                            iThread.Schedule(() =>
+                            {
+                                playlist.SeekId(id);
+                                playlist.Dispose();
+                            });
                         });
                         return;
                     }
@@ -616,26 +616,27 @@ namespace OpenHome.Av
                 {
                     if (s.Type == "Receiver")
                     {
-                        Task<ProxyReceiver> taskReceiver = s.Device.Create<ProxyReceiver>();
-                        ITopology4Group g = iHouse.Sender(udn);
-                        Task<ProxySender> taskSender = g.Device.Create<ProxySender>();
-
-                        iThread.Schedule(() =>
+                        s.Device.Create<ProxyReceiver>((receiver) =>
                         {
-                            ProxyReceiver receiver = taskReceiver.Result;
-                            ProxySender sender = taskSender.Result;
-                            if (!iDisposed)
+                            ITopology4Group g = iHouse.Sender(udn);
+                            g.Device.Create<ProxySender>((sender) =>
                             {
-                                Task action = receiver.SetSender(sender.Metadata.Value);
-                                action.ContinueWith((Task) => { receiver.Play(); });
-                                receiver.Dispose();
-                                sender.Dispose();
-                            }
-                            else
-                            {
-                                receiver.Dispose();
-                                sender.Dispose();
-                            }
+                                iThread.Schedule(() =>
+                                {
+                                    if (!iDisposed)
+                                    {
+                                        Task action = receiver.SetSender(sender.Metadata.Value);
+                                        action.ContinueWith((Task) => { receiver.Play(); });
+                                        receiver.Dispose();
+                                        sender.Dispose();
+                                    }
+                                    else
+                                    {
+                                        receiver.Dispose();
+                                        sender.Dispose();
+                                    }
+                                });
+                            });
                         });
                         return;
                     }

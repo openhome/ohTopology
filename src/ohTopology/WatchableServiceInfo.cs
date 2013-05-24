@@ -232,13 +232,13 @@ namespace OpenHome.Av
         protected Watchable<IInfoMetatext> iMetatext;
     }
 
-    public class ServiceInfoNetwork : ServiceInfo
+    class ServiceInfoNetwork : ServiceInfo
     {
         public ServiceInfoNetwork(INetwork aNetwork, CpDevice aDevice)
             : base(aNetwork)
         {
             iThread = aNetwork;
-            iSubscribe = new ManualResetEvent(false);
+            iSubscribed = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgInfo1(aDevice);
 
             iService.SetPropertyBitDepthChanged(HandleDetailsChanged);
@@ -250,8 +250,8 @@ namespace OpenHome.Av
         
         public override void Dispose()
         {
-            iSubscribe.Dispose();
-            iSubscribe = null;
+            iSubscribed.Dispose();
+            iSubscribed = null;
 
             iService.Dispose();
             iService = null;
@@ -259,21 +259,25 @@ namespace OpenHome.Av
             base.Dispose();
         }
 
-        protected override void OnSubscribe()
+        protected override Task OnSubscribe()
         {
-            iSubscribe.Reset();
-            iService.Subscribe();
-            iSubscribe.WaitOne();
+            Task task = Task.Factory.StartNew(() =>
+            {
+                iService.Subscribe();
+                iSubscribed.WaitOne();
+            });
+            return task;
         }
 
         private void HandleInitialEvent()
         {
-            iSubscribe.Set();
+            iSubscribed.Set();
         }
 
         protected override void OnUnsubscribe()
         {
             iService.Unsubscribe();
+            iSubscribed.Reset();
         }
 
         private void HandleDetailsChanged()
@@ -313,11 +317,11 @@ namespace OpenHome.Av
         }
 
         private IWatchableThread iThread;
-        private ManualResetEvent iSubscribe;
+        private ManualResetEvent iSubscribed;
         private CpProxyAvOpenhomeOrgInfo1 iService;
     }
 
-    public class ServiceInfoMock : ServiceInfo, IMockable
+    class ServiceInfoMock : ServiceInfo, IMockable
     {
         public ServiceInfoMock(INetwork aNetwork, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
             : base(aNetwork)
@@ -325,17 +329,6 @@ namespace OpenHome.Av
             iDetails.Update(aDetails);
             iMetadata.Update(aMetadata);
             iMetatext.Update(aMetatext);
-        }
-
-        protected override void OnSubscribe()
-        {
-            Network.SubscribeThread.Execute(() =>
-            {
-            });
-        }
-
-        protected override void OnUnsubscribe()
-        {
         }
 
         public override void Execute(IEnumerable<string> aValue)
