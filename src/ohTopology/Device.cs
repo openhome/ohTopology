@@ -135,69 +135,6 @@ namespace OpenHome.Av
 
     public class Device : IDevice, IMockable, IDisposable
     {
-        public static Device Create(INetwork aNetwork, CpDevice aDevice)
-        {
-            Device device = new Device(aDevice.Udn());
-            string value;
-            if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Product", out value))
-            {
-                if (uint.Parse(value) == 1)
-                {
-                    device.Add<IProxyProduct>(new ServiceProductNetwork(aNetwork, aDevice));
-                }
-            }
-            if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Info", out value))
-            {
-                if (uint.Parse(value) == 1)
-                {
-                    device.Add<IProxyInfo>(new ServiceInfoNetwork(aNetwork, aDevice));
-                }
-            }
-            if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Time", out value))
-            {
-                if (uint.Parse(value) == 1)
-                {
-                    device.Add<IProxyTime>(new ServiceTimeNetwork(aNetwork, aDevice));
-                }
-            }
-            if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Sender", out value))
-            {
-                if (uint.Parse(value) == 1)
-                {
-                    device.Add<IProxySender>(new ServiceSenderNetwork(aNetwork, aDevice));
-                }
-            }
-            if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Volume", out value))
-            {
-                if (uint.Parse(value) == 1)
-                {
-                    device.Add<IProxyVolume>(new ServiceVolumeNetwork(aNetwork, aDevice));
-                }
-            }
-            if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Playlist", out value))
-            {
-                if (uint.Parse(value) == 1)
-                {
-                    device.Add<IProxyPlaylist>(new ServicePlaylistNetwork(aNetwork, aDevice));
-                }
-            }
-            if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Radio", out value))
-            {
-                if (uint.Parse(value) == 1)
-                {
-                    device.Add<IProxyRadio>(new ServiceRadioNetwork(aNetwork, aDevice));
-                }
-            }
-            if(aDevice.GetAttribute("Upnp.Service.av-openhome-org.Receiver", out value))
-            {
-                if (uint.Parse(value) == 1)
-                {
-                    device.Add<IProxyReceiver>(new ServiceReceiverNetwork(aNetwork, aDevice));
-                }
-            }
-            return device;
-        }
-
         public Device(string aUdn)
         {
             iUdn = aUdn;

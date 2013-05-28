@@ -39,7 +39,7 @@ namespace OpenHome.Av
         {
             iNetwork.Schedule(() =>
             {
-                Device device = Device.Create(iNetwork, aDevice);
+                Device device = DeviceFactory.Create(iNetwork, aDevice);
                 iNetwork.Add(device);
             });
         }

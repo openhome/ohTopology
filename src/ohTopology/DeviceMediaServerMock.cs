@@ -23,13 +23,13 @@ using OpenHome.Net.ControlPoint;
 
 namespace OpenHome.Av
 {
-    public interface IMockMediaServerUriProvider
+    public interface IDeviceMediaServerMockUriProvider
     {
         string GetArtworkUri(IMediaMetadata aMetadata);
         string GetAudioUri(IMediaMetadata aMetadata);
     }
 
-    public class DeviceMediaServerMock : Device, IMockMediaServerUriProvider
+    public class DeviceMediaServerMock : Device, IDeviceMediaServerMockUriProvider
     {
         private readonly INetwork iNetwork;
         private readonly IEnumerable<IMediaMetadata> iMetadata;
