@@ -126,7 +126,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PackageName>ohTopology.net-AnyPlatform-$(Configuration)</PackageName>
-    <PackageFilePatterns>ohTopology.net.dll ohTopology.net.*db</PackageFilePatterns>
+    <PackageFilePatterns>ohTopology.net.dll ohTopology.net.*db MockMediaServer.zip</PackageFilePatterns>
   </PropertyGroup>
   <PropertyGroup>
   </PropertyGroup>
