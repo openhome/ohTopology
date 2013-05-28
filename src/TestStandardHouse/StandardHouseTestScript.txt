@@ -18,6 +18,7 @@ expect Kitchen open Time Active True
 expect Kitchen open HasTime False
 expect Kitchen open Duration 0
 expect Kitchen open Seconds 0
+
 expect Room Added: Sitting Room at 1
 expect Sitting Room open Standby eOn
 expect Sitting Room open Details False 0 0  0 False 0
@@ -34,6 +35,14 @@ expect Sitting Room open Time Active True
 expect Sitting Room open HasTime False
 expect Sitting Room open Duration 0
 expect Sitting Room open Seconds 0
+expect Sitting Room add Unconfigured Source 5 Klimax DSM Analog1 Analog True True True 4c494e4e-0026-0f99-1112-ef000004013f Volume 4c494e4e-0026-0f99-1112-ef000004013f
+expect Sitting Room add Unconfigured Source 6 Klimax DSM Analog2 Analog True True True 4c494e4e-0026-0f99-1112-ef000004013f Volume 4c494e4e-0026-0f99-1112-ef000004013f
+expect Sitting Room add Unconfigured Source 7 Klimax DSM Phono Analog True True True 4c494e4e-0026-0f99-1112-ef000004013f Volume 4c494e4e-0026-0f99-1112-ef000004013f
+expect Sitting Room add Unconfigured Source 8 Klimax DSM SPDIF1 Digital True True True 4c494e4e-0026-0f99-1112-ef000004013f Volume 4c494e4e-0026-0f99-1112-ef000004013f
+expect Sitting Room add Unconfigured Source 9 Klimax DSM SPDIF2 Digital True True True 4c494e4e-0026-0f99-1112-ef000004013f Volume 4c494e4e-0026-0f99-1112-ef000004013f
+expect Sitting Room add Unconfigured Source 10 Klimax DSM TOSLINK1 Digital True True True 4c494e4e-0026-0f99-1112-ef000004013f Volume 4c494e4e-0026-0f99-1112-ef000004013f
+expect Sitting Room add Unconfigured Source 11 Klimax DSM TOSLINK2 Digital True True True 4c494e4e-0026-0f99-1112-ef000004013f Volume 4c494e4e-0026-0f99-1112-ef000004013f
+
 expect Room Added: Bedroom at 0
 expect Bedroom open Standby eOn
 expect Bedroom open Details False 0 0  0 False 0
@@ -50,6 +59,14 @@ expect Bedroom open Time Active True
 expect Bedroom open HasTime False
 expect Bedroom open Duration 0
 expect Bedroom open Seconds 0
+expect Bedroom add Unconfigured Source 5 Kiko DSM Analog1 Analog True True True 4c494e4e-0026-0f99-1113-ef000004013f Volume 4c494e4e-0026-0f99-1113-ef000004013f
+expect Bedroom add Unconfigured Source 6 Kiko DSM Analog2 Analog True True True 4c494e4e-0026-0f99-1113-ef000004013f Volume 4c494e4e-0026-0f99-1113-ef000004013f
+expect Bedroom add Unconfigured Source 7 Kiko DSM Phono Analog True True True 4c494e4e-0026-0f99-1113-ef000004013f Volume 4c494e4e-0026-0f99-1113-ef000004013f
+expect Bedroom add Unconfigured Source 8 Kiko DSM SPDIF1 Digital True True True 4c494e4e-0026-0f99-1113-ef000004013f Volume 4c494e4e-0026-0f99-1113-ef000004013f
+expect Bedroom add Unconfigured Source 9 Kiko DSM SPDIF2 Digital True True True 4c494e4e-0026-0f99-1113-ef000004013f Volume 4c494e4e-0026-0f99-1113-ef000004013f
+expect Bedroom add Unconfigured Source 10 Kiko DSM TOSLINK1 Digital True True True 4c494e4e-0026-0f99-1113-ef000004013f Volume 4c494e4e-0026-0f99-1113-ef000004013f
+expect Bedroom add Unconfigured Source 11 Kiko DSM TOSLINK2 Digital True True True 4c494e4e-0026-0f99-1113-ef000004013f Volume 4c494e4e-0026-0f99-1113-ef000004013f
+
 expect Room Added: Dining Room at 1
 expect Dining Room open Standby eOn
 expect Dining Room open Details False 0 0  0 False 0
@@ -66,6 +83,7 @@ expect Dining Room open Time Active True
 expect Dining Room open HasTime False
 expect Dining Room open Duration 0
 expect Dining Room open Seconds 0
+
 expect Kitchen update Zone True 4c494e4e-0026-0f99-1111-ef000004013f
 expect Kitchen update Details True 0 0  0 False 0
 expect Kitchen update Metadata True  
@@ -248,4 +266,101 @@ empty
 
 mock network update ds 67 time seconds 10
 expect Main Room update Seconds 10
+empty
+
+mock network add dsm 50
+expect Main Room update Zone False 
+expect Main Room add Unconfigured Source 5 Mock Dsm Analog1 Analog True True True 50 Volume 50
+expect Main Room add Unconfigured Source 6 Mock Dsm Analog2 Analog True True True 50 Volume 50
+expect Main Room add Unconfigured Source 7 Mock Dsm Phono Analog True True True 50 Volume 50
+expect Main Room add Unconfigured Source 8 Mock Dsm SPDIF1 Digital True True True 50 Volume 50
+expect Main Room add Unconfigured Source 9 Mock Dsm SPDIF2 Digital True True True 50 Volume 50
+expect Main Room add Unconfigured Source 10 Mock Dsm TOSLINK1 Digital True True True 50 Volume 50
+expect Main Room add Unconfigured Source 11 Mock Dsm TOSLINK2 Digital True True True 50 Volume 50
+expect Main Room update HasSourceControl False
+expect Main Room update HasSourceControl True
+empty
+
+mock network update ds 50 product room Test Room
+expect Main Room remove Unconfigured Source 5 Mock Dsm Analog1 Analog True True True 50 Volume 50
+expect Main Room remove Unconfigured Source 6 Mock Dsm Analog2 Analog True True True 50 Volume 50
+expect Main Room remove Unconfigured Source 7 Mock Dsm Phono Analog True True True 50 Volume 50
+expect Main Room remove Unconfigured Source 8 Mock Dsm SPDIF1 Digital True True True 50 Volume 50
+expect Main Room remove Unconfigured Source 9 Mock Dsm SPDIF2 Digital True True True 50 Volume 50
+expect Main Room remove Unconfigured Source 10 Mock Dsm TOSLINK1 Digital True True True 50 Volume 50
+expect Main Room remove Unconfigured Source 11 Mock Dsm TOSLINK2 Digital True True True 50 Volume 50
+expect Main Room update HasSourceControl False
+expect Room Added: Test Room at 5
+expect Test Room open Standby eOn
+expect Test Room open Details False 0 0  0 False 0
+expect Test Room open Metadata False  
+expect Test Room open Metatext False 
+expect Test Room open Zone False 
+expect Test Room open Controller Active True
+expect Test Room open HasVolume False
+expect Test Room open HasSourceControl False
+expect Test Room open Mute False
+expect Test Room open Volume 0
+expect Test Room open TransportState 
+expect Test Room open Time Active True
+expect Test Room open HasTime False
+expect Test Room open Duration 0
+expect Test Room open Seconds 0
+expect Test Room add Unconfigured Source 5 Mock Dsm Analog1 Analog True True True 50 Volume 50
+expect Test Room add Unconfigured Source 6 Mock Dsm Analog2 Analog True True True 50 Volume 50
+expect Test Room add Unconfigured Source 7 Mock Dsm Phono Analog True True True 50 Volume 50
+expect Test Room add Unconfigured Source 8 Mock Dsm SPDIF1 Digital True True True 50 Volume 50
+expect Test Room add Unconfigured Source 9 Mock Dsm SPDIF2 Digital True True True 50 Volume 50
+expect Test Room add Unconfigured Source 10 Mock Dsm TOSLINK1 Digital True True True 50 Volume 50
+expect Test Room add Unconfigured Source 11 Mock Dsm TOSLINK2 Digital True True True 50 Volume 50
+
+expect Main Room update Zone True 67
+expect Main Room update HasSourceControl True
+expect Test Room update Zone True 50
+expect Test Room update Details True 0 0  0 False 0
+expect Test Room update Metadata True  
+expect Test Room update Metatext True 
+expect Test Room update TransportState Stopped
+expect Test Room update HasSourceControl True
+expect Test Room update Volume 50
+expect Test Room update HasVolume True
+expect Test Room update HasTime True
+empty
+
+mock network update ds 50 product source 5 name Wii
+expect Test Room remove Unconfigured Source 5 Mock Dsm Analog1 Analog True True True 50 Volume 50
+expect Test Room remove Unconfigured Source 6 Mock Dsm Analog2 Analog True True True 50 Volume 50
+expect Test Room remove Unconfigured Source 7 Mock Dsm Phono Analog True True True 50 Volume 50
+expect Test Room remove Unconfigured Source 8 Mock Dsm SPDIF1 Digital True True True 50 Volume 50
+expect Test Room remove Unconfigured Source 9 Mock Dsm SPDIF2 Digital True True True 50 Volume 50
+expect Test Room remove Unconfigured Source 10 Mock Dsm TOSLINK1 Digital True True True 50 Volume 50
+expect Test Room remove Unconfigured Source 11 Mock Dsm TOSLINK2 Digital True True True 50 Volume 50
+expect Test Room add Configured Source 5 Mock Dsm Wii Analog True True True 50 Volume 50
+expect Test Room add Unconfigured Source 6 Mock Dsm Analog2 Analog True True True 50 Volume 50
+expect Test Room add Unconfigured Source 7 Mock Dsm Phono Analog True True True 50 Volume 50
+expect Test Room add Unconfigured Source 8 Mock Dsm SPDIF1 Digital True True True 50 Volume 50
+expect Test Room add Unconfigured Source 9 Mock Dsm SPDIF2 Digital True True True 50 Volume 50
+expect Test Room add Unconfigured Source 10 Mock Dsm TOSLINK1 Digital True True True 50 Volume 50
+expect Test Room add Unconfigured Source 11 Mock Dsm TOSLINK2 Digital True True True 50 Volume 50
+expect Test Room update HasSourceControl False
+expect Test Room update HasSourceControl True
+empty
+
+mock network update ds 50 product source 5 name Analog1
+expect Test Room remove Unconfigured Source 6 Mock Dsm Analog2 Analog True True True 50 Volume 50
+expect Test Room remove Unconfigured Source 7 Mock Dsm Phono Analog True True True 50 Volume 50
+expect Test Room remove Unconfigured Source 8 Mock Dsm SPDIF1 Digital True True True 50 Volume 50
+expect Test Room remove Unconfigured Source 9 Mock Dsm SPDIF2 Digital True True True 50 Volume 50
+expect Test Room remove Unconfigured Source 10 Mock Dsm TOSLINK1 Digital True True True 50 Volume 50
+expect Test Room remove Unconfigured Source 11 Mock Dsm TOSLINK2 Digital True True True 50 Volume 50
+expect Test Room remove Configured Source 5 Mock Dsm Wii Analog True True True 50 Volume 50
+expect Test Room add Unconfigured Source 5 Mock Dsm Analog1 Analog True True True 50 Volume 50
+expect Test Room add Unconfigured Source 6 Mock Dsm Analog2 Analog True True True 50 Volume 50
+expect Test Room add Unconfigured Source 7 Mock Dsm Phono Analog True True True 50 Volume 50
+expect Test Room add Unconfigured Source 8 Mock Dsm SPDIF1 Digital True True True 50 Volume 50
+expect Test Room add Unconfigured Source 9 Mock Dsm SPDIF2 Digital True True True 50 Volume 50
+expect Test Room add Unconfigured Source 10 Mock Dsm TOSLINK1 Digital True True True 50 Volume 50
+expect Test Room add Unconfigured Source 11 Mock Dsm TOSLINK2 Digital True True True 50 Volume 50
+expect Test Room update HasSourceControl False
+expect Test Room update HasSourceControl True
 empty
