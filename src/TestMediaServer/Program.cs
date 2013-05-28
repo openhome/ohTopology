@@ -278,6 +278,8 @@ namespace TestMediaServer
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Track].Value == "15");
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Title].Value == "All My Love");
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Duration].Value == "201");
+
+            session.Dispose();
         }
 
         // IWatcher<IMediaServerSnapshot>
@@ -352,7 +354,10 @@ namespace TestMediaServer
 
             using (var network = new Network(watchableThread, subscribeThread))
             {
-                network.Add(new DeviceMediaServerMock("4c494e4e-0026-0f99-1111-111111111111", network, "."));
+                network.Execute(() =>
+                {
+                    network.Execute("medium");
+                });
 
                 using (var client = new Client(network))
                 {

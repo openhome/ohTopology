@@ -36,7 +36,7 @@ namespace OpenHome.Av
         private readonly HttpFramework iHttpFramework;
         private readonly List<Tuple<Color, Color>> iColors;
 
-        public DeviceMediaServerMock(string aUdn, INetwork aNetwork, string aAppRoot)
+        public DeviceMediaServerMock(INetwork aNetwork, string aUdn, string aAppRoot)
             : base(aUdn)
         {
             iNetwork = aNetwork;

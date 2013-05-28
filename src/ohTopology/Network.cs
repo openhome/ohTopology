@@ -244,6 +244,7 @@ namespace OpenHome.Av
             if (command == "small")
             {
                 CreateAndAdd(DeviceFactory.CreateDsm(this, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
+                CreateAndAdd(DeviceFactory.CreateMediaServer(this, "4c494e4e-0026-0f99-0000-000000000000"));
             }
             else if (command == "medium")
             {
@@ -251,6 +252,7 @@ namespace OpenHome.Av
                 CreateAndAdd(DeviceFactory.CreateDsm(this, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
                 CreateAndAdd(DeviceFactory.CreateDsm(this, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
                 CreateAndAdd(DeviceFactory.CreateDs(this, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
+                CreateAndAdd(DeviceFactory.CreateMediaServer(this, "4c494e4e-0026-0f99-0000-000000000000"));
             }
             else if (command == "large")
             {
@@ -282,12 +284,10 @@ namespace OpenHome.Av
                     {
                         CreateAndAdd(DeviceFactory.CreateDsm(this, udn));
                     }
-                    /*
                     else if (type == "mediaserver")
                     {
-                        AddDevice(new MockWatchableMediaServer(iThread, iSubscribeThread, udn));
+                        CreateAndAdd(DeviceFactory.CreateMediaServer(this, udn));
                     }
-                    */
                     else
                     {
                         throw new NotSupportedException();

@@ -345,5 +345,11 @@ namespace OpenHome.Av
         }
     }
 
-
+    public static class MocakbleExtensions
+    {
+        public static void Execute(this IMockable aMockable, string aValue)
+        {
+            aMockable.Execute(Tokeniser.Parse(aValue));
+        }
+    }
 }
