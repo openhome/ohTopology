@@ -82,7 +82,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ByteArray.cs" />
-    <Compile Include="BrowserExternalSource.cs" />
+    <Compile Include="ServiceMediaServerUpnp.cs" />
+    <Compile Include="ServiceMediaServerMock.cs" />
+    <Compile Include="DeviceMediaServerUpnp.cs" />
     <Compile Include="Media.cs" />
     <Compile Include="SourceController.cs" />
     <Compile Include="SourceControllerPlaylist.cs" />
@@ -93,7 +95,7 @@
     <Compile Include="StandardRoomWatchers.cs" />
     <Compile Include="VolumeController.cs" />
     <Compile Include="ServiceMediaServer.cs" />
-    <Compile Include="DeviceMediaServer.cs" />
+    <Compile Include="DeviceMediaServerMock.cs" />
     <Compile Include="DeviceFactory.cs" />
     <Compile Include="StandardBrowser.cs" />
     <Compile Include="Mockable.cs" />
