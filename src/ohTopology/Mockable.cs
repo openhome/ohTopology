@@ -237,6 +237,19 @@ namespace OpenHome.Av
             watchers.Add(new ResultUnorderedWatcher<T>(iRunner, aId, aWatchable, aFunction));
         }
 
+        public void Create<T>(string aId, IWatchableOrdered<T> aWatchable, Func<T, string> aFunction)
+        {
+            List<IDisposable> watchers;
+
+            if (!iWatchers.TryGetValue(aId, out watchers))
+            {
+                watchers = new List<IDisposable>();
+                iWatchers.Add(aId, watchers);
+            }
+
+            watchers.Add(new ResultOrderedWatcher<T>(iRunner, aId, aWatchable, aFunction));
+        }
+
         public void Destroy(string aId)
         {
             iWatchers[aId].ForEach(w => w.Dispose());
@@ -345,6 +358,60 @@ namespace OpenHome.Av
         }
     }
 
+    public class ResultOrderedWatcher<T> : IOrderedWatcher<T>, IDisposable
+    {
+        private readonly MockableScriptRunner iRunner;
+        private readonly string iId;
+        private IWatchableOrdered<T> iWatchable;
+        private readonly Func<T, string> iFunction;
+
+        public ResultOrderedWatcher(MockableScriptRunner aRunner, string aId, IWatchableOrdered<T> aWatchable, Func<T, string> aFunction)
+        {
+            iRunner = aRunner;
+            iId = aId;
+            iWatchable = aWatchable;
+            iFunction = aFunction;
+
+            iWatchable.AddWatcher(this);
+        }
+
+        // IOrderedWatcher<T>
+
+        public void OrderedOpen()
+        {
+        }
+
+        public void OrderedInitialised()
+        {
+        }
+
+        public void OrderedAdd(T aItem, uint aIndex)
+        {
+            iRunner.Result(iId + " add " + iFunction(aItem));
+        }
+
+        public void OrderedMove(T aItem, uint aFrom, uint aTo)
+        {
+            iRunner.Result(iId + " moved from " + aFrom + " to " + aTo + " " + iFunction(aItem));
+        }
+
+        public void OrderedRemove(T aItem, uint aIndex)
+        {
+            iRunner.Result(iId + " remove " + iFunction(aItem));
+        }
+
+        public void OrderedClose()
+        {
+        }
+
+        // IDisposable
+
+        public void Dispose()
+        {
+            iWatchable.RemoveWatcher(this);
+        }
+    }
+
     public static class MocakbleExtensions
     {
         public static void Execute(this IMockable aMockable, string aValue)
@@ -352,4 +419,5 @@ namespace OpenHome.Av
             aMockable.Execute(Tokeniser.Parse(aValue));
         }
     }
+
 }

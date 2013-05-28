@@ -24,12 +24,14 @@ namespace TestLinnHouse
             private ResultWatcherFactory iFactory;
             private IStandardRoomController iController;
             private IStandardRoomTime iTime;
+            private BrowserExternalSource iBrowserExternal;
 
             public RoomControllerWatcher(MockableScriptRunner aRunner, IStandardRoom aRoom)
             {
                 iFactory = new ResultWatcherFactory(aRunner);
                 iController = new StandardRoomController(aRoom);
                 iTime = new StandardRoomTime(aRoom);
+                iBrowserExternal = new BrowserExternalSource(aRoom);
 
                 iFactory.Create<bool>(iController.Name, iController.Active, v => "Controller Active " + v);
                 iFactory.Create<bool>(iController.Name, iController.HasVolume, v => "HasVolume " + v);
@@ -42,6 +44,29 @@ namespace TestLinnHouse
                 iFactory.Create<bool>(iTime.Name, iTime.HasTime, v => "HasTime " + v);
                 iFactory.Create<uint>(iTime.Name, iTime.Duration, v => "Duration " + v);
                 iFactory.Create<uint>(iTime.Name, iTime.Seconds, v => "Seconds " + v);
+
+                iFactory.Create<ITopology4Source>(iBrowserExternal.Name, iBrowserExternal.Unconfigured, v =>
+                {
+                    string info = "";
+                    info += string.Format("Unconfigured Source {0} {1} {2} {3} {4} {5} {6} {7} Volume",
+                        v.Index, v.Group, v.Name, v.Type, v.Visible, v.HasInfo, v.HasTime, v.Device.Udn);
+                    foreach (var g in v.Volumes)
+                    {
+                        info += " " + g.Device.Udn;
+                    }
+                    return info;
+                });
+                iFactory.Create<ITopology4Source>(iBrowserExternal.Name, iBrowserExternal.Configured, v =>
+                {
+                    string info = "";
+                    info += string.Format("Configured Source {0} {1} {2} {3} {4} {5} {6} {7} Volume",
+                        v.Index, v.Group, v.Name, v.Type, v.Visible, v.HasInfo, v.HasTime, v.Device.Udn);
+                    foreach (var g in v.Volumes)
+                    {
+                        info += " " + g.Device.Udn;
+                    }
+                    return info;
+                });
             }
 
             public void Dispose()
@@ -49,6 +74,7 @@ namespace TestLinnHouse
                 iFactory.Dispose();
                 iController.Dispose();
                 iTime.Dispose();
+                iBrowserExternal.Dispose();
             }
         }
 

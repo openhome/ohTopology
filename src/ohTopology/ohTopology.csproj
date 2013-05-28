@@ -81,11 +81,11 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BrowserExternalSource.cs" />
     <Compile Include="ByteArray.cs" />
     <Compile Include="ServiceMediaServerUpnp.cs" />
     <Compile Include="ServiceMediaServerMock.cs" />
     <Compile Include="DeviceMediaServerUpnp.cs" />
-    <Compile Include="ExternalSourceBrowser.cs" />
     <Compile Include="Media.cs" />
     <Compile Include="SourceController.cs" />
     <Compile Include="SourceControllerPlaylist.cs" />

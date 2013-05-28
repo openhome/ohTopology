@@ -435,6 +435,7 @@ namespace OpenHome.Av
 
             iJoiners = new List<Action>();
             iRoots = new List<ITopology4Root>();
+            iCurrentSources = new List<ITopology4Source>();
             iSources = new List<ITopology4Source>();
             iSenders = new List<ITopology4Group>();
 
@@ -589,7 +590,7 @@ namespace OpenHome.Av
             if (aMode == "Playlist")
             {
                 uint id = uint.Parse(aUri);
-                foreach (ITopology4Source s in iSources)
+                foreach (ITopology4Source s in iCurrentSources)
                 {
                     if (s.Type == "Playlist")
                     {
@@ -612,7 +613,7 @@ namespace OpenHome.Av
             else if (aMode == "Receiver")
             {
                 string udn = aUri;
-                foreach (ITopology4Source s in iSources)
+                foreach (ITopology4Source s in iCurrentSources)
                 {
                     if (s.Type == "Receiver")
                     {
@@ -645,7 +646,7 @@ namespace OpenHome.Av
             else if (aMode == "External")
             {
                 uint index = uint.Parse(aUri);
-                foreach (ITopology4Source s in iSources)
+                foreach (ITopology4Source s in iCurrentSources)
                 {
                     if (s.Index == index)
                     {
@@ -684,11 +685,12 @@ namespace OpenHome.Av
 
             foreach (ITopology4Root r in aValue)
             {
+                iSources.AddRange(r.Sources);
                 r.Source.AddWatcher(this);
                 r.Senders.AddWatcher(this);
             }
 
-            iWatchableSources.Update(new List<ITopology4Source>(iSources));
+            iWatchableSources.Update(iSources);
             SelectFirstSource();
 
             EvaluateZoneable();
@@ -696,6 +698,8 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, IEnumerable<ITopology4Root> aValue, IEnumerable<ITopology4Root> aPrevious)
         {
+            iSources = new List<ITopology4Source>();
+
             foreach (ITopology4Root r in aPrevious)
             {
                 r.Source.RemoveWatcher(this);
@@ -706,11 +710,12 @@ namespace OpenHome.Av
 
             foreach (ITopology4Root r in aValue)
             {
+                iSources.AddRange(r.Sources);
                 r.Source.AddWatcher(this);
                 r.Senders.AddWatcher(this);
             }
 
-            iWatchableSources.Update(new List<ITopology4Source>(iSources));
+            iWatchableSources.Update(iSources);
             SelectSource();
 
             EvaluateZoneable();
@@ -739,25 +744,25 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, ITopology4Source aValue)
         {
-            iSources.Add(aValue);
+            iCurrentSources.Add(aValue);
         }
 
         public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
         {
-            iSources.Remove(aPrevious);
-            iSources.Add(aValue);
+            iCurrentSources.Remove(aPrevious);
+            iCurrentSources.Add(aValue);
 
             SelectSource();
         }
 
         public void ItemClose(string aId, ITopology4Source aValue)
         {
-            iSources.Remove(aValue);
+            iCurrentSources.Remove(aValue);
         }
 
         private void SelectFirstSource()
         {
-            ITopology4Source source = iSources[0];
+            ITopology4Source source = iCurrentSources[0];
             iWatchableSource = new Watchable<ITopology4Source>(iThread, "Source", source);
             iInfoWatcher = new InfoWatcher(iThread, source.Device, iDetails, iMetadata, iMetatext);
             iSource = source;
@@ -765,9 +770,9 @@ namespace OpenHome.Av
 
         private void SelectSource()
         {
-            ITopology4Source source = iSources[0];
+            ITopology4Source source = iCurrentSources[0];
 
-            foreach (ITopology4Source s in iSources)
+            foreach (ITopology4Source s in iCurrentSources)
             {
                 // if we find the same source as was previously selected
                 if (iSource.Index == s.Index && iSource.Device == s.Device)
@@ -849,7 +854,7 @@ namespace OpenHome.Av
 
         private void EvaluateZoneable()
         {
-            foreach (ITopology4Source s in iSources)
+            foreach (ITopology4Source s in iCurrentSources)
             {
                 if (s.Type == "Receiver")
                 {
@@ -869,6 +874,7 @@ namespace OpenHome.Av
         private IEnumerable<ITopology4Root> iRoots;
         private List<Action> iJoiners;
         private ITopology4Source iSource;
+        private List<ITopology4Source> iCurrentSources;
         private List<ITopology4Source> iSources;
         private List<ITopology4Group> iSenders;
         private Watchable<ITopology4Source> iWatchableSource;
