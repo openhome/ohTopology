@@ -889,7 +889,13 @@ namespace OpenHome.Av
         private Watchable<RoomMetatext> iMetatext;
     }
 
-    public class StandardHouse : IUnorderedWatcher<ITopology4Room>, IUnorderedWatcher<IDevice>, IDisposable
+    public interface IStandardHouse
+    {
+        IWatchableOrdered<IStandardRoom> Rooms { get; }
+        IWatchableOrdered<IProxyMediaServer> Servers { get; }
+    }
+
+    public class StandardHouse : IUnorderedWatcher<ITopology4Room>, IUnorderedWatcher<IDevice>, IStandardHouse, IDisposable
     {
         public StandardHouse(INetwork aNetwork, ITopology4 aTopology4)
         {
