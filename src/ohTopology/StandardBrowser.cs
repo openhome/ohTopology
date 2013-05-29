@@ -889,19 +889,23 @@ namespace OpenHome.Av
         private Watchable<RoomMetatext> iMetatext;
     }
 
-    public class StandardHouse : IUnorderedWatcher<ITopology4Room>, IDisposable
+    public class StandardHouse : IUnorderedWatcher<ITopology4Room>, IUnorderedWatcher<IDevice>, IDisposable
     {
-        public StandardHouse(IWatchableThread aThread, ITopology4 aTopology4)
+        public StandardHouse(INetwork aNetwork, ITopology4 aTopology4)
         {
-            iThread = aThread;
+            iNetwork = aNetwork;
             iTopology4 = aTopology4;
 
-            iWatchableRooms = new WatchableOrdered<IStandardRoom>(iThread);
-            iRooms = new List<StandardRoom>();
+            iWatchableServers = new WatchableOrdered<IProxyMediaServer>(iNetwork);
+            iMediaServers = iNetwork.Create<IProxyMediaServer>();
+            iServerLookup = new Dictionary<IDevice, IProxyMediaServer>();
+ 
+            iWatchableRooms = new WatchableOrdered<IStandardRoom>(iNetwork);
             iRoomLookup = new Dictionary<ITopology4Room, StandardRoom>();
 
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
+                iMediaServers.AddWatcher(this);
                 iTopology4.Rooms.AddWatcher(this);
             });
         }
@@ -913,13 +917,20 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("StandardHouse.Dispose");
             }
 
-            iThread.Execute(() =>
+            iNetwork.Execute(() =>
             {
+                iMediaServers.RemoveWatcher(this);
+
+                foreach (var kvp in iServerLookup)
+                {
+                    kvp.Value.Dispose();
+                }
+
                 iTopology4.Rooms.RemoveWatcher(this);
 
-                foreach (StandardRoom room in iRooms)
+                foreach (var kvp in iRoomLookup)
                 {
-                    room.Dispose();
+                    kvp.Value.Dispose();
                 }
             });
             iWatchableRooms.Dispose();
@@ -927,6 +938,11 @@ namespace OpenHome.Av
 
             iRoomLookup.Clear();
             iRoomLookup = null;
+
+            iWatchableServers.Dispose();
+            iWatchableServers = null;
+
+            iServerLookup = null;
 
             iTopology4 = null;
         }
@@ -939,9 +955,17 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchableOrdered<IProxyMediaServer> Servers
+        {
+            get
+            {
+                return iWatchableServers;
+            }
+        }
+
         public ITopology4Group Sender(string aUdn)
         {
-            foreach (StandardRoom r in iRooms)
+            foreach (StandardRoom r in iRoomLookup.Values)
             {
                 foreach (ITopology4Group s in r.Senders)
                 {
@@ -967,21 +991,21 @@ namespace OpenHome.Av
 
         public void UnorderedAdd(ITopology4Room aRoom)
         {
-            StandardRoom room = new StandardRoom(iThread, this, aRoom);
+            StandardRoom room = new StandardRoom(iNetwork, this, aRoom);
 
             // calculate where to insert the room
             int index = 0;
-            for (; index < iRooms.Count; ++index)
+            foreach (IStandardRoom r in iWatchableRooms.Values)
             {
-                if (room.Name.CompareTo(iRooms[index].Name) < 0)
+                if (room.Name.CompareTo(r.Name) < 0)
                 {
                     break;
                 }
+                ++index;
             }
 
             // insert the room
             iRoomLookup.Add(aRoom, room);
-            iRooms.Insert(index, room);
             iWatchableRooms.Add(room, (uint)index);
         }
 
@@ -990,16 +1014,52 @@ namespace OpenHome.Av
             // remove the corresponding Room from the watchable collection
             StandardRoom room = iRoomLookup[aRoom];
 
-            int index = iRooms.IndexOf(room);
-
             iRoomLookup.Remove(aRoom);
-            iRooms.RemoveAt(index);
-            iWatchableRooms.Remove(room, (uint)index);
+            iWatchableRooms.Remove(room);
 
             // schedule the Room object for disposal
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 room.Dispose();
+            });
+        }
+
+        public void UnorderedAdd(IDevice aItem)
+        {
+            aItem.Create<IProxyMediaServer>((t) =>
+            {
+                iNetwork.Schedule(() =>
+                {
+                    // calculate where to insert the server
+                    int index = 0;
+                    foreach (IProxyMediaServer ms in iWatchableServers.Values)
+                    {
+                        if (t.ProductName.CompareTo(ms.ProductName) < 0)
+                        {
+                            break;
+                        }
+                        ++index;
+                    }
+
+                    // insert the server
+                    iServerLookup.Add(aItem, t);
+                    iWatchableServers.Add(t, (uint)index);
+                });
+            });
+        }
+
+        public void UnorderedRemove(IDevice aItem)
+        {
+            // remove the corresponding server from the watchable collection
+            IProxyMediaServer proxy = iServerLookup[aItem];
+
+            iServerLookup.Remove(aItem);
+            iWatchableServers.Remove(proxy);
+
+            // schedule the server object for disposal
+            iNetwork.Schedule(() =>
+            {
+                proxy.Dispose();
             });
         }
 
@@ -1007,11 +1067,14 @@ namespace OpenHome.Av
         {
         }
 
-        private IWatchableThread iThread;
+        private INetwork iNetwork;
         private ITopology4 iTopology4;
 
+        private WatchableOrdered<IProxyMediaServer> iWatchableServers;
+        private IWatchableUnordered<IDevice> iMediaServers;
+        private Dictionary<IDevice, IProxyMediaServer> iServerLookup;
+
         private WatchableOrdered<IStandardRoom> iWatchableRooms;
-        private List<StandardRoom> iRooms;
         private Dictionary<ITopology4Room, StandardRoom> iRoomLookup;
     }
 }
