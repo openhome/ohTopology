@@ -77,13 +77,13 @@ namespace OpenHome.Av
         private Watchable<bool> iEnabled;
     }
 
-    public class StandardRoomWatcherPlaylist : StandardRoomWatcher, IOrderedWatcher<IProxyMediaServer>
+    public class StandardRoomWatcherMusic : StandardRoomWatcher, IOrderedWatcher<IProxyMediaServer>
     {
         private IStandardHouse iHouse;
         private uint iServerCount;
         private bool iHasCompatibleSource;
 
-        public StandardRoomWatcherPlaylist(IStandardHouse aHouse, IStandardRoom aRoom)
+        public StandardRoomWatcherMusic(IStandardHouse aHouse, IStandardRoom aRoom)
             : base(aRoom)
         {
             iHouse = aHouse;
