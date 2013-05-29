@@ -81,8 +81,6 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BrowserExternalSource.cs" />
-    <Compile Include="BrowserRadioPreset.cs" />
     <Compile Include="ByteArray.cs" />
     <Compile Include="ServiceMediaServerUpnp.cs" />
     <Compile Include="ServiceMediaServerMock.cs" />

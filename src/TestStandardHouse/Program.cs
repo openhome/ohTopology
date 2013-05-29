@@ -24,16 +24,16 @@ namespace TestLinnHouse
             private ResultWatcherFactory iFactory;
             private IStandardRoomController iController;
             private IStandardRoomTime iTime;
-            private BrowserExternalSource iBrowserExternal;
-            private BrowserRadioPreset iBrowserPresets;
+            private StandardRoomWatcherExternal iWatcherExternal;
+            private StandardRoomWatcherRadio iWatcherRadio;
 
             public RoomControllerWatcher(MockableScriptRunner aRunner, IStandardRoom aRoom)
             {
                 iFactory = new ResultWatcherFactory(aRunner);
                 iController = new StandardRoomController(aRoom);
                 iTime = new StandardRoomTime(aRoom);
-                iBrowserExternal = new BrowserExternalSource(aRoom);
-                iBrowserPresets = new BrowserRadioPreset(aRoom);
+                iWatcherExternal = new StandardRoomWatcherExternal(aRoom);
+                iWatcherRadio = new StandardRoomWatcherRadio(aRoom);
 
                 iFactory.Create<bool>(iController.Name, iController.Active, v => "Controller Active " + v);
                 iFactory.Create<bool>(iController.Name, iController.HasVolume, v => "HasVolume " + v);
@@ -47,7 +47,7 @@ namespace TestLinnHouse
                 iFactory.Create<uint>(iTime.Name, iTime.Duration, v => "Duration " + v);
                 iFactory.Create<uint>(iTime.Name, iTime.Seconds, v => "Seconds " + v);
 
-                iFactory.Create<ITopology4Source>(iBrowserExternal.Name, iBrowserExternal.Unconfigured, v =>
+                iFactory.Create<ITopology4Source>(iWatcherExternal.Name, iWatcherExternal.Unconfigured, v =>
                 {
                     string info = "";
                     info += string.Format("Unconfigured Source {0} {1} {2} {3} {4} {5} {6} {7} Volume",
@@ -58,7 +58,7 @@ namespace TestLinnHouse
                     }
                     return info;
                 });
-                iFactory.Create<ITopology4Source>(iBrowserExternal.Name, iBrowserExternal.Configured, v =>
+                iFactory.Create<ITopology4Source>(iWatcherExternal.Name, iWatcherExternal.Configured, v =>
                 {
                     string info = "";
                     info += string.Format("Configured Source {0} {1} {2} {3} {4} {5} {6} {7} Volume",
@@ -70,17 +70,25 @@ namespace TestLinnHouse
                     return info;
                 });
 
-                /*iFactory.Create<IEnumerable<IRadioPreset>>(iBrowserPresets.Name, iBrowserPresets.Presets, v =>
+                iFactory.Create<bool>(iWatcherRadio.Name, iWatcherRadio.Enabled, v =>
                 {
-                    string info = "\nPresets begin\n";
-                    foreach (IRadioPreset p in v)
+                    if (v)
                     {
-                        info += p.Metadata;
-                        info += "\n";
+                        iFactory.Create<IEnumerable<IRadioPreset>>(iWatcherRadio.Name, iWatcherRadio.Presets, w =>
+                        {
+                            string info = "\nPresets begin\n";
+                            foreach (IRadioPreset p in w)
+                            {
+                                info += p.Metadata;
+                                info += "\n";
+                            }
+                            info += "Presets end";
+                            return info;
+                        });
                     }
-                    info += "Presets end";
-                    return info;
-                });*/
+
+                    return "Enabled " + v;
+                });
             }
 
             public void Dispose()
@@ -88,8 +96,8 @@ namespace TestLinnHouse
                 iFactory.Dispose();
                 iController.Dispose();
                 iTime.Dispose();
-                iBrowserExternal.Dispose();
-                iBrowserPresets.Dispose();
+                iWatcherExternal.Dispose();
+                iWatcherRadio.Dispose();
             }
         }
 

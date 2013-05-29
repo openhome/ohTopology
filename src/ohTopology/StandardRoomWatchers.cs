@@ -7,6 +7,7 @@ namespace OpenHome.Av
 {
     public interface IStandardRoomWatcher : IDisposable
     {
+        string Name { get; }
         IWatchable<bool> Enabled { get; }
     }
 
@@ -16,6 +17,7 @@ namespace OpenHome.Av
         {
             iRoom = aRoom;
             iActive = true;
+            iEnabled = new Watchable<bool>(iRoom.WatchableThread, "Enabled", false);
 
             iRoom.Sources.AddWatcher(this);
 
@@ -24,6 +26,11 @@ namespace OpenHome.Av
 
         public virtual void Dispose()
         {
+            WatchableThread.Execute(() =>
+            {
+                iRoom.Sources.RemoveWatcher(this);
+            });
+
             if (iActive)
             {
                 iRoom.UnJoin(SetInactive);
@@ -33,6 +40,14 @@ namespace OpenHome.Av
             iEnabled = null;
 
             iRoom = null;
+        }
+
+        public string Name
+        {
+            get
+            {
+                return iRoom.Name;
+            }
         }
 
         public IWatchable<bool> Enabled
@@ -45,24 +60,35 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, IEnumerable<ITopology4Source> aValue)
         {
-            iEnabled.Update(EvaluateEnabled(aValue));
+            EvaluateEnabledOpen(aValue);
         }
 
         public void ItemUpdate(string aId, IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
         {
-            iEnabled.Update(EvaluateEnabled(aValue));
+            EvaluateEnabledUpdate(aValue, aPrevious);
         }
 
         public void ItemClose(string aId, IEnumerable<ITopology4Source> aValue)
         {
+            EvaluateEnabledClose(aValue);
             iEnabled.Update(false);
         }
 
-        protected abstract bool EvaluateEnabled(IEnumerable<ITopology4Source> aValue);
+        protected abstract void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue);
+        protected abstract void EvaluateEnabledUpdate(IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious);
+        protected virtual void EvaluateEnabledClose(IEnumerable<ITopology4Source> aValue) { }
         
         protected void SetEnabled(bool aValue)
         {
             iEnabled.Update(aValue);
+        }
+
+        protected IWatchableThread WatchableThread
+        {
+            get
+            {
+                return iRoom.WatchableThread;
+            }
         }
 
         private void SetInactive()
@@ -100,7 +126,17 @@ namespace OpenHome.Av
             iHouse.Servers.RemoveWatcher(this);
         }
 
-        protected override bool EvaluateEnabled(IEnumerable<ITopology4Source> aValue)
+        protected override void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue)
+        {
+            EvaluateEnabled(aValue);
+        }
+
+        protected override void EvaluateEnabledUpdate(IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
+        {
+            EvaluateEnabled(aValue);
+        }
+
+        private void EvaluateEnabled(IEnumerable<ITopology4Source> aValue)
         {
             iHasCompatibleSource = false;
             foreach (ITopology4Source s in aValue)
@@ -108,11 +144,12 @@ namespace OpenHome.Av
                 if (s.Type == "Playlist" || s.Type == "Radio")
                 {
                     iHasCompatibleSource = true;
-                    return (iServerCount > 0);
+                    SetEnabled(iServerCount > 0);
+                    return;
                 }
             }
 
-            return false;
+            SetEnabled(false);
         }
 
         public void OrderedOpen()
@@ -146,22 +183,64 @@ namespace OpenHome.Av
 
     public class StandardRoomWatcherRadio : StandardRoomWatcher
     {
+        private IProxyRadio iRadio;
+
         public StandardRoomWatcherRadio(IStandardRoom aRoom)
             : base(aRoom)
         {
         }
 
-        protected override bool EvaluateEnabled(IEnumerable<ITopology4Source> aValue)
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            if (iRadio != null)
+            {
+                iRadio.Dispose();
+                iRadio = null;
+            }
+        }
+
+        public IWatchable<IEnumerable<IRadioPreset>> Presets
+        {
+            get
+            {
+                return iRadio.Presets;
+            }
+        }
+
+        protected override void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue)
+        {
+            EvaluateEnabled(aValue);
+        }
+
+        protected override void EvaluateEnabledUpdate(IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
+        {
+            SetEnabled(false);
+
+            if (iRadio != null)
+            {
+                iRadio.Dispose();
+                iRadio = null;
+            }
+
+            EvaluateEnabled(aValue);
+        }
+
+        private void EvaluateEnabled(IEnumerable<ITopology4Source> aValue)
         {
             foreach (ITopology4Source s in aValue)
             {
                 if (s.Type == "Radio")
                 {
-                    return true;
+                    s.Device.Create<IProxyRadio>((radio) =>
+                    {
+                        iRadio = radio;
+                        SetEnabled(true);
+                    });
+                    return;
                 }
             }
-
-            return false;
         }
     }
 
@@ -172,38 +251,176 @@ namespace OpenHome.Av
         {
         }
 
-        protected override bool EvaluateEnabled(IEnumerable<ITopology4Source> aValue)
+        protected override void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue)
+        {
+            EvaluateEnabled(aValue);
+        }
+
+        protected override void EvaluateEnabledUpdate(IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
+        {
+            EvaluateEnabled(aValue);
+        }
+
+        private void EvaluateEnabled(IEnumerable<ITopology4Source> aValue)
         {
             foreach (ITopology4Source s in aValue)
             {
                 if (s.Type == "Receiver")
                 {
-                    return true;
+                    SetEnabled(true);
+                    return;
                 }
             }
 
-            return false;
+            SetEnabled(false);
         }
     }
 
     public class StandardRoomWatcherExternal : StandardRoomWatcher
     {
+        private WatchableOrdered<ITopology4Source> iConfigured;
+        private WatchableOrdered<ITopology4Source> iUnconfigured;
+
         public StandardRoomWatcherExternal(IStandardRoom aRoom)
             : base(aRoom)
         {
         }
 
-        protected override bool EvaluateEnabled(IEnumerable<ITopology4Source> aValue)
+        public IWatchableOrdered<ITopology4Source> Configured
         {
+            get
+            {
+                return iConfigured;
+            }
+        }
+
+        public IWatchableOrdered<ITopology4Source> Unconfigured
+        {
+            get
+            {
+                return iUnconfigured;
+            }
+        }
+
+        protected override void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue)
+        {
+            iConfigured = new WatchableOrdered<ITopology4Source>(WatchableThread);
+            iUnconfigured = new WatchableOrdered<ITopology4Source>(WatchableThread);
+            EvaluateEnabled(aValue);
+        }
+
+        protected override void EvaluateEnabledUpdate(IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
+        {
+            EvaluateEnabled(aValue);
+        }
+
+        protected override void EvaluateEnabledClose(IEnumerable<ITopology4Source> aValue)
+        {
+            base.EvaluateEnabledClose(aValue);
+
+            iConfigured.Dispose();
+            iConfigured = null;
+
+            iUnconfigured.Dispose();
+            iUnconfigured = null;
+        }
+
+        private void EvaluateEnabled(IEnumerable<ITopology4Source> aValue)
+        {
+            SetEnabled(BuildLists(aValue));
+        }
+
+        private bool BuildLists(IEnumerable<ITopology4Source> aValue)
+        {
+            iUnconfigured.Clear();
+            iConfigured.Clear();
+
+            uint cIndex = 0;
+            uint uIndex = 0;
+            bool hasExternal = false;
             foreach (ITopology4Source s in aValue)
             {
-                if (s.Type == "Digital" || s.Type == "Analog" || s.Type == "Hdmi")
+                if (IsExternal(s))
+                {
+                    hasExternal = true;
+
+                    if (IsConfigured(s))
+                    {
+                        iConfigured.Add(s, cIndex);
+                        cIndex++;
+                    }
+                    else
+                    {
+                        iUnconfigured.Add(s, uIndex);
+                        uIndex++;
+                    }
+                }
+            }
+
+            return hasExternal;
+        }
+
+        private bool IsExternal(ITopology4Source aSource)
+        {
+            return (aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi");
+        }
+
+        private bool IsConfigured(ITopology4Source aSource)
+        {
+            if (aSource.Name.StartsWith("Hdmi"))
+            {
+                try
+                {
+                    uint.Parse(aSource.Name.Substring(4));
+                    return false;
+                }
+                catch (FormatException)
                 {
                     return true;
                 }
             }
+            if (aSource.Name.StartsWith("Analog"))
+            {
+                try
+                {
+                    uint.Parse(aSource.Name.Substring(6));
+                    return false;
+                }
+                catch (FormatException)
+                {
+                    return true;
+                }
+            }
+            if (aSource.Name.StartsWith("SPDIF"))
+            {
+                try
+                {
+                    uint.Parse(aSource.Name.Substring(5));
+                    return false;
+                }
+                catch (FormatException)
+                {
+                    return true;
+                }
+            }
+            if (aSource.Name.StartsWith("TOSLINK"))
+            {
+                try
+                {
+                    uint.Parse(aSource.Name.Substring(7));
+                    return false;
+                }
+                catch (FormatException)
+                {
+                    return true;
+                }
+            }
+            if (aSource.Name == "Phono")
+            {
+                return false;
+            }
 
-            return false;
+            return true;
         }
     }
 }

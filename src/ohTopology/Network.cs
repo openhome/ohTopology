@@ -154,9 +154,14 @@ namespace OpenHome.Av
             }
         }
 
-        private void CreateAndAdd(Device aDevice)
+        private void Create(Device aDevice)
         {
             iMockDevices.Add(aDevice.Udn, aDevice);
+        }
+
+        private void CreateAndAdd(Device aDevice)
+        {
+            Create(aDevice);
             Add(aDevice);
         }
 
