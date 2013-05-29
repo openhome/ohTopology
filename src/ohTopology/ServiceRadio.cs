@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Xml;
 
 using OpenHome.Os.App;
 using OpenHome.Net.ControlPoint.Proxies;
@@ -14,7 +15,7 @@ namespace OpenHome.Av
     public interface IProxyRadio : IProxy
     {
         IWatchable<uint> Id { get; }
-        IWatchable<IList<uint>> IdArray { get; }
+        IWatchable<IEnumerable<uint>> IdArray { get; }
         IWatchable<string> TransportState { get; }
         IWatchable<IInfoMetadata> Metadata { get; }
 
@@ -40,7 +41,7 @@ namespace OpenHome.Av
             : base(aNetwork)
         {
             iId = new Watchable<uint>(aNetwork, "Id", 0);
-            iIdArray = new Watchable<IList<uint>>(aNetwork, "IdArray", new List<uint>());
+            iIdArray = new Watchable<IEnumerable<uint>>(aNetwork, "IdArray", new List<uint>());
             iTransportState = new Watchable<string>(aNetwork, "TransportState", string.Empty);
             iMetadata = new Watchable<IInfoMetadata>(aNetwork, "Metadata", new InfoMetadata());
         }
@@ -74,8 +75,8 @@ namespace OpenHome.Av
                 return iId;
             }
         }
-        
-        public IWatchable<IList<uint>> IdArray
+
+        public IWatchable<IEnumerable<uint>> IdArray
         {
             get
             {
@@ -129,7 +130,7 @@ namespace OpenHome.Av
         protected string iProtocolInfo;
 
         protected Watchable<uint> iId;
-        protected Watchable<IList<uint>> iIdArray;
+        protected Watchable<IEnumerable<uint>> iIdArray;
         protected Watchable<string> iTransportState;
         protected Watchable<IInfoMetadata> iMetadata;
     }
@@ -312,13 +313,12 @@ namespace OpenHome.Av
 
     class ServiceRadioMock : ServiceRadio, IMockable
     {
-        public ServiceRadioMock(INetwork aNetwork, uint aId, IList<uint> aIdArray, IInfoMetadata aMetadata, string aProtocolInfo, string aTransportState, uint aChannelsMax)
+        public ServiceRadioMock(INetwork aNetwork, uint aId, IList<uint> aIdArray, IList<string> aPresets, IInfoMetadata aMetadata, string aProtocolInfo, string aTransportState, uint aChannelsMax)
             : base(aNetwork)
         {
-            iNetwork = aNetwork;
-
             iChannelsMax = aChannelsMax;
             iProtocolInfo = aProtocolInfo;
+            iPresets = aPresets;
 
             iId.Update(aId);
             iIdArray.Update(aIdArray);
@@ -330,7 +330,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                iNetwork.Schedule(() =>
+                Network.Schedule(() =>
                 {
                     iTransportState.Update("Playing");
                 });
@@ -342,7 +342,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                iNetwork.Schedule(() =>
+                Network.Schedule(() =>
                 {
                     iTransportState.Update("Paused");
                 });
@@ -354,7 +354,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                iNetwork.Schedule(() =>
+                Network.Schedule(() =>
                 {
                     iTransportState.Update("Stopped");
                 });
@@ -382,7 +382,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                iNetwork.Schedule(() =>
+                Network.Schedule(() =>
                 {
                     iId.Update(aId);
                 });
@@ -394,7 +394,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                iNetwork.Schedule(() =>
+                Network.Schedule(() =>
                 {
                     iMetadata.Update(new InfoMetadata(aMetadata, aUri));
                 });
@@ -406,7 +406,16 @@ namespace OpenHome.Av
         {
             Task<string> task = Task.Factory.StartNew(() =>
             {
-                return string.Empty;
+                int index = 0;
+                foreach(uint v in iIdArray.Value)
+                {
+                    if (v == aId)
+                    {
+                        break;
+                    }
+                    ++index;
+                }
+                return iPresets[index];
             });
             return task;
         }
@@ -415,7 +424,45 @@ namespace OpenHome.Av
         {
             Task<string> task = Task.Factory.StartNew(() =>
             {
-                return string.Empty;
+                XmlDocument document = new XmlDocument();
+
+                Network.Execute(() =>
+                {
+                    XmlNode l = document.CreateElement("ChannelList");
+
+                    string[] ids = aIdList.Split(' ');
+                    foreach (string id in ids)
+                    {
+                        if (id != "0" && !string.IsNullOrEmpty(id))
+                        {
+                            XmlNode e = document.CreateElement("Entry");
+
+                            int index = 0;
+                            foreach (uint v in iIdArray.Value)
+                            {
+                                if (v == uint.Parse(id))
+                                {
+                                    XmlNode i = document.CreateElement("Id");
+                                    i.AppendChild(document.CreateTextNode(id));
+                                    XmlNode m = document.CreateElement("Metadata");
+                                    m.AppendChild(document.CreateTextNode(iPresets[index]));
+
+                                    e.AppendChild(i);
+                                    e.AppendChild(m);
+
+                                    break;
+                                }
+                                ++index;
+                            }
+
+                            l.AppendChild(e);
+                        }
+                    }
+
+                    document.AppendChild(l);
+                });
+
+                return document.OuterXml;
             });
             return task;
         }
@@ -469,7 +516,7 @@ namespace OpenHome.Av
             }
         }
 
-        private INetwork iNetwork;
+        private IList<string> iPresets;
     }
 
     public class ProxyRadio : Proxy<ServiceRadio>, IProxyRadio
@@ -484,7 +531,7 @@ namespace OpenHome.Av
             get { return iService.Id; }
         }
 
-        public IWatchable<IList<uint>> IdArray
+        public IWatchable<IEnumerable<uint>> IdArray
         {
             get { return iService.IdArray; }
         }

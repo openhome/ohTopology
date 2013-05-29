@@ -14,7 +14,7 @@ namespace OpenHome.Av
     public interface IProxyPlaylist : IProxy
     {
         IWatchable<uint> Id { get; }
-        IWatchable<IList<uint>> IdArray { get; }
+        IWatchable<IEnumerable<uint>> IdArray { get; }
         IWatchable<string> TransportState { get; }
         IWatchable<bool> Repeat { get; }
         IWatchable<bool> Shuffle { get; }
@@ -48,7 +48,7 @@ namespace OpenHome.Av
             : base(aNetwork)
         {
             iId = new Watchable<uint>(Network, "Id", 0);
-            iIdArray = new Watchable<IList<uint>>(Network, "IdArray", new List<uint>());
+            iIdArray = new Watchable<IEnumerable<uint>>(Network, "IdArray", new List<uint>());
             iTransportState = new Watchable<string>(Network, "TransportState", string.Empty);
             iRepeat = new Watchable<bool>(Network, "Repeat", false);
             iShuffle = new Watchable<bool>(Network, "Shuffle", true);
@@ -87,7 +87,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<IList<uint>> IdArray
+        public IWatchable<IEnumerable<uint>> IdArray
         {
             get
             {
@@ -157,7 +157,7 @@ namespace OpenHome.Av
 
         protected IWatchableThread iThread;
         protected Watchable<uint> iId;
-        protected Watchable<IList<uint>> iIdArray;
+        protected Watchable<IEnumerable<uint>> iIdArray;
         protected Watchable<string> iTransportState;
         protected Watchable<bool> iRepeat;
         protected Watchable<bool> iShuffle;
@@ -672,7 +672,7 @@ namespace OpenHome.Av
             get { return iService.Id; }
         }
 
-        public IWatchable<IList<uint>> IdArray
+        public IWatchable<IEnumerable<uint>> IdArray
         {
             get { return iService.IdArray; }
         }

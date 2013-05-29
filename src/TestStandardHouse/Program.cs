@@ -25,6 +25,7 @@ namespace TestLinnHouse
             private IStandardRoomController iController;
             private IStandardRoomTime iTime;
             private BrowserExternalSource iBrowserExternal;
+            private BrowserRadioPreset iBrowserPresets;
 
             public RoomControllerWatcher(MockableScriptRunner aRunner, IStandardRoom aRoom)
             {
@@ -32,6 +33,7 @@ namespace TestLinnHouse
                 iController = new StandardRoomController(aRoom);
                 iTime = new StandardRoomTime(aRoom);
                 iBrowserExternal = new BrowserExternalSource(aRoom);
+                iBrowserPresets = new BrowserRadioPreset(aRoom);
 
                 iFactory.Create<bool>(iController.Name, iController.Active, v => "Controller Active " + v);
                 iFactory.Create<bool>(iController.Name, iController.HasVolume, v => "HasVolume " + v);
@@ -67,6 +69,18 @@ namespace TestLinnHouse
                     }
                     return info;
                 });
+
+                /*iFactory.Create<IEnumerable<IRadioPreset>>(iBrowserPresets.Name, iBrowserPresets.Presets, v =>
+                {
+                    string info = "\nPresets begin\n";
+                    foreach (IRadioPreset p in v)
+                    {
+                        info += p.Metadata;
+                        info += "\n";
+                    }
+                    info += "Presets end";
+                    return info;
+                });*/
             }
 
             public void Dispose()
@@ -75,6 +89,7 @@ namespace TestLinnHouse
                 iController.Dispose();
                 iTime.Dispose();
                 iBrowserExternal.Dispose();
+                iBrowserPresets.Dispose();
             }
         }
 
@@ -163,7 +178,7 @@ namespace TestLinnHouse
             Topology3 topology3 = new Topology3(topology2);
             Topology4 topology4 = new Topology4(topology3);
 
-            StandardHouse house = new StandardHouse(thread, topology4);
+            StandardHouse house = new StandardHouse(network, topology4);
 
             MockableScriptRunner runner = new MockableScriptRunner();
 
