@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.IO;
+using System.Text;
 
 using System.Xml;
 using System.Xml.Linq;
@@ -81,6 +82,8 @@ namespace OpenHome.Av
 
         private IEnumerable<IMediaMetadata> ReadMetadata(INetwork aNetwork, string aAppRoot)
         {
+            ZipConstants.DefaultCodePage = Encoding.Default.CodePage;
+
             var path = Path.Combine(aAppRoot, "MockMediaServer.zip");
 
             using (var file = File.Open(path, FileMode.Open))
