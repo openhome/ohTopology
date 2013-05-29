@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.IO;
+using System.Reflection;
 
 using OpenHome.Net.ControlPoint;
 using OpenHome.Os.App;
@@ -179,7 +181,7 @@ namespace OpenHome.Av
 
         public static Device CreateMediaServer(INetwork aNetwork, string aUdn)
         {
-            return (new DeviceMediaServerMock(aNetwork, aUdn, "."));
+            return (new DeviceMediaServerMock(aNetwork, aUdn, Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)));
         }
     }
 }
