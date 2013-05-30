@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using OpenHome.Os;
 using OpenHome.Av;
 using OpenHome.Os.App;
+using OpenHome.MediaServer;
 
 namespace TestLinnHouse
 {
@@ -103,8 +104,9 @@ namespace TestLinnHouse
 
         class RoomWatcher : IOrderedWatcher<IStandardRoom>, IDisposable
         {
-            public RoomWatcher(MockableScriptRunner aRunner)
+            public RoomWatcher(ITagManager aTagManager, MockableScriptRunner aRunner)
             {
+                iTagManager = aTagManager;
                 iRunner = aRunner;
                 iFactory = new ResultWatcherFactory(aRunner);
 
@@ -138,7 +140,7 @@ namespace TestLinnHouse
                 iRunner.Result(string.Format("Room Added: {0} at {1}", aItem.Name, aIndex));
                 iFactory.Create<EStandby>(aItem.Name, aItem.Standby, v => "Standby " + v);
                 iFactory.Create<RoomDetails>(aItem.Name, aItem.Details, v => "Details " + v.Enabled + " " + v.BitDepth + " " + v.BitRate + " " + v.CodecName + " " + v.Duration + " " + v.Lossless + " " + v.SampleRate);
-                iFactory.Create<RoomMetadata>(aItem.Name, aItem.Metadata, v => "Metadata " + v.Enabled + " " + v.Metadata + " " + v.Uri);
+                iFactory.Create<RoomMetadata>(aItem.Name, aItem.Metadata, v => "Metadata " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metadata) + " " + v.Uri);
                 iFactory.Create<RoomMetatext>(aItem.Name, aItem.Metatext, v => "Metatext " + v.Enabled + " " + v.Metatext);
                 iFactory.Create<IZone>(aItem.Name, aItem.Zone, v => "Zone " + v.Active + " " + v.Udn);
 
@@ -159,6 +161,7 @@ namespace TestLinnHouse
                 iWatcherLookup.Remove(aItem);
             }
 
+            private ITagManager iTagManager;
             private MockableScriptRunner iRunner;
             private ResultWatcherFactory iFactory;
             private Dictionary<IStandardRoom, RoomControllerWatcher> iWatcherLookup;
@@ -190,7 +193,7 @@ namespace TestLinnHouse
 
             MockableScriptRunner runner = new MockableScriptRunner();
 
-            RoomWatcher watcher = new RoomWatcher(runner);
+            RoomWatcher watcher = new RoomWatcher(network.TagManager, runner);
             thread.Schedule(() =>
             {
                 house.Rooms.AddWatcher(watcher);

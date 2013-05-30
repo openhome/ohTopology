@@ -238,6 +238,10 @@ namespace OpenHome.Av
     {
         public static string ToDidlLite(this ITagManager aTagManager, IMediaMetadata aMetadata)
         {
+            if (aMetadata == null)
+            {
+                return string.Empty;
+            }
             return aMetadata[aTagManager.System.Folder].Value;
         }
 
