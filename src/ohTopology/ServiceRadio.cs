@@ -291,30 +291,33 @@ namespace OpenHome.Av
                 idList += id.ToString() + " ";
             }
 
-            string channelList;
-            iService.SyncReadList(idList, out channelList);
-           
-           List<IRadioPreset> presets = new List<IRadioPreset>();
-
-            XmlDocument document = new XmlDocument();
-            document.LoadXml(channelList);
-
-            foreach (uint id in idArray)
+            iService.BeginReadList(idList, (IntPtr ptr) =>
             {
-                if (id > 0)
-                {
-                    XmlNode n = document.SelectSingleNode(string.Format("/ChannelList/Entry[Id={0}]/Metadata", id));
-                    presets.Add(new RadioPreset(n.InnerText));
-                }
-                else
-                {
-                    presets.Add(RadioPreset.Empty);
-                }
-            }
+                string channelList;
+                iService.EndReadList(ptr, out channelList);
 
-            Network.Schedule(() =>
-            {
-                iPresets.Update(presets);
+                List<IRadioPreset> presets = new List<IRadioPreset>();
+
+                XmlDocument document = new XmlDocument();
+                document.LoadXml(channelList);
+
+                foreach (uint id in idArray)
+                {
+                    if (id > 0)
+                    {
+                        XmlNode n = document.SelectSingleNode(string.Format("/ChannelList/Entry[Id={0}]/Metadata", id));
+                        presets.Add(new RadioPreset(n.InnerText));
+                    }
+                    else
+                    {
+                        presets.Add(RadioPreset.Empty);
+                    }
+                }
+
+                Network.Schedule(() =>
+                {
+                    iPresets.Update(presets);
+                });
             });
         }
 
