@@ -245,11 +245,11 @@ namespace OpenHome.Av
             return aMetadata[aTagManager.System.Folder].Value;
         }
 
-        public static IMediaMetadata FromDidlLite(this ITagManager aTagManager, string aMetadata)
+        public static MediaDatum FromDidlLite(this ITagManager aTagManager, string aMetadata)
         {
             MediaMetadata metadata = new MediaMetadata();
             metadata.Add(aTagManager.System.Folder, aMetadata);
-            return metadata;
+            return new MediaDatum(metadata);
         }
     }
 }

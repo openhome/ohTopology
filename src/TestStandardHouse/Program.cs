@@ -22,14 +22,16 @@ namespace TestLinnHouse
 
         class RoomControllerWatcher : IDisposable
         {
+            private ITagManager iTagManager;
             private ResultWatcherFactory iFactory;
             private IStandardRoomController iController;
             private IStandardRoomTime iTime;
             private StandardRoomWatcherExternal iWatcherExternal;
             private StandardRoomWatcherRadio iWatcherRadio;
 
-            public RoomControllerWatcher(MockableScriptRunner aRunner, IStandardRoom aRoom)
+            public RoomControllerWatcher(ITagManager aTagManager, MockableScriptRunner aRunner, IStandardRoom aRoom)
             {
+                iTagManager = aTagManager;
                 iFactory = new ResultWatcherFactory(aRunner);
                 iController = new StandardRoomController(aRoom);
                 iTime = new StandardRoomTime(aRoom);
@@ -75,12 +77,22 @@ namespace TestLinnHouse
                 {
                     if (v)
                     {
-                        iFactory.Create<IEnumerable<IRadioPreset>>(iWatcherRadio.Name, iWatcherRadio.Presets, w =>
+                        OpenHome.Av.IVirtualContainer container = iWatcherRadio.Browse().Result;
+                        iFactory.Create<IVirtualSnapshot>(iWatcherRadio.Name, container.Snapshot, w =>
                         {
                             string info = "\nPresets begin\n";
-                            foreach (IRadioPreset p in w)
+                            IVirtualFragment fragment = w.Read(0, w.Total).Result;
+                            foreach (IMediaDatum d in fragment.Data)
                             {
-                                info += p.Metadata;
+                                string didl = iTagManager.ToDidlLite(d);
+                                if (string.IsNullOrEmpty(didl))
+                                {
+                                    info += "null";
+                                }
+                                else
+                                {
+                                    info += didl;
+                                }
                                 info += "\n";
                             }
                             info += "Presets end";
@@ -144,7 +156,7 @@ namespace TestLinnHouse
                 iFactory.Create<RoomMetatext>(aItem.Name, aItem.Metatext, v => "Metatext " + v.Enabled + " " + v.Metatext);
                 iFactory.Create<IZone>(aItem.Name, aItem.Zone, v => "Zone " + v.Active + " " + v.Udn);
 
-                iWatcherLookup.Add(aItem, new RoomControllerWatcher(iRunner, aItem));
+                iWatcherLookup.Add(aItem, new RoomControllerWatcher(iTagManager, iRunner, aItem));
             }
 
             public void OrderedMove(IStandardRoom aItem, uint aFrom, uint aTo)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using OpenHome.Os.App;
 
@@ -209,12 +210,9 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<IEnumerable<IRadioPreset>> Presets
+        public Task<IVirtualContainer> Browse()
         {
-            get
-            {
-                return iRadio.Presets;
-            }
+            return iRadio.Browse();
         }
 
         protected override void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue)
