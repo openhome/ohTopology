@@ -26,6 +26,26 @@ namespace OpenHome.Av
         IEnumerable<ITag> Type { get; }
     }
 
+    public interface IVirtualFragment
+    {
+        uint Index { get; }
+        uint Sequence { get; }
+        IEnumerable<IMediaDatum> Data { get; }
+    }
+
+    public interface IVirtualSnapshot
+    {
+        uint Total { get; }
+        uint Sequence { get; }
+        IEnumerable<uint> AlphaMap { get; } // null if no alpha map
+        Task<IVirtualFragment> Read(uint aIndex, uint aCount);
+    }
+
+    public interface IVirtualContainer
+    {
+        IWatchable<IVirtualSnapshot> Snapshot { get; }
+    }
+
     public class MediaServerValue : IMediaValue
     {
         private readonly string iValue;
@@ -180,6 +200,52 @@ namespace OpenHome.Av
         IEnumerator IEnumerable.GetEnumerator()
         {
             throw new NotImplementedException();
+        }
+    }
+
+    public class VirtualFragment : IVirtualFragment
+    {
+        private readonly uint iIndex;
+        private readonly uint iSequence;
+        private readonly IEnumerable<IMediaDatum> iData;
+
+        public VirtualFragment(uint aIndex, uint aSequence, IEnumerable<IMediaDatum> aData)
+        {
+            iIndex = aIndex;
+            iSequence = aSequence;
+            iData = aData;
+        }
+
+        // IVirtualFragment
+
+        public uint Index
+        {
+            get { return (iIndex); }
+        }
+
+        public uint Sequence
+        {
+            get { return (iSequence); }
+        }
+
+        public IEnumerable<IMediaDatum> Data
+        {
+            get { return (iData); }
+        }
+    }
+
+    public static class MediaExtensions
+    {
+        public static string ToDidlLite(this ITagManager aTagManager, IMediaMetadata aMetadata)
+        {
+            return aMetadata[aTagManager.System.Folder].Value;
+        }
+
+        public static IMediaMetadata FromDidlLite(this ITagManager aTagManager, string aMetadata)
+        {
+            MediaMetadata metadata = new MediaMetadata();
+            metadata.Add(aTagManager.System.Folder, aMetadata);
+            return metadata;
         }
     }
 }

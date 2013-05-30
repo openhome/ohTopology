@@ -104,7 +104,7 @@ namespace OpenHome.Av
             device.Add<IProxyVolume>(new ServiceVolumeMock(aNetwork, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
 
             // info service
-            device.Add<IProxyInfo>(new ServiceInfoMock(aNetwork, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
+            device.Add<IProxyInfo>(new ServiceInfoMock(aNetwork, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(aNetwork.TagManager.FromDidlLite(string.Empty), string.Empty), new InfoMetatext(string.Empty)));
 
             // time service
             device.Add<IProxyTime>(new ServiceTimeMock(aNetwork, 0, 0));
@@ -124,7 +124,7 @@ namespace OpenHome.Av
                                                 new RadioPreset(3, "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>Linn Classical (Classical)</dc:title><res protocolInfo=\"*:*:*:*\" bitrate=\"40000\">http://opml.radiotime.com/Tune.ashx?id=s122116&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122116q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"),
                                                 new RadioPreset(4, "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>BBC World Service (World News)</dc:title><res protocolInfo=\"*:*:*:*\" bitrate=\"4000\">http://opml.radiotime.com/Tune.ashx?id=s50646&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s50646q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"),
                                                 new RadioPreset(5, "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>Sky Radio News (World News)</dc:title><res protocolInfo=\"*:*:*:*\" bitrate=\"4000\">http://opml.radiotime.com/Tune.ashx?id=s81093&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s81093q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>") }),
-                new InfoMetadata(), string.Empty, "Stopped", 100));
+                InfoMetadata.Empty, string.Empty, "Stopped", 100));
 
             // playlist service
             device.Add<IProxyPlaylist>(new ServicePlaylistMock(aNetwork, 0, new List<uint>(), false, false, "Stopped", string.Empty, 1000));
@@ -167,7 +167,7 @@ namespace OpenHome.Av
             device.Add<IProxyVolume>(new ServiceVolumeMock(aNetwork, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
 
             // info service
-            device.Add<IProxyInfo>(new ServiceInfoMock(aNetwork, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(string.Empty, string.Empty), new InfoMetatext(string.Empty)));
+            device.Add<IProxyInfo>(new ServiceInfoMock(aNetwork, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(aNetwork.TagManager.FromDidlLite(string.Empty), string.Empty), new InfoMetatext(string.Empty)));
 
             // time service
             device.Add<IProxyTime>(new ServiceTimeMock(aNetwork, 0, 0));
@@ -187,7 +187,7 @@ namespace OpenHome.Av
                                                 new RadioPreset(3, "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>Linn Classical (Classical)</dc:title><res protocolInfo=\"*:*:*:*\" bitrate=\"40000\">http://opml.radiotime.com/Tune.ashx?id=s122116&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122116q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"),
                                                 new RadioPreset(4, "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>BBC World Service (World News)</dc:title><res protocolInfo=\"*:*:*:*\" bitrate=\"4000\">http://opml.radiotime.com/Tune.ashx?id=s50646&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s50646q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"),
                                                 new RadioPreset(5, "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>Sky Radio News (World News)</dc:title><res protocolInfo=\"*:*:*:*\" bitrate=\"4000\">http://opml.radiotime.com/Tune.ashx?id=s81093&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s81093q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>") }),
-                new InfoMetadata(), string.Empty, "Stopped", 100));
+                InfoMetadata.Empty, string.Empty, "Stopped", 100));
 
             // playlist service
             device.Add<IProxyPlaylist>(new ServicePlaylistMock(aNetwork, 0, new List<uint>(), false, false, "Stopped", string.Empty, 1000));

@@ -79,12 +79,12 @@ namespace OpenHome.Av
 
         // IMediaServerSession
 
-        public Task<IMediaServerContainer> Query(string aValue)
+        public Task<IVirtualContainer> Query(string aValue)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IMediaServerContainer> Browse(IMediaDatum aDatum)
+        public Task<IVirtualContainer> Browse(IMediaDatum aDatum)
         {
             throw new NotImplementedException();
         }
@@ -97,25 +97,25 @@ namespace OpenHome.Av
         }
     }
 
-    internal class MediaServerContainerUpnp : IMediaServerContainer
+    internal class MediaServerContainerUpnp : IVirtualContainer
     {
-        private readonly Watchable<IMediaServerSnapshot> iSnapshot;
+        private readonly Watchable<IVirtualSnapshot> iSnapshot;
 
-        public MediaServerContainerUpnp(INetwork aNetwork, IMediaServerSnapshot aSnapshot)
+        public MediaServerContainerUpnp(INetwork aNetwork, IVirtualSnapshot aSnapshot)
         {
-            iSnapshot = new Watchable<IMediaServerSnapshot>(aNetwork.WatchableThread, "snapshot", aSnapshot);
+            iSnapshot = new Watchable<IVirtualSnapshot>(aNetwork.WatchableThread, "snapshot", aSnapshot);
         }
 
         // IMediaServerContainer
 
-        public IWatchable<IMediaServerSnapshot> Snapshot
+        public IWatchable<IVirtualSnapshot> Snapshot
         {
             get { return (iSnapshot); }
         }
     }
 
 
-    internal class MediaServerSnapshotUpnp : IMediaServerSnapshot
+    internal class MediaServerSnapshotUpnp : IVirtualSnapshot
     {
         private readonly IEnumerable<IMediaDatum> iData;
         private readonly IEnumerable<uint> iAlphaMap;
@@ -143,13 +143,13 @@ namespace OpenHome.Av
             get { return (iAlphaMap); }
         }
 
-        public Task<IMediaServerFragment> Read(uint aIndex, uint aCount)
+        public Task<IVirtualFragment> Read(uint aIndex, uint aCount)
         {
             Do.Assert(aIndex + aCount <= Total);
 
-            return (Task.Factory.StartNew<IMediaServerFragment>(() =>
+            return (Task.Factory.StartNew<IVirtualFragment>(() =>
             {
-                return (new MediaServerFragment(aIndex, 0, iData.Skip((int)aIndex).Take((int)aCount)));
+                return (new VirtualFragment(aIndex, 0, iData.Skip((int)aIndex).Take((int)aCount)));
             }));
         }
     }

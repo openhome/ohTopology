@@ -112,7 +112,7 @@ namespace OpenHome.Av
             }
         }
 
-        public string Metadata
+        public IMediaMetadata Metadata
         {
             get
             {
@@ -129,7 +129,7 @@ namespace OpenHome.Av
         }
 
         private bool iEnabled;
-        private string iMetadata;
+        private IMediaMetadata iMetadata;
         private string iUri;
     }
 
@@ -594,7 +594,7 @@ namespace OpenHome.Av
                 {
                     if (s.Type == "Playlist")
                     {
-                        s.Device.Create<ProxyPlaylist>((playlist) =>
+                        s.Device.Create<IProxyPlaylist>((playlist) =>
                         {
                             iThread.Schedule(() =>
                             {
@@ -608,7 +608,31 @@ namespace OpenHome.Av
             }
             else if (aMode == "Radio")
             {
-                //invoker = new InvokerRadio();
+                string[] split = aUri.Split(new char[] { ' ' }, 2);
+                if (split.Length == 2)
+                {
+                    uint id = uint.Parse(split[0]);
+                    string uri = split[1];
+                    foreach (ITopology4Source s in iCurrentSources)
+                    {
+                        if (s.Type == "Radio")
+                        {
+                            s.Device.Create<IProxyRadio>((radio) =>
+                            {
+                                iThread.Schedule(() =>
+                                {
+                                    radio.SetId(id, uri);
+                                    radio.Dispose();
+                                });
+                            });
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    throw new FormatException();
+                }
             }
             else if (aMode == "Receiver")
             {
@@ -617,10 +641,10 @@ namespace OpenHome.Av
                 {
                     if (s.Type == "Receiver")
                     {
-                        s.Device.Create<ProxyReceiver>((receiver) =>
+                        s.Device.Create<IProxyReceiver>((receiver) =>
                         {
                             ITopology4Group g = iHouse.Sender(udn);
-                            g.Device.Create<ProxySender>((sender) =>
+                            g.Device.Create<IProxySender>((sender) =>
                             {
                                 iThread.Schedule(() =>
                                 {
@@ -653,6 +677,29 @@ namespace OpenHome.Av
                         s.Select();
                         return;
                     }
+                }
+            }
+            else
+            {
+                throw new NotSupportedException(aMode);
+            }
+        }
+
+        public void Play(string aUri, IMediaMetadata aMetadata)
+        {
+            foreach (ITopology4Source s in iCurrentSources)
+            {
+                if (s.Type == "Radio")
+                {
+                    s.Device.Create<IProxyRadio>((radio) =>
+                    {
+                        iThread.Schedule(() =>
+                        {
+                            radio.SetChannel(aUri, aMetadata);
+                            radio.Dispose();
+                        });
+                    });
+                    return;
                 }
             }
         }

@@ -126,6 +126,14 @@ namespace OpenHome.Av
             iHouse.Servers.RemoveWatcher(this);
         }
 
+        public IWatchableOrdered<IProxyMediaServer> Servers
+        {
+            get
+            {
+                return iHouse.Servers;
+            }
+        }
+
         protected override void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue)
         {
             EvaluateEnabled(aValue);

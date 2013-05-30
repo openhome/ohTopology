@@ -77,7 +77,7 @@ namespace OpenHome.Av
         private readonly IEnumerable<IMediaDatum> iGenres;
         private readonly List<IMediaDatum> iRoot;
 
-        private IMediaServerContainer iContainer;
+        private IVirtualContainer iContainer;
 
 
         public MediaServerSessionMock(INetwork aNetwork, IEnumerable<IMediaMetadata> aMetadata, ServiceMediaServerMock aService)
@@ -157,47 +157,47 @@ namespace OpenHome.Av
             return (datum);
         }
 
-        private Task<IMediaServerContainer> BrowseRootTracks()
+        private Task<IVirtualContainer> BrowseRootTracks()
         {
             var tracks = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Title] != null)
                 .OrderBy(m => m[iNetwork.TagManager.Audio.Title].Value)
                 .Select(m => new MediaDatum(m));
 
-            return (Task.Factory.StartNew<IMediaServerContainer>(() =>
+            return (Task.Factory.StartNew<IVirtualContainer>(() =>
             {
                 iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(tracks));
                 return (iContainer);
             }));
         }
 
-        private Task<IMediaServerContainer> BrowseRootArtists()
+        private Task<IVirtualContainer> BrowseRootArtists()
         {
-            return (Task.Factory.StartNew<IMediaServerContainer>(() =>
+            return (Task.Factory.StartNew<IVirtualContainer>(() =>
             {
                 iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iArtists));
                 return (iContainer);
             }));
         }
 
-        private Task<IMediaServerContainer> BrowseRootAlbums()
+        private Task<IVirtualContainer> BrowseRootAlbums()
         {
-            return (Task.Factory.StartNew<IMediaServerContainer>(() =>
+            return (Task.Factory.StartNew<IVirtualContainer>(() =>
             {
                 iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iAlbums));
                 return (iContainer);
             }));
         }
 
-        private Task<IMediaServerContainer> BrowseRootGenres()
+        private Task<IVirtualContainer> BrowseRootGenres()
         {
-            return (Task.Factory.StartNew<IMediaServerContainer>(() =>
+            return (Task.Factory.StartNew<IVirtualContainer>(() =>
             {
                 iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iGenres));
                 return (iContainer);
             }));
         }
 
-        private Task<IMediaServerContainer> BrowseArtistAlbums(string aArtist)
+        private Task<IVirtualContainer> BrowseArtistAlbums(string aArtist)
         {
             var albums = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Artist] != null)
                 .Where(m => m[iNetwork.TagManager.Audio.Artist].Values.Contains(aArtist))
@@ -215,56 +215,56 @@ namespace OpenHome.Av
                     return (datum);
                 });
 
-            return (Task.Factory.StartNew<IMediaServerContainer>(() =>
+            return (Task.Factory.StartNew<IVirtualContainer>(() =>
             {
                 iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(albums));
                 return (iContainer);
             }));
         }
 
-        private Task<IMediaServerContainer> BrowseAlbumTracks(string aAlbum)
+        private Task<IVirtualContainer> BrowseAlbumTracks(string aAlbum)
         {
             var tracks = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Album].Value == aAlbum)
                 .OrderBy(m => uint.Parse(m[iNetwork.TagManager.Audio.Track].Value))
                 .Select(m => new MediaDatum(m));
 
-            return (Task.Factory.StartNew<IMediaServerContainer>(() =>
+            return (Task.Factory.StartNew<IVirtualContainer>(() =>
             {
                 iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(tracks));
                 return (iContainer);
             }));
         }
 
-        private Task<IMediaServerContainer> BrowseGenreTracks(string aGenre)
+        private Task<IVirtualContainer> BrowseGenreTracks(string aGenre)
         {
             var tracks = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Genre] != null)
                 .Where(m => m[iNetwork.TagManager.Audio.Genre].Values.Contains(aGenre))
                 .OrderBy(m => m[iNetwork.TagManager.Audio.Title].Value)
                 .Select(m => new MediaDatum(m));
 
-            return (Task.Factory.StartNew<IMediaServerContainer>(() =>
+            return (Task.Factory.StartNew<IVirtualContainer>(() =>
             {
                 iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(tracks));
                 return (iContainer);
             }));
         }
 
-        internal void Destroy(IMediaServerContainer aContainer)
+        internal void Destroy(IVirtualContainer aContainer)
         {
         }
 
         // IMediaServerSession
 
-        public Task<IMediaServerContainer> Query(string aValue)
+        public Task<IVirtualContainer> Query(string aValue)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IMediaServerContainer> Browse(IMediaDatum aDatum)
+        public Task<IVirtualContainer> Browse(IMediaDatum aDatum)
         {
             if (aDatum == null)
             {
-                return (Task.Factory.StartNew<IMediaServerContainer>(() =>
+                return (Task.Factory.StartNew<IVirtualContainer>(() =>
                 {
                     iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iRoot));
                     return (iContainer);
@@ -337,25 +337,25 @@ namespace OpenHome.Av
         }
     }
 
-    internal class MediaServerContainerMock : IMediaServerContainer
+    internal class MediaServerContainerMock : IVirtualContainer
     {
-        private readonly Watchable<IMediaServerSnapshot> iSnapshot;
+        private readonly Watchable<IVirtualSnapshot> iSnapshot;
 
-        public MediaServerContainerMock(INetwork aNetwork, IMediaServerSnapshot aSnapshot)
+        public MediaServerContainerMock(INetwork aNetwork, IVirtualSnapshot aSnapshot)
         {
-            iSnapshot = new Watchable<IMediaServerSnapshot>(aNetwork.WatchableThread, "snapshot", aSnapshot);
+            iSnapshot = new Watchable<IVirtualSnapshot>(aNetwork.WatchableThread, "snapshot", aSnapshot);
         }
 
         // IMediaServerContainer
 
-        public IWatchable<IMediaServerSnapshot> Snapshot
+        public IWatchable<IVirtualSnapshot> Snapshot
         {
             get { return (iSnapshot); }
         }
     }
 
 
-    internal class MediaServerSnapshotMock : IMediaServerSnapshot
+    internal class MediaServerSnapshotMock : IVirtualSnapshot
     {
         private readonly IEnumerable<IMediaDatum> iData;
         private readonly IEnumerable<uint> iAlphaMap;
@@ -383,13 +383,13 @@ namespace OpenHome.Av
             get { return (iAlphaMap); }
         }
 
-        public Task<IMediaServerFragment> Read(uint aIndex, uint aCount)
+        public Task<IVirtualFragment> Read(uint aIndex, uint aCount)
         {
             Do.Assert(aIndex + aCount <= Total);
 
-            return (Task.Factory.StartNew<IMediaServerFragment>(() =>
+            return (Task.Factory.StartNew<IVirtualFragment>(() =>
             {
-                return (new MediaServerFragment(aIndex, 0, iData.Skip((int)aIndex).Take((int)aCount)));
+                return (new VirtualFragment(aIndex, 0, iData.Skip((int)aIndex).Take((int)aCount)));
             }));
         }
     }

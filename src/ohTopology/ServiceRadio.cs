@@ -68,7 +68,7 @@ namespace OpenHome.Av
         Task SeekSecondRelative(int aValue);
 
         Task SetId(uint aId, string aUri);
-        Task SetChannel(string aUri, string aMetadata);
+        Task SetChannel(string aUri, IMediaMetadata aMetadata);
 
         uint ChannelsMax { get; }
         string ProtocolInfo { get; }
@@ -82,7 +82,7 @@ namespace OpenHome.Av
             iId = new Watchable<uint>(aNetwork, "Id", 0);
             iPresets = new Watchable<IEnumerable<IRadioPreset>>(aNetwork, "Presets", new List<IRadioPreset>());
             iTransportState = new Watchable<string>(aNetwork, "TransportState", string.Empty);
-            iMetadata = new Watchable<IInfoMetadata>(aNetwork, "Metadata", new InfoMetadata());
+            iMetadata = new Watchable<IInfoMetadata>(aNetwork, "Metadata", InfoMetadata.Empty);
         }
 
         public override void Dispose()
@@ -161,7 +161,7 @@ namespace OpenHome.Av
         public abstract Task SeekSecondAbsolute(uint aValue);
         public abstract Task SeekSecondRelative(int aValue);
         public abstract Task SetId(uint aId, string aUri);
-        public abstract Task SetChannel(string aUri, string aMetadata);
+        public abstract Task SetChannel(string aUri, IMediaMetadata aMetadata);
         
         protected uint iChannelsMax;
         protected string iProtocolInfo;
@@ -277,11 +277,11 @@ namespace OpenHome.Av
             return task;
         }
 
-        public override Task SetChannel(string aUri, string aMetadata)
+        public override Task SetChannel(string aUri, IMediaMetadata aMetadata)
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                iService.SyncSetChannel(aUri, aMetadata);
+                iService.SyncSetChannel(aUri, Network.TagManager.ToDidlLite(aMetadata));
             });
             return task;
         }
@@ -340,7 +340,7 @@ namespace OpenHome.Av
             {
                 iMetadata.Update(
                     new InfoMetadata(
-                        iService.PropertyMetadata(),
+                        Network.TagManager.FromDidlLite(iService.PropertyMetadata()),
                         iService.PropertyUri()
                     ));
             });
@@ -436,7 +436,7 @@ namespace OpenHome.Av
             return task;
         }
 
-        public override Task SetChannel(string aUri, string aMetadata)
+        public override Task SetChannel(string aUri, IMediaMetadata aMetadata)
         {
             Task task = Task.Factory.StartNew(() =>
             {
@@ -477,7 +477,7 @@ namespace OpenHome.Av
                 {
                     throw new NotSupportedException();
                 }
-                IInfoMetadata metadata = new InfoMetadata(value.ElementAt(0), value.ElementAt(1));
+                IInfoMetadata metadata = new InfoMetadata(Network.TagManager.FromDidlLite(value.ElementAt(0)), value.ElementAt(1));
                 iMetadata.Update(metadata);
             }
             else if (command == "transportstate")
@@ -559,7 +559,7 @@ namespace OpenHome.Av
             return iService.SetId(aId, aUri);
         }
 
-        public Task SetChannel(string aUri, string aMetadata)
+        public Task SetChannel(string aUri, IMediaMetadata aMetadata)
         {
             return iService.SetChannel(aUri, aMetadata);
         }

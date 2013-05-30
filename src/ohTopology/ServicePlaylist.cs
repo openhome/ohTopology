@@ -350,7 +350,7 @@ namespace OpenHome.Av
                 string uri;
                 string metadata;
                 iService.SyncRead(aId, out uri, out metadata);
-                return new InfoMetadata(metadata, uri) as IInfoMetadata;
+                return new InfoMetadata(Network.TagManager.FromDidlLite(metadata), uri) as IInfoMetadata;
             });
             return task;
         }
@@ -593,7 +593,7 @@ namespace OpenHome.Av
                 Network.Execute(() =>
                 {
                 });
-                return new InfoMetadata();
+                return InfoMetadata.Empty;
             });
             return task;
         }
