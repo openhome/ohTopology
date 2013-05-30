@@ -30,6 +30,7 @@ namespace OpenHome.Av
         IWatchable<bool> HasVolume { get; }
         IWatchable<bool> Mute { get; }
         IWatchable<uint> Volume { get; }
+        IWatchable<uint> VolumeLimit { get; }
         void SetMute(bool aMute);
         void SetVolume(uint aVolume);
         void VolumeInc();
@@ -50,6 +51,7 @@ namespace OpenHome.Av
             iHasVolume = new Watchable<bool>(iThread, "HasVolume", false);
             iMute = new Watchable<bool>(iThread, "Mute", false);
             iValue = new Watchable<uint>(iThread, "Volume", 0);
+            iVolumeLimit = new Watchable<uint>(iThread, "VolumeLimit", 0);
 
             iHasSourceControl = new Watchable<bool>(iThread, "HasSourceControl", false);
             iHasInfoNext = new Watchable<bool>(iThread, "HasInfoNext", false);
@@ -211,11 +213,20 @@ namespace OpenHome.Av
                 return iMute;
             }
         }
+
         public IWatchable<uint> Volume
         {
             get
             {
                 return iValue;
+            }
+        }
+
+        public IWatchable<uint> VolumeLimit
+        {
+            get
+            {
+                return iVolumeLimit;
             }
         }
 
@@ -454,7 +465,7 @@ namespace OpenHome.Av
             if (aValue.Volumes.Count() > 0)
             {
                 ITopology4Group group = aValue.Volumes.ElementAt(0);
-                iVolumeController = new VolumeController(iThread, group.Device, iHasVolume, iMute, iValue);
+                iVolumeController = new VolumeController(iThread, group.Device, iHasVolume, iMute, iValue, iVolumeLimit);
             }
         }
 
@@ -476,12 +487,12 @@ namespace OpenHome.Av
                     if (group.Device != iVolumeController.Device)
                     {
                         iVolumeController.Dispose();
-                        iVolumeController = new VolumeController(iThread, group.Device, iHasVolume, iMute, iValue);
+                        iVolumeController = new VolumeController(iThread, group.Device, iHasVolume, iMute, iValue, iVolumeLimit);
                     }
                 }
                 else
                 {
-                    iVolumeController = new VolumeController(iThread, group.Device, iHasVolume, iMute, iValue);
+                    iVolumeController = new VolumeController(iThread, group.Device, iHasVolume, iMute, iValue, iVolumeLimit);
                 }
             }
             else
@@ -520,6 +531,7 @@ namespace OpenHome.Av
         private Watchable<bool> iHasVolume;
         private Watchable<bool> iMute;
         private Watchable<uint> iValue;
+        private Watchable<uint> iVolumeLimit;
 
         private ISourceController iSourceController;
         private Watchable<bool> iHasSourceControl;

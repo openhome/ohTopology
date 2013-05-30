@@ -7,7 +7,7 @@ namespace OpenHome.Av
 {
     class VolumeController : IWatcher<bool>, IWatcher<uint>, IDisposable
     {
-        public VolumeController(IWatchableThread aThread, IDevice aDevice, Watchable<bool> aHasVolume, Watchable<bool> aMute, Watchable<uint> aValue)
+        public VolumeController(IWatchableThread aThread, IDevice aDevice, Watchable<bool> aHasVolume, Watchable<bool> aMute, Watchable<uint> aValue, Watchable<uint> aVolumeLimit)
         {
             iDisposed = false;
 
@@ -16,6 +16,7 @@ namespace OpenHome.Av
             iHasVolume = aHasVolume;
             iMute = aMute;
             iValue = aValue;
+            iVolumeLimit = aVolumeLimit;
 
             iDevice.Create<IProxyVolume>((volume) =>
             {
@@ -27,6 +28,7 @@ namespace OpenHome.Av
 
                         iVolume.Mute.AddWatcher(this);
                         iVolume.Value.AddWatcher(this);
+                        iVolume.VolumeLimit.AddWatcher(this);
 
                         iHasVolume.Update(true);
                     }
@@ -51,6 +53,7 @@ namespace OpenHome.Av
 
                 iVolume.Mute.RemoveWatcher(this);
                 iVolume.Value.RemoveWatcher(this);
+                iVolume.VolumeLimit.RemoveWatcher(this);
 
                 iVolume.Dispose();
                 iVolume = null;
@@ -103,12 +106,26 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, uint aValue)
         {
-            iValue.Update(aValue);
+            if (aId == "Value")
+            {
+                iValue.Update(aValue);
+            }
+            if (aId == "VolumeLimit")
+            {
+                iVolumeLimit.Update(aValue);
+            }
         }
 
         public void ItemUpdate(string aId, uint aValue, uint aPrevious)
         {
-            iValue.Update(aValue);
+            if (aId == "Value")
+            {
+                iValue.Update(aValue);
+            }
+            if (aId == "VolumeLimit")
+            {
+                iVolumeLimit.Update(aValue);
+            }
         }
 
         public void ItemClose(string aId, uint aValue)
@@ -122,5 +139,6 @@ namespace OpenHome.Av
         private Watchable<bool> iHasVolume;
         private Watchable<bool> iMute;
         private Watchable<uint> iValue;
+        private Watchable<uint> iVolumeLimit;
     }
 }
