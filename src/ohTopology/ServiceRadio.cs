@@ -14,22 +14,35 @@ namespace OpenHome.Av
 {
     public interface IRadioPreset
     {
+        uint Id { get; }
         string Metadata { get; }
     }
 
     public class RadioPreset : IRadioPreset
     {
         public static readonly RadioPreset Empty = new RadioPreset();
+
+        private uint iId;
         private string iMetadata;
 
         private RadioPreset()
         {
+            iId = 0;
             iMetadata = "null";
         }
 
-        public RadioPreset(string aMetadata)
+        public RadioPreset(uint aId, string aMetadata)
         {
+            iId = aId;
             iMetadata = aMetadata;
+        }
+
+        public uint Id
+        {
+            get
+            {
+                return iId;
+            }
         }
 
         public string Metadata
@@ -306,7 +319,7 @@ namespace OpenHome.Av
                     if (id > 0)
                     {
                         XmlNode n = document.SelectSingleNode(string.Format("/ChannelList/Entry[Id={0}]/Metadata", id));
-                        presets.Add(new RadioPreset(n.InnerText));
+                        presets.Add(new RadioPreset(id, n.InnerText));
                     }
                     else
                     {
