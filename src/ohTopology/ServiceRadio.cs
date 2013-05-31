@@ -589,6 +589,34 @@ namespace OpenHome.Av
                 {
                     throw new NotSupportedException();
                 }
+
+                /*XmlDocument document = new XmlDocument();
+                XmlNamespaceManager nsManager = new XmlNamespaceManager(document.NameTable);
+                nsManager.AddNamespace("didl", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+                nsManager.AddNamespace("upnp", "urn:schemas-upnp-org:metadata-1-0/upnp/");
+                nsManager.AddNamespace("dc", "http://purl.org/dc/elements/1.1/");
+                nsManager.AddNamespace("ldl", "urn:linn-co-uk/DIDL-Lite");
+
+                XmlNode didl = document.CreateElement("DIDL-Lite", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+
+                XmlNode item = document.CreateElement("item", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+
+                XmlNode title = document.CreateElement("dc:title", "http://purl.org/dc/elements/1.1/");
+                title.AppendChild(document.CreateTextNode(value.ElementAt(0)));
+                item.AppendChild(title);
+
+                XmlNode c = document.CreateElement("upnp:class", "urn:schemas-upnp-org:metadata-1-0/upnp/");
+                c.AppendChild(document.CreateTextNode("object.item.audioItem"));
+                item.AppendChild(c);
+
+                XmlNode res = document.CreateElement("res", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+                res.AppendChild(document.CreateTextNode(value.ElementAt(1)));
+                item.AppendChild(res);
+
+                didl.AppendChild(item);
+
+                document.AppendChild(didl);*/
+
                 IInfoMetadata metadata = new InfoMetadata(Network.TagManager.FromDidlLite(value.ElementAt(0)), value.ElementAt(1));
                 iMetadata.Update(metadata);
             }

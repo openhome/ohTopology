@@ -27,14 +27,10 @@ namespace OpenHome.Av
         IEnumerable<ITag> Type { get; }
     }
 
-    public interface IMediaPlayable
-    {
-        void Play();
-    }
-
-    public interface IMediaPreset : IMediaPlayable
+    public interface IMediaPreset
     {
         IMediaMetadata Metadata { get; }
+        void Play();
     }
 
     public interface IVirtualFragment
