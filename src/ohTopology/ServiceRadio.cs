@@ -9,9 +9,45 @@ using OpenHome.Os.App;
 using OpenHome.Net.ControlPoint.Proxies;
 using OpenHome.Net.ControlPoint;
 using OpenHome.Os;
+using OpenHome.MediaServer;
 
 namespace OpenHome.Av
 {
+    class MediaPresetRadio : IMediaPreset
+    {
+        private readonly uint iId;
+        private readonly IMediaMetadata iMetadata;
+        private readonly string iUri;
+        private readonly ServiceRadio iRadio;
+
+        public MediaPresetRadio(uint aId, IMediaMetadata aMetadata, string aUri, ServiceRadio aRadio)
+        {
+            iId = aId;
+            iMetadata = aMetadata;
+            iUri = aUri;
+            iRadio = aRadio;
+        }
+
+        public IMediaMetadata Metadata
+        {
+            get
+            {
+                return iMetadata;
+            }
+        }
+
+        public void Play()
+        {
+            if (iId > 0)
+            {
+                iRadio.SetId(iId, iUri).ContinueWith((t) =>
+                {
+                    iRadio.Play();
+                });
+            }
+        }
+    }
+
     public interface IProxyRadio : IProxy
     {
         IWatchable<uint> Id { get; }
@@ -27,7 +63,7 @@ namespace OpenHome.Av
         Task SetId(uint aId, string aUri);
         Task SetChannel(string aUri, IMediaMetadata aMetadata);
 
-        Task<IVirtualContainer> Browse();
+        Task<IWatchableContainer<IMediaPreset>> Browse();
 
         uint ChannelsMax { get; }
         string ProtocolInfo { get; }
@@ -110,7 +146,7 @@ namespace OpenHome.Av
         public abstract Task SetId(uint aId, string aUri);
         public abstract Task SetChannel(string aUri, IMediaMetadata aMetadata);
 
-        public abstract Task<IVirtualContainer> Browse();
+        public abstract Task<IWatchableContainer<IMediaPreset>> Browse();
         
         protected uint iChannelsMax;
         protected string iProtocolInfo;
@@ -238,28 +274,32 @@ namespace OpenHome.Av
             return task;
         }
 
-        public Task<IEnumerable<IMediaDatum>> ReadList(string aIdList)
+        public Task<IEnumerable<IMediaPreset>> ReadList(string aIdList)
         {
-            Task<IEnumerable<IMediaDatum>> task = Task<IEnumerable<IMediaDatum>>.Factory.StartNew(() =>
+            Task<IEnumerable<IMediaPreset>> task = Task<IEnumerable<IMediaPreset>>.Factory.StartNew(() =>
             {
                 string channelList;
                 iService.SyncReadList(aIdList, out channelList);
 
-                List<IMediaDatum> presets = new List<IMediaDatum>();
+                List<IMediaPreset> presets = new List<IMediaPreset>();
 
                 XmlDocument document = new XmlDocument();
                 document.LoadXml(channelList);
 
-                foreach (uint id in aIdList)
+                string[] ids = aIdList.Split(' ');
+                foreach (string i in ids)
                 {
+                    uint id = uint.Parse(i);
                     if (id > 0)
                     {
                         XmlNode n = document.SelectSingleNode(string.Format("/ChannelList/Entry[Id={0}]/Metadata", id));
-                        presets.Add(Network.TagManager.FromDidlLite(n.InnerText));
+                        IMediaMetadata metadata = Network.TagManager.FromDidlLite(n.InnerText);
+                        string uri = metadata[Network.TagManager.Audio.Uri].Value;
+                        presets.Add(new MediaPresetRadio(id, metadata, uri, this));
                     }
                     else
                     {
-                        presets.Add(Network.TagManager.FromDidlLite(string.Empty));
+                        presets.Add(new MediaPresetRadio(id, Network.TagManager.FromDidlLite(string.Empty), string.Empty, this));
                     }
                 }
 
@@ -268,9 +308,9 @@ namespace OpenHome.Av
             return task;
         }
 
-        public override Task<IVirtualContainer> Browse()
+        public override Task<IWatchableContainer<IMediaPreset>> Browse()
         {
-            Task<IVirtualContainer> task = Task<IVirtualContainer>.Factory.StartNew(() =>
+            Task<IWatchableContainer<IMediaPreset>> task = Task < IWatchableContainer<IMediaPreset>>.Factory.StartNew(() =>
             {
                 return iContainer;
             });
@@ -318,9 +358,9 @@ namespace OpenHome.Av
         private RadioContainerNetwork iContainer;
     }
 
-    class RadioContainerNetwork : IVirtualContainer, IDisposable
+    class RadioContainerNetwork : IWatchableContainer<IMediaPreset>, IDisposable
     {
-        private Watchable<IVirtualSnapshot> iSnapshot;
+        private Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
         private ServiceRadioNetwork iRadio;
         private uint iSequence;
 
@@ -328,7 +368,7 @@ namespace OpenHome.Av
         {
             iRadio = aRadio;
             iSequence = 0;
-            iSnapshot = new Watchable<IVirtualSnapshot>(aNetwork, "Snapshot", new RadioSnapshotNetwork(iSequence, new List<uint>(), iRadio));
+            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new RadioSnapshotNetwork(iSequence, new List<uint>(), iRadio));
         }
 
         public void Dispose()
@@ -338,7 +378,7 @@ namespace OpenHome.Av
             iRadio = null;
         }
 
-        public IWatchable<IVirtualSnapshot> Snapshot
+        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
         {
             get
             {
@@ -353,7 +393,7 @@ namespace OpenHome.Av
         }
     }
 
-    class RadioSnapshotNetwork : IVirtualSnapshot
+    class RadioSnapshotNetwork : IWatchableSnapshot<IMediaPreset>
     {
         private readonly uint iSequence;
         private readonly IList<uint> iIdArray;
@@ -390,16 +430,16 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<IVirtualFragment> Read(uint aIndex, uint aCount)
+        public Task<IWatchableFragment<IMediaPreset>> Read(uint aIndex, uint aCount)
         {
-            Task<IVirtualFragment> task = Task<IVirtualFragment>.Factory.StartNew(() =>
+            Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
             {
                 string idList = string.Empty;
-                for(uint i = aIndex; i < aIndex + aCount; ++i)
+                for (uint i = aIndex; i < aIndex + aCount; ++i)
                 {
                     idList += string.Format("{0} ", iIdArray[(int)i]);
                 }
-                return new VirtualFragment(aIndex, iSequence, iRadio.ReadList(idList).Result); 
+                return new WatchableFragment<IMediaPreset>(aIndex, iSequence, iRadio.ReadList(idList.TrimEnd(' ')).Result);
             });
             return task;
         }
@@ -407,14 +447,28 @@ namespace OpenHome.Av
 
     class ServiceRadioMock : ServiceRadio, IMockable
     {
-        private IList<IMediaDatum> iPresets;
+        private IList<IMediaPreset> iPresets;
 
-        public ServiceRadioMock(INetwork aNetwork, uint aId, IList<IMediaDatum> aPresets, IInfoMetadata aMetadata, string aProtocolInfo, string aTransportState, uint aChannelsMax)
+        public ServiceRadioMock(INetwork aNetwork, uint aId, IList<IMediaMetadata> aPresets, IInfoMetadata aMetadata, string aProtocolInfo, string aTransportState, uint aChannelsMax)
             : base(aNetwork)
         {
             iChannelsMax = aChannelsMax;
             iProtocolInfo = aProtocolInfo;
-            iPresets = aPresets;
+
+            iPresets = new List<IMediaPreset>();
+            uint id = 1;
+            foreach (IMediaMetadata m in aPresets)
+            {
+                if (m == null)
+                {
+                    iPresets.Add(new MediaPresetRadio(0, m, string.Empty, this));
+                }
+                else
+                {
+                    iPresets.Add(new MediaPresetRadio(id, m, m[Network.TagManager.Audio.Uri].Value, this));
+                    ++id;
+                }
+            }
             
             iId.Update(aId);
             iMetadata.Update(aMetadata);
@@ -497,9 +551,9 @@ namespace OpenHome.Av
             return task;
         }
 
-        public override Task<IVirtualContainer> Browse()
+        public override Task<IWatchableContainer<IMediaPreset>> Browse()
         {
-            Task<IVirtualContainer> task = Task<IVirtualContainer>.Factory.StartNew(() =>
+            Task<IWatchableContainer<IMediaPreset>> task = Task<IWatchableContainer<IMediaPreset>>.Factory.StartNew(() =>
             {
                 return new RadioContainerMock(Network, new RadioSnapshotMock(iPresets));
             });
@@ -550,16 +604,16 @@ namespace OpenHome.Av
         }
     }
 
-    class RadioContainerMock : IVirtualContainer
+    class RadioContainerMock : IWatchableContainer<IMediaPreset>
     {
-        public readonly Watchable<IVirtualSnapshot> iSnapshot;
+        public readonly Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
 
-        public RadioContainerMock(INetwork aNetwork, IVirtualSnapshot aSnapshot)
+        public RadioContainerMock(INetwork aNetwork, IWatchableSnapshot<IMediaPreset> aSnapshot)
         {
-            iSnapshot = new Watchable<IVirtualSnapshot>(aNetwork, "Snapshot", aSnapshot);
+            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", aSnapshot);
         }
 
-        public IWatchable<IVirtualSnapshot> Snapshot
+        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
         {
             get 
             {
@@ -568,11 +622,11 @@ namespace OpenHome.Av
         }
     }
 
-    class RadioSnapshotMock : IVirtualSnapshot
+    class RadioSnapshotMock : IWatchableSnapshot<IMediaPreset>
     {
-        private readonly IEnumerable<IMediaDatum> iData;
+        private readonly IEnumerable<IMediaPreset> iData;
 
-        public RadioSnapshotMock(IEnumerable<IMediaDatum> aData)
+        public RadioSnapshotMock(IEnumerable<IMediaPreset> aData)
         {
             iData = aData;
         }
@@ -601,13 +655,13 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<IVirtualFragment> Read(uint aIndex, uint aCount)
+        public Task<IWatchableFragment<IMediaPreset>> Read(uint aIndex, uint aCount)
         {
             Do.Assert(aIndex + aCount <= Total);
 
-            Task<IVirtualFragment> task = Task<IVirtualFragment>.Factory.StartNew(() =>
+            Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
             {
-                return new VirtualFragment(aIndex, 0, iData.Skip((int)aIndex).Take((int)aCount));
+                return new WatchableFragment<IMediaPreset>(aIndex, 0, iData.Skip((int)aIndex).Take((int)aCount));
             });
             return task;
         }
@@ -680,7 +734,7 @@ namespace OpenHome.Av
             return iService.SetChannel(aUri, aMetadata);
         }
 
-        public Task<IVirtualContainer> Browse()
+        public Task<IWatchableContainer<IMediaPreset>> Browse()
         {
             return iService.Browse();
         }

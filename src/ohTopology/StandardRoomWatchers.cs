@@ -210,7 +210,7 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<IVirtualContainer> Browse()
+        public Task<IWatchableContainer<IMediaPreset>> Browse()
         {
             return iRadio.Browse();
         }

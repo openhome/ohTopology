@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
+using System.Xml;
 
 using OpenHome.Os.App;
 using OpenHome.MediaServer;
@@ -26,6 +27,16 @@ namespace OpenHome.Av
         IEnumerable<ITag> Type { get; }
     }
 
+    public interface IMediaPlayable
+    {
+        void Play();
+    }
+
+    public interface IMediaPreset : IMediaPlayable
+    {
+        IMediaMetadata Metadata { get; }
+    }
+
     public interface IVirtualFragment
     {
         uint Index { get; }
@@ -44,6 +55,26 @@ namespace OpenHome.Av
     public interface IVirtualContainer
     {
         IWatchable<IVirtualSnapshot> Snapshot { get; }
+    }
+
+    public interface IWatchableFragment<T>
+    {
+        uint Index { get; }
+        uint Sequence { get; }
+        IEnumerable<T> Data { get; }
+    }
+
+    public interface IWatchableSnapshot<T>
+    {
+        uint Total { get; }
+        uint Sequence { get; }
+        IEnumerable<uint> AlphaMap { get; } // null if no alpha map
+        Task<IWatchableFragment<T>> Read(uint aIndex, uint aCount);
+    }
+
+    public interface IWatchableContainer<T>
+    {
+        IWatchable<IWatchableSnapshot<T>> Snapshot { get; }
     }
 
     public class MediaServerValue : IMediaValue
@@ -216,7 +247,7 @@ namespace OpenHome.Av
             iData = aData;
         }
 
-        // IVirtualFragment
+        // IWatchableFragment<T>
 
         public uint Index
         {
@@ -234,6 +265,37 @@ namespace OpenHome.Av
         }
     }
 
+    public class WatchableFragment<T> : IWatchableFragment<T>
+    {
+        private readonly uint iIndex;
+        private readonly uint iSequence;
+        private readonly IEnumerable<T> iData;
+
+        public WatchableFragment(uint aIndex, uint aSequence, IEnumerable<T> aData)
+        {
+            iIndex = aIndex;
+            iSequence = aSequence;
+            iData = aData;
+        }
+
+        // IWatchableFragment<T>
+
+        public uint Index
+        {
+            get { return (iIndex); }
+        }
+
+        public uint Sequence
+        {
+            get { return (iSequence); }
+        }
+
+        public IEnumerable<T> Data
+        {
+            get { return (iData); }
+        }
+    }
+
     public static class MediaExtensions
     {
         public static string ToDidlLite(this ITagManager aTagManager, IMediaMetadata aMetadata)
@@ -245,11 +307,36 @@ namespace OpenHome.Av
             return aMetadata[aTagManager.System.Folder].Value;
         }
 
-        public static MediaDatum FromDidlLite(this ITagManager aTagManager, string aMetadata)
+        public static IMediaMetadata FromDidlLite(this ITagManager aTagManager, string aMetadata)
         {
             MediaMetadata metadata = new MediaMetadata();
+
+            if (!string.IsNullOrEmpty(aMetadata))
+            {
+                XmlDocument document = new XmlDocument();
+                XmlNamespaceManager nsManager = new XmlNamespaceManager(document.NameTable);
+                nsManager.AddNamespace("didl", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+                nsManager.AddNamespace("upnp", "urn:schemas-upnp-org:metadata-1-0/upnp/");
+                nsManager.AddNamespace("dc", "http://purl.org/dc/elements/1.1/");
+                nsManager.AddNamespace("ldl", "urn:linn-co-uk/DIDL-Lite");
+
+                try
+                {
+                    document.LoadXml(aMetadata);
+
+                    string c = document.SelectSingleNode("/didl:DIDL-Lite/*/upnp:class", nsManager).FirstChild.Value;
+                    if (c.Contains("audioItem"))
+                    {
+                        string uri = document.SelectSingleNode("/didl:DIDL-Lite/*/didl:res", nsManager).FirstChild.Value;
+                        metadata.Add(aTagManager.Audio.Uri, uri);
+                    }
+                }
+                catch (XmlException) { }
+            }
+            
             metadata.Add(aTagManager.System.Folder, aMetadata);
-            return new MediaDatum(metadata);
+            
+            return metadata;
         }
     }
 }

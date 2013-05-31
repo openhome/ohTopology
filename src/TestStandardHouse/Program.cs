@@ -77,14 +77,14 @@ namespace TestLinnHouse
                 {
                     if (v)
                     {
-                        OpenHome.Av.IVirtualContainer container = iWatcherRadio.Browse().Result;
-                        iFactory.Create<IVirtualSnapshot>(iWatcherRadio.Name, container.Snapshot, w =>
+                        IWatchableContainer<IMediaPreset> container = iWatcherRadio.Browse().Result;
+                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherRadio.Name, container.Snapshot, w =>
                         {
                             string info = "\nPresets begin\n";
-                            IVirtualFragment fragment = w.Read(0, w.Total).Result;
-                            foreach (IMediaDatum d in fragment.Data)
+                            IWatchableFragment<IMediaPreset> fragment = w.Read(0, w.Total).Result;
+                            foreach (IMediaPreset m in fragment.Data)
                             {
-                                string didl = iTagManager.ToDidlLite(d);
+                                string didl = iTagManager.ToDidlLite(m.Metadata);
                                 if (string.IsNullOrEmpty(didl))
                                 {
                                     info += "null";
