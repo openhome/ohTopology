@@ -109,6 +109,7 @@ namespace OpenHome.Av
         private IStandardHouse iHouse;
         private uint iServerCount;
         private bool iHasCompatibleSource;
+        private IProxyPlaylist iPlaylist;
 
         public StandardRoomWatcherMusic(IStandardHouse aHouse, IStandardRoom aRoom)
             : base(aRoom)
@@ -125,6 +126,12 @@ namespace OpenHome.Av
             base.Dispose();
 
             iHouse.Servers.RemoveWatcher(this);
+
+            if (iPlaylist != null)
+            {
+                iPlaylist.Dispose();
+                iPlaylist = null;
+            }
         }
 
         public IWatchableOrdered<IProxyMediaServer> Servers
@@ -135,6 +142,14 @@ namespace OpenHome.Av
             }
         }
 
+        public Task<IWatchableContainer<IMediaPreset>> Container
+        {
+            get
+            {
+                return iPlaylist.Container;
+            }
+        }
+
         protected override void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue)
         {
             EvaluateEnabled(aValue);
@@ -142,6 +157,14 @@ namespace OpenHome.Av
 
         protected override void EvaluateEnabledUpdate(IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
         {
+            SetEnabled(false);
+
+            if (iPlaylist != null)
+            {
+                iPlaylist.Dispose();
+                iPlaylist = null;
+            }
+
             EvaluateEnabled(aValue);
         }
 
@@ -152,8 +175,12 @@ namespace OpenHome.Av
             {
                 if (s.Type == "Playlist" || s.Type == "Radio")
                 {
-                    iHasCompatibleSource = true;
-                    SetEnabled(iServerCount > 0);
+                    s.Device.Create<IProxyPlaylist>((playlist) =>
+                    {
+                        iPlaylist = playlist;
+                        iHasCompatibleSource = true;
+                        SetEnabled(iServerCount > 0);
+                    });
                     return;
                 }
             }
