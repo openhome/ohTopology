@@ -77,7 +77,7 @@ namespace TestLinnHouse
                 {
                     if (v)
                     {
-                        IWatchableContainer<IMediaPreset> container = iWatcherRadio.Browse().Result;
+                        IWatchableContainer<IMediaPreset> container = iWatcherRadio.Container.Result;
                         iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherRadio.Name, container.Snapshot, w =>
                         {
                             string info = "\nPresets begin\n";

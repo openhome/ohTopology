@@ -210,9 +210,12 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<IWatchableContainer<IMediaPreset>> Browse()
+        public Task<IWatchableContainer<IMediaPreset>> Container
         {
-            return iRadio.Browse();
+            get
+            {
+                return iRadio.Container;
+            }
         }
 
         protected override void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue)

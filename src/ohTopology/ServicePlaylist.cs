@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Xml;
 
 using OpenHome.Os.App;
 using OpenHome.Net.ControlPoint.Proxies;
@@ -11,10 +12,36 @@ using OpenHome.Os;
 
 namespace OpenHome.Av
 {
+    class MediaPresetPlaylist : IMediaPreset
+    {
+        private readonly uint iId;
+        private readonly IMediaMetadata iMetadata;
+        private readonly ServicePlaylist iPlaylist;
+
+        public MediaPresetPlaylist(uint aId, IMediaMetadata aMetadata, ServicePlaylist aPlaylist)
+        {
+            iId = aId;
+            iMetadata = aMetadata;
+            iPlaylist = aPlaylist;
+        }
+
+        public IMediaMetadata Metadata
+        {
+            get
+            {
+                return iMetadata;
+            }
+        }
+
+        public void Play()
+        {
+            iPlaylist.SeekId(iId);
+        }
+    }
+
     public interface IProxyPlaylist : IProxy
     {
         IWatchable<uint> Id { get; }
-        IWatchable<IEnumerable<uint>> IdArray { get; }
         IWatchable<string> TransportState { get; }
         IWatchable<bool> Repeat { get; }
         IWatchable<bool> Shuffle { get; }
@@ -35,8 +62,7 @@ namespace OpenHome.Av
         Task SetRepeat(bool aValue);
         Task SetShuffle(bool aValue);
 
-        Task<IInfoMetadata> Read(uint aId);
-        Task<string> ReadList(string aIdList);
+        Task<IWatchableContainer<IMediaPreset>> Container { get; }
 
         uint TracksMax { get; }
         string ProtocolInfo { get; }
@@ -48,7 +74,6 @@ namespace OpenHome.Av
             : base(aNetwork)
         {
             iId = new Watchable<uint>(Network, "Id", 0);
-            iIdArray = new Watchable<IEnumerable<uint>>(Network, "IdArray", new List<uint>());
             iTransportState = new Watchable<string>(Network, "TransportState", string.Empty);
             iRepeat = new Watchable<bool>(Network, "Repeat", false);
             iShuffle = new Watchable<bool>(Network, "Shuffle", true);
@@ -60,9 +85,6 @@ namespace OpenHome.Av
 
             iId.Dispose();
             iId = null;
-
-            iIdArray.Dispose();
-            iIdArray = null;
 
             iTransportState.Dispose();
             iTransportState = null;
@@ -84,14 +106,6 @@ namespace OpenHome.Av
             get
             {
                 return iId;
-            }
-        }
-
-        public IWatchable<IEnumerable<uint>> IdArray
-        {
-            get
-            {
-                return iIdArray;
             }
         }
 
@@ -149,15 +163,14 @@ namespace OpenHome.Av
         public abstract Task DeleteAll();
         public abstract Task SetRepeat(bool aValue);
         public abstract Task SetShuffle(bool aValue);
-        public abstract Task<IInfoMetadata> Read(uint aId);
-        public abstract Task<string> ReadList(string aIdList);
+
+        public abstract Task<IWatchableContainer<IMediaPreset>> Container { get; }
 
         protected uint iTracksMax;
         protected string iProtocolInfo;
 
         protected IWatchableThread iThread;
         protected Watchable<uint> iId;
-        protected Watchable<IEnumerable<uint>> iIdArray;
         protected Watchable<string> iTransportState;
         protected Watchable<bool> iRepeat;
         protected Watchable<bool> iShuffle;
@@ -170,6 +183,7 @@ namespace OpenHome.Av
         {
             iSubscribed = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgPlaylist1(aDevice);
+            iContainer = new PlaylistContainerNetwork(Network, this);
 
             iService.SetPropertyIdChanged(HandleIdChanged);
             iService.SetPropertyIdArrayChanged(HandleIdArrayChanged);
@@ -182,6 +196,9 @@ namespace OpenHome.Av
 
         public override void Dispose()
         {
+            iContainer.Dispose();
+            iContainer = null;
+            
             iSubscribed.Dispose();
             iSubscribed = null;
 
@@ -343,27 +360,41 @@ namespace OpenHome.Av
             return task;
         }
 
-        public override Task<IInfoMetadata> Read(uint aId)
+        public Task<IEnumerable<IMediaPreset>> ReadList(string aIdList)
         {
-            Task<IInfoMetadata> task = Task.Factory.StartNew(() =>
+            Task<IEnumerable<IMediaPreset>> task = Task<IEnumerable<IMediaPreset>>.Factory.StartNew(() =>
             {
-                string uri;
-                string metadata;
-                iService.SyncRead(aId, out uri, out metadata);
-                return new InfoMetadata(Network.TagManager.FromDidlLite(metadata), uri) as IInfoMetadata;
+                string trackList;
+                iService.SyncReadList(aIdList, out trackList);
+
+                List<IMediaPreset> tracks = new List<IMediaPreset>();
+
+                XmlDocument document = new XmlDocument();
+                document.LoadXml(trackList);
+
+                XmlNodeList list = document.SelectNodes("/TrackList/Entry");
+                foreach (XmlNode n in list)
+                {
+                    uint id = uint.Parse(n["Id"].InnerText);
+                    IMediaMetadata metadata = Network.TagManager.FromDidlLite(n["Metadata"].InnerText);
+                    tracks.Add(new MediaPresetPlaylist(id, metadata, this));
+                }
+
+                return tracks;
             });
             return task;
         }
 
-        public override Task<string> ReadList(string aIdList)
+        public override Task<IWatchableContainer<IMediaPreset>> Container
         {
-            Task<string> task = Task.Factory.StartNew(() =>
+            get
             {
-                string trackList;
-                iService.SyncReadList(aIdList, out trackList);
-                return trackList;
-            });
-            return task;
+                Task<IWatchableContainer<IMediaPreset>> task = Task<IWatchableContainer<IMediaPreset>>.Factory.StartNew(() =>
+                {
+                    return iContainer;
+                });
+                return task;
+            }
         }
 
         private void HandleIdChanged()
@@ -378,7 +409,7 @@ namespace OpenHome.Av
         {
             Network.Schedule(() =>
             {
-                iIdArray.Update(ByteArray.Unpack(iService.PropertyIdArray()));
+                iContainer.UpdateSnapshot(ByteArray.Unpack(iService.PropertyIdArray()));
             });
         }
 
@@ -408,18 +439,109 @@ namespace OpenHome.Av
 
         private ManualResetEvent iSubscribed;
         private CpProxyAvOpenhomeOrgPlaylist1 iService;
+        private PlaylistContainerNetwork iContainer;
+    }
+
+    class PlaylistContainerNetwork : IWatchableContainer<IMediaPreset>, IDisposable
+    {
+        private Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
+        private ServicePlaylistNetwork iPlaylist;
+        private uint iSequence;
+
+        public PlaylistContainerNetwork(INetwork aNetwork, ServicePlaylistNetwork aPlaylist)
+        {
+            iPlaylist = aPlaylist;
+            iSequence = 0;
+            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new PlaylistSnapshotNetwork(iSequence, new List<uint>(), iPlaylist));
+        }
+
+        public void Dispose()
+        {
+            iSnapshot.Dispose();
+            iSnapshot = null;
+            iPlaylist = null;
+        }
+
+        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
+        {
+            get
+            {
+                return iSnapshot;
+            }
+        }
+
+        public void UpdateSnapshot(IList<uint> aIdArray)
+        {
+            ++iSequence;
+            iSnapshot.Update(new PlaylistSnapshotNetwork(iSequence, aIdArray, iPlaylist));
+        }
+    }
+
+    class PlaylistSnapshotNetwork : IWatchableSnapshot<IMediaPreset>
+    {
+        private readonly uint iSequence;
+        private readonly IList<uint> iIdArray;
+        private readonly ServicePlaylistNetwork iPlaylist;
+
+        public PlaylistSnapshotNetwork(uint aSequence, IList<uint> aIdArray, ServicePlaylistNetwork aPlaylist)
+        {
+            iSequence = aSequence;
+            iIdArray = aIdArray;
+            iPlaylist = aPlaylist;
+        }
+
+        public uint Total
+        {
+            get
+            {
+                return ((uint)iIdArray.Count());
+            }
+        }
+
+        public uint Sequence
+        {
+            get
+            {
+                return iSequence;
+            }
+        }
+
+        public IEnumerable<uint> AlphaMap
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        public Task<IWatchableFragment<IMediaPreset>> Read(uint aIndex, uint aCount)
+        {
+            Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
+            {
+                string idList = string.Empty;
+                for (uint i = aIndex; i < aIndex + aCount; ++i)
+                {
+                    idList += string.Format("{0} ", iIdArray[(int)i]);
+                }
+                return new WatchableFragment<IMediaPreset>(aIndex, iSequence, iPlaylist.ReadList(idList.TrimEnd(' ')).Result);
+            });
+            return task;
+        }
     }
 
     class ServicePlaylistMock : ServicePlaylist, IMockable
     {
-        public ServicePlaylistMock(INetwork aNetwork, uint aId, IList<uint> aIdArray, bool aRepeat, bool aShuffle, string aTransportState, string aProtocolInfo, uint aTracksMax)
+        private IList<IMediaPreset> iTracks;
+
+        public ServicePlaylistMock(INetwork aNetwork, uint aId, IList<IMediaMetadata> aTracks, bool aRepeat, bool aShuffle, string aTransportState, string aProtocolInfo, uint aTracksMax)
             : base(aNetwork)
         {
             iTracksMax = aTracksMax;
             iProtocolInfo = aProtocolInfo;
 
+            iTracks = new List<IMediaPreset>();
+
             iId.Update(aId);
-            iIdArray.Update(aIdArray);
             iTransportState.Update(aTransportState);
             iRepeat.Update(aRepeat);
             iShuffle.Update(aShuffle);
@@ -586,28 +708,16 @@ namespace OpenHome.Av
             return task;
         }
 
-        public override Task<IInfoMetadata> Read(uint aId)
+        public override Task<IWatchableContainer<IMediaPreset>> Container
         {
-            Task<IInfoMetadata> task = Task<IInfoMetadata>.Factory.StartNew(() =>
+            get
             {
-                Network.Execute(() =>
+                Task<IWatchableContainer<IMediaPreset>> task = Task<IWatchableContainer<IMediaPreset>>.Factory.StartNew(() =>
                 {
+                    return new PlaylistContainerMock(Network, new PlaylistSnapshotMock(iTracks));
                 });
-                return InfoMetadata.Empty;
-            });
-            return task;
-        }
-
-        public override Task<string> ReadList(string aIdList)
-        {
-            Task<string> task = Task<string>.Factory.StartNew(() =>
-            {
-                Network.Execute(() =>
-                {
-                });
-                return string.Empty;
-            });
-            return task;
+                return task;
+            }
         }
 
         public override void Execute(IEnumerable<string> aValue)
@@ -628,15 +738,9 @@ namespace OpenHome.Av
                 IEnumerable<string> value = aValue.Skip(1);
                 iId.Update(uint.Parse(value.First()));
             }
-            else if (command == "idarray")
+            else if (command == "tracks")
             {
-                List<uint> ids = new List<uint>();
-                IList<string> values = aValue.ToList();
-                foreach (string s in values)
-                {
-                    ids.Add(uint.Parse(s));
-                }
-                iIdArray.Update(ids);
+                throw new NotImplementedException();
             }
             else if (command == "transportstate")
             {
@@ -660,6 +764,69 @@ namespace OpenHome.Av
         }
     }
 
+    class PlaylistContainerMock : IWatchableContainer<IMediaPreset>
+    {
+        public readonly Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
+
+        public PlaylistContainerMock(INetwork aNetwork, IWatchableSnapshot<IMediaPreset> aSnapshot)
+        {
+            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", aSnapshot);
+        }
+
+        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
+        {
+            get
+            {
+                return iSnapshot;
+            }
+        }
+    }
+
+    class PlaylistSnapshotMock : IWatchableSnapshot<IMediaPreset>
+    {
+        private readonly IEnumerable<IMediaPreset> iData;
+
+        public PlaylistSnapshotMock(IEnumerable<IMediaPreset> aData)
+        {
+            iData = aData;
+        }
+
+        public uint Total
+        {
+            get
+            {
+                return ((uint)iData.Count());
+            }
+        }
+
+        public uint Sequence
+        {
+            get
+            {
+                return 0;
+            }
+        }
+
+        public IEnumerable<uint> AlphaMap
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        public Task<IWatchableFragment<IMediaPreset>> Read(uint aIndex, uint aCount)
+        {
+            Do.Assert(aIndex + aCount <= Total);
+
+            Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
+            {
+                return new WatchableFragment<IMediaPreset>(aIndex, 0, iData.Skip((int)aIndex).Take((int)aCount));
+            });
+            return task;
+        }
+    }
+
     public class ProxyPlaylist : Proxy<ServicePlaylist>, IProxyPlaylist
     {
         public ProxyPlaylist(IDevice aDevice, ServicePlaylist aService)
@@ -670,11 +837,6 @@ namespace OpenHome.Av
         public IWatchable<uint> Id
         {
             get { return iService.Id; }
-        }
-
-        public IWatchable<IEnumerable<uint>> IdArray
-        {
-            get { return iService.IdArray; }
         }
 
         public IWatchable<string> TransportState
@@ -772,14 +934,12 @@ namespace OpenHome.Av
             return iService.SetShuffle(aValue);
         }
 
-        public Task<IInfoMetadata> Read(uint aId)
+        public Task<IWatchableContainer<IMediaPreset>> Container
         {
-            return iService.Read(aId);
-        }
-
-        public Task<string> ReadList(string aIdList)
-        {
-            return iService.ReadList(aIdList);
+            get
+            {
+                return iService.Container;
+            }
         }
     }
 }

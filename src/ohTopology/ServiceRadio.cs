@@ -63,7 +63,7 @@ namespace OpenHome.Av
         Task SetId(uint aId, string aUri);
         Task SetChannel(string aUri, IMediaMetadata aMetadata);
 
-        Task<IWatchableContainer<IMediaPreset>> Browse();
+        Task<IWatchableContainer<IMediaPreset>> Container { get; }
 
         uint ChannelsMax { get; }
         string ProtocolInfo { get; }
@@ -146,7 +146,7 @@ namespace OpenHome.Av
         public abstract Task SetId(uint aId, string aUri);
         public abstract Task SetChannel(string aUri, IMediaMetadata aMetadata);
 
-        public abstract Task<IWatchableContainer<IMediaPreset>> Browse();
+        public abstract Task<IWatchableContainer<IMediaPreset>> Container { get; }
         
         protected uint iChannelsMax;
         protected string iProtocolInfo;
@@ -308,13 +308,16 @@ namespace OpenHome.Av
             return task;
         }
 
-        public override Task<IWatchableContainer<IMediaPreset>> Browse()
+        public override Task<IWatchableContainer<IMediaPreset>> Container
         {
-            Task<IWatchableContainer<IMediaPreset>> task = Task < IWatchableContainer<IMediaPreset>>.Factory.StartNew(() =>
+            get
             {
-                return iContainer;
-            });
-            return task;
+                Task<IWatchableContainer<IMediaPreset>> task = Task<IWatchableContainer<IMediaPreset>>.Factory.StartNew(() =>
+                {
+                    return iContainer;
+                });
+                return task;
+            }
         }
 
         private void HandleIdChanged()
@@ -551,13 +554,16 @@ namespace OpenHome.Av
             return task;
         }
 
-        public override Task<IWatchableContainer<IMediaPreset>> Browse()
+        public override Task<IWatchableContainer<IMediaPreset>> Container
         {
-            Task<IWatchableContainer<IMediaPreset>> task = Task<IWatchableContainer<IMediaPreset>>.Factory.StartNew(() =>
+            get
             {
-                return new RadioContainerMock(Network, new RadioSnapshotMock(iPresets));
-            });
-            return task;
+                Task<IWatchableContainer<IMediaPreset>> task = Task<IWatchableContainer<IMediaPreset>>.Factory.StartNew(() =>
+                {
+                    return new RadioContainerMock(Network, new RadioSnapshotMock(iPresets));
+                });
+                return task;
+            }
         }
 
         public override void Execute(IEnumerable<string> aValue)
@@ -762,9 +768,12 @@ namespace OpenHome.Av
             return iService.SetChannel(aUri, aMetadata);
         }
 
-        public Task<IWatchableContainer<IMediaPreset>> Browse()
+        public Task<IWatchableContainer<IMediaPreset>> Container
         {
-            return iService.Browse();
+            get
+            {
+                return iService.Container;
+            }
         }
     }
 }
