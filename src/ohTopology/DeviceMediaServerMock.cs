@@ -82,7 +82,7 @@ namespace OpenHome.Av
 
         private IEnumerable<IMediaMetadata> ReadMetadata(INetwork aNetwork, string aAppRoot)
         {
-            ZipConstants.DefaultCodePage = Encoding.Default.CodePage;
+            ZipConstants.DefaultCodePage = Encoding.Default.CodePage; // without this linux fails to unzip due to missing codepage 850
 
             var path = Path.Combine(aAppRoot, "MockMediaServer.zip");
 
