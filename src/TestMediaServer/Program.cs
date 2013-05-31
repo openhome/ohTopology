@@ -10,14 +10,14 @@ using OpenHome.MediaServer;
 
 namespace TestMediaServer
 {
-    public class Client : IUnorderedWatcher<IDevice>, IWatcher<IVirtualSnapshot>, IDisposable
+    public class Client : IUnorderedWatcher<IDevice>, IWatcher<IWatchableSnapshot<IMediaDatum>>, IDisposable
     {
         private readonly INetwork iNetwork;
         
         private IWatchableUnordered<IDevice> iMediaServers;
         
         private IProxyMediaServer iProxy;
-        private IVirtualSnapshot iSnaphot;
+        private IWatchableSnapshot<IMediaDatum> iSnaphot;
 
         public Client(INetwork aNetwork)
         {
@@ -282,18 +282,18 @@ namespace TestMediaServer
             session.Dispose();
         }
 
-        // IWatcher<IMediaServerSnapshot>
+        // IWatcher<IWatchableSnapshot<IMediaDatum>>
 
-        public void ItemOpen(string aId, IVirtualSnapshot aValue)
+        public void ItemOpen(string aId, IWatchableSnapshot<IMediaDatum> aValue)
         {
             iSnaphot = aValue;
         }
 
-        public void ItemUpdate(string aId, IVirtualSnapshot aValue, IVirtualSnapshot aPrevious)
+        public void ItemUpdate(string aId, IWatchableSnapshot<IMediaDatum> aValue, IWatchableSnapshot<IMediaDatum> aPrevious)
         {
         }
 
-        public void ItemClose(string aId, IVirtualSnapshot aValue)
+        public void ItemClose(string aId, IWatchableSnapshot<IMediaDatum> aValue)
         {
         }
 

@@ -16,8 +16,8 @@ namespace OpenHome.Av
 {
     public interface IMediaServerSession : IDisposable
     {
-        Task<IVirtualContainer> Query(string aValue);
-        Task<IVirtualContainer> Browse(IMediaDatum aDatum); // null = home
+        Task<IWatchableContainer<IMediaDatum>> Query(string aValue);
+        Task<IWatchableContainer<IMediaDatum>> Browse(IMediaDatum aDatum); // null = home
     }
 
     public interface IProxyMediaServer : IProxy
