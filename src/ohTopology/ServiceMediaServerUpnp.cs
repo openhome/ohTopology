@@ -79,12 +79,12 @@ namespace OpenHome.Av
 
         // IMediaServerSession
 
-        public Task<IVirtualContainer> Query(string aValue)
+        public Task<IWatchableContainer<IMediaDatum>> Query(string aValue)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IVirtualContainer> Browse(IMediaDatum aDatum)
+        public Task<IWatchableContainer<IMediaDatum>> Browse(IMediaDatum aDatum)
         {
             throw new NotImplementedException();
         }
@@ -97,25 +97,25 @@ namespace OpenHome.Av
         }
     }
 
-    internal class MediaServerContainerUpnp : IVirtualContainer
+    internal class MediaServerContainerUpnp : IWatchableContainer<IMediaDatum>
     {
-        private readonly Watchable<IVirtualSnapshot> iSnapshot;
+        private readonly Watchable<IWatchableSnapshot<IMediaDatum>> iSnapshot;
 
-        public MediaServerContainerUpnp(INetwork aNetwork, IVirtualSnapshot aSnapshot)
+        public MediaServerContainerUpnp(INetwork aNetwork, IWatchableSnapshot<IMediaDatum> aSnapshot)
         {
-            iSnapshot = new Watchable<IVirtualSnapshot>(aNetwork.WatchableThread, "snapshot", aSnapshot);
+            iSnapshot = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork.WatchableThread, "snapshot", aSnapshot);
         }
 
         // IMediaServerContainer
 
-        public IWatchable<IVirtualSnapshot> Snapshot
+        public IWatchable<IWatchableSnapshot<IMediaDatum>> Snapshot
         {
             get { return (iSnapshot); }
         }
     }
 
 
-    internal class MediaServerSnapshotUpnp : IVirtualSnapshot
+    internal class MediaServerSnapshotUpnp : IWatchableSnapshot<IMediaDatum>
     {
         private readonly IEnumerable<IMediaDatum> iData;
         private readonly IEnumerable<uint> iAlphaMap;
@@ -143,13 +143,13 @@ namespace OpenHome.Av
             get { return (iAlphaMap); }
         }
 
-        public Task<IVirtualFragment> Read(uint aIndex, uint aCount)
+        public Task<IWatchableFragment<IMediaDatum>> Read(uint aIndex, uint aCount)
         {
             Do.Assert(aIndex + aCount <= Total);
 
-            return (Task.Factory.StartNew<IVirtualFragment>(() =>
+            return (Task.Factory.StartNew<IWatchableFragment<IMediaDatum>>(() =>
             {
-                return (new VirtualFragment(aIndex, 0, iData.Skip((int)aIndex).Take((int)aCount)));
+                return (new WatchableFragment<IMediaDatum>(aIndex, 0, iData.Skip((int)aIndex).Take((int)aCount)));
             }));
         }
     }

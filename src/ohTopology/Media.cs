@@ -33,26 +33,6 @@ namespace OpenHome.Av
         void Play();
     }
 
-    public interface IVirtualFragment
-    {
-        uint Index { get; }
-        uint Sequence { get; }
-        IEnumerable<IMediaDatum> Data { get; }
-    }
-
-    public interface IVirtualSnapshot
-    {
-        uint Total { get; }
-        uint Sequence { get; }
-        IEnumerable<uint> AlphaMap { get; } // null if no alpha map
-        Task<IVirtualFragment> Read(uint aIndex, uint aCount);
-    }
-
-    public interface IVirtualContainer
-    {
-        IWatchable<IVirtualSnapshot> Snapshot { get; }
-    }
-
     public interface IWatchableFragment<T>
     {
         uint Index { get; }
@@ -227,37 +207,6 @@ namespace OpenHome.Av
         IEnumerator IEnumerable.GetEnumerator()
         {
             throw new NotImplementedException();
-        }
-    }
-
-    public class VirtualFragment : IVirtualFragment
-    {
-        private readonly uint iIndex;
-        private readonly uint iSequence;
-        private readonly IEnumerable<IMediaDatum> iData;
-
-        public VirtualFragment(uint aIndex, uint aSequence, IEnumerable<IMediaDatum> aData)
-        {
-            iIndex = aIndex;
-            iSequence = aSequence;
-            iData = aData;
-        }
-
-        // IWatchableFragment<T>
-
-        public uint Index
-        {
-            get { return (iIndex); }
-        }
-
-        public uint Sequence
-        {
-            get { return (iSequence); }
-        }
-
-        public IEnumerable<IMediaDatum> Data
-        {
-            get { return (iData); }
         }
     }
 
