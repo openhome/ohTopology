@@ -28,7 +28,7 @@ namespace OpenHome.Av
         protected ServiceReceiver(INetwork aNetwork)
             : base(aNetwork)
         {
-            iMetadata = new Watchable<IInfoMetadata>(Network, "Metadata", new InfoMetadata());
+            iMetadata = new Watchable<IInfoMetadata>(Network, "Metadata", InfoMetadata.Empty);
             iTransportState = new Watchable<string>(Network, "TransportState", string.Empty);
         }
 
@@ -161,7 +161,7 @@ namespace OpenHome.Av
         {
             Network.Schedule(() =>
             {
-                iMetadata.Update(new InfoMetadata(iService.PropertyMetadata(), iService.PropertyUri()));
+                iMetadata.Update(new InfoMetadata(Network.TagManager.FromDidlLite(iService.PropertyMetadata()), iService.PropertyUri()));
             });
         }
 
@@ -184,7 +184,7 @@ namespace OpenHome.Av
         {
             iProtocolInfo = aProtocolInfo;
 
-            iMetadata.Update(new InfoMetadata(aMetadata, aUri));
+            iMetadata.Update(new InfoMetadata(aNetwork.TagManager.FromDidlLite(aMetadata), aUri));
             iTransportState.Update(aTransportState);
         }
 
@@ -218,7 +218,7 @@ namespace OpenHome.Av
             {
                 Network.Schedule(() =>
                 {
-                    iMetadata.Update(new InfoMetadata(aMetadata.ToString(), aMetadata.Uri));
+                    iMetadata.Update(new InfoMetadata(Network.TagManager.FromDidlLite(aMetadata.ToString()), aMetadata.Uri));
                 });
             });
             return task;
@@ -239,7 +239,7 @@ namespace OpenHome.Av
                 {
                     throw new NotSupportedException();
                 }
-                IInfoMetadata metadata = new InfoMetadata(value.ElementAt(0), value.ElementAt(1));
+                IInfoMetadata metadata = new InfoMetadata(Network.TagManager.FromDidlLite(value.ElementAt(0)), value.ElementAt(1));
                 iMetadata.Update(metadata);
             }
             else if (command == "transportstate")

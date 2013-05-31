@@ -58,7 +58,7 @@ namespace OpenHome.Av
             Add(Color.MistyRose, Color.Navy);
 
 
-            Console.WriteLine(iHttpFramework.Port);
+            Console.WriteLine("Port: " + iHttpFramework.Port);
 
             iHttpFramework.AddHttpHandler("artwork", HandleRequestArtwork);
             iHttpFramework.AddHttpHandler("audio", HandleRequestAudio);

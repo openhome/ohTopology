@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Xml;
 
 using OpenHome.Os.App;
 using OpenHome.Net.ControlPoint.Proxies;
@@ -23,7 +24,7 @@ namespace OpenHome.Av
 
     public interface IInfoMetadata
     {
-        string Metadata { get; }
+        IMediaMetadata Metadata { get; }
         string Uri { get; }
     }
 
@@ -119,19 +120,21 @@ namespace OpenHome.Av
 
     public class InfoMetadata : IInfoMetadata
     {
-        internal InfoMetadata()
+        public static readonly IInfoMetadata Empty = new InfoMetadata();
+        
+        private InfoMetadata()
         {
-            iMetadata = string.Empty;
-            iUri = string.Empty;
+            iMetadata = null;
+            iUri = null;
         }
 
-        public InfoMetadata(string aMetadata, string aUri)
+        public InfoMetadata(IMediaMetadata aMetadata, string aUri)
         {
             iMetadata = aMetadata;
             iUri = aUri;
         }
 
-        public string Metadata
+        public IMediaMetadata Metadata
         {
             get
             {
@@ -147,7 +150,7 @@ namespace OpenHome.Av
             }
         }
 
-        private string iMetadata;
+        private IMediaMetadata iMetadata;
         private string iUri;
     }
 
@@ -180,7 +183,7 @@ namespace OpenHome.Av
             : base(aNetwork)
         {
             iDetails = new Watchable<IInfoDetails>(Network, "Details", new InfoDetails());
-            iMetadata = new Watchable<IInfoMetadata>(Network, "Metadata", new InfoMetadata());
+            iMetadata = new Watchable<IInfoMetadata>(Network, "Metadata", InfoMetadata.Empty);
             iMetatext = new Watchable<IInfoMetatext>(Network, "Metatext", new InfoMetatext());
         }
 
@@ -302,7 +305,7 @@ namespace OpenHome.Av
             {
                 iMetadata.Update(
                     new InfoMetadata(
-                        iService.PropertyMetadata(),
+                        Network.TagManager.FromDidlLite(iService.PropertyMetadata()),
                         iService.PropertyUri()
                     ));
             });
@@ -357,7 +360,35 @@ namespace OpenHome.Av
                 {
                     throw new NotSupportedException();
                 }
-                IInfoMetadata metadata = new InfoMetadata(value.ElementAt(0), value.ElementAt(1));
+                
+                /*XmlDocument document = new XmlDocument();
+                XmlNamespaceManager nsManager = new XmlNamespaceManager(document.NameTable);
+                nsManager.AddNamespace("didl", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+                nsManager.AddNamespace("upnp", "urn:schemas-upnp-org:metadata-1-0/upnp/");
+                nsManager.AddNamespace("dc", "http://purl.org/dc/elements/1.1/");
+                nsManager.AddNamespace("ldl", "urn:linn-co-uk/DIDL-Lite");
+
+                XmlNode didl = document.CreateElement("DIDL-Lite", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+
+                XmlNode item = document.CreateElement("item", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+
+                XmlNode title = document.CreateElement("dc:title", "http://purl.org/dc/elements/1.1/");
+                title.AppendChild(document.CreateTextNode(value.ElementAt(0)));
+                item.AppendChild(title);
+
+                XmlNode c = document.CreateElement("upnp:class", "urn:schemas-upnp-org:metadata-1-0/upnp/");
+                c.AppendChild(document.CreateTextNode("object.item.audioItem"));
+                item.AppendChild(c);
+
+                XmlNode res = document.CreateElement("res", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+                res.AppendChild(document.CreateTextNode(value.ElementAt(1)));
+                item.AppendChild(res);
+
+                didl.AppendChild(item);
+
+                document.AppendChild(didl);*/
+
+                IInfoMetadata metadata = new InfoMetadata(Network.TagManager.FromDidlLite(value.ElementAt(0)), value.ElementAt(1));
                 iMetadata.Update(metadata);
             }
             else if (command == "metatext")

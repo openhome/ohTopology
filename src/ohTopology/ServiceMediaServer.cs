@@ -14,30 +14,10 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    public interface IMediaServerFragment
-    {
-        uint Index { get; }
-        uint Sequence { get; }
-        IEnumerable<IMediaDatum> Data { get; }
-    }
-
-    public interface IMediaServerSnapshot
-    {
-        uint Total { get; }
-        uint Sequence { get; }
-        IEnumerable<uint> AlphaMap { get; } // null if no alpha map
-        Task<IMediaServerFragment> Read(uint aIndex, uint aCount);
-    }
-
-    public interface IMediaServerContainer
-    {
-        IWatchable<IMediaServerSnapshot> Snapshot { get; }
-    }
-
     public interface IMediaServerSession : IDisposable
     {
-        Task<IMediaServerContainer> Query(string aValue);
-        Task<IMediaServerContainer> Browse(IMediaDatum aDatum); // null = home
+        Task<IVirtualContainer> Query(string aValue);
+        Task<IVirtualContainer> Browse(IMediaDatum aDatum); // null = home
     }
 
     public interface IProxyMediaServer : IProxy
@@ -56,37 +36,6 @@ namespace OpenHome.Av
         string ProductName { get; }
         string ProductUrl { get; }
         Task<IMediaServerSession> CreateSession();
-    }
-
-    public class MediaServerFragment : IMediaServerFragment
-    {
-        private readonly uint iIndex;
-        private readonly uint iSequence;
-        private readonly IEnumerable<IMediaDatum> iData;
-
-        public MediaServerFragment(uint aIndex, uint aSequence, IEnumerable<IMediaDatum> aData)
-        {
-            iIndex = aIndex;
-            iSequence = aSequence;
-            iData = aData;
-        }
-
-        // IMediaServerFragment
-
-        public uint Index
-        {
-            get { return (iIndex); }
-        }
-
-        public uint Sequence
-        {
-            get { return (iSequence); }
-        }
-
-        public IEnumerable<IMediaDatum> Data
-        {
-            get { return (iData); }
-        }
     }
 
     internal class ProxyMediaServer : Proxy<ServiceMediaServer>, IProxyMediaServer
