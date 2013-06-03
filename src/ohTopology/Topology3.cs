@@ -121,7 +121,7 @@ namespace OpenHome.Av
     public interface ITopology3
     {
         IWatchableUnordered<ITopology3Room> Rooms { get; }
-        IWatchableThread WatchableThread { get; }
+        INetwork Network { get; }
     }
 
     public class Topology3 : ITopology3, IUnorderedWatcher<ITopology2Group>, IDisposable
@@ -129,14 +129,14 @@ namespace OpenHome.Av
         public Topology3(ITopology2 aTopology2)
         {
             iDisposed = false;
-            iThread = aTopology2.WatchableThread;
+            iNetwork = aTopology2.Network;
             iTopology2 = aTopology2;
 
-            iRooms = new WatchableUnordered<ITopology3Room>(iThread);
+            iRooms = new WatchableUnordered<ITopology3Room>(iNetwork);
             iGroupWatcherLookup = new Dictionary<ITopology2Group, Topology3GroupWatcher>();
             iRoomLookup = new Dictionary<string, Topology3Room>();
 
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iTopology2.Groups.AddWatcher(this);
             });
@@ -149,7 +149,7 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("Topology3.Dispose");
             }
 
-            iThread.Execute(() =>
+            iNetwork.Execute(() =>
             {
                 iTopology2.Groups.RemoveWatcher(this);
 
@@ -179,11 +179,11 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchableThread WatchableThread
+        public INetwork Network
         {
             get
             {
-                return iThread;
+                return iNetwork;
             }
         }
 
@@ -224,7 +224,7 @@ namespace OpenHome.Av
             else
             {
                 // need to create a new room
-                room = new Topology3Room(iThread, aRoom, aGroup);
+                room = new Topology3Room(iNetwork, aRoom, aGroup);
                 iRoomLookup.Add(aRoom, room);
                 iRooms.Add(room);
             }
@@ -242,7 +242,7 @@ namespace OpenHome.Av
                     iRoomLookup.Remove(aRoom);
 
                     // schedule disposal of the room
-                    iThread.Schedule(() =>
+                    iNetwork.Schedule(() =>
                     {
                         room.Dispose();
                     });
@@ -251,7 +251,7 @@ namespace OpenHome.Av
         }
 
         private bool iDisposed;
-        private IWatchableThread iThread;
+        private INetwork iNetwork;
         private ITopology2 iTopology2;
 
         private WatchableUnordered<ITopology3Room> iRooms;

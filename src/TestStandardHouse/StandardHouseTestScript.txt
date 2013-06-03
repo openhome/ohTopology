@@ -19,6 +19,12 @@ expect Kitchen open HasTime False
 expect Kitchen open Duration 0
 expect Kitchen open Seconds 0
 expect Kitchen open 
+Unconfigured source begin
+Unconfigured source end
+expect Kitchen open 
+Configured source begin
+Configured source end
+expect Kitchen open 
 Presets begin
 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Jazz (Jazz)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122120&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122120q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -46,13 +52,19 @@ expect Sitting Room open Time Active True
 expect Sitting Room open HasTime False
 expect Sitting Room open Duration 0
 expect Sitting Room open Seconds 0
-expect Sitting Room add Unconfigured Source 5 Klimax DSM Analog1 Analog True True True 4c494e4e-0026-0f99-1112-ef000004013f Volume 4c494e4e-0026-0f99-1112-ef000004013f
-expect Sitting Room add Unconfigured Source 6 Klimax DSM Analog2 Analog True True True 4c494e4e-0026-0f99-1112-ef000004013f Volume 4c494e4e-0026-0f99-1112-ef000004013f
-expect Sitting Room add Unconfigured Source 7 Klimax DSM Phono Analog True True True 4c494e4e-0026-0f99-1112-ef000004013f Volume 4c494e4e-0026-0f99-1112-ef000004013f
-expect Sitting Room add Unconfigured Source 8 Klimax DSM SPDIF1 Digital True True True 4c494e4e-0026-0f99-1112-ef000004013f Volume 4c494e4e-0026-0f99-1112-ef000004013f
-expect Sitting Room add Unconfigured Source 9 Klimax DSM SPDIF2 Digital True True True 4c494e4e-0026-0f99-1112-ef000004013f Volume 4c494e4e-0026-0f99-1112-ef000004013f
-expect Sitting Room add Unconfigured Source 10 Klimax DSM TOSLINK1 Digital True True True 4c494e4e-0026-0f99-1112-ef000004013f Volume 4c494e4e-0026-0f99-1112-ef000004013f
-expect Sitting Room add Unconfigured Source 11 Klimax DSM TOSLINK2 Digital True True True 4c494e4e-0026-0f99-1112-ef000004013f Volume 4c494e4e-0026-0f99-1112-ef000004013f
+expect Sitting Room open 
+Unconfigured source begin
+Analog1
+Analog2
+Phono
+SPDIF1
+SPDIF2
+TOSLINK1
+TOSLINK2
+Unconfigured source end
+expect Sitting Room open 
+Configured source begin
+Configured source end
 expect Sitting Room open 
 Presets begin
 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -81,13 +93,19 @@ expect Bedroom open Time Active True
 expect Bedroom open HasTime False
 expect Bedroom open Duration 0
 expect Bedroom open Seconds 0
-expect Bedroom add Unconfigured Source 5 Kiko DSM Analog1 Analog True True True 4c494e4e-0026-0f99-1113-ef000004013f Volume 4c494e4e-0026-0f99-1113-ef000004013f
-expect Bedroom add Unconfigured Source 6 Kiko DSM Analog2 Analog True True True 4c494e4e-0026-0f99-1113-ef000004013f Volume 4c494e4e-0026-0f99-1113-ef000004013f
-expect Bedroom add Unconfigured Source 7 Kiko DSM Phono Analog True True True 4c494e4e-0026-0f99-1113-ef000004013f Volume 4c494e4e-0026-0f99-1113-ef000004013f
-expect Bedroom add Unconfigured Source 8 Kiko DSM SPDIF1 Digital True True True 4c494e4e-0026-0f99-1113-ef000004013f Volume 4c494e4e-0026-0f99-1113-ef000004013f
-expect Bedroom add Unconfigured Source 9 Kiko DSM SPDIF2 Digital True True True 4c494e4e-0026-0f99-1113-ef000004013f Volume 4c494e4e-0026-0f99-1113-ef000004013f
-expect Bedroom add Unconfigured Source 10 Kiko DSM TOSLINK1 Digital True True True 4c494e4e-0026-0f99-1113-ef000004013f Volume 4c494e4e-0026-0f99-1113-ef000004013f
-expect Bedroom add Unconfigured Source 11 Kiko DSM TOSLINK2 Digital True True True 4c494e4e-0026-0f99-1113-ef000004013f Volume 4c494e4e-0026-0f99-1113-ef000004013f
+expect Bedroom open 
+Unconfigured source begin
+Analog1
+Analog2
+Phono
+SPDIF1
+SPDIF2
+TOSLINK1
+TOSLINK2
+Unconfigured source end
+expect Bedroom open 
+Configured source begin
+Configured source end
 expect Bedroom open 
 Presets begin
 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -116,6 +134,12 @@ expect Dining Room open Time Active True
 expect Dining Room open HasTime False
 expect Dining Room open Duration 0
 expect Dining Room open Seconds 0
+expect Dining Room open 
+Unconfigured source begin
+Unconfigured source end
+expect Dining Room open 
+Configured source begin
+Configured source end
 expect Dining Room open 
 Presets begin
 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -185,6 +209,12 @@ expect Main Room open HasTime False
 expect Main Room open Duration 0
 expect Main Room open Seconds 0
 expect Main Room open 
+Unconfigured source begin
+Unconfigured source end
+expect Main Room open 
+Configured source begin
+Configured source end
+expect Main Room open 
 Presets begin
 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Jazz (Jazz)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122120&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122120q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -246,6 +276,12 @@ expect Main Room open HasTime False
 expect Main Room open Duration 0
 expect Main Room open Seconds 0
 expect Main Room open 
+Unconfigured source begin
+Unconfigured source end
+expect Main Room open 
+Configured source begin
+Configured source end
+expect Main Room open 
 Presets begin
 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Jazz (Jazz)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122120&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122120q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -271,6 +307,12 @@ empty
 // add another ds to Main Room
 mock network add ds 68
 expect Main Room update Zone False 
+expect Main Room update 
+Unconfigured source begin
+Unconfigured source end
+expect Main Room update 
+Configured source begin
+Configured source end
 expect Main Room update Presets Enabled False
 expect Main Room open 
 Presets begin
@@ -295,6 +337,12 @@ empty
 
 // join ds and ensure info changes from DS 67 info to DS 68 info
 mock network update ds 67 product source 0 name Test
+expect Main Room update 
+Unconfigured source begin
+Unconfigured source end
+expect Main Room update 
+Configured source begin
+Configured source end
 expect Main Room update Presets Enabled False
 expect Main Room open 
 Presets begin
@@ -311,6 +359,12 @@ expect Main Room update HasSourceControl False
 expect Main Room update HasSourceControl True
 empty
 mock network update ds 68 product name Test
+expect Main Room update 
+Unconfigured source begin
+Unconfigured source end
+expect Main Room update 
+Configured source begin
+Configured source end
 expect Main Room update Presets Enabled False
 expect Main Room open 
 Presets begin
@@ -374,13 +428,19 @@ empty
 
 mock network add dsm 50
 expect Main Room update Zone False 
-expect Main Room add Unconfigured Source 5 Mock Dsm Analog1 Analog True True True 50 Volume 50
-expect Main Room add Unconfigured Source 6 Mock Dsm Analog2 Analog True True True 50 Volume 50
-expect Main Room add Unconfigured Source 7 Mock Dsm Phono Analog True True True 50 Volume 50
-expect Main Room add Unconfigured Source 8 Mock Dsm SPDIF1 Digital True True True 50 Volume 50
-expect Main Room add Unconfigured Source 9 Mock Dsm SPDIF2 Digital True True True 50 Volume 50
-expect Main Room add Unconfigured Source 10 Mock Dsm TOSLINK1 Digital True True True 50 Volume 50
-expect Main Room add Unconfigured Source 11 Mock Dsm TOSLINK2 Digital True True True 50 Volume 50
+expect Main Room update 
+Unconfigured source begin
+Analog1
+Analog2
+Phono
+SPDIF1
+SPDIF2
+TOSLINK1
+TOSLINK2
+Unconfigured source end
+expect Main Room update 
+Configured source begin
+Configured source end
 expect Main Room update Presets Enabled False
 expect Main Room open 
 Presets begin
@@ -398,13 +458,12 @@ expect Main Room update HasSourceControl True
 empty
 
 mock network update ds 50 product room Test Room
-expect Main Room remove Unconfigured Source 5 Mock Dsm Analog1 Analog True True True 50 Volume 50
-expect Main Room remove Unconfigured Source 6 Mock Dsm Analog2 Analog True True True 50 Volume 50
-expect Main Room remove Unconfigured Source 7 Mock Dsm Phono Analog True True True 50 Volume 50
-expect Main Room remove Unconfigured Source 8 Mock Dsm SPDIF1 Digital True True True 50 Volume 50
-expect Main Room remove Unconfigured Source 9 Mock Dsm SPDIF2 Digital True True True 50 Volume 50
-expect Main Room remove Unconfigured Source 10 Mock Dsm TOSLINK1 Digital True True True 50 Volume 50
-expect Main Room remove Unconfigured Source 11 Mock Dsm TOSLINK2 Digital True True True 50 Volume 50
+expect Main Room update 
+Unconfigured source begin
+Unconfigured source end
+expect Main Room update 
+Configured source begin
+Configured source end
 expect Main Room update Presets Enabled False
 expect Main Room open 
 Presets begin
@@ -434,13 +493,19 @@ expect Test Room open Time Active True
 expect Test Room open HasTime False
 expect Test Room open Duration 0
 expect Test Room open Seconds 0
-expect Test Room add Unconfigured Source 5 Mock Dsm Analog1 Analog True True True 50 Volume 50
-expect Test Room add Unconfigured Source 6 Mock Dsm Analog2 Analog True True True 50 Volume 50
-expect Test Room add Unconfigured Source 7 Mock Dsm Phono Analog True True True 50 Volume 50
-expect Test Room add Unconfigured Source 8 Mock Dsm SPDIF1 Digital True True True 50 Volume 50
-expect Test Room add Unconfigured Source 9 Mock Dsm SPDIF2 Digital True True True 50 Volume 50
-expect Test Room add Unconfigured Source 10 Mock Dsm TOSLINK1 Digital True True True 50 Volume 50
-expect Test Room add Unconfigured Source 11 Mock Dsm TOSLINK2 Digital True True True 50 Volume 50
+expect Test Room open 
+Unconfigured source begin
+Analog1
+Analog2
+Phono
+SPDIF1
+SPDIF2
+TOSLINK1
+TOSLINK2
+Unconfigured source end
+expect Test Room open 
+Configured source begin
+Configured source end
 expect Test Room open 
 Presets begin
 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -467,20 +532,19 @@ expect Test Room update HasTime True
 empty
 
 mock network update ds 50 product source 5 name Wii
-expect Test Room remove Unconfigured Source 5 Mock Dsm Analog1 Analog True True True 50 Volume 50
-expect Test Room remove Unconfigured Source 6 Mock Dsm Analog2 Analog True True True 50 Volume 50
-expect Test Room remove Unconfigured Source 7 Mock Dsm Phono Analog True True True 50 Volume 50
-expect Test Room remove Unconfigured Source 8 Mock Dsm SPDIF1 Digital True True True 50 Volume 50
-expect Test Room remove Unconfigured Source 9 Mock Dsm SPDIF2 Digital True True True 50 Volume 50
-expect Test Room remove Unconfigured Source 10 Mock Dsm TOSLINK1 Digital True True True 50 Volume 50
-expect Test Room remove Unconfigured Source 11 Mock Dsm TOSLINK2 Digital True True True 50 Volume 50
-expect Test Room add Configured Source 5 Mock Dsm Wii Analog True True True 50 Volume 50
-expect Test Room add Unconfigured Source 6 Mock Dsm Analog2 Analog True True True 50 Volume 50
-expect Test Room add Unconfigured Source 7 Mock Dsm Phono Analog True True True 50 Volume 50
-expect Test Room add Unconfigured Source 8 Mock Dsm SPDIF1 Digital True True True 50 Volume 50
-expect Test Room add Unconfigured Source 9 Mock Dsm SPDIF2 Digital True True True 50 Volume 50
-expect Test Room add Unconfigured Source 10 Mock Dsm TOSLINK1 Digital True True True 50 Volume 50
-expect Test Room add Unconfigured Source 11 Mock Dsm TOSLINK2 Digital True True True 50 Volume 50
+expect Test Room update 
+Unconfigured source begin
+Analog2
+Phono
+SPDIF1
+SPDIF2
+TOSLINK1
+TOSLINK2
+Unconfigured source end
+expect Test Room update 
+Configured source begin
+Wii
+Configured source end
 expect Test Room update Presets Enabled False
 expect Test Room open 
 Presets begin
@@ -498,20 +562,19 @@ expect Test Room update HasSourceControl True
 empty
 
 mock network update ds 50 product source 5 name Analog1
-expect Test Room remove Unconfigured Source 6 Mock Dsm Analog2 Analog True True True 50 Volume 50
-expect Test Room remove Unconfigured Source 7 Mock Dsm Phono Analog True True True 50 Volume 50
-expect Test Room remove Unconfigured Source 8 Mock Dsm SPDIF1 Digital True True True 50 Volume 50
-expect Test Room remove Unconfigured Source 9 Mock Dsm SPDIF2 Digital True True True 50 Volume 50
-expect Test Room remove Unconfigured Source 10 Mock Dsm TOSLINK1 Digital True True True 50 Volume 50
-expect Test Room remove Unconfigured Source 11 Mock Dsm TOSLINK2 Digital True True True 50 Volume 50
-expect Test Room remove Configured Source 5 Mock Dsm Wii Analog True True True 50 Volume 50
-expect Test Room add Unconfigured Source 5 Mock Dsm Analog1 Analog True True True 50 Volume 50
-expect Test Room add Unconfigured Source 6 Mock Dsm Analog2 Analog True True True 50 Volume 50
-expect Test Room add Unconfigured Source 7 Mock Dsm Phono Analog True True True 50 Volume 50
-expect Test Room add Unconfigured Source 8 Mock Dsm SPDIF1 Digital True True True 50 Volume 50
-expect Test Room add Unconfigured Source 9 Mock Dsm SPDIF2 Digital True True True 50 Volume 50
-expect Test Room add Unconfigured Source 10 Mock Dsm TOSLINK1 Digital True True True 50 Volume 50
-expect Test Room add Unconfigured Source 11 Mock Dsm TOSLINK2 Digital True True True 50 Volume 50
+expect Test Room update 
+Unconfigured source begin
+Analog1
+Analog2
+Phono
+SPDIF1
+SPDIF2
+TOSLINK1
+TOSLINK2
+Unconfigured source end
+expect Test Room update 
+Configured source begin
+Configured source end
 expect Test Room update Presets Enabled False
 expect Test Room open 
 Presets begin

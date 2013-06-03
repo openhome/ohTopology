@@ -18,7 +18,7 @@ namespace OpenHome.Av
     {
         public StandardRoomTime(IStandardRoom aRoom)
         {
-            iThread = aRoom.WatchableThread;
+            iThread = aRoom.Network;
             iRoom = aRoom;
 
             iLock = new object();

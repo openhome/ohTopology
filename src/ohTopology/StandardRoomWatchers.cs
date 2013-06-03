@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
 using OpenHome.Os.App;
 
@@ -17,8 +18,9 @@ namespace OpenHome.Av
         protected StandardRoomWatcher(IStandardRoom aRoom)
         {
             iRoom = aRoom;
+            iNetwork = aRoom.Network;
             iActive = true;
-            iEnabled = new Watchable<bool>(iRoom.WatchableThread, "Enabled", false);
+            iEnabled = new Watchable<bool>(iNetwork, "Enabled", false);
 
             iRoom.Sources.AddWatcher(this);
 
@@ -88,7 +90,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return iRoom.WatchableThread;
+                return iRoom.Network;
             }
         }
 
@@ -98,6 +100,8 @@ namespace OpenHome.Av
             iRoom.UnJoin(SetInactive);
             iActive = false;
         }
+
+        protected INetwork iNetwork;
 
         private IStandardRoom iRoom;
         private bool iActive;
@@ -314,15 +318,15 @@ namespace OpenHome.Av
 
     public class StandardRoomWatcherExternal : StandardRoomWatcher
     {
-        private WatchableOrdered<ITopology4Source> iConfigured;
-        private WatchableOrdered<ITopology4Source> iUnconfigured;
+        private ExternalContainer iConfigured;
+        private ExternalContainer iUnconfigured;
 
         public StandardRoomWatcherExternal(IStandardRoom aRoom)
             : base(aRoom)
         {
         }
 
-        public IWatchableOrdered<ITopology4Source> Configured
+        public IWatchableContainer<IMediaPreset> Configured
         {
             get
             {
@@ -330,7 +334,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchableOrdered<ITopology4Source> Unconfigured
+        public IWatchableContainer<IMediaPreset> Unconfigured
         {
             get
             {
@@ -340,8 +344,8 @@ namespace OpenHome.Av
 
         protected override void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue)
         {
-            iConfigured = new WatchableOrdered<ITopology4Source>(WatchableThread);
-            iUnconfigured = new WatchableOrdered<ITopology4Source>(WatchableThread);
+            iConfigured = new ExternalContainer(iNetwork);
+            iUnconfigured = new ExternalContainer(iNetwork);
             EvaluateEnabled(aValue);
         }
 
@@ -368,12 +372,11 @@ namespace OpenHome.Av
 
         private bool BuildLists(IEnumerable<ITopology4Source> aValue)
         {
-            iUnconfigured.Clear();
-            iConfigured.Clear();
-
             uint cIndex = 0;
             uint uIndex = 0;
             bool hasExternal = false;
+            List<ITopology4Source> configured = new List<ITopology4Source>();
+            List<ITopology4Source> unconfigured = new List<ITopology4Source>();
             foreach (ITopology4Source s in aValue)
             {
                 if (IsExternal(s))
@@ -382,16 +385,19 @@ namespace OpenHome.Av
 
                     if (IsConfigured(s))
                     {
-                        iConfigured.Add(s, cIndex);
+                        configured.Add(s);
                         cIndex++;
                     }
                     else
                     {
-                        iUnconfigured.Add(s, uIndex);
+                        unconfigured.Add(s);
                         uIndex++;
                     }
                 }
             }
+
+            iUnconfigured.UpdateSnapshot(unconfigured);
+            iConfigured.UpdateSnapshot(configured);
 
             return hasExternal;
         }
@@ -457,6 +463,88 @@ namespace OpenHome.Av
             }
 
             return true;
+        }
+    }
+
+    class ExternalContainer : IWatchableContainer<IMediaPreset>, IDisposable
+    {
+        private Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
+        private uint iSequence;
+
+        public ExternalContainer(INetwork aNetwork)
+        {
+            iSequence = 0;
+            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new ExternalSnapshot(iSequence, new List<ITopology4Source>()));
+        }
+
+        public void Dispose()
+        {
+            iSnapshot.Dispose();
+            iSnapshot = null;
+        }
+
+        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
+        {
+            get
+            {
+                return iSnapshot;
+            }
+        }
+
+        public void UpdateSnapshot(IList<ITopology4Source> aSources)
+        {
+            ++iSequence;
+            iSnapshot.Update(new ExternalSnapshot(iSequence, aSources));
+        }
+    }
+
+    class ExternalSnapshot : IWatchableSnapshot<IMediaPreset>
+    {
+        private readonly uint iSequence;
+        private readonly IList<IMediaPreset> iSources;
+
+        public ExternalSnapshot(uint aSequence, IList<ITopology4Source> aSources)
+        {
+            iSequence = aSequence;
+            iSources = new List<IMediaPreset>();
+
+            foreach (ITopology4Source s in aSources)
+            {
+                iSources.Add(s.Preset);
+            }
+        }
+
+        public uint Total
+        {
+            get
+            {
+                return ((uint)iSources.Count);
+            }
+        }
+
+        public uint Sequence
+        {
+            get
+            {
+                return iSequence;
+            }
+        }
+
+        public IEnumerable<uint> AlphaMap
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        public Task<IWatchableFragment<IMediaPreset>> Read(uint aIndex, uint aCount)
+        {
+            Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
+            {
+                return new WatchableFragment<IMediaPreset>(aIndex, iSequence, iSources.Skip((int)aIndex).Take((int)aCount));
+            });
+            return task;
         }
     }
 }

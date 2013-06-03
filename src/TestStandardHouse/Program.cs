@@ -50,26 +50,26 @@ namespace TestLinnHouse
                 iFactory.Create<uint>(iTime.Name, iTime.Duration, v => "Duration " + v);
                 iFactory.Create<uint>(iTime.Name, iTime.Seconds, v => "Seconds " + v);
 
-                iFactory.Create<ITopology4Source>(iWatcherExternal.Name, iWatcherExternal.Unconfigured, v =>
+                iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Name, iWatcherExternal.Unconfigured.Snapshot, v =>
                 {
-                    string info = "";
-                    info += string.Format("Unconfigured Source {0} {1} {2} {3} {4} {5} {6} {7} Volume",
-                        v.Index, v.Group, v.Name, v.Type, v.Visible, v.HasInfo, v.HasTime, v.Device.Udn);
-                    foreach (var g in v.Volumes)
+                    string info = "\nUnconfigured source begin\n";
+                    IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
+                    foreach (IMediaPreset p in fragment.Data)
                     {
-                        info += " " + g.Device.Udn;
+                        info += p.Metadata[iTagManager.Container.Title].Value + "\n";
                     }
+                    info += "Unconfigured source end";
                     return info;
                 });
-                iFactory.Create<ITopology4Source>(iWatcherExternal.Name, iWatcherExternal.Configured, v =>
+                iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Name, iWatcherExternal.Configured.Snapshot, v =>
                 {
-                    string info = "";
-                    info += string.Format("Configured Source {0} {1} {2} {3} {4} {5} {6} {7} Volume",
-                        v.Index, v.Group, v.Name, v.Type, v.Visible, v.HasInfo, v.HasTime, v.Device.Udn);
-                    foreach (var g in v.Volumes)
+                    string info = "\nConfigured source begin\n";
+                    IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
+                    foreach (IMediaPreset p in fragment.Data)
                     {
-                        info += " " + g.Device.Udn;
+                        info += p.Metadata[iTagManager.Container.Title].Value + "\n";
                     }
+                    info += "Configured source end";
                     return info;
                 });
 

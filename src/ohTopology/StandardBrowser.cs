@@ -337,7 +337,7 @@ namespace OpenHome.Av
             iUdn = aUdn;
             iRoom = aRoom;
 
-            iListeners = new WatchableUnordered<IStandardRoom>(aRoom.WatchableThread);
+            iListeners = new WatchableUnordered<IStandardRoom>(aRoom.Network);
         }
 
         public bool Active
@@ -379,7 +379,7 @@ namespace OpenHome.Av
                 throw new NotSupportedException();
             }
 
-            aRoom.Play("Receiver", iUdn);
+            aRoom.Play(iUdn);
             iListeners.Add(aRoom);
         }
 
@@ -390,7 +390,7 @@ namespace OpenHome.Av
                 throw new NotSupportedException();
             }
 
-            aRoom.Play("Receiver", string.Empty);
+            aRoom.Play(string.Empty);
             iListeners.Remove(aRoom);
         }
 
@@ -418,18 +418,19 @@ namespace OpenHome.Av
         IEnumerable<ITopology4Group> Senders { get; }
 
         void SetStandby(bool aValue);
-        void Play(string aMode, string aUri);
+        void Play(string aUdn);
+        void Play(string aUri, IMediaMetadata aMetadata);
 
-        IWatchableThread WatchableThread { get; }
+        INetwork Network { get; }
     }
 
     public class StandardRoom : IStandardRoom, IWatcher<IEnumerable<ITopology4Root>>, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IDisposable
     {
-        public StandardRoom(IWatchableThread aThread, StandardHouse aHouse, ITopology4Room aRoom)
+        public StandardRoom(StandardHouse aHouse, ITopology4Room aRoom)
         {
             iDisposed = false;
 
-            iThread = aThread;
+            iNetwork = aHouse.Network;
             iHouse = aHouse;
             iRoom = aRoom;
 
@@ -439,19 +440,19 @@ namespace OpenHome.Av
             iSources = new List<ITopology4Source>();
             iSenders = new List<ITopology4Group>();
 
-            iDetails = new Watchable<RoomDetails>(iThread, "Details", new RoomDetails());
-            iMetadata = new Watchable<RoomMetadata>(iThread, "Metadata", new RoomMetadata());
-            iMetatext = new Watchable<RoomMetatext>(iThread, "Metatext", new RoomMetatext());
+            iDetails = new Watchable<RoomDetails>(iNetwork, "Details", new RoomDetails());
+            iMetadata = new Watchable<RoomMetadata>(iNetwork, "Metadata", new RoomMetadata());
+            iMetatext = new Watchable<RoomMetatext>(iNetwork, "Metatext", new RoomMetatext());
 
-            iZoneable = new Watchable<bool>(aThread, "HasReceiver", false);
-            iZone = new Watchable<IZone>(aThread, "Zone", new Zone(false, string.Empty, this));
+            iZoneable = new Watchable<bool>(iNetwork, "HasReceiver", false);
+            iZone = new Watchable<IZone>(iNetwork, "Zone", new Zone(false, string.Empty, this));
 
             iRoom.Roots.AddWatcher(this);
         }
 
         public void Dispose()
         {
-            iThread.Execute(() =>
+            iNetwork.Execute(() =>
             {
                 iRoom.Roots.RemoveWatcher(this);
             });
@@ -485,7 +486,7 @@ namespace OpenHome.Av
             iRoots = null;
             iRoom = null;
             iHouse = null;
-            iThread = null;
+            iNetwork = null;
 
             iDisposed = true;
         }
@@ -585,103 +586,36 @@ namespace OpenHome.Av
             }
         }
 
-        public void Play(string aMode, string aUri)
+        public void Play(string aUdn)
         {
-            if (aMode == "Playlist")
+            foreach (ITopology4Source s in iCurrentSources)
             {
-                uint id = uint.Parse(aUri);
-                foreach (ITopology4Source s in iCurrentSources)
+                if (s.Type == "Receiver")
                 {
-                    if (s.Type == "Playlist")
+                    s.Device.Create<IProxyReceiver>((receiver) =>
                     {
-                        s.Device.Create<IProxyPlaylist>((playlist) =>
+                        ITopology4Group g = iHouse.Sender(aUdn);
+                        g.Device.Create<IProxySender>((sender) =>
                         {
-                            iThread.Schedule(() =>
+                            iNetwork.Schedule(() =>
                             {
-                                playlist.SeekId(id);
-                                playlist.Dispose();
+                                if (!iDisposed)
+                                {
+                                    Task action = receiver.SetSender(sender.Metadata.Value);
+                                    action.ContinueWith((Task) => { receiver.Play(); });
+                                    receiver.Dispose();
+                                    sender.Dispose();
+                                }
+                                else
+                                {
+                                    receiver.Dispose();
+                                    sender.Dispose();
+                                }
                             });
                         });
-                        return;
-                    }
+                    });
+                    return;
                 }
-            }
-            else if (aMode == "Radio")
-            {
-                string[] split = aUri.Split(new char[] { ' ' }, 2);
-                if (split.Length == 2)
-                {
-                    uint id = uint.Parse(split[0]);
-                    string uri = split[1];
-                    foreach (ITopology4Source s in iCurrentSources)
-                    {
-                        if (s.Type == "Radio")
-                        {
-                            s.Device.Create<IProxyRadio>((radio) =>
-                            {
-                                iThread.Schedule(() =>
-                                {
-                                    radio.SetId(id, uri);
-                                    radio.Dispose();
-                                });
-                            });
-                            return;
-                        }
-                    }
-                }
-                else
-                {
-                    throw new FormatException();
-                }
-            }
-            else if (aMode == "Receiver")
-            {
-                string udn = aUri;
-                foreach (ITopology4Source s in iCurrentSources)
-                {
-                    if (s.Type == "Receiver")
-                    {
-                        s.Device.Create<IProxyReceiver>((receiver) =>
-                        {
-                            ITopology4Group g = iHouse.Sender(udn);
-                            g.Device.Create<IProxySender>((sender) =>
-                            {
-                                iThread.Schedule(() =>
-                                {
-                                    if (!iDisposed)
-                                    {
-                                        Task action = receiver.SetSender(sender.Metadata.Value);
-                                        action.ContinueWith((Task) => { receiver.Play(); });
-                                        receiver.Dispose();
-                                        sender.Dispose();
-                                    }
-                                    else
-                                    {
-                                        receiver.Dispose();
-                                        sender.Dispose();
-                                    }
-                                });
-                            });
-                        });
-                        return;
-                    }
-                }
-            }
-            else if (aMode == "External")
-            {
-                uint index = uint.Parse(aUri);
-                foreach (ITopology4Source s in iCurrentSources)
-                {
-                    if (s.Index == index)
-                    {
-                        s.Select();
-                        return;
-                    }
-                }
-            }
-            else
-            {
-                throw new NotSupportedException(aMode);
             }
         }
 
@@ -693,7 +627,7 @@ namespace OpenHome.Av
                 {
                     s.Device.Create<IProxyRadio>((radio) =>
                     {
-                        iThread.Schedule(() =>
+                        iNetwork.Schedule(() =>
                         {
                             radio.SetChannel(aUri, aMetadata);
                             radio.Dispose();
@@ -704,11 +638,11 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchableThread WatchableThread
+        public INetwork Network
         {
             get
             {
-                return iThread;
+                return iNetwork;
             }
         }
 
@@ -726,7 +660,7 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, IEnumerable<ITopology4Root> aValue)
         {
-            iWatchableSources = new Watchable<IEnumerable<ITopology4Source>>(iThread, "Sources", new List<ITopology4Source>());
+            iWatchableSources = new Watchable<IEnumerable<ITopology4Source>>(iNetwork, "Sources", new List<ITopology4Source>());
             
             iRoots = aValue;
 
@@ -810,8 +744,8 @@ namespace OpenHome.Av
         private void SelectFirstSource()
         {
             ITopology4Source source = iCurrentSources[0];
-            iWatchableSource = new Watchable<ITopology4Source>(iThread, "Source", source);
-            iInfoWatcher = new InfoWatcher(iThread, source.Device, iDetails, iMetadata, iMetatext);
+            iWatchableSource = new Watchable<ITopology4Source>(iNetwork, "Source", source);
+            iInfoWatcher = new InfoWatcher(iNetwork, source.Device, iDetails, iMetadata, iMetatext);
             iSource = source;
         }
 
@@ -842,7 +776,7 @@ namespace OpenHome.Av
                 iInfoWatcher.Dispose();
                 iInfoWatcher = null;
 
-                iInfoWatcher = new InfoWatcher(iThread, source.Device, iDetails, iMetadata, iMetatext);
+                iInfoWatcher = new InfoWatcher(iNetwork, source.Device, iDetails, iMetadata, iMetatext);
             }
 
             iWatchableSource.Update(source);
@@ -914,7 +848,7 @@ namespace OpenHome.Av
         }
 
         private bool iDisposed;
-        private IWatchableThread iThread;
+        private INetwork iNetwork;
         private StandardHouse iHouse;
         private ITopology4Room iRoom;
 
@@ -940,6 +874,7 @@ namespace OpenHome.Av
     {
         IWatchableOrdered<IStandardRoom> Rooms { get; }
         IWatchableOrdered<IProxyMediaServer> Servers { get; }
+        INetwork Network { get; }
     }
 
     public class StandardHouse : IUnorderedWatcher<ITopology4Room>, IUnorderedWatcher<IDevice>, IStandardHouse, IDisposable
@@ -1016,6 +951,14 @@ namespace OpenHome.Av
             }
         }
 
+        public INetwork Network
+        {
+            get
+            {
+                return iNetwork;
+            }
+        }
+
         public ITopology4Group Sender(string aUdn)
         {
             foreach (StandardRoom r in iRoomLookup.Values)
@@ -1044,7 +987,7 @@ namespace OpenHome.Av
 
         public void UnorderedAdd(ITopology4Room aRoom)
         {
-            StandardRoom room = new StandardRoom(iNetwork, this, aRoom);
+            StandardRoom room = new StandardRoom(this, aRoom);
 
             // calculate where to insert the room
             int index = 0;
