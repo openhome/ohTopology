@@ -30,6 +30,9 @@
     <OutputPath>..\..\build\ohTopology.net\bin\Release</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
     <Reference Include="CpAvOpenhomeOrgInfo1.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgInfo1.net.dll</HintPath>
     </Reference>
@@ -69,16 +72,13 @@
     <Reference Include="ohNet.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\ohNet.net.dll</HintPath>
     </Reference>
+    <Reference Include="ohOs.App.V1">
+      <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ICSharpCode.SharpZipLib.dll</HintPath>
-    </Reference>
-    <Reference Include="ohOs.App.V1">
-      <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ByteArray.cs" />

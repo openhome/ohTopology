@@ -31,6 +31,12 @@
     <OutputPath>..\..\build\TestTopology1\bin\Release</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ohTopology\ohTopology.csproj">
+      <Project>{B6F3BF75-F35B-4A83-A3F9-2812B97ACA28}</Project>
+      <Name>ohTopology</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="System" />
     <Reference Include="ohOs.App.V1">
       <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
@@ -38,16 +44,13 @@
     <Reference Include="ohOs">
       <HintPath>..\..\dependencies\AnyPlatform\ohOs\ohOs.dll</HintPath>
     </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ohTopology\ohTopology.csproj">
-      <Project>{B6F3BF75-F35B-4A83-A3F9-2812B97ACA28}</Project>
-      <Name>ohTopology</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Topology1TestScript.txt">
