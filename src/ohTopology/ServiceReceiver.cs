@@ -235,11 +235,11 @@ namespace OpenHome.Av
             else if (command == "metadata")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-                if (value.Count() != 2)
+                if (value.Count() < 2)
                 {
                     throw new NotSupportedException();
                 }
-                IInfoMetadata metadata = new InfoMetadata(Network.TagManager.FromDidlLite(value.ElementAt(0)), value.ElementAt(1));
+                IInfoMetadata metadata = new InfoMetadata(Network.TagManager.FromDidlLite(string.Join(" ", value.Take(value.Count() - 1))), value.Last());
                 iMetadata.Update(metadata);
             }
             else if (command == "transportstate")

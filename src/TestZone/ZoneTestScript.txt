@@ -1,0 +1,33 @@
+﻿// setup type of network
+mock network medium
+
+expect Room Added: Kitchen at 0
+expect Kitchen open Zone False  Kitchen
+expect Kitchen open Metadata False  
+
+expect Room Added: Sitting Room at 1
+expect Sitting Room open Zone False  Sitting Room
+expect Sitting Room open Metadata False  
+
+expect Room Added: Bedroom at 0
+expect Bedroom open Zone False  Bedroom
+expect Bedroom open Metadata False  
+
+expect Room Added: Dining Room at 1
+expect Dining Room open Zone False  Dining Room
+expect Dining Room open Metadata False  
+
+expect Kitchen update Zone True 4c494e4e-0026-0f99-1111-ef000004013f Kitchen
+expect Kitchen update Metadata True  
+expect Sitting Room update Zone True 4c494e4e-0026-0f99-1112-ef000004013f Sitting Room
+expect Sitting Room update Metadata True  
+expect Bedroom update Zone True 4c494e4e-0026-0f99-1113-ef000004013f Bedroom
+expect Bedroom update Metadata True  
+expect Dining Room update Zone True 4c494e4e-0026-0f99-1114-ef000004013f Dining Room
+expect Dining Room update Metadata True  
+empty
+
+mock house zone Kitchen add Bedroom
+expect Kitchen add Listener Bedroom
+expect Bedroom update Metadata True  
+empty

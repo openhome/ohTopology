@@ -198,7 +198,8 @@ namespace TestLinnHouse
 
             Topology1 topology1 = new Topology1(network);
             Topology2 topology2 = new Topology2(topology1);
-            Topology3 topology3 = new Topology3(topology2);
+            Topologym topologym = new Topologym(topology2);
+            Topology3 topology3 = new Topology3(topologym);
             Topology4 topology4 = new Topology4(topology3);
 
             StandardHouse house = new StandardHouse(network, topology4);
@@ -232,6 +233,8 @@ namespace TestLinnHouse
             topology4.Dispose();
 
             topology3.Dispose();
+
+            topologym.Dispose();
 
             topology2.Dispose();
 

@@ -204,7 +204,7 @@ namespace OpenHome.Av
 
     class Topology4Group : ITopology4Root, IWatcher<uint>, IWatcher<string>, IDisposable
     {
-        public Topology4Group(INetwork aNetwork, string aName, ITopology2Group aGroup, IEnumerable<ITopology2Source> aSources)
+        public Topology4Group(INetwork aNetwork, string aName, ITopologymGroup aGroup, IEnumerable<ITopology2Source> aSources)
         {
             iDisposed = false;
 
@@ -515,7 +515,7 @@ namespace OpenHome.Av
         private bool iDisposed;
 
         private IWatchableThread iThread;
-        private ITopology2Group iGroup;
+        private ITopologymGroup iGroup;
 
         private string iName;
 
@@ -537,11 +537,11 @@ namespace OpenHome.Av
     class Topology4GroupWatcher : IWatcher<string>, IWatcher<ITopology2Source>, IDisposable
     {
         private Topology4Room iRoom;
-        private ITopology2Group iGroup;
+        private ITopologymGroup iGroup;
         private string iName;
         private List<ITopology2Source> iSources;
 
-        public Topology4GroupWatcher(Topology4Room aRoom, ITopology2Group aGroup)
+        public Topology4GroupWatcher(Topology4Room aRoom, ITopologymGroup aGroup)
         {
             iRoom = aRoom;
             iGroup = aGroup;
@@ -631,7 +631,7 @@ namespace OpenHome.Av
         void SetStandby(bool aValue);
     }
 
-    class Topology4Room : ITopology4Room, IUnorderedWatcher<ITopology2Group>, IWatcher<bool>, IDisposable
+    class Topology4Room : ITopology4Room, IUnorderedWatcher<ITopologymGroup>, IWatcher<bool>, IDisposable
     {
         public Topology4Room(INetwork aNetwork, ITopology3Room aRoom)
         {
@@ -646,7 +646,7 @@ namespace OpenHome.Av
             iWatchableRoots = new Watchable<IEnumerable<ITopology4Root>>(iNetwork, "roots", new List<ITopology4Root>());
             iWatchableSources = new Watchable<IEnumerable<ITopology4Source>>(iNetwork, "sources", new List<ITopology4Source>());
 
-            iGroupLookup = new Dictionary<ITopology2Group, Topology4GroupWatcher>();
+            iGroupLookup = new Dictionary<ITopologymGroup, Topology4GroupWatcher>();
             iGroup4s = new List<Topology4Group>();
             iRoots = new List<Topology4Group>();
 
@@ -733,14 +733,14 @@ namespace OpenHome.Av
         {
         }
 
-        public void UnorderedAdd(ITopology2Group aItem)
+        public void UnorderedAdd(ITopologymGroup aItem)
         {
             iGroupLookup.Add(aItem, new Topology4GroupWatcher(this, aItem));
             aItem.Standby.AddWatcher(this);
             CreateTree();
         }
 
-        public void UnorderedRemove(ITopology2Group aItem)
+        public void UnorderedRemove(ITopologymGroup aItem)
         {
             iGroupLookup[aItem].Dispose();
             iGroupLookup.Remove(aItem);
@@ -894,7 +894,7 @@ namespace OpenHome.Av
         private Watchable<IEnumerable<ITopology4Root>> iWatchableRoots;
         private Watchable<IEnumerable<ITopology4Source>> iWatchableSources;
 
-        private Dictionary<ITopology2Group, Topology4GroupWatcher> iGroupLookup;
+        private Dictionary<ITopologymGroup, Topology4GroupWatcher> iGroupLookup;
         private List<Topology4Group> iGroup4s;
         private List<Topology4Group> iRoots;
     }

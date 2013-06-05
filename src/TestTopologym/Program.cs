@@ -19,7 +19,7 @@ namespace TestTopology3
             }
         }
 
-        class RoomWatcher : IUnorderedWatcher<ITopology3Room>, IDisposable
+        class RoomWatcher : IUnorderedWatcher<ITopologymGroup>, IDisposable
         {
             private readonly MockableScriptRunner iRunner;
             private readonly ResultWatcherFactory iFactory;
@@ -30,7 +30,7 @@ namespace TestTopology3
                 iFactory = new ResultWatcherFactory(iRunner);
             }
 
-            // IUnorderedWatcher<ITopology3Room>
+            // IUnorderedWatcher<ITopologymGroup>
 
             public void UnorderedOpen()
             {
@@ -44,16 +44,24 @@ namespace TestTopology3
             {
             }
 
-            public void UnorderedAdd(ITopology3Room aItem)
+            public void UnorderedAdd(ITopologymGroup aItem)
             {
-                iRunner.Result("Room Added " + aItem.Name);
-                iFactory.Create<ITopologymGroup>(aItem.Name, aItem.Groups, v => v.Id);
+                iRunner.Result(aItem.Device.Udn + " Group Added");
+                iFactory.Create<ITopologymSender>(aItem.Device.Udn, aItem.Sender, v => 
+                {
+                    if (v.Enabled)
+                    {
+                        return "Sender " + v.Enabled + " " + v.Device.Udn;
+                    }
+
+                    return "Sender " + v.Enabled;
+                });
             }
 
-            public void UnorderedRemove(ITopology3Room aItem)
+            public void UnorderedRemove(ITopologymGroup aItem)
             {
-                iFactory.Destroy(aItem.Name);
-                iRunner.Result("Room Removed " + aItem.Name);
+                iFactory.Destroy(aItem.Device.Udn);
+                iRunner.Result(aItem.Device.Udn + " Group Removed");
             }
 
             // IDisposable
@@ -84,14 +92,13 @@ namespace TestTopology3
             Topology1 topology1 = new Topology1(network);
             Topology2 topology2 = new Topology2(topology1);
             Topologym topologym = new Topologym(topology2);
-            Topology3 topology3 = new Topology3(topologym);
 
             MockableScriptRunner runner = new MockableScriptRunner();
 
             RoomWatcher watcher = new RoomWatcher(runner);
             thread.Schedule(() =>
             {
-                topology3.Rooms.AddWatcher(watcher);
+                topologym.Groups.AddWatcher(watcher);
             });
 
             try
@@ -105,11 +112,9 @@ namespace TestTopology3
 
             thread.Execute(() =>
             {
-                topology3.Rooms.RemoveWatcher(watcher);
+                topologym.Groups.RemoveWatcher(watcher);
                 watcher.Dispose();
             });
-
-            topology3.Dispose();
 
             topologym.Dispose();
 

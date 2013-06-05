@@ -17,6 +17,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ohCollectMediaTree", "ohCol
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestMediaServer", "TestMediaServer\TestMediaServer.csproj", "{0FECB989-7ACA-48A5-BC50-2090C722F18B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestZone", "TestZone\TestZone.csproj", "{B8A0CF6F-2FB5-4992-9CD9-9E358CAF9887}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestTopologym", "TestTopologym\TestTopologym.csproj", "{DC3DA1FE-05ED-4263-BDE5-768D6C2BCC5D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +59,14 @@ Global
 		{0FECB989-7ACA-48A5-BC50-2090C722F18B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0FECB989-7ACA-48A5-BC50-2090C722F18B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0FECB989-7ACA-48A5-BC50-2090C722F18B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8A0CF6F-2FB5-4992-9CD9-9E358CAF9887}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8A0CF6F-2FB5-4992-9CD9-9E358CAF9887}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8A0CF6F-2FB5-4992-9CD9-9E358CAF9887}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8A0CF6F-2FB5-4992-9CD9-9E358CAF9887}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC3DA1FE-05ED-4263-BDE5-768D6C2BCC5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC3DA1FE-05ED-4263-BDE5-768D6C2BCC5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC3DA1FE-05ED-4263-BDE5-768D6C2BCC5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC3DA1FE-05ED-4263-BDE5-768D6C2BCC5D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

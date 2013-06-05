@@ -424,7 +424,7 @@ namespace OpenHome.Av
         INetwork Network { get; }
     }
 
-    public class StandardRoom : IStandardRoom, IWatcher<IEnumerable<ITopology4Root>>, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IDisposable
+    public class StandardRoom : IStandardRoom, IWatcher<IEnumerable<ITopology4Root>>, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IMockable, IDisposable
     {
         public StandardRoom(StandardHouse aHouse, ITopology4Room aRoom)
         {
@@ -588,7 +588,7 @@ namespace OpenHome.Av
 
         public void Play(string aUdn)
         {
-            foreach (ITopology4Source s in iCurrentSources)
+            foreach (ITopology4Source s in iSources)
             {
                 if (s.Type == "Receiver")
                 {
@@ -621,7 +621,7 @@ namespace OpenHome.Av
 
         public void Play(string aUri, IMediaMetadata aMetadata)
         {
-            foreach (ITopology4Source s in iCurrentSources)
+            foreach (ITopology4Source s in iSources)
             {
                 if (s.Type == "Radio")
                 {
@@ -745,7 +745,10 @@ namespace OpenHome.Av
         {
             ITopology4Source source = iCurrentSources[0];
             iWatchableSource = new Watchable<ITopology4Source>(iNetwork, "Source", source);
-            iInfoWatcher = new InfoWatcher(iNetwork, source.Device, iDetails, iMetadata, iMetatext);
+            if (source.HasInfo)
+            {
+                iInfoWatcher = new InfoWatcher(iNetwork, source.Device, iDetails, iMetadata, iMetatext);
+            }
             iSource = source;
         }
 
@@ -753,29 +756,21 @@ namespace OpenHome.Av
         {
             ITopology4Source source = iCurrentSources[0];
 
-            foreach (ITopology4Source s in iCurrentSources)
-            {
-                // if we find the same source as was previously selected
-                if (iSource.Index == s.Index && iSource.Device == s.Device)
-                {
-                    // if same source has different data update the source
-                    if (!Topology4SourceComparer.Equals(iSource, source))
-                    {
-                        iWatchableSource.Update(s);
-                        iSource = s;
-                        return;
-                    }
-
-                    iSource = s;
-                    return;
-                }
-            }
-
             if (iSource.Device != source.Device)
             {
-                iInfoWatcher.Dispose();
-                iInfoWatcher = null;
+                if (iInfoWatcher != null)
+                {
+                    iInfoWatcher.Dispose();
+                    iInfoWatcher = null;
+                }
 
+                if (source.HasInfo)
+                {
+                    iInfoWatcher = new InfoWatcher(iNetwork, source.Device, iDetails, iMetadata, iMetatext);
+                }
+            }
+            else if(!iSource.HasInfo && source.HasInfo)
+            {
                 iInfoWatcher = new InfoWatcher(iNetwork, source.Device, iDetails, iMetadata, iMetatext);
             }
 
@@ -835,7 +830,7 @@ namespace OpenHome.Av
 
         private void EvaluateZoneable()
         {
-            foreach (ITopology4Source s in iCurrentSources)
+            foreach (ITopology4Source s in iSources)
             {
                 if (s.Type == "Receiver")
                 {
@@ -845,6 +840,10 @@ namespace OpenHome.Av
             }
 
             iZoneable.Update(false);
+        }
+
+        public void Execute(IEnumerable<string> aValue)
+        {
         }
 
         private bool iDisposed;
@@ -877,7 +876,7 @@ namespace OpenHome.Av
         INetwork Network { get; }
     }
 
-    public class StandardHouse : IUnorderedWatcher<ITopology4Room>, IUnorderedWatcher<IDevice>, IStandardHouse, IDisposable
+    public class StandardHouse : IUnorderedWatcher<ITopology4Room>, IUnorderedWatcher<IDevice>, IStandardHouse, IMockable, IDisposable
     {
         public StandardHouse(INetwork aNetwork, ITopology4 aTopology4)
         {
@@ -1061,6 +1060,44 @@ namespace OpenHome.Av
 
         public void UnorderedClose()
         {
+        }
+
+        public void Execute(IEnumerable<string> aValue)
+        {
+            string command = aValue.First().ToLowerInvariant();
+
+            if (command == "zone")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+
+                string name = value.First();
+
+                foreach (StandardRoom r1 in iRoomLookup.Values)
+                {
+                    if (r1.Name == name)
+                    {
+                        value = value.Skip(1);
+
+                        command = value.First().ToLowerInvariant();
+
+                        if (command == "add")
+                        {
+                            value = value.Skip(1);
+
+                            name = value.First();
+
+                            foreach (StandardRoom r2 in iRoomLookup.Values)
+                            {
+                                if (r2.Name == name)
+                                {
+                                    r1.Zone.Value.AddToZone(r2);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private INetwork iNetwork;

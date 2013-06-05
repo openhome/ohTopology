@@ -154,6 +154,14 @@ namespace OpenHome.Av
             }
         }
 
+        public IProxyPlaylist Playlist
+        {
+            get
+            {
+                return iPlaylist;
+            }
+        }
+
         protected override void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue)
         {
             EvaluateEnabled(aValue);

@@ -93,6 +93,7 @@
     <Compile Include="StandardRoomController.cs" />
     <Compile Include="StandardRoomTime.cs" />
     <Compile Include="StandardRoomWatchers.cs" />
+    <Compile Include="Topologym.cs" />
     <Compile Include="VolumeController.cs" />
     <Compile Include="ServiceMediaServer.cs" />
     <Compile Include="DeviceMediaServerMock.cs" />
