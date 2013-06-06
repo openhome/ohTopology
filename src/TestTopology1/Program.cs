@@ -94,6 +94,8 @@ namespace TestTopology
 
             topology.Dispose();
 
+            mockInjector.Dispose();
+
             network.Dispose();
 
             thread.Dispose();

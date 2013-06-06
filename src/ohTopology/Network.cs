@@ -113,6 +113,7 @@ namespace OpenHome.Av
             {
                 CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
                 CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000"));
+                return;
             }
             else if (command == "medium")
             {
@@ -121,12 +122,13 @@ namespace OpenHome.Av
                 CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
                 CreateAndAdd(DeviceFactory.CreateDs(iNetwork, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
                 CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000"));
+                return;
             }
             else if (command == "large")
             {
                 throw new NotImplementedException();
             }
-            else if (command == "add")
+            else if (command == "create")
             {
                 IEnumerable<string> value = aValue.Skip(1);
 
@@ -138,27 +140,62 @@ namespace OpenHome.Av
 
                     string udn = value.First();
 
-                    Device device;
-
-                    if (iMockDevices.TryGetValue(udn, out device))
+                    if (type == "ds")
                     {
-                        iNetwork.Add(device);
-                    }
-                    else if (type == "ds")
-                    {
-                        CreateAndAdd(DeviceFactory.CreateDs(iNetwork, udn));
+                        Create(DeviceFactory.CreateDs(iNetwork, udn));
+                        return;
                     }
                     else if (type == "dsm")
                     {
-                        CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, udn));
+                        Create(DeviceFactory.CreateDsm(iNetwork, udn));
+                        return;
                     }
                     else if (type == "mediaserver")
                     {
-                        CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, udn));
+                        Create(DeviceFactory.CreateMediaServer(iNetwork, udn));
+                        return;
                     }
-                    else
+                }
+            }
+            else if (command == "destroy")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+
+                string type = value.First();
+
+                if (type == "device")
+                {
+                    value = value.Skip(1);
+
+                    string udn = value.First();
+
+                    Device device;
+                    if (iMockDevices.TryGetValue(udn, out device))
                     {
-                        throw new NotSupportedException();
+                        iNetwork.Remove(device);
+                        iMockDevices.Remove(device.Udn);
+                        device.Dispose();
+                        return;
+                    }
+                }
+            }
+            else if (command == "add")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+
+                string type = value.First();
+
+                if (type == "device")
+                {
+                    value = value.Skip(1);
+
+                    string udn = value.First();
+
+                    Device device;
+                    if (iMockDevices.TryGetValue(udn, out device))
+                    {
+                        iNetwork.Add(device);
+                        return;
                     }
                 }
             }
@@ -168,14 +205,18 @@ namespace OpenHome.Av
 
                 string type = value.First();
 
-                if (type == "ds" || type == "dsm" || type == "mediaserver")
+                if (type == "device")
                 {
                     value = value.Skip(1);
-                    Remove(value.First());
-                }
-                else
-                {
-                    throw new NotSupportedException();
+
+                    string udn = value.First();
+
+                    Device device;
+                    if (iMockDevices.TryGetValue(udn, out device))
+                    {
+                        iNetwork.Remove(device);
+                        return;
+                    }
                 }
             }
             else if (command == "update")
@@ -184,7 +225,7 @@ namespace OpenHome.Av
 
                 string type = value.First();
 
-                if (type == "ds")
+                if (type == "device")
                 {
                     value = value.Skip(1);
 
@@ -195,17 +236,12 @@ namespace OpenHome.Av
                     if (iMockDevices.TryGetValue(udn, out device))
                     {
                         device.Execute(value.Skip(1));
-                    }
-                    else
-                    {
-                        throw new KeyNotFoundException();
+                        return;
                     }
                 }
             }
-            else
-            {
-                throw new NotSupportedException();
-            }
+
+            throw new NotSupportedException();
         }
 
         private void Create(Device aDevice)
@@ -217,18 +253,6 @@ namespace OpenHome.Av
         {
             Create(aDevice);
             iNetwork.Add(aDevice);
-        }
-
-
-
-        private void Remove(string aUdn)
-        {
-            Device device;
-
-            if (iMockDevices.TryGetValue(aUdn, out device))
-            {
-                iNetwork.Remove(device);
-            }
         }
     }
 

@@ -9,11 +9,12 @@ expect product added 4c494e4e-0026-0f99-1114-ef000004013f
 empty
 
 // test product is added when ds appears on network
-mock network add ds 67
+mock network create ds 67
+mock network add device 67
 expect product added 67
 empty
 
 // test product is removed when ds disappears from network
-mock network remove ds 67
+mock network remove device 67
 expect product removed 67
 empty

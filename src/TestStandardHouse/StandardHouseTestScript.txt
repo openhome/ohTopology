@@ -179,7 +179,8 @@ expect Dining Room update HasTime True
 empty
 
 // test adding a new room
-mock network add ds 67
+mock network create ds 67
+mock network add device 67
 expect Room Added: Main Room at 3
 expect Main Room open Standby eOn
 expect Main Room open Details False 0 0  0 False 0
@@ -223,27 +224,27 @@ expect Main Room update HasTime True
 empty
 
 // test changing details
-mock network update ds 67 info details 50 100 flac 500 true 44000
+mock network update device 67 info details 50 100 flac 500 true 44000
 expect Main Room update Details True 50 100 flac 500 True 44000
 empty
 
 // test changing metadata
-mock network update ds 67 info metadata blah http://blah
+mock network update device 67 info metadata blah http://blah
 expect Main Room update Metadata True blah http://blah
 empty
 
 // test changing metatext
-mock network update ds 67 info metatext testing
+mock network update device 67 info metatext testing
 expect Main Room update Metatext True testing
 empty
 
 // test room controller active flag
-mock network remove ds 67
+mock network remove device 67
 expect Room Removed: Main Room at 3
 empty
 
 // re-add ds 67
-mock network add ds 67
+mock network add device 67
 expect Room Added: Main Room at 3
 expect Main Room open Standby eOn
 expect Main Room open Details False 0 0  0 False 0
@@ -287,7 +288,8 @@ expect Main Room update HasTime True
 empty
 
 // add another ds to Main Room
-mock network add ds 68
+mock network create ds 68
+mock network add device 68
 expect Main Room update Zone False 
 expect Main Room update 
 Unconfigured source begin
@@ -312,13 +314,13 @@ expect Main Room update HasSourceControl True
 empty
 
 // set DS 68's info
-mock network update ds 68 info details 1 2 mp3 3 false 4
-mock network update ds 68 info metadata Ds68 http://Ds68
-mock network update ds 68 info metatext Ds68
+mock network update device 68 info details 1 2 mp3 3 false 4
+mock network update device 68 info metadata Ds68 http://Ds68
+mock network update device 68 info metatext Ds68
 empty
 
 // join ds and ensure info changes from DS 67 info to DS 68 info
-mock network update ds 67 product source 0 name Test
+mock network update device 67 product source 0 name Test
 expect Main Room update 
 Unconfigured source begin
 Unconfigured source end
@@ -340,7 +342,7 @@ expect Main Room update Presets Enabled True
 expect Main Room update HasSourceControl False
 expect Main Room update HasSourceControl True
 empty
-mock network update ds 68 product name Test
+mock network update device 68 product name Test
 expect Main Room update Zone True 67
 expect Main Room update 
 Unconfigured source begin
@@ -373,7 +375,7 @@ expect Main Room update HasTime True
 empty
 
 // change to radio source to check create source controller
-mock network update ds 67 product sourceindex 1
+mock network update device 67 product sourceindex 1
 expect Main Room update Details False 0 0  0 False 0
 expect Main Room update Metadata False  
 expect Main Room update Metatext False 
@@ -386,29 +388,30 @@ expect Main Room update HasSourceControl True
 expect Main Room update HasTime True
 empty
 
-mock network update ds 67 radio transportstate Playing
+mock network update device 67 radio transportstate Playing
 expect Main Room update TransportState Playing
 empty
 
-mock network update ds 67 product sourceindex 3
+mock network update device 67 product sourceindex 3
 expect Main Room update HasSourceControl False
 expect Main Room update TransportState Stopped
 expect Main Room update HasSourceControl True
 empty
 
-mock network update ds 67 time duration 60
+mock network update device 67 time duration 60
 expect Main Room update Duration 60
 empty
 
-mock network update ds 67 time seconds 1
+mock network update device 67 time seconds 1
 expect Main Room update Seconds 1
 empty
 
-mock network update ds 67 time seconds 10
+mock network update device 67 time seconds 10
 expect Main Room update Seconds 10
 empty
 
-mock network add dsm 50
+mock network create dsm 50
+mock network add device 50
 expect Main Room update Zone False 
 expect Main Room update 
 Unconfigured source begin
@@ -439,7 +442,7 @@ expect Main Room update HasSourceControl False
 expect Main Room update HasSourceControl True
 empty
 
-mock network update ds 50 product room Test Room
+mock network update device 50 product room Test Room
 expect Main Room update Zone True 67
 expect Main Room update 
 Unconfigured source begin
@@ -510,7 +513,7 @@ expect Test Room update HasSourceControl True
 expect Test Room update HasTime True
 empty
 
-mock network update ds 50 product source 5 name Wii
+mock network update device 50 product source 5 name Wii
 expect Test Room update 
 Unconfigured source begin
 Analog2
@@ -540,7 +543,7 @@ expect Test Room update HasSourceControl False
 expect Test Room update HasSourceControl True
 empty
 
-mock network update ds 50 product source 5 name Analog1
+mock network update device 50 product source 5 name Analog1
 expect Test Room update 
 Unconfigured source begin
 Analog1

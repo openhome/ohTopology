@@ -13,13 +13,14 @@ expect Dining Room add 4c494e4e-0026-0f99-1114-ef000004013f
 empty
 
 // test room and group is added when ds appears on network
-mock network add ds 67
+mock network create ds 67
+mock network add device 67
 expect Room Added Main Room
 expect Main Room add 67
 empty
 
 // test group moves room when room name changes
-mock network update ds 67 product room Bathroom
+mock network update device 67 product room Bathroom
 expect Main Room remove 67
 expect Room Removed Main Room
 expect Room Added Bathroom
@@ -27,20 +28,21 @@ expect Bathroom add 67
 empty
 
 // test group is added to existing room and no new room is created
-mock network add ds 68
+mock network create ds 68
+mock network add device 68
 expect Room Added Main Room
 expect Main Room add 68
 empty
-mock network update ds 68 product room Bathroom
+mock network update device 68 product room Bathroom
 expect Main Room remove 68
 expect Room Removed Main Room
 expect Bathroom add 68
 empty
 
 // test room is remove when last group is removed
-mock network remove ds 67
+mock network remove device 67
 expect Bathroom remove 67
-mock network remove ds 68
+mock network remove device 68
 expect Bathroom remove 68
 expect Room Removed Bathroom
 empty
