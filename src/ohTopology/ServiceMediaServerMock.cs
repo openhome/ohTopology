@@ -225,7 +225,7 @@ namespace OpenHome.Av
         private Task<IWatchableContainer<IMediaDatum>> BrowseAlbumTracks(string aAlbum)
         {
             var tracks = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Album].Value == aAlbum)
-                .OrderBy(m => uint.Parse(m[iNetwork.TagManager.Audio.Track].Value))
+                .OrderBy(m => m[iNetwork.TagManager.Audio.Track] != null ? uint.Parse(m[iNetwork.TagManager.Audio.Track].Value) : 0)
                 .Select(m => new MediaDatum(m));
 
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
@@ -239,7 +239,7 @@ namespace OpenHome.Av
         {
             var tracks = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Genre] != null)
                 .Where(m => m[iNetwork.TagManager.Audio.Genre].Values.Contains(aGenre))
-                .OrderBy(m => m[iNetwork.TagManager.Audio.Title].Value)
+                .OrderBy(m => m[iNetwork.TagManager.Audio.Title] != null ? m[iNetwork.TagManager.Audio.Title].Value : "")
                 .Select(m => new MediaDatum(m));
 
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>

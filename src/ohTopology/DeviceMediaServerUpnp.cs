@@ -31,13 +31,14 @@ namespace OpenHome.Av
         private readonly INetwork iNetwork;
         private readonly CpDevice iDevice;
         private readonly CpProxyUpnpOrgContentDirectory1 iUpnpProxy;
+        private readonly ServiceMediaServerUpnp iService;
 
-        public DeviceMediaServerUpnp(INetwork aNetwork, CpDevice aDevice, CpProxyUpnpOrgContentDirectory1 aUpnpProxy)
+        public DeviceMediaServerUpnp(INetwork aNetwork, CpDevice aDevice)
             : base(aDevice.Udn())
         {
             iNetwork = aNetwork;
             iDevice = aDevice;
-            iUpnpProxy = aUpnpProxy;
+            iUpnpProxy = new CpProxyUpnpOrgContentDirectory1(iDevice);
 
             string deviceXml;
 
@@ -74,15 +75,25 @@ namespace OpenHome.Av
             string productName = GetDeviceValueFrom(upnpFriendlyName);
             string productUrl = GetDeviceValueFrom(upnpPresentationUrl);
 
-            Add<IProxyMediaServer>(new ServiceMediaServerUpnp(aNetwork, new string[] { "Browse", "Query" },
-                manufacturerImageUri, manufacturerInfo, manufacturerName, manufacturerUrl,
-                modelImageUri, modelInfo, modelName, modelUrl,
-                productImageUri, productInfo, productName, productUrl,
-                iUpnpProxy));
+            iService = new ServiceMediaServerUpnp(aNetwork, new string[] { "Browse", "Query" },
+                            manufacturerImageUri, manufacturerInfo, manufacturerName, manufacturerUrl,
+                            modelImageUri, modelInfo, modelName, modelUrl,
+                            productImageUri, productInfo, productName, productUrl,
+                            iUpnpProxy);
+
+            Add<IProxyMediaServer>(iService);
+
+            iUpnpProxy.SetPropertySystemUpdateIDChanged(OnSystemUpdateIdChanged);
+            iUpnpProxy.Subscribe();
 
             // content directory service
             //MockWatchableContentDirectory contentDirectory = new MockWatchableContentDirectory(aThread, aUdn, 0, "");
             //Add<ContentDirectory>(contentDirectory);
+        }
+
+        private void OnSystemUpdateIdChanged()
+        {
+            iService.Refresh();
         }
 
         private string GetDeviceElementValue(IEnumerable<XElement> aElements, string aName)
@@ -122,6 +133,14 @@ namespace OpenHome.Av
             }
 
             return (sb.ToString());
+        }
+
+        // IDisposable
+
+        public override void Dispose()
+        {
+            iUpnpProxy.Dispose();
+            base.Dispose();
         }
     }
 }

@@ -12,6 +12,11 @@ namespace OpenHome.Av
 {
     public abstract class DeviceInjector : IDisposable
     {
+        private Network iNetwork;
+        private Dictionary<CpDevice, Device> iCpDeviceLookup;
+
+        protected CpDeviceListUpnpServiceType iDeviceList;
+
         protected DeviceInjector(Network aNetwork)
         {
             iNetwork = aNetwork;
@@ -19,27 +24,14 @@ namespace OpenHome.Av
             iCpDeviceLookup = new Dictionary<CpDevice, Device>();
         }
 
-        public void Dispose()
-        {
-            iDeviceList.Dispose();
-            iDeviceList = null;
-
-            iNetwork.Execute(() =>
-            {
-                foreach (Device d in iCpDeviceLookup.Values)
-                {
-                    d.Dispose();
-                }
-            });
-            iCpDeviceLookup.Clear();
-            iCpDeviceLookup = null;
-        }
-
         protected void Added(CpDeviceList aList, CpDevice aDevice)
         {
+            aDevice.AddRef();
+
             iNetwork.Schedule(() =>
             {
-                Device device = DeviceFactory.Create(iNetwork, aDevice);
+                Device device = Create(iNetwork, aDevice);
+                iCpDeviceLookup.Add(aDevice, device);
                 iNetwork.Add(device);
             });
         }
@@ -51,35 +43,56 @@ namespace OpenHome.Av
                 Device device = iCpDeviceLookup[aDevice];
                 iCpDeviceLookup.Remove(aDevice);
                 iNetwork.Remove(device);
-
-                iNetwork.Schedule(() =>
-                {
-                    device.Dispose();
-                });
+                device.Dispose();
+                aDevice.RemoveRef();
             });
         }
 
-        protected CpDeviceListUpnpServiceType iDeviceList;
+        protected virtual Device Create(INetwork aNetwork, CpDevice aDevice)
+        {
+            return (DeviceFactory.Create(aNetwork, aDevice));
+        }
 
-        private Network iNetwork;
-        private Dictionary<CpDevice, Device> iCpDeviceLookup;
+        // IDisposable
+
+        public void Dispose()
+        {
+            iDeviceList.Dispose();
+            iDeviceList = null;
+
+            iNetwork.Execute(() =>
+            {
+                foreach (var entry in iCpDeviceLookup)
+                {
+                    entry.Value.Dispose();
+                    entry.Key.RemoveRef();
+                }
+            });
+            iCpDeviceLookup.Clear();
+            iCpDeviceLookup = null;
+        }
     }
 
-    public class ProductDeviceInjector : DeviceInjector
+    public class DeviceInjectorProduct : DeviceInjector
     {
-        public ProductDeviceInjector(Network aNetwork)
+        public DeviceInjectorProduct(Network aNetwork)
             : base(aNetwork)
         {
             iDeviceList = new CpDeviceListUpnpServiceType("av.openhome.org", "Product", 1, Added, Removed);
         }
     }
 
-    public class ContentDirectoryDeviceInjector : DeviceInjector
+    public class DeviceInjectorContentDirectory : DeviceInjector
     {
-        public ContentDirectoryDeviceInjector(Network aNetwork)
+        public DeviceInjectorContentDirectory(Network aNetwork)
             : base(aNetwork)
         {
             iDeviceList = new CpDeviceListUpnpServiceType("upnp.org", "ContentDirectory", 1, Added, Removed);
+        }
+
+        protected override Device Create(INetwork aNetwork, CpDevice aDevice)
+        {
+            return (new DeviceMediaServerUpnp(aNetwork, aDevice));
         }
     }
 
