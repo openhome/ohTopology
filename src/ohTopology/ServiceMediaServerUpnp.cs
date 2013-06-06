@@ -103,7 +103,7 @@ namespace OpenHome.Av
 
         public MediaServerContainerUpnp(INetwork aNetwork, IWatchableSnapshot<IMediaDatum> aSnapshot)
         {
-            iSnapshot = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork.WatchableThread, "snapshot", aSnapshot);
+            iSnapshot = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork, "snapshot", aSnapshot);
         }
 
         // IMediaServerContainer

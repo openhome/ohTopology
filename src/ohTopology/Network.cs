@@ -85,7 +85,6 @@ namespace OpenHome.Av
 
     public interface INetwork : IWatchableThread, IDisposable
     {
-        IWatchableThread WatchableThread { get; }
         ITagManager TagManager { get; }
         IWatchableUnordered<IDevice> Create<T>() where T : IProxy;
         //void Refresh();
@@ -212,14 +211,6 @@ namespace OpenHome.Av
                     }
                     return list;
                 }
-            }
-        }
-
-        public IWatchableThread WatchableThread
-        {
-            get
-            {
-                return iThread;
             }
         }
 
@@ -358,7 +349,12 @@ namespace OpenHome.Av
 
             while (!complete)
             {
-                foreach (Device d in iDevices)
+                Device[] devices = null;
+                lock (iDevices)
+                {
+                    devices = iDevices.ToArray();
+                }
+                foreach (Device d in devices)
                 {
                     complete |= d.Wait();
                 }
@@ -373,7 +369,12 @@ namespace OpenHome.Av
 
             while (!complete)
             {
-                foreach (Device d in iDevices)
+                Device[] devices = null;
+                lock (iDevices)
+                {
+                    devices = iDevices.ToArray();
+                }
+                foreach (Device d in devices)
                 {
                     complete |= d.Wait();
                 }

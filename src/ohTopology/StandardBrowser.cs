@@ -1089,11 +1089,7 @@ namespace OpenHome.Av
             iRoomLookup.Remove(aRoom);
             iWatchableRooms.Remove(room);
 
-            // schedule the Room object for disposal
-            iNetwork.Schedule(() =>
-            {
-                room.Dispose();
-            });
+            room.Dispose();
         }
 
         public void UnorderedAdd(IDevice aItem)

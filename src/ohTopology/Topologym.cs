@@ -503,11 +503,7 @@ namespace OpenHome.Av
                 iSenderLookup[aItem].Dispose();
                 iSenderLookup.Remove(aItem);
 
-                // schedule Topology2Group disposal
-                iNetwork.Schedule(() =>
-                {
-                    group.Dispose();
-                });
+                group.Dispose();
             }
         }
 

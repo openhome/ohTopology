@@ -117,7 +117,7 @@ namespace OpenHome.Av
                     {
                         Console.WriteLine(line);
 
-                        aThread.Schedule(() =>
+                        aThread.Execute(() =>
                         {
                             aMockable.Execute(commands.Skip(1));
                         });

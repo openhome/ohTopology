@@ -93,19 +93,16 @@ namespace OpenHome.Av
             iPendingSubscriptions.Add(aItem);
             aItem.Create<IProxyProduct>((product) =>
             {
-                iNetwork.Schedule(() =>
+                if (iPendingSubscriptions.Contains(aItem))
                 {
-                    if (iPendingSubscriptions.Contains(aItem))
-                    {
-                        iProducts.Add(product);
-                        iProductLookup.Add(aItem, product);
-                        iPendingSubscriptions.Remove(aItem);
-                    }
-                    else
-                    {
-                        product.Dispose();
-                    }
-                });
+                    iProducts.Add(product);
+                    iProductLookup.Add(aItem, product);
+                    iPendingSubscriptions.Remove(aItem);
+                }
+                else
+                {
+                    product.Dispose();
+                }
             });
         }
 
@@ -124,11 +121,7 @@ namespace OpenHome.Av
                 iProducts.Remove(product);
                 iProductLookup.Remove(aItem);
 
-                // schedule Product disposal
-                iNetwork.Schedule(() =>
-                {
-                    product.Dispose();
-                });
+                product.Dispose();
             }
         }
 

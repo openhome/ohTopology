@@ -366,11 +366,7 @@ namespace OpenHome.Av
                 iGroups.Remove(group);
                 iGroupLookup.Remove(aItem);
 
-                // schedule Topology2Group disposal
-                iNetwork.Schedule(() =>
-                {
-                    group.Dispose();
-                });
+                group.Dispose();
             }
         }
 

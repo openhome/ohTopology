@@ -13,6 +13,7 @@ Sources end
 expect Sneaky Music DS open Source 0 Sneaky Music DS Playlist Playlist True True True 4c494e4e-0026-0f99-1111-ef000004013f Volume 4c494e4e-0026-0f99-1111-ef000004013f
 expect Sneaky Music DS open 
 Senders begin
+Sender Sneaky Music DS
 Senders end
 expect Room Added Sitting Room
 expect Sitting Room open Standby eOn
@@ -32,6 +33,7 @@ Sources end
 expect Klimax DSM open Source 0 Klimax DSM Playlist Playlist True True True 4c494e4e-0026-0f99-1112-ef000004013f Volume 4c494e4e-0026-0f99-1112-ef000004013f
 expect Klimax DSM open 
 Senders begin
+Sender Klimax DSM
 Senders end
 expect Room Added Bedroom
 expect Bedroom open Standby eOn
@@ -51,6 +53,7 @@ Sources end
 expect Kiko DSM open Source 0 Kiko DSM Playlist Playlist True True True 4c494e4e-0026-0f99-1113-ef000004013f Volume 4c494e4e-0026-0f99-1113-ef000004013f
 expect Kiko DSM open 
 Senders begin
+Sender Kiko DSM
 Senders end
 expect Room Added Dining Room
 expect Dining Room open Standby eOn
@@ -62,21 +65,6 @@ Source 3 Majik DS Songcast Receiver True True True 4c494e4e-0026-0f99-1114-ef000
 Sources end
 expect Majik DS open Source 0 Majik DS Playlist Playlist True True True 4c494e4e-0026-0f99-1114-ef000004013f Volume 4c494e4e-0026-0f99-1114-ef000004013f
 expect Majik DS open 
-Senders begin
-Senders end
-expect Sneaky Music DS update 
-Senders begin
-Sender Sneaky Music DS
-Senders end
-expect Klimax DSM update 
-Senders begin
-Sender Klimax DSM
-Senders end
-expect Kiko DSM update 
-Senders begin
-Sender Kiko DSM
-Senders end
-expect Majik DS update 
 Senders begin
 Sender Majik DS
 Senders end
@@ -94,9 +82,6 @@ Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 Sources end
 expect Mock DS open Source 0 Mock DS Playlist Playlist True True True 67 Volume 67
 expect Mock DS open 
-Senders begin
-Senders end
-expect Mock DS update 
 Senders begin
 Sender Mock DS
 Senders end
@@ -120,9 +105,6 @@ Sources end
 expect Mock DS open Source 0 Mock DS Playlist Playlist True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
-Senders end
-expect Mock DS update 
-Senders begin
 Sender Mock DS
 Senders end
 empty
@@ -138,10 +120,12 @@ mock network add ds 68
 expect Mock DS open Source 0 Mock DS Playlist Playlist True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
+Sender Mock DS
 Senders end
 expect Mock DS open Source 0 Mock DS Playlist Playlist True True True 68 Volume 68
 expect Mock DS open 
 Senders begin
+Sender Mock DS
 Senders end
 expect Main Room update 
 Sources begin
@@ -152,14 +136,6 @@ Source 0 Mock DS Playlist Playlist True True True 68 Volume 68
 Source 1 Mock DS Radio Radio True True True 68 Volume 68
 Source 3 Mock DS Songcast Receiver True True True 68 Volume 68
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
 empty
 mock network update ds 67 product standby false
 expect Main Room update Standby eMixed
@@ -179,10 +155,12 @@ mock network update ds 68 product name Test
 expect Mock DS open Source 0 Mock DS Playlist Playlist True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
+Sender Mock DS
 Senders end
 expect Test open Source 0 Test Playlist Playlist True True True 68 Volume 68
 expect Test open 
 Senders begin
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -193,19 +171,13 @@ Source 0 Test Playlist Playlist True True True 68 Volume 68
 Source 1 Test Radio Radio True True True 68 Volume 68
 Source 3 Test Songcast Receiver True True True 68 Volume 68
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect Test update 
-Senders begin
-Sender Test
-Senders end
 empty
 mock network update ds 67 product source 0 name Test
 expect Mock DS open Source 0 Test Playlist Playlist True True True 68 Volume 67 68
 expect Mock DS open 
 Senders begin
+Sender Mock DS
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -215,15 +187,6 @@ Source 3 Test Songcast Receiver True True True 68 Volume 67 68
 Source 1 Mock DS Radio Radio True True True 67 Volume 67
 Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Sender Test
-Senders end
 empty
 
 // test toggling Mock DS source visibility
@@ -231,6 +194,8 @@ mock network update ds 67 product source 0 visible false
 expect Mock DS open Source 0 Test Playlist Playlist True True True 68 Volume 67 68
 expect Mock DS open 
 Senders begin
+Sender Mock DS
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -240,20 +205,13 @@ Source 3 Test Songcast Receiver True True True 68 Volume 67 68
 Source 1 Mock DS Radio Radio True True True 67 Volume 67
 Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Sender Test
-Senders end
 empty
 mock network update ds 67 product source 0 visible true
 expect Mock DS open Source 0 Test Playlist Playlist True True True 68 Volume 67 68
 expect Mock DS open 
 Senders begin
+Sender Mock DS
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -263,15 +221,6 @@ Source 3 Test Songcast Receiver True True True 68 Volume 67 68
 Source 1 Mock DS Radio Radio True True True 67 Volume 67
 Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Sender Test
-Senders end
 empty
 
 // test toggling Test source visibility
@@ -279,6 +228,8 @@ mock network update ds 68 product source 1 visible false
 expect Mock DS open Source 0 Test Playlist Playlist True True True 68 Volume 67 68
 expect Mock DS open 
 Senders begin
+Sender Mock DS
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -287,20 +238,13 @@ Source 3 Test Songcast Receiver True True True 68 Volume 67 68
 Source 1 Mock DS Radio Radio True True True 67 Volume 67
 Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Sender Test
-Senders end
 empty
 mock network update ds 68 product source 1 visible true
 expect Mock DS open Source 0 Test Playlist Playlist True True True 68 Volume 67 68
 expect Mock DS open 
 Senders begin
+Sender Mock DS
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -310,15 +254,6 @@ Source 3 Test Songcast Receiver True True True 68 Volume 67 68
 Source 1 Mock DS Radio Radio True True True 67 Volume 67
 Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Sender Test
-Senders end
 empty
 
 // change ds 68's selected source
@@ -352,10 +287,12 @@ mock network update ds 68 product name My DS
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
+Sender Mock DS
 Senders end
 expect My DS open Source 0 My DS Playlist Playlist True True True 68 Volume 68
 expect My DS open 
 Senders begin
+Sender My DS
 Senders end
 expect Main Room update 
 Sources begin
@@ -366,14 +303,6 @@ Source 0 My DS Playlist Playlist True True True 68 Volume 68
 Source 1 My DS Radio Radio True True True 68 Volume 68
 Source 3 My DS Songcast Receiver True True True 68 Volume 68
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect My DS update 
-Senders begin
-Sender My DS
-Senders end
 empty
 
 // test reforming the link by changing ds 68's name - note that the Current source of the root is not updated
@@ -382,6 +311,8 @@ mock network update ds 68 product name Test
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
+Sender Mock DS
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -391,15 +322,6 @@ Source 3 Test Songcast Receiver True True True 68 Volume 67 68
 Source 1 Mock DS Radio Radio True True True 67 Volume 67
 Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Sender Test
-Senders end
 empty
 
 // test breaking the link by changing ds 67's source name
@@ -407,10 +329,12 @@ mock network update ds 67 product source 0 name Playlist
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
+Sender Mock DS
 Senders end
 expect Test open Source 0 Test Playlist Playlist True True True 68 Volume 68
 expect Test open 
 Senders begin
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -421,14 +345,6 @@ Source 0 Test Playlist Playlist True True True 68 Volume 68
 Source 1 Test Radio Radio True True True 68 Volume 68
 Source 3 Test Songcast Receiver True True True 68 Volume 68
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect Test update 
-Senders begin
-Sender Test
-Senders end
 empty
 
 // reform link of 67 and 68
@@ -436,6 +352,8 @@ mock network update ds 67 product source 0 name Test
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
+Sender Mock DS
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -445,21 +363,13 @@ Source 3 Test Songcast Receiver True True True 68 Volume 67 68
 Source 1 Mock DS Radio Radio True True True 67 Volume 67
 Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Sender Test
-Senders end
 empty
 
 mock network remove ds 67
 expect Test open Source 0 Test Playlist Playlist True True True 68 Volume 68
 expect Test open 
 Senders begin
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -467,10 +377,6 @@ Source 0 Test Playlist Playlist True True True 68 Volume 68
 Source 1 Test Radio Radio True True True 68 Volume 68
 Source 3 Test Songcast Receiver True True True 68 Volume 68
 Sources end
-expect Test update 
-Senders begin
-Sender Test
-Senders end
 empty
 
 // remove Time service for 67
@@ -481,6 +387,8 @@ mock network add ds 67
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True False 67 Volume 67
 expect Mock DS open 
 Senders begin
+Sender Mock DS
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -490,21 +398,13 @@ Source 3 Test Songcast Receiver True True True 68 Volume 67 68
 Source 1 Mock DS Radio Radio True True False 67 Volume 67
 Source 3 Mock DS Songcast Receiver True True False 67 Volume 67
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Sender Test
-Senders end
 empty
 
 mock network remove ds 67
 expect Test open Source 0 Test Playlist Playlist True True True 68 Volume 68
 expect Test open 
 Senders begin
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -512,10 +412,6 @@ Source 0 Test Playlist Playlist True True True 68 Volume 68
 Source 1 Test Radio Radio True True True 68 Volume 68
 Source 3 Test Songcast Receiver True True True 68 Volume 68
 Sources end
-expect Test update 
-Senders begin
-Sender Test
-Senders end
 empty
 
 // remove Info service from 67
@@ -526,6 +422,8 @@ mock network add ds 67
 expect Mock DS open Source 3 Mock DS Songcast Receiver True False False 67 Volume 67
 expect Mock DS open 
 Senders begin
+Sender Mock DS
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -535,21 +433,13 @@ Source 3 Test Songcast Receiver True True True 68 Volume 67 68
 Source 1 Mock DS Radio Radio True False False 67 Volume 67
 Source 3 Mock DS Songcast Receiver True False False 67 Volume 67
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Sender Test
-Senders end
 empty
 
 mock network remove ds 67
 expect Test open Source 0 Test Playlist Playlist True True True 68 Volume 68
 expect Test open 
 Senders begin
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -557,10 +447,6 @@ Source 0 Test Playlist Playlist True True True 68 Volume 68
 Source 1 Test Radio Radio True True True 68 Volume 68
 Source 3 Test Songcast Receiver True True True 68 Volume 68
 Sources end
-expect Test update 
-Senders begin
-Sender Test
-Senders end
 empty
 
 // re-add Info and Time services and remove Volume service from 67
@@ -571,6 +457,8 @@ mock network add ds 67
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume
 expect Mock DS open 
 Senders begin
+Sender Mock DS
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -580,21 +468,13 @@ Source 3 Test Songcast Receiver True True True 68 Volume 68
 Source 1 Mock DS Radio Radio True True True 67 Volume
 Source 3 Mock DS Songcast Receiver True True True 67 Volume
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Sender Test
-Senders end
 empty
 
 mock network remove ds 68
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume
 expect Mock DS open 
 Senders begin
+Sender Mock DS
 Senders end
 expect Main Room update 
 Sources begin
@@ -602,10 +482,6 @@ Source 0 Mock DS Test Playlist True True True 67 Volume
 Source 1 Mock DS Radio Radio True True True 67 Volume
 Source 3 Mock DS Songcast Receiver True True True 67 Volume
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
 empty
 
 // remove Volume service from 68
@@ -616,6 +492,8 @@ mock network add ds 68
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume
 expect Mock DS open 
 Senders begin
+Sender Mock DS
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -625,21 +503,13 @@ Source 3 Test Songcast Receiver True True True 68 Volume
 Source 1 Mock DS Radio Radio True True True 67 Volume
 Source 3 Mock DS Songcast Receiver True True True 67 Volume
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Sender Test
-Senders end
 empty
 
 mock network remove ds 67
 expect Test open Source 0 Test Playlist Playlist True True True 68 Volume
 expect Test open 
 Senders begin
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -647,10 +517,6 @@ Source 0 Test Playlist Playlist True True True 68 Volume
 Source 1 Test Radio Radio True True True 68 Volume
 Source 3 Test Songcast Receiver True True True 68 Volume
 Sources end
-expect Test update 
-Senders begin
-Sender Test
-Senders end
 empty
 
 // add Volume service to 67
@@ -661,6 +527,8 @@ mock network add ds 67
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
+Sender Mock DS
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -670,21 +538,13 @@ Source 3 Test Songcast Receiver True True True 68 Volume 67
 Source 1 Mock DS Radio Radio True True True 67 Volume 67
 Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Sender Test
-Senders end
 empty
 
 mock network remove ds 68
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
+Sender Mock DS
 Senders end
 expect Main Room update 
 Sources begin
@@ -692,10 +552,6 @@ Source 0 Mock DS Test Playlist True True True 67 Volume 67
 Source 1 Mock DS Radio Radio True True True 67 Volume 67
 Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
 empty
 
 // add Volume service to 68
@@ -706,6 +562,8 @@ mock network add ds 68
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
+Sender Mock DS
+Sender Test
 Senders end
 expect Main Room update 
 Sources begin
@@ -715,15 +573,6 @@ Source 3 Test Songcast Receiver True True True 68 Volume 67 68
 Source 1 Mock DS Radio Radio True True True 67 Volume 67
 Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 Sources end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Senders end
-expect Mock DS update 
-Senders begin
-Sender Mock DS
-Sender Test
-Senders end
 empty
 
 // disable sender on 68

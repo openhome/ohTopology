@@ -343,7 +343,7 @@ namespace OpenHome.Av
 
         public MediaServerContainerMock(INetwork aNetwork, IWatchableSnapshot<IMediaDatum> aSnapshot)
         {
-            iSnapshot = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork.WatchableThread, "snapshot", aSnapshot);
+            iSnapshot = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork, "snapshot", aSnapshot);
         }
 
         // IMediaServerContainer

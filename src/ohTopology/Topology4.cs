@@ -231,19 +231,16 @@ namespace OpenHome.Av
             {
                 iGroup.Device.Create<IProxySender>((sender) =>
                 {
-                    iThread.Schedule(() =>
+                    if (!iDisposed)
                     {
-                        if (!iDisposed)
-                        {
-                            iSender = sender;
+                        iSender = sender;
 
-                            iSender.Status.AddWatcher(this);
-                        }
-                        else
-                        {
-                            sender.Dispose();
-                        }
-                    });
+                        iSender.Status.AddWatcher(this);
+                    }
+                    else
+                    {
+                        sender.Dispose();
+                    }
                 });
             }
         }
@@ -786,13 +783,10 @@ namespace OpenHome.Av
             iWatchableRoots.Update(roots);
             iWatchableSources.Update(sources);
 
-            iNetwork.Schedule(() =>
+            foreach (Topology4Group g in oldGroups)
             {
-                foreach (Topology4Group g in oldGroups)
-                {
-                    g.Dispose();
-                }
-            });
+                g.Dispose();
+            }
         }
 
         private void InsertIntoTree(Topology4Group aGroup)
@@ -1000,11 +994,7 @@ namespace OpenHome.Av
             iRooms.Remove(room);
             iRoomLookup.Remove(aItem);
 
-            // schedule disposal of L4 room
-            iNetwork.Schedule(() =>
-            {
-                room.Dispose();
-            });
+            room.Dispose();
         }
 
         private bool iDisposed;

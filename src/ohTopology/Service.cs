@@ -50,10 +50,9 @@ namespace OpenHome.Av
 
             if (iSubscribeTask != null)
             {
-                Task.Factory.StartNew(() =>
+                iSubscribeTask.ContinueWith((t) =>
                 {
-                    iSubscribeTask.Wait();
-                    Network.Schedule(() =>
+                    iNetwork.Schedule(() =>
                     {
                         aCallback((T)OnCreate(aDevice));
                     });

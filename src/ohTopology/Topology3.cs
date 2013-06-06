@@ -241,11 +241,7 @@ namespace OpenHome.Av
                     iRooms.Remove(room);
                     iRoomLookup.Remove(aRoom);
 
-                    // schedule disposal of the room
-                    iNetwork.Schedule(() =>
-                    {
-                        room.Dispose();
-                    });
+                    room.Dispose();
                 }
             }
         }
