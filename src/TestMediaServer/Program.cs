@@ -47,13 +47,11 @@ namespace TestMediaServer
             });
 
             Do.Assert(iSnaphot.AlphaMap == null);
-            Do.Assert(iSnaphot.Sequence == 0);
             Do.Assert(iSnaphot.Total == 4);
 
             var rootFragment = iSnaphot.Read(0, 4).Result;
 
             Do.Assert(rootFragment.Index == 0);
-            Do.Assert(rootFragment.Sequence == 0);
             Do.Assert(rootFragment.Data.Count() == 4);
 
             Do.Assert(rootFragment.Data.ElementAt(0).Type.Count() == 1);
@@ -89,7 +87,6 @@ namespace TestMediaServer
             });
 
             Do.Assert(iSnaphot.AlphaMap == null);
-            Do.Assert(iSnaphot.Sequence == 0);
             Do.Assert(iSnaphot.Total == 12521);
 
             var artists = session.Browse(rootFragment.Data.ElementAt(1)).Result;
@@ -106,13 +103,11 @@ namespace TestMediaServer
 
 
             Do.Assert(iSnaphot.AlphaMap == null);
-            Do.Assert(iSnaphot.Sequence == 0);
             Do.Assert(iSnaphot.Total == 882);
 
             var fragment = iSnaphot.Read(100, 1).Result;
 
             Do.Assert(fragment.Index == 100);
-            Do.Assert(fragment.Sequence == 0);
             Do.Assert(fragment.Data.Count() == 1);
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 2);
@@ -133,7 +128,6 @@ namespace TestMediaServer
             });
 
             Do.Assert(iSnaphot.AlphaMap == null);
-            Do.Assert(iSnaphot.Sequence == 0);
             Do.Assert(iSnaphot.Total == 2);
 
             fragment = iSnaphot.Read(0, 1).Result;
@@ -158,7 +152,6 @@ namespace TestMediaServer
             });
 
             Do.Assert(iSnaphot.AlphaMap == null);
-            Do.Assert(iSnaphot.Sequence == 0);
             Do.Assert(iSnaphot.Total == 15);
 
             fragment = iSnaphot.Read(0, 1).Result;
@@ -185,13 +178,11 @@ namespace TestMediaServer
             });
 
             Do.Assert(iSnaphot.AlphaMap == null);
-            Do.Assert(iSnaphot.Sequence == 0);
             Do.Assert(iSnaphot.Total == 1000);
 
             fragment = iSnaphot.Read(100, 1).Result;
 
             Do.Assert(fragment.Index == 100);
-            Do.Assert(fragment.Sequence == 0);
             Do.Assert(fragment.Data.Count() == 1);
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 1);
@@ -211,7 +202,6 @@ namespace TestMediaServer
             });
 
             Do.Assert(iSnaphot.AlphaMap == null);
-            Do.Assert(iSnaphot.Sequence == 0);
             Do.Assert(iSnaphot.Total == 18);
 
             fragment = iSnaphot.Read(0, 1).Result;
@@ -239,13 +229,11 @@ namespace TestMediaServer
             });
 
             Do.Assert(iSnaphot.AlphaMap == null);
-            Do.Assert(iSnaphot.Sequence == 0);
             Do.Assert(iSnaphot.Total == 124);
 
             fragment = iSnaphot.Read(100, 1).Result;
 
             Do.Assert(fragment.Index == 100);
-            Do.Assert(fragment.Sequence == 0);
             Do.Assert(fragment.Data.Count() == 1);
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 1);
@@ -265,7 +253,6 @@ namespace TestMediaServer
             });
 
             Do.Assert(iSnaphot.AlphaMap == null);
-            Do.Assert(iSnaphot.Sequence == 0);
             Do.Assert(iSnaphot.Total == 16);
 
             fragment = iSnaphot.Read(0, 1).Result;

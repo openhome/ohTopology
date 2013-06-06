@@ -477,12 +477,10 @@ namespace OpenHome.Av
     class ExternalContainer : IWatchableContainer<IMediaPreset>, IDisposable
     {
         private Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
-        private uint iSequence;
 
         public ExternalContainer(INetwork aNetwork)
         {
-            iSequence = 0;
-            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new ExternalSnapshot(iSequence, new List<ITopology4Source>()));
+            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new ExternalSnapshot(new List<ITopology4Source>()));
         }
 
         public void Dispose()
@@ -501,19 +499,16 @@ namespace OpenHome.Av
 
         public void UpdateSnapshot(IList<ITopology4Source> aSources)
         {
-            ++iSequence;
-            iSnapshot.Update(new ExternalSnapshot(iSequence, aSources));
+            iSnapshot.Update(new ExternalSnapshot(aSources));
         }
     }
 
     class ExternalSnapshot : IWatchableSnapshot<IMediaPreset>
     {
-        private readonly uint iSequence;
         private readonly IList<IMediaPreset> iSources;
 
-        public ExternalSnapshot(uint aSequence, IList<ITopology4Source> aSources)
+        public ExternalSnapshot(IList<ITopology4Source> aSources)
         {
-            iSequence = aSequence;
             iSources = new List<IMediaPreset>();
 
             foreach (ITopology4Source s in aSources)
@@ -530,14 +525,6 @@ namespace OpenHome.Av
             }
         }
 
-        public uint Sequence
-        {
-            get
-            {
-                return iSequence;
-            }
-        }
-
         public IEnumerable<uint> AlphaMap
         {
             get
@@ -550,7 +537,7 @@ namespace OpenHome.Av
         {
             Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
             {
-                return new WatchableFragment<IMediaPreset>(aIndex, iSequence, iSources.Skip((int)aIndex).Take((int)aCount));
+                return new WatchableFragment<IMediaPreset>(aIndex, iSources.Skip((int)aIndex).Take((int)aCount));
             });
             return task;
         }

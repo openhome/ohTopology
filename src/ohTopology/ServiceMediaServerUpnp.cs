@@ -240,7 +240,6 @@ namespace OpenHome.Av
         private readonly string iId;
         private uint iUpdateId;
 
-        private uint iSequence;
         private readonly Watchable<IWatchableSnapshot<IMediaDatum>> iWatchable;
 
         public MediaServerContainerUpnp(INetwork aNetwork, CpProxyUpnpOrgContentDirectory1 aUpnpProxy, string aId, uint aUpdateId, uint aTotal)
@@ -250,8 +249,7 @@ namespace OpenHome.Av
             iId = aId;
             iUpdateId = aUpdateId;
 
-            iSequence = 0;
-            iWatchable = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork, "snapshot", new MediaServerSnapshotUpnp(iNetwork, iUpnpProxy, iId, aTotal, 0));
+            iWatchable = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork, "snapshot", new MediaServerSnapshotUpnp(iNetwork, iUpnpProxy, iId, aTotal));
         }
 
         internal string Id
@@ -276,7 +274,7 @@ namespace OpenHome.Av
 
             iNetwork.Schedule(() =>
             {
-                iWatchable.Update(new MediaServerSnapshotUpnp(iNetwork, iUpnpProxy, iId, aTotal, ++iSequence));
+                iWatchable.Update(new MediaServerSnapshotUpnp(iNetwork, iUpnpProxy, iId, aTotal));
             });
         }
 
@@ -303,17 +301,15 @@ namespace OpenHome.Av
         private readonly CpProxyUpnpOrgContentDirectory1 iUpnpProxy;
         private readonly string iId;
         private readonly uint iTotal;
-        private readonly uint iSequence;
 
         private readonly IEnumerable<uint> iAlphaMap;
 
-        public MediaServerSnapshotUpnp(INetwork aNetwork, CpProxyUpnpOrgContentDirectory1 aUpnpProxy, string aId, uint aTotal, uint aSequence)
+        public MediaServerSnapshotUpnp(INetwork aNetwork, CpProxyUpnpOrgContentDirectory1 aUpnpProxy, string aId, uint aTotal)
         {
             iNetwork = aNetwork;
             iUpnpProxy = aUpnpProxy;
             iId = aId;
             iTotal = aTotal;
-            iSequence = aSequence;
 
             iAlphaMap = null;
         }
@@ -323,11 +319,6 @@ namespace OpenHome.Av
         public uint Total
         {
             get { return (iTotal); }
-        }
-
-        public uint Sequence
-        {
-            get { return (iSequence); }
         }
 
         public IEnumerable<uint> AlphaMap
@@ -357,7 +348,7 @@ namespace OpenHome.Av
                     return (null);
                 }
 
-                return (new MediaServerFragmentUpnp(iNetwork, aIndex, 0, result));
+                return (new MediaServerFragmentUpnp(iNetwork, aIndex, result));
             }));
         }
     }
@@ -366,14 +357,12 @@ namespace OpenHome.Av
     {
         private readonly INetwork iNetwork;
         private readonly uint iIndex;
-        private readonly uint iSequence;
         private readonly IEnumerable<IMediaDatum> iData;
 
-        public MediaServerFragmentUpnp(INetwork aNetwork, uint aIndex, uint aSequence, string aDidl)
+        public MediaServerFragmentUpnp(INetwork aNetwork, uint aIndex, string aDidl)
         {
             iNetwork = aNetwork;
             iIndex = aIndex;
-            iSequence = aSequence;
             iData = Parse(aDidl);
         }
 
@@ -399,11 +388,6 @@ namespace OpenHome.Av
         public uint Index
         {
             get { return (iIndex); }
-        }
-
-        public uint Sequence
-        {
-            get { return (iSequence); }
         }
 
         public IEnumerable<IMediaDatum> Data

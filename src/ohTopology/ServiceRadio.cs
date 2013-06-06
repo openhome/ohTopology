@@ -365,13 +365,11 @@ namespace OpenHome.Av
     {
         private Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
         private ServiceRadioNetwork iRadio;
-        private uint iSequence;
 
         public RadioContainerNetwork(INetwork aNetwork, ServiceRadioNetwork aRadio)
         {
             iRadio = aRadio;
-            iSequence = 0;
-            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new RadioSnapshotNetwork(iSequence, new List<uint>(), iRadio));
+            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new RadioSnapshotNetwork(new List<uint>(), iRadio));
         }
 
         public void Dispose()
@@ -391,20 +389,17 @@ namespace OpenHome.Av
 
         public void UpdateSnapshot(IList<uint> aIdArray)
         {
-            ++iSequence;
-            iSnapshot.Update(new RadioSnapshotNetwork(iSequence, aIdArray, iRadio));
+            iSnapshot.Update(new RadioSnapshotNetwork(aIdArray, iRadio));
         }
     }
 
     class RadioSnapshotNetwork : IWatchableSnapshot<IMediaPreset>
     {
-        private readonly uint iSequence;
         private readonly IList<uint> iIdArray;
         private readonly ServiceRadioNetwork iRadio;
 
-        public RadioSnapshotNetwork(uint aSequence, IList<uint> aIdArray, ServiceRadioNetwork aRadio)
+        public RadioSnapshotNetwork(IList<uint> aIdArray, ServiceRadioNetwork aRadio)
         {
-            iSequence = aSequence;
             iIdArray = aIdArray;
             iRadio = aRadio;
         }
@@ -414,14 +409,6 @@ namespace OpenHome.Av
             get
             {
                 return ((uint)iIdArray.Count());
-            }
-        }
-
-        public uint Sequence
-        {
-            get
-            {
-                return iSequence;
             }
         }
 
@@ -442,7 +429,7 @@ namespace OpenHome.Av
                 {
                     idList += string.Format("{0} ", iIdArray[(int)i]);
                 }
-                return new WatchableFragment<IMediaPreset>(aIndex, iSequence, iRadio.ReadList(idList.TrimEnd(' ')).Result);
+                return new WatchableFragment<IMediaPreset>(aIndex, iRadio.ReadList(idList.TrimEnd(' ')).Result);
             });
             return task;
         }
@@ -673,14 +660,6 @@ namespace OpenHome.Av
             }
         }
 
-        public uint Sequence
-        {
-            get
-            {
-                return 0;
-            }
-        }
-
         public IEnumerable<uint> AlphaMap
         {
             get
@@ -695,7 +674,7 @@ namespace OpenHome.Av
 
             Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
             {
-                return new WatchableFragment<IMediaPreset>(aIndex, 0, iData.Skip((int)aIndex).Take((int)aCount));
+                return new WatchableFragment<IMediaPreset>(aIndex, iData.Skip((int)aIndex).Take((int)aCount));
             });
             return task;
         }

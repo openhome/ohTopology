@@ -389,7 +389,7 @@ namespace OpenHome.Av
 
             return (Task.Factory.StartNew<IWatchableFragment<IMediaDatum>>(() =>
             {
-                return (new WatchableFragment<IMediaDatum>(aIndex, 0, iData.Skip((int)aIndex).Take((int)aCount)));
+                return (new WatchableFragment<IMediaDatum>(aIndex, iData.Skip((int)aIndex).Take((int)aCount)));
             }));
         }
     }
