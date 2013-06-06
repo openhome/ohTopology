@@ -36,14 +36,12 @@ namespace OpenHome.Av
     public interface IWatchableFragment<T>
     {
         uint Index { get; }
-        uint Sequence { get; }
         IEnumerable<T> Data { get; }
     }
 
     public interface IWatchableSnapshot<T>
     {
         uint Total { get; }
-        uint Sequence { get; }
         IEnumerable<uint> AlphaMap { get; } // null if no alpha map
         Task<IWatchableFragment<T>> Read(uint aIndex, uint aCount);
     }
@@ -213,13 +211,11 @@ namespace OpenHome.Av
     public class WatchableFragment<T> : IWatchableFragment<T>
     {
         private readonly uint iIndex;
-        private readonly uint iSequence;
         private readonly IEnumerable<T> iData;
 
-        public WatchableFragment(uint aIndex, uint aSequence, IEnumerable<T> aData)
+        public WatchableFragment(uint aIndex, IEnumerable<T> aData)
         {
             iIndex = aIndex;
-            iSequence = aSequence;
             iData = aData;
         }
 
@@ -228,11 +224,6 @@ namespace OpenHome.Av
         public uint Index
         {
             get { return (iIndex); }
-        }
-
-        public uint Sequence
-        {
-            get { return (iSequence); }
         }
 
         public IEnumerable<T> Data

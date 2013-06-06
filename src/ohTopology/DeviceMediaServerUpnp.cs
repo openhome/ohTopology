@@ -31,13 +31,14 @@ namespace OpenHome.Av
         private readonly INetwork iNetwork;
         private readonly CpDevice iDevice;
         private readonly CpProxyUpnpOrgContentDirectory1 iUpnpProxy;
+        private readonly ServiceMediaServerUpnp iService;
 
-        public DeviceMediaServerUpnp(INetwork aNetwork, CpDevice aDevice, CpProxyUpnpOrgContentDirectory1 aUpnpProxy)
+        public DeviceMediaServerUpnp(INetwork aNetwork, CpDevice aDevice)
             : base(aDevice.Udn())
         {
             iNetwork = aNetwork;
             iDevice = aDevice;
-            iUpnpProxy = aUpnpProxy;
+            iUpnpProxy = new CpProxyUpnpOrgContentDirectory1(iDevice);
 
             string deviceXml;
 
@@ -74,15 +75,21 @@ namespace OpenHome.Av
             string productName = GetDeviceValueFrom(upnpFriendlyName);
             string productUrl = GetDeviceValueFrom(upnpPresentationUrl);
 
-            Add<IProxyMediaServer>(new ServiceMediaServerUpnp(aNetwork, new string[] { "Browse", "Query" },
-                manufacturerImageUri, manufacturerInfo, manufacturerName, manufacturerUrl,
-                modelImageUri, modelInfo, modelName, modelUrl,
-                productImageUri, productInfo, productName, productUrl,
-                iUpnpProxy));
+            iService = new ServiceMediaServerUpnp(aNetwork, new string[] { "Browse", "Query" },
+                            manufacturerImageUri, manufacturerInfo, manufacturerName, manufacturerUrl,
+                            modelImageUri, modelInfo, modelName, modelUrl,
+                            productImageUri, productInfo, productName, productUrl,
+                            iUpnpProxy);
 
-            // content directory service
-            //MockWatchableContentDirectory contentDirectory = new MockWatchableContentDirectory(aThread, aUdn, 0, "");
-            //Add<ContentDirectory>(contentDirectory);
+            Add<IProxyMediaServer>(iService);
+
+            iUpnpProxy.SetPropertySystemUpdateIDChanged(OnSystemUpdateIdChanged);
+            iUpnpProxy.Subscribe();
+        }
+
+        private void OnSystemUpdateIdChanged()
+        {
+            iService.Refresh();
         }
 
         private string GetDeviceElementValue(IEnumerable<XElement> aElements, string aName)
@@ -123,99 +130,14 @@ namespace OpenHome.Av
 
             return (sb.ToString());
         }
+
+        // IDisposable
+
+        public override void Dispose()
+        {
+            iUpnpProxy.Dispose();
+            base.Dispose();
+        }
     }
 }
-/*
-public class ServiceUpnpOrgContentDirectory1 : IServiceMediaServer
-{
-    private class BrowseAsyncHandler
-    {
-        public BrowseAsyncHandler(CpProxyUpnpOrgContentDirectory1 aService, Action<IServiceMediaServerBrowseResult> aCallback)
-        {
-            iService = aService;
-            iCallback = aCallback;
-        }
 
-        public void Browse(string aObjectId, string aBrowseFlag, string aFilter, uint aStartingIndex, uint aRequestedCount, string aSortCriteria)
-        {
-            iService.BeginBrowse(aObjectId, aBrowseFlag, aFilter, aStartingIndex, aRequestedCount, aSortCriteria, Callback);
-        }
-
-        private void Callback(IntPtr aAsyncHandle)
-        {
-            string result;
-            uint numberReturned;
-            uint totalMatches;
-            uint updateId;
-
-            iService.EndBrowse(aAsyncHandle, out result, out numberReturned, out totalMatches, out updateId);
-
-            iCallback(null); // TODO
-        }
-
-        private CpProxyUpnpOrgContentDirectory1 iService;
-        private Action<IServiceMediaServerBrowseResult> iCallback;
-    }
-
-    public ServiceUpnpOrgContentDirectory1(IWatchableThread aThread, string aId, CpProxyUpnpOrgContentDirectory1 aService)
-    {
-        iLock = new object();
-        iDisposed = false;
-
-        iService = aService;
-
-        iService.SetPropertySystemUpdateIDChanged(HandleSystemUpdateIDChanged);
-
-        iUpdateCount = new Watchable<uint>(aThread, string.Format("UpdateCount({0})", aId), iService.PropertySystemUpdateID());
-    }
-
-    public void Dispose()
-    {
-        lock (iLock)
-        {
-            if (iDisposed)
-            {
-                throw new ObjectDisposedException("ServiceUpnpOrgContentDirectory1.Dispose");
-            }
-
-            iService = null;
-
-            iDisposed = true;
-        }
-    }
-
-    public IWatchable<uint> UpdateCount
-    {
-        get
-        {
-            return iUpdateCount;
-        }
-    }
-
-    public void Browse(string aId, Action<IServiceMediaServerBrowseResult> aCallback)
-    {
-        BrowseAsyncHandler handler = new BrowseAsyncHandler(iService, aCallback);
-        handler.Browse(aId);
-    }
-
-    private void HandleSystemUpdateIDChanged()
-    {
-        lock (iLock)
-        {
-            if (iDisposed)
-            {
-                return;
-            }
-
-            iUpdateCount.Update(iService.PropertySystemUpdateID());
-        }
-    }
-
-    private object iLock;
-    private bool iDisposed;
-
-    private CpProxyUpnpOrgContentDirectory1 iService;
-
-    private Watchable<uint> iUpdateCount;
-}
-*/

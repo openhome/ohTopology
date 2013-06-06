@@ -12,6 +12,11 @@ namespace OpenHome.Av
 {
     public abstract class DeviceInjector : IDisposable
     {
+        private Network iNetwork;
+        private Dictionary<CpDevice, Device> iCpDeviceLookup;
+
+        protected CpDeviceListUpnpServiceType iDeviceList;
+
         protected DeviceInjector(Network aNetwork)
         {
             iNetwork = aNetwork;
@@ -19,27 +24,14 @@ namespace OpenHome.Av
             iCpDeviceLookup = new Dictionary<CpDevice, Device>();
         }
 
-        public void Dispose()
-        {
-            iDeviceList.Dispose();
-            iDeviceList = null;
-
-            iNetwork.Execute(() =>
-            {
-                foreach (Device d in iCpDeviceLookup.Values)
-                {
-                    d.Dispose();
-                }
-            });
-            iCpDeviceLookup.Clear();
-            iCpDeviceLookup = null;
-        }
-
         protected void Added(CpDeviceList aList, CpDevice aDevice)
         {
+            aDevice.AddRef();
+
             iNetwork.Schedule(() =>
             {
-                Device device = DeviceFactory.Create(iNetwork, aDevice);
+                Device device = Create(iNetwork, aDevice);
+                iCpDeviceLookup.Add(aDevice, device);
                 iNetwork.Add(device);
             });
         }
@@ -51,35 +43,56 @@ namespace OpenHome.Av
                 Device device = iCpDeviceLookup[aDevice];
                 iCpDeviceLookup.Remove(aDevice);
                 iNetwork.Remove(device);
-
-                iNetwork.Schedule(() =>
-                {
-                    device.Dispose();
-                });
+                device.Dispose();
+                aDevice.RemoveRef();
             });
         }
 
-        protected CpDeviceListUpnpServiceType iDeviceList;
+        protected virtual Device Create(INetwork aNetwork, CpDevice aDevice)
+        {
+            return (DeviceFactory.Create(aNetwork, aDevice));
+        }
 
-        private Network iNetwork;
-        private Dictionary<CpDevice, Device> iCpDeviceLookup;
+        // IDisposable
+
+        public void Dispose()
+        {
+            iDeviceList.Dispose();
+            iDeviceList = null;
+
+            iNetwork.Execute(() =>
+            {
+                foreach (var entry in iCpDeviceLookup)
+                {
+                    entry.Value.Dispose();
+                    entry.Key.RemoveRef();
+                }
+            });
+            iCpDeviceLookup.Clear();
+            iCpDeviceLookup = null;
+        }
     }
 
-    public class ProductDeviceInjector : DeviceInjector
+    public class DeviceInjectorProduct : DeviceInjector
     {
-        public ProductDeviceInjector(Network aNetwork)
+        public DeviceInjectorProduct(Network aNetwork)
             : base(aNetwork)
         {
             iDeviceList = new CpDeviceListUpnpServiceType("av.openhome.org", "Product", 1, Added, Removed);
         }
     }
 
-    public class ContentDirectoryDeviceInjector : DeviceInjector
+    public class DeviceInjectorContentDirectory : DeviceInjector
     {
-        public ContentDirectoryDeviceInjector(Network aNetwork)
+        public DeviceInjectorContentDirectory(Network aNetwork)
             : base(aNetwork)
         {
             iDeviceList = new CpDeviceListUpnpServiceType("upnp.org", "ContentDirectory", 1, Added, Removed);
+        }
+
+        protected override Device Create(INetwork aNetwork, CpDevice aDevice)
+        {
+            return (new DeviceMediaServerUpnp(aNetwork, aDevice));
         }
     }
 
@@ -96,46 +109,49 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            foreach (Device d in iMockDevices.Values)
+            iNetwork.Execute(() =>
             {
-                iNetwork.Remove(d);
-                d.Dispose();
-            }
-            iMockDevices.Clear();
-            iMockDevices = null;
+                foreach (Device d in iMockDevices.Values)
+                {
+                    iNetwork.Remove(d);
+                    d.Dispose();
+                }
+                iMockDevices.Clear();
+                iMockDevices = null;
+            });
         }
 
         public void Execute(IEnumerable<string> aValue)
         {
-            string command = aValue.First().ToLowerInvariant();
+            iNetwork.Execute(() =>
+            {
+                string command = aValue.First().ToLowerInvariant();
 
-            if (command == "small")
-            {
-                CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
-                CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000"));
-                return;
-            }
-            else if (command == "medium")
-            {
-                CreateAndAdd(DeviceFactory.CreateDs(iNetwork, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));
-                CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
-                CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
-                CreateAndAdd(DeviceFactory.CreateDs(iNetwork, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
-                CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000"));
-                return;
-            }
-            else if (command == "large")
-            {
-                throw new NotImplementedException();
-            }
-            else if (command == "create")
-            {
-                IEnumerable<string> value = aValue.Skip(1);
-
-                string type = value.First();
-
-                if (type == "ds" || type == "dsm" || type == "mediaserver")
+                if (command == "small")
                 {
+                    CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
+                    CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000"));
+                    return;
+                }
+                else if (command == "medium")
+                {
+                    CreateAndAdd(DeviceFactory.CreateDs(iNetwork, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));
+                    CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
+                    CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
+                    CreateAndAdd(DeviceFactory.CreateDs(iNetwork, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
+                    CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000"));
+                    return;
+                }
+                else if (command == "large")
+                {
+                    throw new NotImplementedException();
+                }
+                else if (command == "create")
+                {
+                    IEnumerable<string> value = aValue.Skip(1);
+
+                    string type = value.First();
+
                     value = value.Skip(1);
 
                     string udn = value.First();
@@ -150,98 +166,133 @@ namespace OpenHome.Av
                         Create(DeviceFactory.CreateDsm(iNetwork, udn));
                         return;
                     }
-                    else if (type == "mediaserver")
-                    {
-                        Create(DeviceFactory.CreateMediaServer(iNetwork, udn));
-                        return;
-                    }
                 }
-            }
-            else if (command == "destroy")
-            {
-                IEnumerable<string> value = aValue.Skip(1);
-
-                string type = value.First();
-
-                if (type == "device")
+                else if (command == "add")
                 {
-                    value = value.Skip(1);
+                    IEnumerable<string> value = aValue.Skip(1);
 
-                    string udn = value.First();
+                    string type = value.First();
 
-                    Device device;
-                    if (iMockDevices.TryGetValue(udn, out device))
+                    if (type == "device")
                     {
-                        iNetwork.Remove(device);
-                        iMockDevices.Remove(device.Udn);
-                        device.Dispose();
-                        return;
+                        value = value.Skip(1);
+
+                        string udn = value.First();
+
+                        Device device;
+                        if (iMockDevices.TryGetValue(udn, out device))
+                        {
+                            iNetwork.Add(device);
+                            return;
+                        }
                     }
                 }
-            }
-            else if (command == "add")
-            {
-                IEnumerable<string> value = aValue.Skip(1);
-
-                string type = value.First();
-
-                if (type == "device")
+                else if (command == "remove")
                 {
-                    value = value.Skip(1);
+                    IEnumerable<string> value = aValue.Skip(1);
 
-                    string udn = value.First();
+                    string type = value.First();
 
-                    Device device;
-                    if (iMockDevices.TryGetValue(udn, out device))
+                    if (type == "device")
                     {
-                        iNetwork.Add(device);
-                        return;
+                        value = value.Skip(1);
+
+                        string udn = value.First();
+
+                        Device device;
+                        if (iMockDevices.TryGetValue(udn, out device))
+                        {
+                            iNetwork.Remove(device);
+                            return;
+                        }
                     }
                 }
-            }
-            else if (command == "remove")
-            {
-                IEnumerable<string> value = aValue.Skip(1);
-
-                string type = value.First();
-
-                if (type == "device")
+                else if (command == "destroy")
                 {
-                    value = value.Skip(1);
+                    IEnumerable<string> value = aValue.Skip(1);
 
-                    string udn = value.First();
+                    string type = value.First();
 
-                    Device device;
-                    if (iMockDevices.TryGetValue(udn, out device))
+                    if (type == "device")
                     {
-                        iNetwork.Remove(device);
-                        return;
+                        value = value.Skip(1);
+
+                        string udn = value.First();
+
+                        Device device;
+                        if (iMockDevices.TryGetValue(udn, out device))
+                        {
+                            iNetwork.Remove(device);
+                            iMockDevices.Remove(device.Udn);
+                            device.Dispose();
+                            return;
+                        }
                     }
                 }
-            }
-            else if (command == "update")
-            {
-                IEnumerable<string> value = aValue.Skip(1);
-
-                string type = value.First();
-
-                if (type == "device")
+                else if (command == "add")
                 {
-                    value = value.Skip(1);
+                    IEnumerable<string> value = aValue.Skip(1);
 
-                    string udn = value.First();
+                    string type = value.First();
 
-                    Device device;
-
-                    if (iMockDevices.TryGetValue(udn, out device))
+                    if (type == "device")
                     {
-                        device.Execute(value.Skip(1));
-                        return;
+                        value = value.Skip(1);
+
+                        string udn = value.First();
+
+                        Device device;
+                        if (iMockDevices.TryGetValue(udn, out device))
+                        {
+                            iNetwork.Add(device);
+                            return;
+                        }
                     }
                 }
-            }
+                else if (command == "remove")
+                {
+                    IEnumerable<string> value = aValue.Skip(1);
 
-            throw new NotSupportedException();
+                    string type = value.First();
+
+                    if (type == "device")
+                    {
+                        value = value.Skip(1);
+
+                        string udn = value.First();
+
+                        Device device;
+                        if (iMockDevices.TryGetValue(udn, out device))
+                        {
+                            iNetwork.Remove(device);
+                            return;
+                        }
+                    }
+                }
+                else if (command == "update")
+                {
+                    IEnumerable<string> value = aValue.Skip(1);
+
+                    string type = value.First();
+
+                    if (type == "device")
+                    {
+                        value = value.Skip(1);
+
+                        string udn = value.First();
+
+                        Device device;
+
+                        if (iMockDevices.TryGetValue(udn, out device))
+                        {
+                            device.Execute(value.Skip(1));
+                            return;
+                        }
+                    }
+                }
+
+                throw new NotSupportedException();
+            });
         }
 
         private void Create(Device aDevice)
