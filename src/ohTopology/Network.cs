@@ -83,12 +83,12 @@ namespace OpenHome.Av
         }
     }
 
-    public class MockDeviceInjector : IMockable, IDisposable
+    public class DeviceInjectorMock : IMockable, IDisposable
     {
         private Network iNetwork;
         private Dictionary<string, Device> iMockDevices;
 
-        public MockDeviceInjector(Network aNetwork)
+        public DeviceInjectorMock(Network aNetwork)
         {
             iNetwork = aNetwork;
             iMockDevices = new Dictionary<string, Device>();

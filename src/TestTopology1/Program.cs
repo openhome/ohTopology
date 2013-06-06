@@ -65,7 +65,7 @@ namespace TestTopology
             Mockable mocker = new Mockable();
 
             Network network = new Network(thread);
-            MockDeviceInjector mockInjector = new MockDeviceInjector(network);
+            DeviceInjectorMock mockInjector = new DeviceInjectorMock(network);
             mocker.Add("network", mockInjector);
 
             Topology1 topology = new Topology1(network);

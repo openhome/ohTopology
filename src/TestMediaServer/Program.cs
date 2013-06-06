@@ -353,7 +353,7 @@ namespace TestMediaServer
 
             using (var network = new Network(watchableThread))
             {
-                using (MockDeviceInjector mockInjector = new MockDeviceInjector(network))
+                using (DeviceInjectorMock mockInjector = new DeviceInjectorMock(network))
                 {
                     network.Execute(() =>
                     {

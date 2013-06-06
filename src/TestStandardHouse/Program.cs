@@ -193,7 +193,7 @@ namespace TestLinnHouse
             Mockable mocker = new Mockable();
 
             Network network = new Network(thread);
-            MockDeviceInjector mockInjector = new MockDeviceInjector(network);
+            DeviceInjectorMock mockInjector = new DeviceInjectorMock(network);
             mocker.Add("network", mockInjector);
 
             Topology1 topology1 = new Topology1(network);
