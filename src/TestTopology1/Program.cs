@@ -61,12 +61,12 @@ namespace TestTopology
 
             ExceptionReporter reporter = new ExceptionReporter();
             WatchableThread thread = new WatchableThread(reporter);
-            WatchableThread subscribeThread = new WatchableThread(reporter);
 
             Mockable mocker = new Mockable();
 
-            Network network = new Network(thread, subscribeThread);
-            mocker.Add("network", network);
+            Network network = new Network(thread);
+            DeviceInjectorMock mockInjector = new DeviceInjectorMock(network);
+            mocker.Add("network", mockInjector);
 
             Topology1 topology = new Topology1(network);
 

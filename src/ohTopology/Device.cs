@@ -9,124 +9,6 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public interface IService : IMockable, IDisposable
-    {
-        void Create<T>(IDevice aDevice, Action<T> aCallback) where T : IProxy;
-    }
-
-    public abstract class Service : IService
-    {
-        private readonly INetwork iNetwork;
-        private uint iRefCount;
-        protected Task iSubscribeTask;
-
-        protected Service(INetwork aNetwork)
-        {
-            iNetwork = aNetwork;
-            iRefCount = 0;
-            iSubscribeTask = new Task(() => { });
-        }
-
-        public INetwork Network
-        {
-            get
-            {
-                return (iNetwork);
-            }
-        }
-
-        public virtual void Dispose()
-        {
-            if (iRefCount > 0)
-            {
-                throw new Exception("Disposing of Service with outstanding subscriptions");
-            }
-        }
-
-        public void Create<T>(IDevice aDevice, Action<T> aCallback) where T : IProxy
-        {
-            if (iRefCount == 0)
-            {
-                iSubscribeTask = OnSubscribe();
-            }
-            ++iRefCount;
-
-            if (iSubscribeTask != null)
-            {
-                Task.Factory.StartNew(() =>
-                {
-                    iSubscribeTask.Wait();
-                    Network.Schedule(() =>
-                    {
-                        aCallback((T)OnCreate(aDevice));
-                    });
-                });
-            }
-            else
-            {
-                aCallback((T)OnCreate(aDevice));
-            }
-        }
-
-        public abstract IProxy OnCreate(IDevice aDevice);
-
-        protected virtual Task OnSubscribe()
-        {
-            return null;
-        }
-
-        public void Unsubscribe()
-        {
-            --iRefCount;
-            if (iRefCount == 0)
-            {
-                OnUnsubscribe();
-            }
-        }
-
-        protected virtual void OnUnsubscribe() { }
-
-        // IMockable
-
-        public virtual void Execute(IEnumerable<string> aCommand)
-        {
-        }
-    }
-
-    public interface IProxy : IDisposable
-    {
-        IDevice Device { get; }
-    }
-
-    public class Proxy<T> where T : Service
-    {
-        private readonly IDevice iDevice;
-        protected readonly T iService;
-
-        protected Proxy(IDevice aDevice, T aService)
-        {
-            iDevice = aDevice;
-            iService = aService;
-        }
-
-        // IProxy
-
-        public IDevice Device
-        {
-            get
-            {
-                return (iDevice);
-            }
-        }
-
-        // IDisposable
-
-        public void Dispose()
-        {
-            iService.Unsubscribe();
-        }
-    }
-
     public interface IDevice
     {
         string Udn { get; }
@@ -140,7 +22,7 @@ namespace OpenHome.Av
             iUdn = aUdn;
 
             iDisposed = false;
-            iServices = new Dictionary<Type, IService>();
+            iServices = new Dictionary<Type, Service>();
         }
 
         public virtual void Dispose()
@@ -168,7 +50,7 @@ namespace OpenHome.Av
             }
         }
 
-        public void Add<T>(IService aService) where T : IProxy
+        public void Add<T>(Service aService) where T : IProxy
         {
             iServices.Add(typeof(T), aService);
         }
@@ -223,6 +105,18 @@ namespace OpenHome.Av
             }
         }
 
+        public bool Wait()
+        {
+            bool complete = false;
+
+            foreach (Service s in iServices.Values)
+            {
+                complete |= s.Wait();
+            }
+
+            return complete;
+        }
+
         // IMockable
 
         public void Execute(IEnumerable<string> aValue)
@@ -233,6 +127,6 @@ namespace OpenHome.Av
         private string iUdn;
         private bool iDisposed;
 
-        protected Dictionary<Type, IService> iServices;
+        protected Dictionary<Type, Service> iServices;
     }
 }

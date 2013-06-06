@@ -128,7 +128,8 @@ namespace OpenHome.Av
             device.Add<IProxyRadio>(new ServiceRadioMock(aNetwork, 0, presets, InfoMetadata.Empty, string.Empty, "Stopped", 100));
 
             // playlist service
-            device.Add<IProxyPlaylist>(new ServicePlaylistMock(aNetwork, 0, new List<uint>(), false, false, "Stopped", string.Empty, 1000));
+            List<IMediaMetadata> tracks = new List<IMediaMetadata>();
+            device.Add<IProxyPlaylist>(new ServicePlaylistMock(aNetwork, 0, tracks, false, false, "Stopped", string.Empty, 1000));
 
             return device;
         }
@@ -192,7 +193,8 @@ namespace OpenHome.Av
             device.Add<IProxyRadio>(new ServiceRadioMock(aNetwork, 0, presets, InfoMetadata.Empty, string.Empty, "Stopped", 100));
 
             // playlist service
-            device.Add<IProxyPlaylist>(new ServicePlaylistMock(aNetwork, 0, new List<uint>(), false, false, "Stopped", string.Empty, 1000));
+            List<IMediaMetadata> tracks = new List<IMediaMetadata>();
+            device.Add<IProxyPlaylist>(new ServicePlaylistMock(aNetwork, 0, tracks, false, false, "Stopped", string.Empty, 1000));
             
             return device;
         }

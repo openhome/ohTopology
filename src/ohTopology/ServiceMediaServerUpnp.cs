@@ -251,7 +251,7 @@ namespace OpenHome.Av
             iUpdateId = aUpdateId;
 
             iSequence = 0;
-            iWatchable = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork.WatchableThread, "snapshot", new MediaServerSnapshotUpnp(iNetwork, iUpnpProxy, iId, aTotal, 0));
+            iWatchable = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork, "snapshot", new MediaServerSnapshotUpnp(iNetwork, iUpnpProxy, iId, aTotal, 0));
         }
 
         internal string Id

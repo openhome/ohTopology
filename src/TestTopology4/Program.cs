@@ -29,7 +29,7 @@ namespace TestTopology4
                 {
                     string info = "";
                     info += string.Format("Source {0} {1} {2} {3} {4} {5} {6} {7} Volume",
-                        v.Index, v.Group, v.Name, v.Type, v.Visible, v.HasInfo, v.HasTime, v.Device.Udn);
+                        v.Index, v.Group.Name, v.Name, v.Type, v.Visible, v.HasInfo, v.HasTime, v.Device.Udn);
                     foreach (var g in v.Volumes)
                     {
                         info += " " + g.Device.Udn;
@@ -143,7 +143,7 @@ namespace TestTopology4
                     foreach (var s in v)
                     {
                         info += string.Format("Source {0} {1} {2} {3} {4} {5} {6} {7} Volume",
-                            s.Index, s.Group, s.Name, s.Type, s.Visible, s.HasInfo, s.HasTime, s.Device.Udn);
+                            s.Index, s.Group.Name, s.Name, s.Type, s.Visible, s.HasInfo, s.HasTime, s.Device.Udn);
                         foreach (var g in s.Volumes)
                         {
                             info += " " + g.Device.Udn;
@@ -179,16 +179,17 @@ namespace TestTopology4
 
             ExceptionReporter reporter = new ExceptionReporter();
             WatchableThread thread = new WatchableThread(reporter);
-            WatchableThread subscribeThread = new WatchableThread(reporter);
 
             Mockable mocker = new Mockable();
 
-            Network network = new Network(thread, subscribeThread);
-            mocker.Add("network", network);
+            Network network = new Network(thread);
+            DeviceInjectorMock mockInjector = new DeviceInjectorMock(network);
+            mocker.Add("network", mockInjector);
 
             Topology1 topology1 = new Topology1(network);
             Topology2 topology2 = new Topology2(topology1);
-            Topology3 topology3 = new Topology3(topology2);
+            Topologym topologym = new Topologym(topology2);
+            Topology3 topology3 = new Topology3(topologym);
             Topology4 topology4 = new Topology4(topology3);
 
             MockableScriptRunner runner = new MockableScriptRunner();
@@ -217,6 +218,8 @@ namespace TestTopology4
             topology4.Dispose();
 
             topology3.Dispose();
+
+            topologym.Dispose();
 
             topology2.Dispose();
 

@@ -190,38 +190,26 @@ namespace OpenHome.Av
 
         public override Task Play()
         {
-            Task task = Task.Factory.StartNew(() =>
+            return Start(() =>
             {
-                Network.Schedule(() =>
-                {
-                    iTransportState.Update("Playing");
-                });
+                iTransportState.Update("Playing");
             });
-            return task;
         }
 
         public override Task Stop()
         {
-            Task task = Task.Factory.StartNew(() =>
+            return Start(() =>
             {
-                Network.Schedule(() =>
-                {
-                    iTransportState.Update("Stopped");
-                });
+                iTransportState.Update("Stopped");
             });
-            return task;
         }
 
         public override Task SetSender(ISenderMetadata aMetadata)
         {
-            Task task = Task.Factory.StartNew(() =>
+            return Start(() =>
             {
-                Network.Schedule(() =>
-                {
-                    iMetadata.Update(new InfoMetadata(Network.TagManager.FromDidlLite(aMetadata.ToString()), aMetadata.Uri));
-                });
+                iMetadata.Update(new InfoMetadata(Network.TagManager.FromDidlLite(aMetadata.ToString()), aMetadata.Uri));
             });
-            return task;
         }
 
         public override void Execute(IEnumerable<string> aValue)
@@ -235,11 +223,11 @@ namespace OpenHome.Av
             else if (command == "metadata")
             {
                 IEnumerable<string> value = aValue.Skip(1);
-                if (value.Count() != 2)
+                if (value.Count() < 2)
                 {
                     throw new NotSupportedException();
                 }
-                IInfoMetadata metadata = new InfoMetadata(Network.TagManager.FromDidlLite(value.ElementAt(0)), value.ElementAt(1));
+                IInfoMetadata metadata = new InfoMetadata(Network.TagManager.FromDidlLite(string.Join(" ", value.Take(value.Count() - 1))), value.Last());
                 iMetadata.Update(metadata);
             }
             else if (command == "transportstate")

@@ -350,22 +350,24 @@ namespace TestMediaServer
         {
             ExceptionReporter reporter = new ExceptionReporter();
             WatchableThread watchableThread = new WatchableThread(reporter);
-            WatchableThread subscribeThread = new WatchableThread(reporter);
 
-            using (var network = new Network(watchableThread, subscribeThread))
+            using (var network = new Network(watchableThread))
             {
-                network.Execute(() =>
+                using (DeviceInjectorMock mockInjector = new DeviceInjectorMock(network))
                 {
-                    network.Execute("medium");
-                });
+                    network.Execute(() =>
+                    {
+                        mockInjector.Execute("medium");
+                    });
 
-                using (var client = new Client(network))
-                {
-                    client.Run();
+                    using (var client = new Client(network))
+                    {
+                        client.Run();
+                    }
+
+                    Console.WriteLine("Test completed successfully ... Press key to continue");
+                    Console.ReadKey();
                 }
-
-                Console.WriteLine("Test completed successfully ... Press key to continue");
-                Console.ReadKey();
             }
         }
     }

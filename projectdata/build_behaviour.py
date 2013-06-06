@@ -197,6 +197,7 @@ def test(context):
         cli([prog % fmt, scrp % fmt])
     run_test('Topology1')
     run_test('Topology2')
+    run_test('Topologym')
     run_test('Topology3')
     run_test('Topology4')
     run_test('StandardHouse')

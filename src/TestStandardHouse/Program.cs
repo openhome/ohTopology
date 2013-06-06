@@ -50,26 +50,26 @@ namespace TestLinnHouse
                 iFactory.Create<uint>(iTime.Name, iTime.Duration, v => "Duration " + v);
                 iFactory.Create<uint>(iTime.Name, iTime.Seconds, v => "Seconds " + v);
 
-                iFactory.Create<ITopology4Source>(iWatcherExternal.Name, iWatcherExternal.Unconfigured, v =>
+                iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Name, iWatcherExternal.Unconfigured.Snapshot, v =>
                 {
-                    string info = "";
-                    info += string.Format("Unconfigured Source {0} {1} {2} {3} {4} {5} {6} {7} Volume",
-                        v.Index, v.Group, v.Name, v.Type, v.Visible, v.HasInfo, v.HasTime, v.Device.Udn);
-                    foreach (var g in v.Volumes)
+                    string info = "\nUnconfigured source begin\n";
+                    IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
+                    foreach (IMediaPreset p in fragment.Data)
                     {
-                        info += " " + g.Device.Udn;
+                        info += p.Metadata[iTagManager.Container.Title].Value + "\n";
                     }
+                    info += "Unconfigured source end";
                     return info;
                 });
-                iFactory.Create<ITopology4Source>(iWatcherExternal.Name, iWatcherExternal.Configured, v =>
+                iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Name, iWatcherExternal.Configured.Snapshot, v =>
                 {
-                    string info = "";
-                    info += string.Format("Configured Source {0} {1} {2} {3} {4} {5} {6} {7} Volume",
-                        v.Index, v.Group, v.Name, v.Type, v.Visible, v.HasInfo, v.HasTime, v.Device.Udn);
-                    foreach (var g in v.Volumes)
+                    string info = "\nConfigured source begin\n";
+                    IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
+                    foreach (IMediaPreset p in fragment.Data)
                     {
-                        info += " " + g.Device.Udn;
+                        info += p.Metadata[iTagManager.Container.Title].Value + "\n";
                     }
+                    info += "Configured source end";
                     return info;
                 });
 
@@ -77,7 +77,7 @@ namespace TestLinnHouse
                 {
                     if (v)
                     {
-                        IWatchableContainer<IMediaPreset> container = iWatcherRadio.Browse().Result;
+                        IWatchableContainer<IMediaPreset> container = iWatcherRadio.Container.Result;
                         iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherRadio.Name, container.Snapshot, w =>
                         {
                             string info = "\nPresets begin\n";
@@ -154,7 +154,7 @@ namespace TestLinnHouse
                 iFactory.Create<RoomDetails>(aItem.Name, aItem.Details, v => "Details " + v.Enabled + " " + v.BitDepth + " " + v.BitRate + " " + v.CodecName + " " + v.Duration + " " + v.Lossless + " " + v.SampleRate);
                 iFactory.Create<RoomMetadata>(aItem.Name, aItem.Metadata, v => "Metadata " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metadata) + " " + v.Uri);
                 iFactory.Create<RoomMetatext>(aItem.Name, aItem.Metatext, v => "Metatext " + v.Enabled + " " + v.Metatext);
-                iFactory.Create<IZone>(aItem.Name, aItem.Zone, v => "Zone " + v.Active + " " + v.Udn);
+                iFactory.Create<IZone>(aItem.Name, aItem.Zone, v => "Zone " + v.Active + " " + ((v.Sender == null) ? "" : v.Sender.Udn));
 
                 iWatcherLookup.Add(aItem, new RoomControllerWatcher(iTagManager, iRunner, aItem));
             }
@@ -189,16 +189,17 @@ namespace TestLinnHouse
 
             ExceptionReporter reporter = new ExceptionReporter();
             WatchableThread thread = new WatchableThread(reporter);
-            WatchableThread subscribeThread = new WatchableThread(reporter);
 
             Mockable mocker = new Mockable();
 
-            Network network = new Network(thread, subscribeThread);
-            mocker.Add("network", network);
+            Network network = new Network(thread);
+            DeviceInjectorMock mockInjector = new DeviceInjectorMock(network);
+            mocker.Add("network", mockInjector);
 
             Topology1 topology1 = new Topology1(network);
             Topology2 topology2 = new Topology2(topology1);
-            Topology3 topology3 = new Topology3(topology2);
+            Topologym topologym = new Topologym(topology2);
+            Topology3 topology3 = new Topology3(topologym);
             Topology4 topology4 = new Topology4(topology3);
 
             StandardHouse house = new StandardHouse(network, topology4);
@@ -232,6 +233,8 @@ namespace TestLinnHouse
             topology4.Dispose();
 
             topology3.Dispose();
+
+            topologym.Dispose();
 
             topology2.Dispose();
 

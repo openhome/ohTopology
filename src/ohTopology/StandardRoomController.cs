@@ -41,7 +41,7 @@ namespace OpenHome.Av
     {
         public StandardRoomController(IStandardRoom aRoom)
         {
-            iThread = aRoom.WatchableThread;
+            iThread = aRoom.Network;
             iRoom = aRoom;
 
             iLock = new object();

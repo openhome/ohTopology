@@ -31,7 +31,9 @@ namespace OpenHome.Av
 
     public class SenderMetadata : ISenderMetadata
     {
-        internal SenderMetadata()
+        public static readonly SenderMetadata Empty = new SenderMetadata();
+
+        private SenderMetadata()
         {
             iName = string.Empty;
             iUri = string.Empty;
@@ -86,7 +88,7 @@ namespace OpenHome.Av
             : base(aNetwork)
         {
             iAudio = new Watchable<bool>(Network, "Audio", false);
-            iMetadata = new Watchable<ISenderMetadata>(Network, "Metadata", new SenderMetadata());
+            iMetadata = new Watchable<ISenderMetadata>(Network, "Metadata", SenderMetadata.Empty);
             iStatus = new Watchable<string>(Network, "Status", string.Empty);
         }
 

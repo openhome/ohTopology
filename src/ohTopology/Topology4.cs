@@ -4,27 +4,53 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using OpenHome.Os.App;
+using OpenHome.MediaServer;
 
 namespace OpenHome.Av
 {
+    internal class MediaPresetExternal : IMediaPreset
+    {
+        private readonly IMediaMetadata iMetadata;
+        private readonly Topology4Source iSource;
+
+        public MediaPresetExternal(IMediaMetadata aMetadata, Topology4Source aSource)
+        {
+            iMetadata = aMetadata;
+            iSource = aSource;
+        }
+
+        public IMediaMetadata Metadata
+        {
+            get
+            {
+                return iMetadata;
+            }
+        }
+
+        public void Play()
+        {
+            iSource.Select();
+        }
+    }
+
     public interface ITopology4Source
     {
-        string Group { get; }
+        ITopology4Group Group { get; }
 
         uint Index { get; }
         string Name { get; }
         string Type { get; }
         bool Visible { get; }
 
+        IMediaPreset Preset { get; }
+
         IEnumerable<ITopology4Group> Volumes { get; }
         IDevice Device { get; }
         bool HasInfo { get; }
         bool HasTime { get; }
-
-        void Select();
     }
 
-    public class Topology4SourceComparer
+    internal class Topology4SourceComparer
     {
         public static bool Equals(ITopology4Source aSource1, ITopology4Source aSource2)
         {
@@ -57,7 +83,7 @@ namespace OpenHome.Av
 
     class Topology4Source : ITopology4Source
     {
-        public Topology4Source(Topology4Group aGroup, ITopology2Source aSource)
+        public Topology4Source(ITagManager aTagManager, Topology4Group aGroup, ITopology2Source aSource)
         {
             iGroup = aGroup;
 
@@ -65,6 +91,11 @@ namespace OpenHome.Av
             iName = aSource.Name;
             iType = aSource.Type;
             iVisible = aSource.Visible;
+
+
+            MediaMetadata metadata = new MediaMetadata();
+            metadata.Add(aTagManager.Container.Title, aSource.Name);
+            iPreset = new MediaPresetExternal(metadata, this);
         }
 
         public uint Index
@@ -83,11 +114,11 @@ namespace OpenHome.Av
             }
         }
 
-        public string Group
+        public ITopology4Group Group
         {
             get
             {
-                return iGroup.Name;
+                return iGroup;
             }
         }
 
@@ -104,6 +135,14 @@ namespace OpenHome.Av
             get
             {
                 return iVisible;
+            }
+        }
+
+        public IMediaPreset Preset
+        {
+            get
+            {
+                return iPreset;
             }
         }
 
@@ -131,7 +170,7 @@ namespace OpenHome.Av
             set { iHasTime = value; }
         }
 
-        public void Select()
+        internal void Select()
         {
             iGroup.SetSourceIndex(iIndex);
         }
@@ -142,6 +181,7 @@ namespace OpenHome.Av
         private string iName;
         private string iType;
         private bool iVisible;
+        private IMediaPreset iPreset;
 
         private IEnumerable<ITopology4Group> iVolumes;
         private IDevice iDevice;
@@ -153,6 +193,7 @@ namespace OpenHome.Av
     {
         string Name { get; }
         IDevice Device { get; }
+        IWatchable<ITopologymSender> Sender { get; }
     }
     
     public interface ITopology4Root : ITopology4Group
@@ -164,11 +205,11 @@ namespace OpenHome.Av
 
     class Topology4Group : ITopology4Root, IWatcher<uint>, IWatcher<string>, IDisposable
     {
-        public Topology4Group(IWatchableThread aThread, string aName, ITopology2Group aGroup, IEnumerable<ITopology2Source> aSources)
+        public Topology4Group(INetwork aNetwork, string aName, ITopologymGroup aGroup, IEnumerable<ITopology2Source> aSources)
         {
             iDisposed = false;
 
-            iThread = aThread;
+            iThread = aNetwork;
             iName = aName;
             iGroup = aGroup;
 
@@ -180,7 +221,7 @@ namespace OpenHome.Av
 
             foreach (ITopology2Source s in aSources)
             {
-                Topology4Source source = new Topology4Source(this, s);
+                Topology4Source source = new Topology4Source(aNetwork.TagManager, this, s);
                 iSources.Add(source);
             }
 
@@ -190,19 +231,16 @@ namespace OpenHome.Av
             {
                 iGroup.Device.Create<IProxySender>((sender) =>
                 {
-                    iThread.Schedule(() =>
+                    if (!iDisposed)
                     {
-                        if (!iDisposed)
-                        {
-                            iSender = sender;
+                        iSender = sender;
 
-                            iSender.Status.AddWatcher(this);
-                        }
-                        else
-                        {
-                            sender.Dispose();
-                        }
-                    });
+                        iSender.Status.AddWatcher(this);
+                    }
+                    else
+                    {
+                        sender.Dispose();
+                    }
                 });
             }
         }
@@ -235,6 +273,14 @@ namespace OpenHome.Av
             get
             {
                 return iGroup.Device;
+            }
+        }
+
+        public IWatchable<ITopologymSender> Sender
+        {
+            get
+            {
+                return iGroup.Sender;
             }
         }
 
@@ -356,7 +402,7 @@ namespace OpenHome.Av
 
         public bool AddIfIsChild(Topology4Group aGroup)
         {
-            foreach (ITopology4Source s in iSources)
+            foreach (Topology4Source s in iSources)
             {
                 if (aGroup.Name == s.Name)
                 {
@@ -475,7 +521,7 @@ namespace OpenHome.Av
         private bool iDisposed;
 
         private IWatchableThread iThread;
-        private ITopology2Group iGroup;
+        private ITopologymGroup iGroup;
 
         private string iName;
 
@@ -497,11 +543,11 @@ namespace OpenHome.Av
     class Topology4GroupWatcher : IWatcher<string>, IWatcher<ITopology2Source>, IDisposable
     {
         private Topology4Room iRoom;
-        private ITopology2Group iGroup;
+        private ITopologymGroup iGroup;
         private string iName;
         private List<ITopology2Source> iSources;
 
-        public Topology4GroupWatcher(Topology4Room aRoom, ITopology2Group aGroup)
+        public Topology4GroupWatcher(Topology4Room aRoom, ITopologymGroup aGroup)
         {
             iRoom = aRoom;
             iGroup = aGroup;
@@ -591,22 +637,22 @@ namespace OpenHome.Av
         void SetStandby(bool aValue);
     }
 
-    class Topology4Room : ITopology4Room, IUnorderedWatcher<ITopology2Group>, IWatcher<bool>, IDisposable
+    class Topology4Room : ITopology4Room, IUnorderedWatcher<ITopologymGroup>, IWatcher<bool>, IDisposable
     {
-        public Topology4Room(IWatchableThread aThread, ITopology3Room aRoom)
+        public Topology4Room(INetwork aNetwork, ITopology3Room aRoom)
         {
-            iThread = aThread;
+            iNetwork = aNetwork;
             iRoom = aRoom;
 
             iName = iRoom.Name;
             iStandbyCount = 0;
             iStandby = EStandby.eOn;
 
-            iWatchableStandby = new Watchable<EStandby>(iThread, "standby", EStandby.eOn);
-            iWatchableRoots = new Watchable<IEnumerable<ITopology4Root>>(iThread, "roots", new List<ITopology4Root>());
-            iWatchableSources = new Watchable<IEnumerable<ITopology4Source>>(iThread, "sources", new List<ITopology4Source>());
+            iWatchableStandby = new Watchable<EStandby>(iNetwork, "standby", EStandby.eOn);
+            iWatchableRoots = new Watchable<IEnumerable<ITopology4Root>>(iNetwork, "roots", new List<ITopology4Root>());
+            iWatchableSources = new Watchable<IEnumerable<ITopology4Source>>(iNetwork, "sources", new List<ITopology4Source>());
 
-            iGroupLookup = new Dictionary<ITopology2Group, Topology4GroupWatcher>();
+            iGroupLookup = new Dictionary<ITopologymGroup, Topology4GroupWatcher>();
             iGroup4s = new List<Topology4Group>();
             iRoots = new List<Topology4Group>();
 
@@ -693,14 +739,14 @@ namespace OpenHome.Av
         {
         }
 
-        public void UnorderedAdd(ITopology2Group aItem)
+        public void UnorderedAdd(ITopologymGroup aItem)
         {
             iGroupLookup.Add(aItem, new Topology4GroupWatcher(this, aItem));
             aItem.Standby.AddWatcher(this);
             CreateTree();
         }
 
-        public void UnorderedRemove(ITopology2Group aItem)
+        public void UnorderedRemove(ITopologymGroup aItem)
         {
             iGroupLookup[aItem].Dispose();
             iGroupLookup.Remove(aItem);
@@ -721,7 +767,7 @@ namespace OpenHome.Av
 
             foreach (var kvp in iGroupLookup)
             {
-                InsertIntoTree(new Topology4Group(iThread, kvp.Value.Name, kvp.Key, kvp.Value.Sources));
+                InsertIntoTree(new Topology4Group(iNetwork, kvp.Value.Name, kvp.Key, kvp.Value.Sources));
             }
 
             List<ITopology4Root> roots = new List<ITopology4Root>();
@@ -737,13 +783,10 @@ namespace OpenHome.Av
             iWatchableRoots.Update(roots);
             iWatchableSources.Update(sources);
 
-            iThread.Schedule(() =>
+            foreach (Topology4Group g in oldGroups)
             {
-                foreach (Topology4Group g in oldGroups)
-                {
-                    g.Dispose();
-                }
-            });
+                g.Dispose();
+            }
         }
 
         private void InsertIntoTree(Topology4Group aGroup)
@@ -843,7 +886,7 @@ namespace OpenHome.Av
             }
         }
 
-        private IWatchableThread iThread;
+        private INetwork iNetwork;
         private ITopology3Room iRoom;
 
         private string iName;
@@ -854,7 +897,7 @@ namespace OpenHome.Av
         private Watchable<IEnumerable<ITopology4Root>> iWatchableRoots;
         private Watchable<IEnumerable<ITopology4Source>> iWatchableSources;
 
-        private Dictionary<ITopology2Group, Topology4GroupWatcher> iGroupLookup;
+        private Dictionary<ITopologymGroup, Topology4GroupWatcher> iGroupLookup;
         private List<Topology4Group> iGroup4s;
         private List<Topology4Group> iRoots;
     }
@@ -862,7 +905,7 @@ namespace OpenHome.Av
     public interface ITopology4
     {
         IWatchableUnordered<ITopology4Room> Rooms { get; }
-        IWatchableThread WatchableThread { get; }
+        INetwork Network { get; }
     }
 
     public class Topology4 : ITopology4, IUnorderedWatcher<ITopology3Room>, IDisposable
@@ -870,14 +913,14 @@ namespace OpenHome.Av
         public Topology4(ITopology3 aTopology3)
         {
             iDisposed = false;
-            iThread = aTopology3.WatchableThread;
+            iNetwork = aTopology3.Network;
             iTopology3 = aTopology3;
 
-            iRooms = new WatchableUnordered<ITopology4Room>(iThread);
+            iRooms = new WatchableUnordered<ITopology4Room>(iNetwork);
 
             iRoomLookup = new Dictionary<ITopology3Room, Topology4Room>();
 
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iTopology3.Rooms.AddWatcher(this);
             });
@@ -890,7 +933,7 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("Topology3.Dispose");
             }
 
-            iThread.Execute(() =>
+            iNetwork.Execute(() =>
             {
                 iTopology3.Rooms.RemoveWatcher(this);
 
@@ -917,11 +960,11 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchableThread WatchableThread
+        public INetwork Network
         {
             get
             {
-                return iThread;
+                return iNetwork;
             }
         }
 
@@ -939,7 +982,7 @@ namespace OpenHome.Av
 
         public void UnorderedAdd(ITopology3Room aItem)
         {
-            Topology4Room room = new Topology4Room(iThread, aItem);
+            Topology4Room room = new Topology4Room(iNetwork, aItem);
             iRooms.Add(room);
             iRoomLookup.Add(aItem, room);
         }
@@ -951,15 +994,11 @@ namespace OpenHome.Av
             iRooms.Remove(room);
             iRoomLookup.Remove(aItem);
 
-            // schedule disposal of L4 room
-            iThread.Schedule(() =>
-            {
-                room.Dispose();
-            });
+            room.Dispose();
         }
 
         private bool iDisposed;
-        private IWatchableThread iThread;
+        private INetwork iNetwork;
         private ITopology3 iTopology3;
 
         private WatchableUnordered<ITopology4Room> iRooms;

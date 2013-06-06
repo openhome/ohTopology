@@ -20,23 +20,20 @@ namespace OpenHome.Av
 
             iDevice.Create<IProxyVolume>((volume) =>
             {
-                aThread.Schedule(() =>
+                if (!iDisposed)
                 {
-                    if (!iDisposed)
-                    {
-                        iVolume = volume;
+                    iVolume = volume;
 
-                        iVolume.Mute.AddWatcher(this);
-                        iVolume.Value.AddWatcher(this);
-                        iVolume.VolumeLimit.AddWatcher(this);
+                    iVolume.Mute.AddWatcher(this);
+                    iVolume.Value.AddWatcher(this);
+                    iVolume.VolumeLimit.AddWatcher(this);
 
-                        iHasVolume.Update(true);
-                    }
-                    else
-                    {
-                        volume.Dispose();
-                    }
-                });
+                    iHasVolume.Update(true);
+                }
+                else
+                {
+                    volume.Dispose();
+                }
             });
         }
 

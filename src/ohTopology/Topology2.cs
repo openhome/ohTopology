@@ -278,7 +278,7 @@ namespace OpenHome.Av
     public interface ITopology2
     {
         IWatchableUnordered<ITopology2Group> Groups { get; }
-        IWatchableThread WatchableThread { get; }
+        INetwork Network { get; }
     }
 
     public class Topology2 : ITopology2, IUnorderedWatcher<IProxyProduct>, IDisposable
@@ -287,14 +287,14 @@ namespace OpenHome.Av
         {
             iDisposed = false;
 
-            iThread = aTopology1.WatchableThread;
+            iNetwork = aTopology1.Network;
             iTopology1 = aTopology1;
 
-            iGroups = new WatchableUnordered<ITopology2Group>(iThread);
+            iGroups = new WatchableUnordered<ITopology2Group>(iNetwork);
 
             iGroupLookup = new Dictionary<IProxyProduct, Topology2Group>();
 
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iTopology1.Products.AddWatcher(this);
             });
@@ -307,7 +307,7 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("Topology2.Dispose");
             }
 
-            iThread.Execute(() =>
+            iNetwork.Execute(() =>
             {
                 iTopology1.Products.RemoveWatcher(this);
                 
@@ -334,11 +334,11 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchableThread WatchableThread
+        public INetwork Network
         {
             get
             {
-                return iThread;
+                return iNetwork;
             }
         }
 
@@ -352,7 +352,7 @@ namespace OpenHome.Av
 
         public void UnorderedAdd(IProxyProduct aItem)
         {
-            Topology2Group group = new Topology2Group(iThread, aItem.Device.Udn, aItem);
+            Topology2Group group = new Topology2Group(iNetwork, aItem.Device.Udn, aItem);
             iGroupLookup.Add(aItem, group);
             iGroups.Add(group);
         }
@@ -366,11 +366,7 @@ namespace OpenHome.Av
                 iGroups.Remove(group);
                 iGroupLookup.Remove(aItem);
 
-                // schedule Topology2Group disposal
-                iThread.Schedule(() =>
-                {
-                    group.Dispose();
-                });
+                group.Dispose();
             }
         }
 
@@ -380,7 +376,7 @@ namespace OpenHome.Av
 
         private bool iDisposed;
 
-        private IWatchableThread iThread;
+        private INetwork iNetwork;
         private ITopology1 iTopology1;
         private Dictionary<IProxyProduct, Topology2Group> iGroupLookup;
         private WatchableUnordered<ITopology2Group> iGroups;

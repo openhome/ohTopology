@@ -11,7 +11,7 @@ namespace OpenHome.Av
     public interface ITopology1
     {
         IWatchableUnordered<IProxyProduct> Products { get; }
-        IWatchableThread WatchableThread { get; }
+        INetwork Network { get; }
     }
 
     public class Topology1 : ITopology1, IUnorderedWatcher<IDevice>, IDisposable
@@ -21,14 +21,13 @@ namespace OpenHome.Av
             iDisposed = false;
 
             iNetwork = aNetwork;
-            iThread = aNetwork.WatchableThread;
 
             iPendingSubscriptions = new List<IDevice>();
             iProductLookup = new Dictionary<IDevice, IProxyProduct>();
-            iProducts = new WatchableUnordered<IProxyProduct>(iThread);
+            iProducts = new WatchableUnordered<IProxyProduct>(iNetwork);
 
             iDevices = iNetwork.Create<IProxyProduct>();
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDevices.AddWatcher(this);
             });
@@ -41,7 +40,7 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("Topology1.Dispose");
             }
 
-            iThread.Execute(() =>
+            iNetwork.Execute(() =>
             {
                 iDevices.RemoveWatcher(this);
                 iPendingSubscriptions.Clear();
@@ -69,11 +68,11 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchableThread WatchableThread
+        public INetwork Network
         {
             get
             {
-                return iThread;
+                return iNetwork;
             }
         }
 
@@ -94,19 +93,16 @@ namespace OpenHome.Av
             iPendingSubscriptions.Add(aItem);
             aItem.Create<IProxyProduct>((product) =>
             {
-                iThread.Schedule(() =>
+                if (iPendingSubscriptions.Contains(aItem))
                 {
-                    if (iPendingSubscriptions.Contains(aItem))
-                    {
-                        iProducts.Add(product);
-                        iProductLookup.Add(aItem, product);
-                        iPendingSubscriptions.Remove(aItem);
-                    }
-                    else
-                    {
-                        product.Dispose();
-                    }
-                });
+                    iProducts.Add(product);
+                    iProductLookup.Add(aItem, product);
+                    iPendingSubscriptions.Remove(aItem);
+                }
+                else
+                {
+                    product.Dispose();
+                }
             });
         }
 
@@ -125,18 +121,13 @@ namespace OpenHome.Av
                 iProducts.Remove(product);
                 iProductLookup.Remove(aItem);
 
-                // schedule Product disposal
-                iThread.Schedule(() =>
-                {
-                    product.Dispose();
-                });
+                product.Dispose();
             }
         }
 
         private bool iDisposed;
 
         private INetwork iNetwork;
-        private IWatchableThread iThread;
 
         private List<IDevice> iPendingSubscriptions;
         private Dictionary<IDevice, IProxyProduct> iProductLookup;

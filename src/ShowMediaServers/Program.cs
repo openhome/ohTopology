@@ -37,7 +37,11 @@ namespace ShowMediaServers
         {
             iSession = aTask.Result;
             iContainers.Enqueue(null);
-            ProcessNextContainer();
+
+            iNetwork.Schedule(() =>
+            {
+                ProcessNextContainer();
+            });
         }
 
         private void ProcessNextContainer()
@@ -106,6 +110,8 @@ namespace ShowMediaServers
         public void Dispose()
         {
             Console.WriteLine("Removed  : {0}", this);
+
+            iContainers.Clear();
 
             if (iContainer != null)
             {
@@ -235,7 +241,6 @@ namespace ShowMediaServers
         {
             ExceptionReporter reporter = new ExceptionReporter();
             WatchableThread watchableThread = new WatchableThread(reporter);
-            WatchableThread subscribeThread = new WatchableThread(reporter);
 
             InitParams initParams = new InitParams();
             initParams.LogOutput = new MessageListener(MessageHandlerLog);
@@ -245,26 +250,21 @@ namespace ShowMediaServers
 
             library.StartCp(0x020a);
 
-            using (var network = new Network(watchableThread, subscribeThread))
+            using (var network = new Network(watchableThread))
             {
-                network.Execute(() =>
+                using (var mock = new DeviceInjectorMock(network))
                 {
-                    network.Execute("medium");
-                });
+                    mock.Execute("medium");
 
-                using (var injector = new DeviceInjectorContentDirectory(network))
-                {
-                    using (var client = new Client(network))
+                    using (var real = new DeviceInjectorContentDirectory(network))
                     {
-                        client.Run();
-                        Console.ReadKey();
+                        using (var client = new Client(network))
+                        {
+                            client.Run();
+                            Console.ReadKey();
+                        }
                     }
                 }
-
-                network.Execute(() =>
-                {
-                    network.Execute("medium");
-                });
             }
 
             try
