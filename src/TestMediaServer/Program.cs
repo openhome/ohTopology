@@ -353,18 +353,21 @@ namespace TestMediaServer
 
             using (var network = new Network(watchableThread))
             {
-                network.Execute(() =>
+                using (MockDeviceInjector mockInjector = new MockDeviceInjector(network))
                 {
-                    network.Execute("medium");
-                });
+                    network.Execute(() =>
+                    {
+                        mockInjector.Execute("medium");
+                    });
 
-                using (var client = new Client(network))
-                {
-                    client.Run();
+                    using (var client = new Client(network))
+                    {
+                        client.Run();
+                    }
+
+                    Console.WriteLine("Test completed successfully ... Press key to continue");
+                    Console.ReadKey();
                 }
-
-                Console.WriteLine("Test completed successfully ... Press key to continue");
-                Console.ReadKey();
             }
         }
     }
