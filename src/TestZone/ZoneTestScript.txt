@@ -27,6 +27,11 @@ expect Dining Room update Zone True 4c494e4e-0026-0f99-1114-ef000004013f Dining 
 expect Dining Room update Metadata True  
 empty
 
+// switch to receiver source on bedroom
+mock network update ds 4c494e4e-0026-0f99-1113-ef000004013f product sourceindex 3
+empty
+
+// add bedroom to kitchen zone
 mock house zone Kitchen add Bedroom
 expect Kitchen add Listener Bedroom
 expect Bedroom update Metadata True  

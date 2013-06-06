@@ -35,7 +35,7 @@ namespace OpenHome.Av
 
     public interface ITopology4Source
     {
-        string Group { get; }
+        ITopology4Group Group { get; }
 
         uint Index { get; }
         string Name { get; }
@@ -114,11 +114,11 @@ namespace OpenHome.Av
             }
         }
 
-        public string Group
+        public ITopology4Group Group
         {
             get
             {
-                return iGroup.Name;
+                return iGroup;
             }
         }
 
@@ -193,6 +193,7 @@ namespace OpenHome.Av
     {
         string Name { get; }
         IDevice Device { get; }
+        IWatchable<ITopologymSender> Sender { get; }
     }
     
     public interface ITopology4Root : ITopology4Group
@@ -275,6 +276,14 @@ namespace OpenHome.Av
             get
             {
                 return iGroup.Device;
+            }
+        }
+
+        public IWatchable<ITopologymSender> Sender
+        {
+            get
+            {
+                return iGroup.Sender;
             }
         }
 

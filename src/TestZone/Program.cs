@@ -82,8 +82,8 @@ namespace TestZone
                     {
                         return "Listener " + w.Name;
                     });
-                    
-                    return "Zone " + v.Active + " " + v.Udn + " " + v.Room.Name;
+
+                    return "Zone " + v.Active + " " + (v.Active ? v.Sender.Udn : "") + " " + v.Room.Name;
                 });
 
                 iWatcherLookup.Add(aItem, new RoomControllerWatcher(iTagManager, iRunner, aItem));
@@ -119,11 +119,10 @@ namespace TestZone
 
             ExceptionReporter reporter = new ExceptionReporter();
             WatchableThread thread = new WatchableThread(reporter);
-            WatchableThread subscribeThread = new WatchableThread(reporter);
 
             Mockable mocker = new Mockable();
 
-            Network network = new Network(thread, subscribeThread);
+            Network network = new Network(thread);
             mocker.Add("network", network);
 
             Topology1 topology1 = new Topology1(network);

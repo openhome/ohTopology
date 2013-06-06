@@ -86,7 +86,6 @@ namespace OpenHome.Av
     public interface INetwork : IWatchableThread, IDisposable
     {
         IWatchableThread WatchableThread { get; }
-        IWatchableThread SubscribeThread { get; }
         ITagManager TagManager { get; }
         IWatchableUnordered<IDevice> Create<T>() where T : IProxy;
         //void Refresh();
@@ -97,7 +96,6 @@ namespace OpenHome.Av
         private object iLock;
 
         protected readonly IWatchableThread iThread;
-        protected readonly IWatchableThread iSubscribeThread;
 
         private readonly ITagManager iTagManager;
 
@@ -105,11 +103,10 @@ namespace OpenHome.Av
         private Dictionary<string, Device> iMockDevices;
         private Dictionary<Type, WatchableUnordered<IDevice>> iDeviceLists;
 
-        public Network(IWatchableThread aThread, IWatchableThread aSubscribeThread)
+        public Network(IWatchableThread aThread)
         {
             iLock = new object();
 
-            iSubscribeThread = aSubscribeThread;
             iThread = aThread;
 
             iTagManager = new TagManager();
@@ -223,14 +220,6 @@ namespace OpenHome.Av
             get
             {
                 return iThread;
-            }
-        }
-
-        public IWatchableThread SubscribeThread
-        {
-            get
-            {
-                return iSubscribeThread;
             }
         }
 
@@ -365,18 +354,32 @@ namespace OpenHome.Av
 
         public void Wait()
         {
-            iThread.Wait(() =>
+            bool complete = false;
+
+            while (!complete)
             {
-                iSubscribeThread.Wait();
-            });
+                foreach (Device d in iDevices)
+                {
+                    complete |= d.Wait();
+                }
+
+                iThread.Wait();
+            }
         }
 
         public void Wait(Action aAction)
         {
-            iThread.Wait(() =>
+            bool complete = false;
+
+            while (!complete)
             {
-                iSubscribeThread.Wait(aAction);
-            });
+                foreach (Device d in iDevices)
+                {
+                    complete |= d.Wait();
+                }
+
+                iThread.Wait(aAction);
+            }
         }
     }
 }

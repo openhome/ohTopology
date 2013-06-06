@@ -115,7 +115,7 @@ namespace OpenHome.Av
 
                     if (command == "mock")
                     {
-                        //Console.WriteLine(line);
+                        Console.WriteLine(line);
 
                         aThread.Schedule(() =>
                         {
@@ -168,7 +168,7 @@ namespace OpenHome.Av
         public void Result(string aValue)
         {
             iResultQueue.Enqueue(aValue);
-            //Console.WriteLine(aValue);
+            Console.WriteLine(aValue);
         }
 
         private void Assert(string aActual, string aExpected)

@@ -190,38 +190,26 @@ namespace OpenHome.Av
 
         public override Task Play()
         {
-            Task task = Task.Factory.StartNew(() =>
+            return Start(() =>
             {
-                Network.Schedule(() =>
-                {
-                    iTransportState.Update("Playing");
-                });
+                iTransportState.Update("Playing");
             });
-            return task;
         }
 
         public override Task Stop()
         {
-            Task task = Task.Factory.StartNew(() =>
+            return Start(() =>
             {
-                Network.Schedule(() =>
-                {
-                    iTransportState.Update("Stopped");
-                });
+                iTransportState.Update("Stopped");
             });
-            return task;
         }
 
         public override Task SetSender(ISenderMetadata aMetadata)
         {
-            Task task = Task.Factory.StartNew(() =>
+            return Start(() =>
             {
-                Network.Schedule(() =>
-                {
-                    iMetadata.Update(new InfoMetadata(Network.TagManager.FromDidlLite(aMetadata.ToString()), aMetadata.Uri));
-                });
+                iMetadata.Update(new InfoMetadata(Network.TagManager.FromDidlLite(aMetadata.ToString()), aMetadata.Uri));
             });
-            return task;
         }
 
         public override void Execute(IEnumerable<string> aValue)

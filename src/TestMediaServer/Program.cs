@@ -350,9 +350,8 @@ namespace TestMediaServer
         {
             ExceptionReporter reporter = new ExceptionReporter();
             WatchableThread watchableThread = new WatchableThread(reporter);
-            WatchableThread subscribeThread = new WatchableThread(reporter);
 
-            using (var network = new Network(watchableThread, subscribeThread))
+            using (var network = new Network(watchableThread))
             {
                 network.Execute(() =>
                 {
