@@ -22,26 +22,23 @@ namespace OpenHome.Av
 
             aSource.Device.Create<IProxyReceiver>((receiver) =>
             {
-                aThread.Schedule(() =>
+                if (!iDisposed)
                 {
-                    if (!iDisposed)
-                    {
-                        iReceiver = receiver;
+                    iReceiver = receiver;
 
-                        aHasInfoNext.Update(false);
-                        aCanSkip.Update(false);
-                        iCanPause.Update(false);
-                        iCanSeek.Update(false);
+                    aHasInfoNext.Update(false);
+                    aCanSkip.Update(false);
+                    iCanPause.Update(false);
+                    iCanSeek.Update(false);
 
-                        iReceiver.TransportState.AddWatcher(this);
+                    iReceiver.TransportState.AddWatcher(this);
 
-                        iHasSourceControl.Update(true);
-                    }
-                    else
-                    {
-                        receiver.Dispose();
-                    }
-                });
+                    iHasSourceControl.Update(true);
+                }
+                else
+                {
+                    receiver.Dispose();
+                }
             });
         }
 

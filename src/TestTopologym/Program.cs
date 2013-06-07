@@ -122,6 +122,8 @@ namespace TestTopology3
 
             topology1.Dispose();
 
+            mockInjector.Dispose();
+
             network.Dispose();
 
             thread.Dispose();

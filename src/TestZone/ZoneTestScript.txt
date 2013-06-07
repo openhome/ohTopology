@@ -2,37 +2,61 @@
 mock network medium
 
 expect Room Added: Kitchen at 0
-expect Kitchen open Zone False  Kitchen
-expect Kitchen open Metadata False  
+expect Kitchen open Zone True 4c494e4e-0026-0f99-1111-ef000004013f Kitchen
+expect Kitchen open Metadata True  
 
 expect Room Added: Sitting Room at 1
-expect Sitting Room open Zone False  Sitting Room
-expect Sitting Room open Metadata False  
+expect Sitting Room open Zone True 4c494e4e-0026-0f99-1112-ef000004013f Sitting Room
+expect Sitting Room open Metadata True  
 
 expect Room Added: Bedroom at 0
-expect Bedroom open Zone False  Bedroom
-expect Bedroom open Metadata False  
+expect Bedroom open Zone True 4c494e4e-0026-0f99-1113-ef000004013f Bedroom
+expect Bedroom open Metadata True  
 
 expect Room Added: Dining Room at 1
-expect Dining Room open Zone False  Dining Room
-expect Dining Room open Metadata False  
-
-expect Kitchen update Zone True 4c494e4e-0026-0f99-1111-ef000004013f Kitchen
-expect Kitchen update Metadata True  
-expect Sitting Room update Zone True 4c494e4e-0026-0f99-1112-ef000004013f Sitting Room
-expect Sitting Room update Metadata True  
-expect Bedroom update Zone True 4c494e4e-0026-0f99-1113-ef000004013f Bedroom
-expect Bedroom update Metadata True  
-expect Dining Room update Zone True 4c494e4e-0026-0f99-1114-ef000004013f Dining Room
-expect Dining Room update Metadata True  
+expect Dining Room open Zone True 4c494e4e-0026-0f99-1114-ef000004013f Dining Room
+expect Dining Room open Metadata True  
 empty
 
 // switch to receiver source on bedroom
-mock network update ds 4c494e4e-0026-0f99-1113-ef000004013f product sourceindex 3
+mock network update 4c494e4e-0026-0f99-1113-ef000004013f product sourceindex 3
 empty
 
 // add bedroom to kitchen zone
 mock house zone Kitchen add Bedroom
 expect Kitchen add Listener Bedroom
-expect Bedroom update Metadata True  
+empty
+
+// switch to receiver source on dining room and event listening to kitchen
+mock network update 4c494e4e-0026-0f99-1114-ef000004013f product sourceindex 3
+empty
+mock network update 4c494e4e-0026-0f99-1114-ef000004013f receiver metadata kitchen ohz://239.255.255.250:51972/4c494e4e-0026-0f99-1111-ef000004013f
+empty
+mock network update 4c494e4e-0026-0f99-1114-ef000004013f receiver transportstate Playing
+expect Kitchen add Listener Dining Room
+empty
+
+// remove bedroom
+mock network remove 4c494e4e-0026-0f99-1113-ef000004013f
+expect Kitchen remove Listener Bedroom
+expect Room Removed: Bedroom at 0
+empty
+mock network add 4c494e4e-0026-0f99-1113-ef000004013f
+expect Room Added: Bedroom at 0
+expect Bedroom open Zone True 4c494e4e-0026-0f99-1113-ef000004013f Bedroom
+expect Bedroom open Metadata True  
+expect Kitchen add Listener Bedroom
+empty
+
+//remove kitchen and re-add
+mock network remove 4c494e4e-0026-0f99-1111-ef000004013f
+expect Room Removed: Kitchen at 2
+empty
+
+mock network add 4c494e4e-0026-0f99-1111-ef000004013f
+expect Room Added: Kitchen at 2
+expect Kitchen open Zone True 4c494e4e-0026-0f99-1111-ef000004013f Kitchen
+expect Kitchen open Metadata True  
+expect Kitchen add Listener Dining Room
+expect Kitchen add Listener Bedroom
 empty

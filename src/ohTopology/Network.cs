@@ -127,6 +127,7 @@ namespace OpenHome.Av
                 {
                     CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
                     CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000"));
+                    return;
                 }
                 else if (command == "medium")
                 {
@@ -135,87 +136,90 @@ namespace OpenHome.Av
                     CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
                     CreateAndAdd(DeviceFactory.CreateDs(iNetwork, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
                     CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000"));
+                    return;
                 }
                 else if (command == "large")
                 {
                     throw new NotImplementedException();
                 }
-                else if (command == "add")
+                else if (command == "create")
                 {
                     IEnumerable<string> value = aValue.Skip(1);
 
                     string type = value.First();
 
-                    if (type == "ds" || type == "dsm" || type == "mediaserver")
+                    value = value.Skip(1);
+
+                    string udn = value.First();
+
+                    if (type == "ds")
                     {
-                        value = value.Skip(1);
+                        Create(DeviceFactory.CreateDs(iNetwork, udn));
+                        return;
+                    }
+                    else if (type == "dsm")
+                    {
+                        Create(DeviceFactory.CreateDsm(iNetwork, udn));
+                        return;
+                    }
+                }
+                else if (command == "add")
+                {
+                    IEnumerable<string> value = aValue.Skip(1);
 
-                        string udn = value.First();
+                    string udn = value.First();
 
-                        Device device;
-
-                        if (iMockDevices.TryGetValue(udn, out device))
-                        {
-                            iNetwork.Add(device);
-                        }
-                        else if (type == "ds")
-                        {
-                            CreateAndAdd(DeviceFactory.CreateDs(iNetwork, udn));
-                        }
-                        else if (type == "dsm")
-                        {
-                            CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, udn));
-                        }
-                        else if (type == "mediaserver")
-                        {
-                            CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, udn));
-                        }
-                        else
-                        {
-                            throw new NotSupportedException();
-                        }
+                    Device device;
+                    if (iMockDevices.TryGetValue(udn, out device))
+                    {
+                        iNetwork.Add(device);
+                        return;
                     }
                 }
                 else if (command == "remove")
                 {
                     IEnumerable<string> value = aValue.Skip(1);
 
-                    string type = value.First();
+                    string udn = value.First();
 
-                    if (type == "ds" || type == "dsm" || type == "mediaserver")
+                    Device device;
+                    if (iMockDevices.TryGetValue(udn, out device))
                     {
-                        value = value.Skip(1);
-                        Remove(value.First());
+                        iNetwork.Remove(device);
+                        return;
                     }
-                    else
+                }
+                else if (command == "destroy")
+                {
+                    IEnumerable<string> value = aValue.Skip(1);
+
+                    string udn = value.First();
+
+                    Device device;
+                    if (iMockDevices.TryGetValue(udn, out device))
                     {
-                        throw new NotSupportedException();
+                        iNetwork.Remove(device);
+                        iMockDevices.Remove(device.Udn);
+                        device.Dispose();
+                        return;
                     }
                 }
                 else if (command == "update")
                 {
                     IEnumerable<string> value = aValue.Skip(1);
 
-                    string type = value.First();
+                    string udn = value.First();
 
-                    if (type == "ds")
+                    Device device;
+
+                    if (iMockDevices.TryGetValue(udn, out device))
                     {
-                        value = value.Skip(1);
-
-                        string udn = value.First();
-
-                        Device device;
-
-                        if (iMockDevices.TryGetValue(udn, out device))
-                        {
-                            device.Execute(value.Skip(1));
-                        }
-                        else
-                        {
-                            throw new KeyNotFoundException();
-                        }
+                        device.Execute(value.Skip(1));
+                        return;
                     }
                 }
+
+                throw new NotSupportedException();
             });
         }
 
@@ -228,18 +232,6 @@ namespace OpenHome.Av
         {
             Create(aDevice);
             iNetwork.Add(aDevice);
-        }
-
-
-
-        private void Remove(string aUdn)
-        {
-            Device device;
-
-            if (iMockDevices.TryGetValue(aUdn, out device))
-            {
-                iNetwork.Remove(device);
-            }
         }
     }
 

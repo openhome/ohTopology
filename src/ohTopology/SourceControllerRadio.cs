@@ -21,26 +21,23 @@ namespace OpenHome.Av
 
             aSource.Device.Create<IProxyRadio>((radio) =>
             {
-                aThread.Schedule(() =>
+                if (!iDisposed)
                 {
-                    if (!iDisposed)
-                    {
-                        iRadio = radio;
+                    iRadio = radio;
 
-                        aHasInfoNext.Update(false);
-                        aCanSkip.Update(false);
-                        iCanPause.Update(false);
-                        iCanSeek.Update(false);
+                    aHasInfoNext.Update(false);
+                    aCanSkip.Update(false);
+                    iCanPause.Update(false);
+                    iCanSeek.Update(false);
 
-                        iRadio.TransportState.AddWatcher(this);
+                    iRadio.TransportState.AddWatcher(this);
 
-                        iHasSourceControl.Update(true);
-                    }
-                    else
-                    {
-                        radio.Dispose();
-                    }
-                });
+                    iHasSourceControl.Update(true);
+                }
+                else
+                {
+                    radio.Dispose();
+                }
             });
         }
 

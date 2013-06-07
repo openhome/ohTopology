@@ -64,7 +64,8 @@ empty
 
 // test group is added when ds appears on network
 
-mock network add ds 67
+mock network create ds 67
+mock network add 67
 
 expect 67 Group Added
 
@@ -81,36 +82,36 @@ expect 67 open Source 4 Net Aux NetAux False
 empty
 
 // test group room name changes
-mock network update ds 67 product room Bathroom
+mock network update 67 product room Bathroom
 expect 67 update Room Bathroom
 empty
 
 // test group name changes
-mock network update ds 67 product name Majik DS
+mock network update 67 product name Majik DS
 expect 67 update Name Majik DS
 empty
 
 // test group standby changes
-mock network update ds 67 product standby false
+mock network update 67 product standby false
 expect 67 update Standby False
 empty
 
 // test group source index changes
-mock network update ds 67 product sourceindex 2
+mock network update 67 product sourceindex 2
 expect 67 update SourceIndex 2
 empty
 
 // test group source name changes
-mock network update ds 67 product source 0 name My Playlist
+mock network update 67 product source 0 name My Playlist
 expect 67 update Source 0 My Playlist Playlist True
 empty
 
 // test group source visible changes
-mock network update ds 67 product source 4 visible true
+mock network update 67 product source 4 visible true
 expect 67 update Source 4 Net Aux NetAux True
 empty
 
 // test group is removed when ds disappears from network
-mock network remove ds 67
+mock network remove 67
 expect 67 Group Removed
 empty
