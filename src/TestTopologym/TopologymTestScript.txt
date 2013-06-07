@@ -31,7 +31,7 @@ mock network update 4c494e4e-0026-0f99-1111-ef000004013f receiver transportstate
 expect 4c494e4e-0026-0f99-1111-ef000004013f update Sender True 4c494e4e-0026-0f99-1112-ef000004013f
 empty
 
-// test removing Sitting Roomr sets Kitchen sender to false
+// test removing Sitting Room sets Kitchen sender to false
 mock network remove 4c494e4e-0026-0f99-1112-ef000004013f
 expect 4c494e4e-0026-0f99-1112-ef000004013f Group Removed
 expect 4c494e4e-0026-0f99-1111-ef000004013f update Sender False

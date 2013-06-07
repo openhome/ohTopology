@@ -201,6 +201,7 @@ def test(context):
     run_test('Topology3')
     run_test('Topology4')
     run_test('StandardHouse')
+    run_test('Zone')
 
 
 @build_step("publish", optional=True, default=False)

@@ -465,6 +465,7 @@ namespace OpenHome.Av
 
             iWatchableZone.Dispose();
             iWatchableZone = null;
+            iZone = null;
 
             iRoots = null;
             iRoom = null;
@@ -870,10 +871,13 @@ namespace OpenHome.Av
         private Watchable<RoomMetatext> iMetatext;
     }
 
-    class RoomWatcher : IWatcher<ITopology4Source>, IWatcher<ITopologymSender>, IDisposable
+    class RoomWatcher : IWatcher<ITopology4Source>, IWatcher<ITopologymSender>, IOrderedWatcher<IStandardRoom>, IDisposable
     {
         private StandardHouse iHouse;
         private IStandardRoom iRoom;
+        private bool iRoomsInitialised;
+        private ITopology4Source iSource;
+        private ITopologymSender iSender;
 
         public RoomWatcher(StandardHouse aHouse, IStandardRoom aRoom)
         {
@@ -881,10 +885,12 @@ namespace OpenHome.Av
             iRoom = aRoom;
 
             iRoom.Source.AddWatcher(this);
+            iHouse.Rooms.AddWatcher(this);
         }
 
         public void Dispose()
         {
+            iHouse.Rooms.RemoveWatcher(this);
             iRoom.Source.RemoveWatcher(this);
 
             iRoom = null;
@@ -897,6 +903,7 @@ namespace OpenHome.Av
             {
                 aValue.Group.Sender.AddWatcher(this);
             }
+            iSource = aValue;
         }
 
         public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
@@ -909,6 +916,7 @@ namespace OpenHome.Av
             {
                 aValue.Group.Sender.AddWatcher(this);
             }
+            iSource = aValue;
         }
 
         public void ItemClose(string aId, ITopology4Source aValue)
@@ -917,6 +925,7 @@ namespace OpenHome.Av
             {
                 aValue.Group.Sender.RemoveWatcher(this);
             }
+            iSource = null;
         }
 
         public void ItemOpen(string aId, ITopologymSender aValue)
@@ -925,6 +934,7 @@ namespace OpenHome.Av
             {
                 iHouse.AddToZone(aValue.Device, iRoom);
             }
+            iSender = aValue;
         }
 
         public void ItemUpdate(string aId, ITopologymSender aValue, ITopologymSender aPrevious)
@@ -937,11 +947,41 @@ namespace OpenHome.Av
             {
                 iHouse.AddToZone(aValue.Device, iRoom);
             }
+            iSender = aValue;
         }
 
         public void ItemClose(string aId, ITopologymSender aValue)
         {
+            if (aValue.Enabled)
+            {
+                iHouse.RemoveFromZone(aValue.Device, iRoom);
+            }
+            iSender = null;
         }
+
+        public void OrderedOpen() { }
+
+        public void OrderedInitialised() { iRoomsInitialised = true; }
+
+        public void OrderedClose() { }
+
+        public void OrderedAdd(IStandardRoom aItem, uint aIndex)
+        {
+            if (iRoomsInitialised)
+            {
+                if (iSender != null && iSender.Enabled)
+                {
+                    if (aItem.Zone.Value.Sender == iSender.Device)
+                    {
+                        iHouse.AddToZone(iSender.Device, iRoom);
+                    }
+                }
+            }
+        }
+
+        public void OrderedMove(IStandardRoom aItem, uint aFrom, uint aTo) { }
+
+        public void OrderedRemove(IStandardRoom aItem, uint aIndex) { }
     }
 
     public interface IStandardHouse
@@ -992,12 +1032,13 @@ namespace OpenHome.Av
 
                 iTopology4.Rooms.RemoveWatcher(this);
 
-                foreach (var kvp in iRoomLookup)
+                // remove listeners from zones before disposing of zones
+                foreach (var kvp in iRoomWatchers)
                 {
                     kvp.Value.Dispose();
                 }
 
-                foreach (var kvp in iRoomWatchers)
+                foreach (var kvp in iRoomLookup)
                 {
                     kvp.Value.Dispose();
                 }
@@ -1057,12 +1098,6 @@ namespace OpenHome.Av
         {
             StandardRoom room = new StandardRoom(this, aRoom);
 
-            iRoomWatchers.Add(aRoom, new RoomWatcher(this, room));
-
-            foreach (IStandardRoom r in iWatchableRooms.Values)
-            {
-            }
-
             // calculate where to insert the room
             int index = 0;
             foreach (IStandardRoom r in iWatchableRooms.Values)
@@ -1077,6 +1112,9 @@ namespace OpenHome.Av
             // insert the room
             iRoomLookup.Add(aRoom, room);
             iWatchableRooms.Add(room, (uint)index);
+
+            // do this here so that room is added before other rooms are informed of this room listening to them
+            iRoomWatchers.Add(aRoom, new RoomWatcher(this, room));
         }
 
         public void UnorderedRemove(ITopology4Room aRoom)
