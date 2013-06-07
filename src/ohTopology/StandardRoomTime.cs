@@ -149,14 +149,11 @@ namespace OpenHome.Av
         {
             aDevice.Create<IProxyTime>((time) =>
             {
-                iThread.Schedule(() =>
-                {
-                    iTime = time;
-                    iTime.Duration.AddWatcher(this);
-                    iTime.Seconds.AddWatcher(this);
+                iTime = time;
+                iTime.Duration.AddWatcher(this);
+                iTime.Seconds.AddWatcher(this);
 
-                    iHasTime.Update(true);
-                });
+                iHasTime.Update(true);
             });
         }
 

@@ -21,24 +21,21 @@ namespace OpenHome.Av
 
             aSource.Device.Create<IProxyPlaylist>((playlist) =>
             {
-                aThread.Schedule(() =>
+                if (!iDisposed)
                 {
-                    if (!iDisposed)
-                    {
-                        iPlaylist = playlist;
+                    iPlaylist = playlist;
 
-                        aHasInfoNext.Update(true);
-                        aCanSkip.Update(true);
+                    aHasInfoNext.Update(true);
+                    aCanSkip.Update(true);
 
-                        iPlaylist.TransportState.AddWatcher(this);
+                    iPlaylist.TransportState.AddWatcher(this);
 
-                        iHasSourceControl.Update(true);
-                    }
-                    else
-                    {
-                        playlist.Dispose();
-                    }
-                });
+                    iHasSourceControl.Update(true);
+                }
+                else
+                {
+                    playlist.Dispose();
+                }
             });
         }
 

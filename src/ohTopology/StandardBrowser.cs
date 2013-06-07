@@ -179,21 +179,18 @@ namespace OpenHome.Av
 
             iDevice.Create<IProxyInfo>((info) =>
             {
-                aThread.Schedule(() =>
+                if (!iDisposed)
                 {
-                    if (!iDisposed)
-                    {
-                        iInfo = info;
+                    iInfo = info;
 
-                        iInfo.Details.AddWatcher(this);
-                        iInfo.Metadata.AddWatcher(this);
-                        iInfo.Metatext.AddWatcher(this);
-                    }
-                    else
-                    {
-                        info.Dispose();
-                    }
-                });
+                    iInfo.Details.AddWatcher(this);
+                    iInfo.Metadata.AddWatcher(this);
+                    iInfo.Metatext.AddWatcher(this);
+                }
+                else
+                {
+                    info.Dispose();
+                }
             });
         }
 
@@ -369,12 +366,12 @@ namespace OpenHome.Av
             }
         }
 
-        internal void AddToZone(IStandardRoom aRoom)
+        public void AddToZone(IStandardRoom aRoom)
         {
             iListeners.Add(aRoom);
         }
 
-        internal void RemoveFromZone(IStandardRoom aRoom)
+        public void RemoveFromZone(IStandardRoom aRoom)
         {
             iListeners.Remove(aRoom);
         }
@@ -430,7 +427,8 @@ namespace OpenHome.Av
             iMetatext = new Watchable<RoomMetatext>(iNetwork, "Metatext", new RoomMetatext());
 
             iZoneable = new Watchable<bool>(iNetwork, "HasReceiver", false);
-            iZone = new Watchable<IZone>(iNetwork, "Zone", new Zone(false, this, null));
+            iZone = new Zone(false, this, null);
+            iWatchableZone = new Watchable<IZone>(iNetwork, "Zone", iZone);
 
             iRoom.Roots.AddWatcher(this);
         }
@@ -465,8 +463,8 @@ namespace OpenHome.Av
             iZoneable.Dispose();
             iZoneable = null;
 
-            iZone.Dispose();
-            iZone = null;
+            iWatchableZone.Dispose();
+            iWatchableZone = null;
 
             iRoots = null;
             iRoom = null;
@@ -551,7 +549,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return iZone;
+                return iWatchableZone;
             }
         }
 
@@ -581,21 +579,18 @@ namespace OpenHome.Av
                     {
                         aRoom.Zone.Value.Sender.Create<IProxySender>((sender) =>
                         {
-                            iNetwork.Schedule(() =>
+                            if (!iDisposed)
                             {
-                                if (!iDisposed)
-                                {
-                                    Task action = receiver.SetSender(sender.Metadata.Value);
-                                    action.ContinueWith((t) => { receiver.Play(); });
-                                    receiver.Dispose();
-                                    sender.Dispose();
-                                }
-                                else
-                                {
-                                    receiver.Dispose();
-                                    sender.Dispose();
-                                }
-                            });
+                                Task action = receiver.SetSender(sender.Metadata.Value);
+                                action.ContinueWith((t) => { receiver.Play(); });
+                                receiver.Dispose();
+                                sender.Dispose();
+                            }
+                            else
+                            {
+                                receiver.Dispose();
+                                sender.Dispose();
+                            }
                         });
                     });
                     return;
@@ -611,11 +606,8 @@ namespace OpenHome.Av
                 {
                     s.Device.Create<IProxyRadio>((radio) =>
                     {
-                        iNetwork.Schedule(() =>
-                        {
-                            radio.SetChannel(aUri, aMetadata);
-                            radio.Dispose();
-                        });
+                        radio.SetChannel(aUri, aMetadata);
+                        radio.Dispose();
                     });
                     return;
                 }
@@ -795,9 +787,10 @@ namespace OpenHome.Av
                 {
                     if (root == g)
                     {
-                        if (!iZone.Value.Active)
+                        if (!iWatchableZone.Value.Active)
                         {
-                            iZone.Update(new Zone(true, this, root.Device));
+                            iZone = new Zone(true, this, root.Device);
+                            iWatchableZone.Update(iZone);
                         }
                         break;
                     }
@@ -805,9 +798,10 @@ namespace OpenHome.Av
             }
             else
             {
-                if (iZone.Value.Active)
+                if (iWatchableZone.Value.Active)
                 {
-                    iZone.Update(new Zone(false, this, null));
+                    iZone = new Zone(false, this, null);
+                    iWatchableZone.Update(iZone);
                 }
             }
         }
@@ -834,6 +828,7 @@ namespace OpenHome.Av
         {
             if (iRoots.First().Device == aDevice)
             {
+                iZone.AddToZone(aRoom);
                 return true;
             }
 
@@ -844,6 +839,7 @@ namespace OpenHome.Av
         {
             if (iRoots.First().Device == aDevice)
             {
+                iZone.RemoveFromZone(aRoom);
                 return true;
             }
 
@@ -865,7 +861,8 @@ namespace OpenHome.Av
         private Watchable<IEnumerable<ITopology4Source>> iWatchableSources;
 
         private Watchable<bool> iZoneable;
-        private Watchable<IZone> iZone;
+        private Zone iZone;
+        private Watchable<IZone> iWatchableZone;
 
         private InfoWatcher iInfoWatcher;
         private Watchable<RoomDetails> iDetails;
@@ -1062,6 +1059,10 @@ namespace OpenHome.Av
 
             iRoomWatchers.Add(aRoom, new RoomWatcher(this, room));
 
+            foreach (IStandardRoom r in iWatchableRooms.Values)
+            {
+            }
+
             // calculate where to insert the room
             int index = 0;
             foreach (IStandardRoom r in iWatchableRooms.Values)
@@ -1096,23 +1097,20 @@ namespace OpenHome.Av
         {
             aItem.Create<IProxyMediaServer>((t) =>
             {
-                iNetwork.Schedule(() =>
+                // calculate where to insert the server
+                int index = 0;
+                foreach (IProxyMediaServer ms in iWatchableServers.Values)
                 {
-                    // calculate where to insert the server
-                    int index = 0;
-                    foreach (IProxyMediaServer ms in iWatchableServers.Values)
+                    if (t.ProductName.CompareTo(ms.ProductName) < 0)
                     {
-                        if (t.ProductName.CompareTo(ms.ProductName) < 0)
-                        {
-                            break;
-                        }
-                        ++index;
+                        break;
                     }
+                    ++index;
+                }
 
-                    // insert the server
-                    iServerLookup.Add(aItem, t);
-                    iWatchableServers.Add(t, (uint)index);
-                });
+                // insert the server
+                iServerLookup.Add(aItem, t);
+                iWatchableServers.Add(t, (uint)index);
             });
         }
 
