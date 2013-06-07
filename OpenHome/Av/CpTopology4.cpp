@@ -4,6 +4,7 @@
 #include <OpenHome/Private/Parser.h>
 #include <OpenHome/Private/Ascii.h>
 #include <OpenHome/Net/Private/XmlParser.h>
+#include <OpenHome/Av/Debug.h>
 
 using namespace OpenHome;
 using namespace OpenHome::Net;
