@@ -13,7 +13,7 @@ namespace OpenHome.Av
     public abstract class DeviceInjector : IDisposable
     {
         private Network iNetwork;
-        private Dictionary<CpDevice, Device> iCpDeviceLookup;
+        private Dictionary<string, Device> iCpDeviceLookup;
 
         protected CpDeviceListUpnpServiceType iDeviceList;
 
@@ -21,30 +21,27 @@ namespace OpenHome.Av
         {
             iNetwork = aNetwork;
 
-            iCpDeviceLookup = new Dictionary<CpDevice, Device>();
+            iCpDeviceLookup = new Dictionary<string, Device>();
         }
 
         protected void Added(CpDeviceList aList, CpDevice aDevice)
         {
-            aDevice.AddRef();
-
-            iNetwork.Schedule(() =>
+            iNetwork.Execute(() =>
             {
                 Device device = Create(iNetwork, aDevice);
-                iCpDeviceLookup.Add(aDevice, device);
+                iCpDeviceLookup.Add(device.Udn, device);
                 iNetwork.Add(device);
             });
         }
 
         protected void Removed(CpDeviceList aList, CpDevice aDevice)
         {
-            iNetwork.Schedule(() =>
+            iNetwork.Execute(() =>
             {
-                Device device = iCpDeviceLookup[aDevice];
-                iCpDeviceLookup.Remove(aDevice);
+                Device device = iCpDeviceLookup[aDevice.Udn()];
+                iCpDeviceLookup.Remove(device.Udn);
                 iNetwork.Remove(device);
                 device.Dispose();
-                aDevice.RemoveRef();
             });
         }
 
@@ -62,10 +59,9 @@ namespace OpenHome.Av
 
             iNetwork.Execute(() =>
             {
-                foreach (var entry in iCpDeviceLookup)
+                foreach (var device in iCpDeviceLookup.Values)
                 {
-                    entry.Value.Dispose();
-                    entry.Key.RemoveRef();
+                    device.Dispose();
                 }
             });
             iCpDeviceLookup.Clear();

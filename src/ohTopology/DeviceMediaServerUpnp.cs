@@ -38,6 +38,7 @@ namespace OpenHome.Av
         {
             iNetwork = aNetwork;
             iDevice = aDevice;
+            iDevice.AddRef();
             iUpnpProxy = new CpProxyUpnpOrgContentDirectory1(iDevice);
 
             string deviceXml;
@@ -136,6 +137,7 @@ namespace OpenHome.Av
         public override void Dispose()
         {
             iUpnpProxy.Dispose();
+            iDevice.RemoveRef();
             base.Dispose();
         }
     }

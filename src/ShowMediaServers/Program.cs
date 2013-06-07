@@ -20,7 +20,9 @@ namespace ShowMediaServers
         private readonly INetwork iNetwork;
         private readonly IProxyMediaServer iProxy;
         private readonly Queue<IMediaDatum> iContainers;
+        private readonly TaskCompletionSource<bool> iComplete;
 
+        private bool iClose;
         private IMediaServerSession iSession;
         private IWatchableContainer<IMediaDatum> iContainer;
 
@@ -29,38 +31,70 @@ namespace ShowMediaServers
             iNetwork = aNetwork;
             iProxy = aProxy;
             iContainers = new Queue<IMediaDatum>();
+            iComplete = new TaskCompletionSource<bool>();
+            iClose = false;
             Console.WriteLine("Added    : {0}", this);
             iProxy.CreateSession().ContinueWith(GetSession);
         }
 
+        public void Close()
+        {
+            iNetwork.Execute(() =>
+            {
+                Console.WriteLine("Close    : {0}", this);
+                iClose = true;
+            });
+        }
+
         private void GetSession(Task<IMediaServerSession> aTask)
         {
-            iSession = aTask.Result;
-            iContainers.Enqueue(null);
-
             iNetwork.Schedule(() =>
             {
+                iSession = aTask.Result;
+                iContainers.Enqueue(null);
                 ProcessNextContainer();
             });
         }
 
+        // ProcessNextContainer always called in the watchable thread
+
         private void ProcessNextContainer()
         {
-            if (iContainers.Count > 0)
+            if (iContainer != null)
             {
-                iSession.Browse(iContainers.Dequeue()).ContinueWith((t) =>
-                {
-                    iContainer = t.Result;
+                iContainer.Snapshot.RemoveWatcher(this);
+                iContainer = null;
+            }
 
-                    if (iContainer != null)
+            if (!iClose)
+            {
+                if (iContainers.Count > 0)
+                {
+                    iSession.Browse(iContainers.Dequeue()).ContinueWith((t) =>
                     {
                         iNetwork.Schedule(() =>
                         {
-                            iContainer.Snapshot.AddWatcher(this);
+                            iContainer = t.Result;
+
+                            if (iContainer != null)
+                            {
+                                iContainer.Snapshot.AddWatcher(this);
+                            }
+                            else
+                            {
+                                ProcessNextContainer();
+                            }
                         });
-                    }
-                });
+                    });
+
+                    return;
+                }
             }
+
+            Console.WriteLine("Closing  : {0}", this);
+            iSession.Dispose();
+            iComplete.SetResult(true);
+            Console.WriteLine("Closed   : {0}", this);
         }
 
         public override string ToString()
@@ -91,7 +125,7 @@ namespace ShowMediaServers
 
                 iNetwork.Schedule(() =>
                 {
-                    iContainer.Snapshot.RemoveWatcher(this);
+                    ProcessNextContainer();
                 });
             });
         }
@@ -102,28 +136,19 @@ namespace ShowMediaServers
 
         public void ItemClose(string aId, IWatchableSnapshot<IMediaDatum> aValue)
         {
-            ProcessNextContainer();
         }
 
         // IDisposable
 
         public void Dispose()
         {
-            Console.WriteLine("Removed  : {0}", this);
+            Console.WriteLine("Removing : {0}", this);
 
-            iContainers.Clear();
-
-            if (iContainer != null)
-            {
-                iContainer.Snapshot.RemoveWatcher(this);
-            }
-
-            if (iSession != null)
-            {
-                iSession.Dispose();
-            }
+            iComplete.Task.Wait();
 
             iProxy.Dispose();
+
+            Console.WriteLine("Removed  : {0}", this);
         }
     }
 
@@ -148,8 +173,6 @@ namespace ShowMediaServers
                 iDevices = aNetwork.Create<IProxyMediaServer>();
                 iDevices.AddWatcher(this);
             });
-
-            iNetwork.Wait();
         }
 
         public void Run()
@@ -207,12 +230,17 @@ namespace ShowMediaServers
             iNetwork.Execute(() =>
             {
                 iDevices.RemoveWatcher(this);
-
-                foreach (var entry in iMediaServers)
-                {
-                    entry.Value.Dispose();
-                }
             });
+
+            foreach (var server in iMediaServers.Values)
+            {
+                server.Close();
+            }
+
+            foreach (var server in iMediaServers.Values)
+            {
+                server.Dispose();
+            }
         }
     }
 

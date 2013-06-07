@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
+using System.Xml;
+using System.Xml.Linq;
 
 using OpenHome.Os.App;
 using OpenHome.MediaServer;
@@ -355,6 +357,11 @@ namespace OpenHome.Av
 
     internal class MediaServerFragmentUpnp : IWatchableFragment<IMediaDatum>
     {
+        private const string kNsDidlLite = "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/";
+        private const string kNsUpnp = "urn:schemas-upnp-org:metadata-1-0/upnp/";
+        private const string kNsDc = "http://purl.org/dc/elements/1.1/";
+        private const string kNsLinn = "urn:linn-co-uk/DIDL-Lite";
+
         private readonly INetwork iNetwork;
         private readonly uint iIndex;
         private readonly IEnumerable<IMediaDatum> iData;
@@ -366,14 +373,92 @@ namespace OpenHome.Av
             iData = Parse(aDidl);
         }
 
+        /*
+                <DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/">
+         *          <container id="co1" parentID="0" restricted="0"><dc:title>Artist / Album</dc:title><upnp:class>object.container</upnp:class></container>
+         *          <container id="co2" parentID="0" restricted="0"><dc:title>Album</dc:title><upnp:class>object.container</upnp:class></container>
+         *          <container id="co3" parentID="0" restricted="0"><dc:title>Title</dc:title><upnp:class>object.container</upnp:class></container>
+         *          <container id="co4" parentID="0" restricted="0"><dc:title>Composer</dc:title><upnp:class>object.container</upnp:class></container>
+         *          <container id="co5" parentID="0" restricted="0"><dc:title>Genre</dc:title><upnp:class>object.container.genre</upnp:class></container>
+         *          <container id="co6" parentID="0" restricted="0"><dc:title>Style</dc:title><upnp:class>object.container</upnp:class></container>
+         *          <container id="co7" parentID="0" restricted="0"><dc:title>Dynamic Browsing</dc:title><upnp:class>object.container</upnp:class></container>
+         *          <container id="co8" parentID="0" restricted="0"><dc:title>Internet Radio [TuneIn Radio]</dc:title><upnp:class>object.container</upnp:class></container>
+         *          <container id="co9" parentID="0" restricted="0"><dc:title>Playlists  </dc:title><upnp:class>object.container</upnp:class></container>
+         *          <container id="co10" parentID="0" restricted="0"><dc:title>Advanced Search</dc:title><upnp:class>object.container</upnp:class></container>
+         *      </DIDL-Lite>
+        */
+
         private IEnumerable<IMediaDatum> Parse(string aDidl)
         {
-            List<IMediaDatum> data = new List<IMediaDatum>();
-            data.Add(CreateTestItem("A"));
-            data.Add(CreateTestItem("B"));
-            data.Add(CreateTestItem("C"));
-            data.Add(CreateTestItem("D"));
-            return (data);
+            var reader = new StringReader(aDidl);
+
+            XDocument xml = null;
+
+            try
+            {
+                xml = XDocument.Load(reader);
+            }
+            catch
+            {
+                yield break;
+            }
+
+            foreach (var element in xml.Descendants())
+            {
+                if (element.Name == XName.Get("item", kNsDidlLite))
+                {
+                    var datum = ParseItem(element);
+
+                    if (datum != null)
+                    {
+                        yield return datum;
+                    }
+                }
+
+                if (element.Name == XName.Get("container", kNsDidlLite))
+                {
+                    var datum = ParseContainer(element);
+
+                    if (datum != null)
+                    {
+                        yield return datum;
+                    }
+                }
+            }
+        }
+
+        private IMediaDatum ParseItem(XElement aElement)
+        {
+            var datum = new MediaDatum();
+            Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Title);
+            return (datum);
+        }
+
+        private IMediaDatum ParseContainer(XElement aElement)
+        {
+            var ids = aElement.Attributes(XName.Get("id"));
+
+            if (ids.Any())
+            {
+                var datum = new MediaDatumUpnp(ids.First().Value, iNetwork.TagManager.Container.Title);
+                Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title);
+                return (datum);
+            }
+
+            return (null);
+        }
+
+        private void Convert(XElement aElement, string aName, string aNamespace, MediaDatum aDatum, ITag aTag)
+        {
+            var elements = aElement.Descendants(XName.Get(aName, aNamespace));
+
+            foreach (var element in elements)
+            {
+                if (element.Value.Length > 0)
+                {
+                    aDatum.Add(aTag, element.Value);
+                }
+            }
         }
 
         private IMediaDatum CreateTestItem(string aTitle)
