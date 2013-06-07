@@ -1137,40 +1137,43 @@ namespace OpenHome.Av
 
         public void Execute(IEnumerable<string> aValue)
         {
-            string command = aValue.First().ToLowerInvariant();
-
-            if (command == "zone")
+            iNetwork.Execute(() =>
             {
-                IEnumerable<string> value = aValue.Skip(1);
+                string command = aValue.First().ToLowerInvariant();
 
-                string name = value.First();
-
-                foreach (StandardRoom r1 in iRoomLookup.Values)
+                if (command == "zone")
                 {
-                    if (r1.Name == name)
+                    IEnumerable<string> value = aValue.Skip(1);
+
+                    string name = value.First();
+
+                    foreach (StandardRoom r1 in iRoomLookup.Values)
                     {
-                        value = value.Skip(1);
-
-                        command = value.First().ToLowerInvariant();
-
-                        if (command == "add")
+                        if (r1.Name == name)
                         {
                             value = value.Skip(1);
 
-                            name = value.First();
+                            command = value.First().ToLowerInvariant();
 
-                            foreach (StandardRoom r2 in iRoomLookup.Values)
+                            if (command == "add")
                             {
-                                if (r2.Name == name)
+                                value = value.Skip(1);
+
+                                name = value.First();
+
+                                foreach (StandardRoom r2 in iRoomLookup.Values)
                                 {
-                                    r2.ListenTo(r1);
-                                    return;
+                                    if (r2.Name == name)
+                                    {
+                                        r2.ListenTo(r1);
+                                        return;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
+            });
         }
 
         internal void AddToZone(IDevice aDevice, IStandardRoom aRoom)
