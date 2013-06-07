@@ -4,18 +4,18 @@ mock network medium
 // test network is populated with 4 devices
 expect Room Added: Kitchen at 0
 expect Kitchen open Standby eOn
-expect Kitchen open Details False 0 0  0 False 0
-expect Kitchen open Metadata False  
-expect Kitchen open Metatext False 
+expect Kitchen open Details True 0 0  0 False 0
+expect Kitchen open Metadata True  
+expect Kitchen open Metatext True 
 expect Kitchen open Zone True 4c494e4e-0026-0f99-1111-ef000004013f
 expect Kitchen open Controller Active True
 expect Kitchen open HasVolume True
-expect Kitchen open HasSourceControl False
+expect Kitchen open HasSourceControl True
 expect Kitchen open Mute False
 expect Kitchen open Volume 50
-expect Kitchen open TransportState 
+expect Kitchen open TransportState Stopped
 expect Kitchen open Time Active True
-expect Kitchen open HasTime False
+expect Kitchen open HasTime True
 expect Kitchen open Duration 0
 expect Kitchen open Seconds 0
 expect Kitchen open 
@@ -38,18 +38,18 @@ expect Kitchen open Presets Enabled True
 
 expect Room Added: Sitting Room at 1
 expect Sitting Room open Standby eOn
-expect Sitting Room open Details False 0 0  0 False 0
-expect Sitting Room open Metadata False  
-expect Sitting Room open Metatext False 
+expect Sitting Room open Details True 0 0  0 False 0
+expect Sitting Room open Metadata True  
+expect Sitting Room open Metatext True 
 expect Sitting Room open Zone True 4c494e4e-0026-0f99-1112-ef000004013f
 expect Sitting Room open Controller Active True
 expect Sitting Room open HasVolume True
-expect Sitting Room open HasSourceControl False
+expect Sitting Room open HasSourceControl True
 expect Sitting Room open Mute False
 expect Sitting Room open Volume 50
-expect Sitting Room open TransportState 
+expect Sitting Room open TransportState Stopped
 expect Sitting Room open Time Active True
-expect Sitting Room open HasTime False
+expect Sitting Room open HasTime True
 expect Sitting Room open Duration 0
 expect Sitting Room open Seconds 0
 expect Sitting Room open 
@@ -79,18 +79,18 @@ expect Sitting Room open Presets Enabled True
 
 expect Room Added: Bedroom at 0
 expect Bedroom open Standby eOn
-expect Bedroom open Details False 0 0  0 False 0
-expect Bedroom open Metadata False  
-expect Bedroom open Metatext False 
+expect Bedroom open Details True 0 0  0 False 0
+expect Bedroom open Metadata True  
+expect Bedroom open Metatext True 
 expect Bedroom open Zone True 4c494e4e-0026-0f99-1113-ef000004013f
 expect Bedroom open Controller Active True
 expect Bedroom open HasVolume True
-expect Bedroom open HasSourceControl False
+expect Bedroom open HasSourceControl True
 expect Bedroom open Mute False
 expect Bedroom open Volume 50
-expect Bedroom open TransportState 
+expect Bedroom open TransportState Stopped
 expect Bedroom open Time Active True
-expect Bedroom open HasTime False
+expect Bedroom open HasTime True
 expect Bedroom open Duration 0
 expect Bedroom open Seconds 0
 expect Bedroom open 
@@ -120,18 +120,18 @@ expect Bedroom open Presets Enabled True
 
 expect Room Added: Dining Room at 1
 expect Dining Room open Standby eOn
-expect Dining Room open Details False 0 0  0 False 0
-expect Dining Room open Metadata False  
-expect Dining Room open Metatext False 
+expect Dining Room open Details True 0 0  0 False 0
+expect Dining Room open Metadata True  
+expect Dining Room open Metatext True 
 expect Dining Room open Zone True 4c494e4e-0026-0f99-1114-ef000004013f
 expect Dining Room open Controller Active True
 expect Dining Room open HasVolume True
-expect Dining Room open HasSourceControl False
+expect Dining Room open HasSourceControl True
 expect Dining Room open Mute False
 expect Dining Room open Volume 50
-expect Dining Room open TransportState 
+expect Dining Room open TransportState Stopped
 expect Dining Room open Time Active True
-expect Dining Room open HasTime False
+expect Dining Room open HasTime True
 expect Dining Room open Duration 0
 expect Dining Room open Seconds 0
 expect Dining Room open 
@@ -151,31 +151,6 @@ null
 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Sky Radio News (World News)</dc:title><res protocolInfo="*:*:*:*" bitrate="4000">http://opml.radiotime.com/Tune.ashx?id=s81093&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s81093q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
 Presets end
 expect Dining Room open Presets Enabled True
-
-expect Kitchen update Details True 0 0  0 False 0
-expect Kitchen update Metadata True  
-expect Kitchen update Metatext True 
-expect Kitchen update TransportState Stopped
-expect Kitchen update HasSourceControl True
-expect Kitchen update HasTime True
-expect Sitting Room update Details True 0 0  0 False 0
-expect Sitting Room update Metadata True  
-expect Sitting Room update Metatext True 
-expect Sitting Room update TransportState Stopped
-expect Sitting Room update HasSourceControl True
-expect Sitting Room update HasTime True
-expect Bedroom update Details True 0 0  0 False 0
-expect Bedroom update Metadata True  
-expect Bedroom update Metatext True 
-expect Bedroom update TransportState Stopped
-expect Bedroom update HasSourceControl True
-expect Bedroom update HasTime True
-expect Dining Room update Details True 0 0  0 False 0
-expect Dining Room update Metadata True  
-expect Dining Room update Metatext True 
-expect Dining Room update TransportState Stopped
-expect Dining Room update HasSourceControl True
-expect Dining Room update HasTime True
 empty
 
 // test adding a new room
@@ -183,18 +158,18 @@ mock network create ds 67
 mock network add 67
 expect Room Added: Main Room at 3
 expect Main Room open Standby eOn
-expect Main Room open Details False 0 0  0 False 0
-expect Main Room open Metadata False  
-expect Main Room open Metatext False 
+expect Main Room open Details True 0 0  0 False 0
+expect Main Room open Metadata True  
+expect Main Room open Metatext True 
 expect Main Room open Zone True 67
 expect Main Room open Controller Active True
 expect Main Room open HasVolume True
-expect Main Room open HasSourceControl False
+expect Main Room open HasSourceControl True
 expect Main Room open Mute False
 expect Main Room open Volume 50
-expect Main Room open TransportState 
+expect Main Room open TransportState Stopped
 expect Main Room open Time Active True
-expect Main Room open HasTime False
+expect Main Room open HasTime True
 expect Main Room open Duration 0
 expect Main Room open Seconds 0
 expect Main Room open 
@@ -214,13 +189,6 @@ null
 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Sky Radio News (World News)</dc:title><res protocolInfo="*:*:*:*" bitrate="4000">http://opml.radiotime.com/Tune.ashx?id=s81093&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s81093q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
 Presets end
 expect Main Room open Presets Enabled True
-
-expect Main Room update Details True 0 0  0 False 0
-expect Main Room update Metadata True  
-expect Main Room update Metatext True 
-expect Main Room update TransportState Stopped
-expect Main Room update HasSourceControl True
-expect Main Room update HasTime True
 empty
 
 // test changing details
@@ -247,18 +215,18 @@ empty
 mock network add 67
 expect Room Added: Main Room at 3
 expect Main Room open Standby eOn
-expect Main Room open Details False 0 0  0 False 0
-expect Main Room open Metadata False  
-expect Main Room open Metatext False 
+expect Main Room open Details True 50 100 flac 500 True 44000
+expect Main Room open Metadata True blah http://blah
+expect Main Room open Metatext True testing
 expect Main Room open Zone True 67
 expect Main Room open Controller Active True
 expect Main Room open HasVolume True
-expect Main Room open HasSourceControl False
+expect Main Room open HasSourceControl True
 expect Main Room open Mute False
 expect Main Room open Volume 50
-expect Main Room open TransportState 
+expect Main Room open TransportState Stopped
 expect Main Room open Time Active True
-expect Main Room open HasTime False
+expect Main Room open HasTime True
 expect Main Room open Duration 0
 expect Main Room open Seconds 0
 expect Main Room open 
@@ -278,13 +246,6 @@ null
 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Sky Radio News (World News)</dc:title><res protocolInfo="*:*:*:*" bitrate="4000">http://opml.radiotime.com/Tune.ashx?id=s81093&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s81093q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
 Presets end
 expect Main Room open Presets Enabled True
-
-expect Main Room update Details True 50 100 flac 500 True 44000
-expect Main Room update Metadata True blah http://blah
-expect Main Room update Metatext True testing
-expect Main Room update TransportState Stopped
-expect Main Room update HasSourceControl True
-expect Main Room update HasTime True
 empty
 
 // add another ds to Main Room
@@ -365,12 +326,12 @@ expect Main Room update Presets Enabled True
 expect Main Room update Details False 0 0  0 False 0
 expect Main Room update Metadata False  
 expect Main Room update Metatext False 
-expect Main Room update HasSourceControl False
-expect Main Room update HasTime False
 expect Main Room update Details True 1 2 mp3 3 False 4
 expect Main Room update Metadata True Ds68 http://Ds68
 expect Main Room update Metatext True Ds68
+expect Main Room update HasSourceControl False
 expect Main Room update HasSourceControl True
+expect Main Room update HasTime False
 expect Main Room update HasTime True
 empty
 
@@ -379,12 +340,12 @@ mock network update 67 product sourceindex 1
 expect Main Room update Details False 0 0  0 False 0
 expect Main Room update Metadata False  
 expect Main Room update Metatext False 
-expect Main Room update HasSourceControl False
-expect Main Room update HasTime False
 expect Main Room update Details True 50 100 flac 500 True 44000
 expect Main Room update Metadata True blah http://blah
 expect Main Room update Metatext True testing
+expect Main Room update HasSourceControl False
 expect Main Room update HasSourceControl True
+expect Main Room update HasTime False
 expect Main Room update HasTime True
 empty
 
@@ -463,20 +424,21 @@ null
 Presets end
 expect Main Room update Presets Enabled True
 expect Main Room update HasSourceControl False
+expect Main Room update HasSourceControl True
 expect Room Added: Test Room at 5
 expect Test Room open Standby eOn
-expect Test Room open Details False 0 0  0 False 0
-expect Test Room open Metadata False  
-expect Test Room open Metatext False 
+expect Test Room open Details True 0 0  0 False 0
+expect Test Room open Metadata True  
+expect Test Room open Metatext True 
 expect Test Room open Zone True 50
 expect Test Room open Controller Active True
 expect Test Room open HasVolume True
-expect Test Room open HasSourceControl False
+expect Test Room open HasSourceControl True
 expect Test Room open Mute False
 expect Test Room open Volume 50
-expect Test Room open TransportState 
+expect Test Room open TransportState Stopped
 expect Test Room open Time Active True
-expect Test Room open HasTime False
+expect Test Room open HasTime True
 expect Test Room open Duration 0
 expect Test Room open Seconds 0
 expect Test Room open 
@@ -503,14 +465,6 @@ null
 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Sky Radio News (World News)</dc:title><res protocolInfo="*:*:*:*" bitrate="4000">http://opml.radiotime.com/Tune.ashx?id=s81093&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s81093q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
 Presets end
 expect Test Room open Presets Enabled True
-
-expect Main Room update HasSourceControl True
-expect Test Room update Details True 0 0  0 False 0
-expect Test Room update Metadata True  
-expect Test Room update Metatext True 
-expect Test Room update TransportState Stopped
-expect Test Room update HasSourceControl True
-expect Test Room update HasTime True
 empty
 
 mock network update 50 product source 5 name Wii
