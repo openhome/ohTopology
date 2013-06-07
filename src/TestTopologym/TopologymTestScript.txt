@@ -12,33 +12,33 @@ expect 4c494e4e-0026-0f99-1114-ef000004013f Group Added
 expect 4c494e4e-0026-0f99-1114-ef000004013f open Sender False
 empty
 
-mock network update device 4c494e4e-0026-0f99-1111-ef000004013f receiver metadata Bedroom ohz://239.255.255.250:51972/4c494e4e-0026-0f99-1113-ef000004013f
+mock network update 4c494e4e-0026-0f99-1111-ef000004013f receiver metadata Bedroom ohz://239.255.255.250:51972/4c494e4e-0026-0f99-1113-ef000004013f
 empty
 
-mock network update device 4c494e4e-0026-0f99-1111-ef000004013f receiver transportstate Playing
+mock network update 4c494e4e-0026-0f99-1111-ef000004013f receiver transportstate Playing
 expect 4c494e4e-0026-0f99-1111-ef000004013f update Sender True 4c494e4e-0026-0f99-1113-ef000004013f
 empty
 
-mock network update device 4c494e4e-0026-0f99-1111-ef000004013f receiver metadata Sitting Room ohz://239.255.255.250:51972/4c494e4e-0026-0f99-1112-ef000004013f
+mock network update 4c494e4e-0026-0f99-1111-ef000004013f receiver metadata Sitting Room ohz://239.255.255.250:51972/4c494e4e-0026-0f99-1112-ef000004013f
 expect 4c494e4e-0026-0f99-1111-ef000004013f update Sender True 4c494e4e-0026-0f99-1112-ef000004013f
 empty
 
-mock network update device 4c494e4e-0026-0f99-1111-ef000004013f receiver transportstate Stopped
+mock network update 4c494e4e-0026-0f99-1111-ef000004013f receiver transportstate Stopped
 expect 4c494e4e-0026-0f99-1111-ef000004013f update Sender False
 empty
 
-mock network update device 4c494e4e-0026-0f99-1111-ef000004013f receiver transportstate Playing
+mock network update 4c494e4e-0026-0f99-1111-ef000004013f receiver transportstate Playing
 expect 4c494e4e-0026-0f99-1111-ef000004013f update Sender True 4c494e4e-0026-0f99-1112-ef000004013f
 empty
 
 // test removing Sitting Roomr sets Kitchen sender to false
-mock network remove device 4c494e4e-0026-0f99-1112-ef000004013f
+mock network remove 4c494e4e-0026-0f99-1112-ef000004013f
 expect 4c494e4e-0026-0f99-1112-ef000004013f Group Removed
 expect 4c494e4e-0026-0f99-1111-ef000004013f update Sender False
 empty
 
 // test adding Sitting Room sets Kitchen sender to true
-mock network add device 4c494e4e-0026-0f99-1112-ef000004013f
+mock network add 4c494e4e-0026-0f99-1112-ef000004013f
 expect 4c494e4e-0026-0f99-1111-ef000004013f update Sender True 4c494e4e-0026-0f99-1112-ef000004013f
 expect 4c494e4e-0026-0f99-1112-ef000004013f Group Added
 expect 4c494e4e-0026-0f99-1112-ef000004013f open Sender False

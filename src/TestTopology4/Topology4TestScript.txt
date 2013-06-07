@@ -72,7 +72,7 @@ empty
 
 // test sources are add when ds appears on the network
 mock network create ds 67
-mock network add device 67
+mock network add 67
 expect Room Added Main Room
 expect Main Room open Standby eOn
 expect Main Room open 
@@ -89,12 +89,12 @@ Senders end
 empty
 
 // test source are removed when ds disappears on the network
-mock network remove device 67
+mock network remove 67
 expect Room Removed Main Room
 empty
 
 // test changing standby state for a single product in a room
-mock network add device 67
+mock network add 67
 expect Room Added Main Room
 expect Main Room open Standby eOn
 expect Main Room open 
@@ -109,16 +109,16 @@ Senders begin
 Sender Mock DS
 Senders end
 empty
-mock network update device 67 product standby false
+mock network update 67 product standby false
 expect Main Room update Standby eOff
 empty
-mock network update device 67 product standby true
+mock network update 67 product standby true
 expect Main Room update Standby eOn
 empty
 
 // test changing standby state for a two products in a room
 mock network create ds 68
-mock network add device 68
+mock network add 68
 expect Mock DS open Source 0 Mock DS Playlist Playlist True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
@@ -139,21 +139,21 @@ Source 1 Mock DS Radio Radio True True True 68 Volume 68
 Source 3 Mock DS Songcast Receiver True True True 68 Volume 68
 Sources end
 empty
-mock network update device 67 product standby false
+mock network update 67 product standby false
 expect Main Room update Standby eMixed
 empty
-mock network update device 68 product standby false
+mock network update 68 product standby false
 expect Main Room update Standby eOff
 empty
-mock network update device 68 product standby true
+mock network update 68 product standby true
 expect Main Room update Standby eMixed
 empty
-mock network update device 67 product standby true
+mock network update 67 product standby true
 expect Main Room update Standby eOn
 empty
 
 // test linking ds 68 to ds 67
-mock network update device 68 product name Test
+mock network update 68 product name Test
 expect Mock DS open Source 0 Mock DS Playlist Playlist True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
@@ -174,7 +174,7 @@ Source 1 Test Radio Radio True True True 68 Volume 68
 Source 3 Test Songcast Receiver True True True 68 Volume 68
 Sources end
 empty
-mock network update device 67 product source 0 name Test
+mock network update 67 product source 0 name Test
 expect Mock DS open Source 0 Test Playlist Playlist True True True 68 Volume 67 68
 expect Mock DS open 
 Senders begin
@@ -192,7 +192,7 @@ Sources end
 empty
 
 // test toggling Mock DS source visibility
-mock network update device 67 product source 0 visible false
+mock network update 67 product source 0 visible false
 expect Mock DS open Source 0 Test Playlist Playlist True True True 68 Volume 67 68
 expect Mock DS open 
 Senders begin
@@ -208,7 +208,7 @@ Source 1 Mock DS Radio Radio True True True 67 Volume 67
 Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 Sources end
 empty
-mock network update device 67 product source 0 visible true
+mock network update 67 product source 0 visible true
 expect Mock DS open Source 0 Test Playlist Playlist True True True 68 Volume 67 68
 expect Mock DS open 
 Senders begin
@@ -226,7 +226,7 @@ Sources end
 empty
 
 // test toggling Test source visibility
-mock network update device 68 product source 1 visible false
+mock network update 68 product source 1 visible false
 expect Mock DS open Source 0 Test Playlist Playlist True True True 68 Volume 67 68
 expect Mock DS open 
 Senders begin
@@ -241,7 +241,7 @@ Source 1 Mock DS Radio Radio True True True 67 Volume 67
 Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 Sources end
 empty
-mock network update device 68 product source 1 visible true
+mock network update 68 product source 1 visible true
 expect Mock DS open Source 0 Test Playlist Playlist True True True 68 Volume 67 68
 expect Mock DS open 
 Senders begin
@@ -259,33 +259,33 @@ Sources end
 empty
 
 // change ds 68's selected source
-mock network update device 68 product sourceindex 1
+mock network update 68 product sourceindex 1
 expect Mock DS update Source 1 Test Radio Radio True True True 68 Volume 67 68
 empty
-mock network update device 68 product sourceindex 2
+mock network update 68 product sourceindex 2
 expect Mock DS update Source 2 Test UPnP AV UpnpAv False True True 68 Volume 67 68
 empty
-mock network update device 68 product sourceindex 3
+mock network update 68 product sourceindex 3
 expect Mock DS update Source 3 Test Songcast Receiver True True True 68 Volume 67 68
 empty
 
 // change ds 67's selected source
-mock network update device 67 product sourceindex 1
+mock network update 67 product sourceindex 1
 expect Mock DS update Source 1 Mock DS Radio Radio True True True 67 Volume 67
 empty
-mock network update device 67 product sourceindex 2
+mock network update 67 product sourceindex 2
 expect Mock DS update Source 2 Mock DS UPnP AV UpnpAv False True True 67 Volume 67
 empty
-mock network update device 67 product sourceindex 3
+mock network update 67 product sourceindex 3
 expect Mock DS update Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 empty
 
 // test current source is not updated when changing ds 68's source index when ds 67's source index has not been expanded by ds 68's sources
-mock network update device 68 product sourceindex 0
+mock network update 68 product sourceindex 0
 empty
 
 // test breaking link by changing ds 68's name
-mock network update device 68 product name My DS
+mock network update 68 product name My DS
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
@@ -309,7 +309,7 @@ empty
 
 // test reforming the link by changing ds 68's name - note that the Current source of the root is not updated
 // because this change causes there to be 1 root (ds 67) and its source index is not expanded
-mock network update device 68 product name Test
+mock network update 68 product name Test
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
@@ -327,7 +327,7 @@ Sources end
 empty
 
 // test breaking the link by changing ds 67's source name
-mock network update device 67 product source 0 name Playlist
+mock network update 67 product source 0 name Playlist
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
@@ -350,7 +350,7 @@ Sources end
 empty
 
 // reform link of 67 and 68
-mock network update device 67 product source 0 name Test
+mock network update 67 product source 0 name Test
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
@@ -367,7 +367,7 @@ Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 Sources end
 empty
 
-mock network remove device 67
+mock network remove 67
 expect Test open Source 0 Test Playlist Playlist True True True 68 Volume 68
 expect Test open 
 Senders begin
@@ -382,10 +382,10 @@ Sources end
 empty
 
 // remove Time service for 67
-mock network update device 67 product attributes Info Volume Sender
+mock network update 67 product attributes Info Volume Sender
 empty
 
-mock network add device 67
+mock network add 67
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True False 67 Volume 67
 expect Mock DS open 
 Senders begin
@@ -402,7 +402,7 @@ Source 3 Mock DS Songcast Receiver True True False 67 Volume 67
 Sources end
 empty
 
-mock network remove device 67
+mock network remove 67
 expect Test open Source 0 Test Playlist Playlist True True True 68 Volume 68
 expect Test open 
 Senders begin
@@ -417,10 +417,10 @@ Sources end
 empty
 
 // remove Info service from 67
-mock network update device 67 product attributes Volume Sender
+mock network update 67 product attributes Volume Sender
 empty
 
-mock network add device 67
+mock network add 67
 expect Mock DS open Source 3 Mock DS Songcast Receiver True False False 67 Volume 67
 expect Mock DS open 
 Senders begin
@@ -437,7 +437,7 @@ Source 3 Mock DS Songcast Receiver True False False 67 Volume 67
 Sources end
 empty
 
-mock network remove device 67
+mock network remove 67
 expect Test open Source 0 Test Playlist Playlist True True True 68 Volume 68
 expect Test open 
 Senders begin
@@ -452,10 +452,10 @@ Sources end
 empty
 
 // re-add Info and Time services and remove Volume service from 67
-mock network update device 67 product attributes Info Time Sender
+mock network update 67 product attributes Info Time Sender
 empty
 
-mock network add device 67
+mock network add 67
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume
 expect Mock DS open 
 Senders begin
@@ -472,7 +472,7 @@ Source 3 Mock DS Songcast Receiver True True True 67 Volume
 Sources end
 empty
 
-mock network remove device 68
+mock network remove 68
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume
 expect Mock DS open 
 Senders begin
@@ -487,10 +487,10 @@ Sources end
 empty
 
 // remove Volume service from 68
-mock network update device 68 product attributes Info Time Sender
+mock network update 68 product attributes Info Time Sender
 empty
 
-mock network add device 68
+mock network add 68
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume
 expect Mock DS open 
 Senders begin
@@ -507,7 +507,7 @@ Source 3 Mock DS Songcast Receiver True True True 67 Volume
 Sources end
 empty
 
-mock network remove device 67
+mock network remove 67
 expect Test open Source 0 Test Playlist Playlist True True True 68 Volume
 expect Test open 
 Senders begin
@@ -522,10 +522,10 @@ Sources end
 empty
 
 // add Volume service to 67
-mock network update device 67 product attributes Info Time Volume Sender
+mock network update 67 product attributes Info Time Volume Sender
 empty
 
-mock network add device 67
+mock network add 67
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
@@ -542,7 +542,7 @@ Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 Sources end
 empty
 
-mock network remove device 68
+mock network remove 68
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
@@ -557,10 +557,10 @@ Sources end
 empty
 
 // add Volume service to 68
-mock network update device 68 product attributes Info Time Volume Sender
+mock network update 68 product attributes Info Time Volume Sender
 empty
 
-mock network add device 68
+mock network add 68
 expect Mock DS open Source 3 Mock DS Songcast Receiver True True True 67 Volume 67
 expect Mock DS open 
 Senders begin
@@ -578,7 +578,7 @@ Sources end
 empty
 
 // disable sender on 68
-mock network update device 68 sender status Disabled
+mock network update 68 sender status Disabled
 expect Mock DS update 
 Senders begin
 Sender Mock DS
@@ -586,7 +586,7 @@ Senders end
 empty
 
 // enable sender on 68
-mock network update device 68 sender status Enabled
+mock network update 68 sender status Enabled
 expect Mock DS update 
 Senders begin
 Sender Mock DS

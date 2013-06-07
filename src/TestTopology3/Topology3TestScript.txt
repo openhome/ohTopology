@@ -14,13 +14,13 @@ empty
 
 // test room and group is added when ds appears on network
 mock network create ds 67
-mock network add device 67
+mock network add 67
 expect Room Added Main Room
 expect Main Room add 67
 empty
 
 // test group moves room when room name changes
-mock network update device 67 product room Bathroom
+mock network update 67 product room Bathroom
 expect Main Room remove 67
 expect Room Removed Main Room
 expect Room Added Bathroom
@@ -29,20 +29,20 @@ empty
 
 // test group is added to existing room and no new room is created
 mock network create ds 68
-mock network add device 68
+mock network add 68
 expect Room Added Main Room
 expect Main Room add 68
 empty
-mock network update device 68 product room Bathroom
+mock network update 68 product room Bathroom
 expect Main Room remove 68
 expect Room Removed Main Room
 expect Bathroom add 68
 empty
 
 // test room is remove when last group is removed
-mock network remove device 67
+mock network remove 67
 expect Bathroom remove 67
-mock network remove device 68
+mock network remove 68
 expect Bathroom remove 68
 expect Room Removed Bathroom
 empty
