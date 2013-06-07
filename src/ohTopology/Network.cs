@@ -171,123 +171,55 @@ namespace OpenHome.Av
                 {
                     IEnumerable<string> value = aValue.Skip(1);
 
-                    string type = value.First();
+                    string udn = value.First();
 
-                    if (type == "device")
+                    Device device;
+                    if (iMockDevices.TryGetValue(udn, out device))
                     {
-                        value = value.Skip(1);
-
-                        string udn = value.First();
-
-                        Device device;
-                        if (iMockDevices.TryGetValue(udn, out device))
-                        {
-                            iNetwork.Add(device);
-                            return;
-                        }
+                        iNetwork.Add(device);
+                        return;
                     }
                 }
                 else if (command == "remove")
                 {
                     IEnumerable<string> value = aValue.Skip(1);
 
-                    string type = value.First();
+                    string udn = value.First();
 
-                    if (type == "device")
+                    Device device;
+                    if (iMockDevices.TryGetValue(udn, out device))
                     {
-                        value = value.Skip(1);
-
-                        string udn = value.First();
-
-                        Device device;
-                        if (iMockDevices.TryGetValue(udn, out device))
-                        {
-                            iNetwork.Remove(device);
-                            return;
-                        }
+                        iNetwork.Remove(device);
+                        return;
                     }
                 }
                 else if (command == "destroy")
                 {
                     IEnumerable<string> value = aValue.Skip(1);
 
-                    string type = value.First();
+                    string udn = value.First();
 
-                    if (type == "device")
+                    Device device;
+                    if (iMockDevices.TryGetValue(udn, out device))
                     {
-                        value = value.Skip(1);
-
-                        string udn = value.First();
-
-                        Device device;
-                        if (iMockDevices.TryGetValue(udn, out device))
-                        {
-                            iNetwork.Remove(device);
-                            iMockDevices.Remove(device.Udn);
-                            device.Dispose();
-                            return;
-                        }
-                    }
-                }
-                else if (command == "add")
-                {
-                    IEnumerable<string> value = aValue.Skip(1);
-
-                    string type = value.First();
-
-                    if (type == "device")
-                    {
-                        value = value.Skip(1);
-
-                        string udn = value.First();
-
-                        Device device;
-                        if (iMockDevices.TryGetValue(udn, out device))
-                        {
-                            iNetwork.Add(device);
-                            return;
-                        }
-                    }
-                }
-                else if (command == "remove")
-                {
-                    IEnumerable<string> value = aValue.Skip(1);
-
-                    string type = value.First();
-
-                    if (type == "device")
-                    {
-                        value = value.Skip(1);
-
-                        string udn = value.First();
-
-                        Device device;
-                        if (iMockDevices.TryGetValue(udn, out device))
-                        {
-                            iNetwork.Remove(device);
-                            return;
-                        }
+                        iNetwork.Remove(device);
+                        iMockDevices.Remove(device.Udn);
+                        device.Dispose();
+                        return;
                     }
                 }
                 else if (command == "update")
                 {
                     IEnumerable<string> value = aValue.Skip(1);
 
-                    string type = value.First();
+                    string udn = value.First();
 
-                    if (type == "device")
+                    Device device;
+
+                    if (iMockDevices.TryGetValue(udn, out device))
                     {
-                        value = value.Skip(1);
-
-                        string udn = value.First();
-
-                        Device device;
-
-                        if (iMockDevices.TryGetValue(udn, out device))
-                        {
-                            device.Execute(value.Skip(1));
-                            return;
-                        }
+                        device.Execute(value.Skip(1));
+                        return;
                     }
                 }
 
