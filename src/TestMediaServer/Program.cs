@@ -37,6 +37,7 @@ namespace TestMediaServer
             Do.Assert(iProxy.SupportsBrowse());
             Do.Assert(iProxy.SupportsLink());
             Do.Assert(iProxy.SupportsLink(iNetwork.TagManager.Audio.Artist));
+            Do.Assert(iProxy.SupportsLink(iNetwork.TagManager.Audio.Album));
             Do.Assert(iProxy.SupportsLink(iNetwork.TagManager.Audio.Genre));
 
             var session = iProxy.CreateSession().Result;
@@ -319,6 +320,34 @@ namespace TestMediaServer
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Track].Value == "1");
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Title].Value == "Livin' on a prayer");
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Duration].Value == "251");
+
+            // check album link
+
+            var linkAlbumTracks = session.Link(iNetwork.TagManager.Audio.Album, "4207").Result;
+
+            iNetwork.Execute(() =>
+            {
+                linkAlbumTracks.Snapshot.AddWatcher(this);
+            });
+
+            iNetwork.Execute(() =>
+            {
+                linkAlbumTracks.Snapshot.RemoveWatcher(this);
+            });
+
+            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Total == 18);
+
+            fragment = iSnaphot.Read(0, 1).Result;
+
+            Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Artist].Value == "Blur");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumTitle].Value == "The Best Of");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumArtist].Value == "Blur");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumDiscs].Value == "1");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Track].Value == "1");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Title].Value == "Beetlebum");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Duration].Value == "305");
 
             // check genre link
 

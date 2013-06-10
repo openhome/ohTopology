@@ -331,6 +331,11 @@ namespace OpenHome.Av
                 return (BrowseArtistAlbums(aValue));
             }
 
+            if (aTag == iNetwork.TagManager.Audio.Album)
+            {
+                return (BrowseAlbumTracks(aValue));
+            }
+
             if (aTag == iNetwork.TagManager.Audio.Genre)
             {
                 return (BrowseGenreTracks(aValue));
