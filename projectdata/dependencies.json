@@ -2,7 +2,7 @@
     {   "name": "ohNet",
         "type": "openhome",
         "platform-specific": true,
-        "version": "1.0.525",
+        "version": "1.0.715",
         "archive-suffix": "-${titlecase-debugmode}",
         "configure-args": [
             "--ohnet-lib-dir", "${dest}${name}-${platform}-${titlecase-debugmode}/lib",
