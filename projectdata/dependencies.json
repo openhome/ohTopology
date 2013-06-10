@@ -16,7 +16,7 @@
 	{   "name": "ohNet-AnyPlatform",
         "type": "openhome",
         "platform-specific": true,
-        "version": "1.0.525",
+        "version": "1.0.715",
         "archive-suffix": "-Release",
 		"archive-directory": "${binary-repo}/ohNet/",
         "archive-filename": "${archive-prefix}ohNet-${version}-${archive-platform}${archive-suffix}${archive-extension}",
