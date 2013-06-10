@@ -304,6 +304,8 @@ namespace ShowMediaServers
                 Console.WriteLine(e);
             }
 
+            Console.WriteLine("Closed");
+
             Console.ReadKey();
         }
     }

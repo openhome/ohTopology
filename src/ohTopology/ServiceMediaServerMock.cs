@@ -255,11 +255,6 @@ namespace OpenHome.Av
 
         // IMediaServerSession
 
-        public Task<IWatchableContainer<IMediaDatum>> Query(string aValue)
-        {
-            throw new NotImplementedException();
-        }
-
         public Task<IWatchableContainer<IMediaDatum>> Browse(IMediaDatum aDatum)
         {
             if (aDatum == null)
@@ -327,6 +322,26 @@ namespace OpenHome.Av
             var genre = aDatum[iNetwork.TagManager.Audio.Genre].Value;
 
             return (BrowseGenreTracks(genre));
+        }
+
+        public Task<IWatchableContainer<IMediaDatum>> Link(ITag aTag, string aValue)
+        {
+            if (aTag == iNetwork.TagManager.Audio.Artist)
+            {
+                return (BrowseArtistAlbums(aValue));
+            }
+
+            if (aTag == iNetwork.TagManager.Audio.Genre)
+            {
+                return (BrowseGenreTracks(aValue));
+            }
+
+            return (null);
+        }
+
+        public Task<IWatchableContainer<IMediaDatum>> Query(string aValue)
+        {
+            throw new NotImplementedException();
         }
 
         // Disposable

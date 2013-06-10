@@ -34,8 +34,10 @@ namespace TestMediaServer
 
         public void Run()
         {
-            Do.Assert(iProxy.SupportsQuery());
             Do.Assert(iProxy.SupportsBrowse());
+            Do.Assert(iProxy.SupportsLink());
+            Do.Assert(iProxy.SupportsLink(iNetwork.TagManager.Audio.Artist));
+            Do.Assert(iProxy.SupportsLink(iNetwork.TagManager.Audio.Genre));
 
             var session = iProxy.CreateSession().Result;
             
@@ -250,6 +252,86 @@ namespace TestMediaServer
             iNetwork.Execute(() =>
             {
                 genreTracks.Snapshot.RemoveWatcher(this);
+            });
+
+            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Total == 16);
+
+            fragment = iSnaphot.Read(0, 1).Result;
+
+            Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Artist].Value == "House of Pain");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumTitle].Value == "House of Pain");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumArtist].Value == "House of Pain");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumDiscs].Value == "1");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Track].Value == "15");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Title].Value == "All My Love");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Duration].Value == "201");
+
+            // check artist link
+
+            var linkArtistAlbums = session.Link(iNetwork.TagManager.Audio.Artist, "Bon Jovi").Result;
+
+            iNetwork.Execute(() =>
+            {
+                linkArtistAlbums.Snapshot.AddWatcher(this);
+            });
+
+            iNetwork.Execute(() =>
+            {
+                linkArtistAlbums.Snapshot.RemoveWatcher(this);
+            });
+
+            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Total == 2);
+
+            fragment = iSnaphot.Read(0, 1).Result;
+
+            Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 1);
+            Do.Assert(fragment.Data.ElementAt(0).Type.ElementAt(0) == iNetwork.TagManager.Audio.Album);
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Artist].Value == "Bon Jovi");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumTitle].Value == "Crossroad");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumArtist].Value == "Bon Jovi");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumDiscs].Value == "1");
+
+            var linkArtistAlbumTracks = session.Browse(fragment.Data.ElementAt(0)).Result;
+
+            iNetwork.Execute(() =>
+            {
+                linkArtistAlbumTracks.Snapshot.AddWatcher(this);
+            });
+
+            iNetwork.Execute(() =>
+            {
+                linkArtistAlbumTracks.Snapshot.RemoveWatcher(this);
+            });
+
+            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Total == 15);
+
+            fragment = iSnaphot.Read(0, 1).Result;
+
+            Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Artist].Value == "Bon Jovi");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumTitle].Value == "Crossroad");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumArtist].Value == "Bon Jovi");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumDiscs].Value == "1");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Track].Value == "1");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Title].Value == "Livin' on a prayer");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Duration].Value == "251");
+
+            // check genre link
+
+            var linkGenreTracks = session.Link(iNetwork.TagManager.Audio.Genre, "Rap/R & B").Result;
+
+            iNetwork.Execute(() =>
+            {
+                linkGenreTracks.Snapshot.AddWatcher(this);
+            });
+
+            iNetwork.Execute(() =>
+            {
+                linkGenreTracks.Snapshot.RemoveWatcher(this);
             });
 
             Do.Assert(iSnaphot.AlphaMap == null);
