@@ -64,7 +64,7 @@ namespace OpenHome.Av
             iHttpFramework.AddHttpHandler("audio", HandleRequestAudio);
             iHttpFramework.Open();
 
-            Add<IProxyMediaServer>(new ServiceMediaServerMock(aNetwork, new string[] {"Browse", "Link", "Link:audio.artist", "Link:audio.album", "Link:audio.genre"},
+            Add<IProxyMediaServer>(new ServiceMediaServerMock(aNetwork, new string[] {"Browse", "Link", "Link:audio.artist", "Link:audio.album", "Link:audio.genre", "Search"},
                 "", "OpenHome", "OpenHome", "http://www.openhome.org",
                 "", "OpenHome", "OpenHome", "http://www.openhome.org",
                 "", "OpenHome", "OpenHome", "http://www.openhome.org",

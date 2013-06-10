@@ -18,6 +18,7 @@ namespace OpenHome.Av
     {
         Task<IWatchableContainer<IMediaDatum>> Browse(IMediaDatum aDatum); // null = home
         Task<IWatchableContainer<IMediaDatum>> Link(ITag aTag, string aValue);
+        Task<IWatchableContainer<IMediaDatum>> Search(string aValue);
         Task<IWatchableContainer<IMediaDatum>> Query(string aValue);
     }
 
@@ -242,6 +243,11 @@ namespace OpenHome.Av
         {
             var value = string.Format("Link:{0}", aTag.FullName);
             return (aProxy.Attributes.Contains(value));
+        }
+
+        public static bool SupportsSearch(this IProxyMediaServer aProxy)
+        {
+            return (aProxy.Attributes.Contains("Search"));
         }
 
         public static bool SupportsQuery(this IProxyMediaServer aProxy)

@@ -219,6 +219,11 @@ namespace OpenHome.Av
             throw new NotImplementedException();
         }
 
+        public Task<IWatchableContainer<IMediaDatum>> Search(string aValue)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<IWatchableContainer<IMediaDatum>> Query(string aValue)
         {
             throw new NotImplementedException();

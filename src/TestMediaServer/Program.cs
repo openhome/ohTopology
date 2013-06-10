@@ -39,6 +39,7 @@ namespace TestMediaServer
             Do.Assert(iProxy.SupportsLink(iNetwork.TagManager.Audio.Artist));
             Do.Assert(iProxy.SupportsLink(iNetwork.TagManager.Audio.Album));
             Do.Assert(iProxy.SupportsLink(iNetwork.TagManager.Audio.Genre));
+            Do.Assert(iProxy.SupportsSearch());
 
             var session = iProxy.CreateSession().Result;
             
@@ -376,6 +377,23 @@ namespace TestMediaServer
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Track].Value == "15");
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Title].Value == "All My Love");
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Duration].Value == "201");
+
+            // check search
+
+            var search = session.Search("Love").Result;
+
+            iNetwork.Execute(() =>
+            {
+                search.Snapshot.AddWatcher(this);
+            });
+
+            iNetwork.Execute(() =>
+            {
+                search.Snapshot.RemoveWatcher(this);
+            });
+
+            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Total == 556);
 
             session.Dispose();
         }
