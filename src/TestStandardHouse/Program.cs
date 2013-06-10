@@ -23,20 +23,24 @@ namespace TestLinnHouse
         class RoomControllerWatcher : IDisposable
         {
             private ITagManager iTagManager;
+            private IStandardHouse iHouse;
             private ResultWatcherFactory iFactory;
             private IStandardRoomController iController;
             private IStandardRoomTime iTime;
             private StandardRoomWatcherExternal iWatcherExternal;
             private StandardRoomWatcherRadio iWatcherRadio;
+            private StandardRoomWatcherMusic iWatcherMusic;
 
-            public RoomControllerWatcher(ITagManager aTagManager, MockableScriptRunner aRunner, IStandardRoom aRoom)
+            public RoomControllerWatcher(ITagManager aTagManager, IStandardHouse aHouse, MockableScriptRunner aRunner, IStandardRoom aRoom)
             {
                 iTagManager = aTagManager;
+                iHouse = aHouse;
                 iFactory = new ResultWatcherFactory(aRunner);
                 iController = new StandardRoomController(aRoom);
                 iTime = new StandardRoomTime(aRoom);
                 iWatcherExternal = new StandardRoomWatcherExternal(aRoom);
                 iWatcherRadio = new StandardRoomWatcherRadio(aRoom);
+                iWatcherMusic = new StandardRoomWatcherMusic(iHouse, aRoom);
 
                 iFactory.Create<bool>(iController.Name, iController.Active, v => "Controller Active " + v);
                 iFactory.Create<bool>(iController.Name, iController.HasVolume, v => "HasVolume " + v);
@@ -102,6 +106,11 @@ namespace TestLinnHouse
 
                     return "Presets Enabled " + v;
                 });
+
+                iFactory.Create<bool>(iWatcherMusic.Name, iWatcherMusic.Enabled, v =>
+                {
+                    return "Music Enabled " + v;
+                });
             }
 
             public void Dispose()
@@ -111,14 +120,16 @@ namespace TestLinnHouse
                 iTime.Dispose();
                 iWatcherExternal.Dispose();
                 iWatcherRadio.Dispose();
+                iWatcherMusic.Dispose();
             }
         }
 
         class RoomWatcher : IOrderedWatcher<IStandardRoom>, IDisposable
         {
-            public RoomWatcher(ITagManager aTagManager, MockableScriptRunner aRunner)
+            public RoomWatcher(ITagManager aTagManager, IStandardHouse aHouse, MockableScriptRunner aRunner)
             {
                 iTagManager = aTagManager;
+                iHouse = aHouse;
                 iRunner = aRunner;
                 iFactory = new ResultWatcherFactory(aRunner);
 
@@ -156,7 +167,7 @@ namespace TestLinnHouse
                 iFactory.Create<RoomMetatext>(aItem.Name, aItem.Metatext, v => "Metatext " + v.Enabled + " " + v.Metatext);
                 iFactory.Create<IZone>(aItem.Name, aItem.Zone, v => "Zone " + v.Active + " " + ((v.Sender == null) ? "" : v.Sender.Udn));
 
-                iWatcherLookup.Add(aItem, new RoomControllerWatcher(iTagManager, iRunner, aItem));
+                iWatcherLookup.Add(aItem, new RoomControllerWatcher(iTagManager, iHouse, iRunner, aItem));
             }
 
             public void OrderedMove(IStandardRoom aItem, uint aFrom, uint aTo)
@@ -174,6 +185,7 @@ namespace TestLinnHouse
             }
 
             private ITagManager iTagManager;
+            private IStandardHouse iHouse;
             private MockableScriptRunner iRunner;
             private ResultWatcherFactory iFactory;
             private Dictionary<IStandardRoom, RoomControllerWatcher> iWatcherLookup;
@@ -206,7 +218,7 @@ namespace TestLinnHouse
 
             MockableScriptRunner runner = new MockableScriptRunner();
 
-            RoomWatcher watcher = new RoomWatcher(network.TagManager, runner);
+            RoomWatcher watcher = new RoomWatcher(network.TagManager, house, runner);
             thread.Schedule(() =>
             {
                 house.Rooms.AddWatcher(watcher);

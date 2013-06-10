@@ -120,7 +120,6 @@ namespace OpenHome.Av
         {
             iHouse = aHouse;
             iServerCount = 0;
-            iHasCompatibleSource = false;
 
             iHouse.Servers.AddWatcher(this);
         }
@@ -182,10 +181,12 @@ namespace OpenHome.Av
 
         private void EvaluateEnabled(IEnumerable<ITopology4Source> aValue)
         {
+            SetEnabled(false);
+
             iHasCompatibleSource = false;
             foreach (ITopology4Source s in aValue)
             {
-                if (s.Type == "Playlist" || s.Type == "Radio")
+                if (s.Type == "Playlist")
                 {
                     s.Device.Create<IProxyPlaylist>((playlist) =>
                     {
@@ -196,8 +197,6 @@ namespace OpenHome.Av
                     return;
                 }
             }
-
-            SetEnabled(false);
         }
 
         public void OrderedOpen()
