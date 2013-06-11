@@ -420,6 +420,10 @@ namespace OpenHome.Av
             {
                 try
                 {
+                    if (aSource.Name.Length == 4)
+                    {
+                        return false;
+                    }
                     uint.Parse(aSource.Name.Substring(4));
                     return false;
                 }
@@ -432,6 +436,10 @@ namespace OpenHome.Av
             {
                 try
                 {
+                    if (aSource.Name.Length == 6)
+                    {
+                        return false;
+                    }
                     uint.Parse(aSource.Name.Substring(6));
                     return false;
                 }
@@ -440,10 +448,14 @@ namespace OpenHome.Av
                     return true;
                 }
             }
-            if (aSource.Name.StartsWith("SPDIF"))
+            if (aSource.Name.StartsWith("SPDIF") || aSource.Name.StartsWith("Spdif"))
             {
                 try
                 {
+                    if (aSource.Name.Length == 5)
+                    {
+                        return false;
+                    }
                     uint.Parse(aSource.Name.Substring(5));
                     return false;
                 }
@@ -452,10 +464,14 @@ namespace OpenHome.Av
                     return true;
                 }
             }
-            if (aSource.Name.StartsWith("TOSLINK"))
+            if (aSource.Name.StartsWith("TOSLINK") || aSource.Name.StartsWith("Toslink"))
             {
                 try
                 {
+                    if (aSource.Name.Length == 7)
+                    {
+                        return false;
+                    }
                     uint.Parse(aSource.Name.Substring(7));
                     return false;
                 }
