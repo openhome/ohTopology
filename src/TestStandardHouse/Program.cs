@@ -59,7 +59,7 @@ namespace TestLinnHouse
                     IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
                     foreach (IMediaPreset p in fragment.Data)
                     {
-                        info += p.Metadata[iTagManager.Container.Title].Value + "\n";
+                        info += p.Metadata[iTagManager.Audio.Title].Value + "\n";
                     }
                     info += "Unconfigured source end";
                     return info;
@@ -70,7 +70,7 @@ namespace TestLinnHouse
                     IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
                     foreach (IMediaPreset p in fragment.Data)
                     {
-                        info += p.Metadata[iTagManager.Container.Title].Value + "\n";
+                        info += p.Metadata[iTagManager.Audio.Title].Value + "\n";
                     }
                     info += "Configured source end";
                     return info;
