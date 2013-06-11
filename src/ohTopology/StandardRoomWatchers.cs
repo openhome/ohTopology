@@ -9,7 +9,7 @@ namespace OpenHome.Av
 {
     public interface IStandardRoomWatcher : IDisposable
     {
-        string Name { get; }
+        IStandardRoom Room { get; }
         IWatchable<bool> Enabled { get; }
     }
 
@@ -45,11 +45,11 @@ namespace OpenHome.Av
             iRoom = null;
         }
 
-        public string Name
+        public IStandardRoom Room
         {
             get
             {
-                return iRoom.Name;
+                return iRoom;
             }
         }
 

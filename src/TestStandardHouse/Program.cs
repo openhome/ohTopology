@@ -44,7 +44,7 @@ namespace TestLinnHouse
                 iFactory.Create<uint>(iTime.Name, iTime.Duration, v => "Duration " + v);
                 iFactory.Create<uint>(iTime.Name, iTime.Seconds, v => "Seconds " + v);
 
-                iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Name, iWatcherExternal.Unconfigured.Snapshot, v =>
+                iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Unconfigured.Snapshot, v =>
                 {
                     string info = "\nUnconfigured source begin\n";
                     IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
@@ -55,7 +55,7 @@ namespace TestLinnHouse
                     info += "Unconfigured source end";
                     return info;
                 });
-                iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Name, iWatcherExternal.Configured.Snapshot, v =>
+                iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Configured.Snapshot, v =>
                 {
                     string info = "\nConfigured source begin\n";
                     IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
@@ -67,12 +67,12 @@ namespace TestLinnHouse
                     return info;
                 });
 
-                iFactory.Create<bool>(iWatcherRadio.Name, iWatcherRadio.Enabled, v =>
+                iFactory.Create<bool>(iWatcherRadio.Room.Name, iWatcherRadio.Enabled, v =>
                 {
                     if (v)
                     {
                         IWatchableContainer<IMediaPreset> container = iWatcherRadio.Container.Result;
-                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherRadio.Name, container.Snapshot, w =>
+                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherRadio.Room.Name, container.Snapshot, w =>
                         {
                             string info = "\nPresets begin\n";
                             IWatchableFragment<IMediaPreset> fragment = w.Read(0, w.Total).Result;
@@ -97,7 +97,7 @@ namespace TestLinnHouse
                     return "Presets Enabled " + v;
                 });
 
-                iFactory.Create<bool>(iWatcherMusic.Name, iWatcherMusic.Enabled, v =>
+                iFactory.Create<bool>(iWatcherMusic.Room.Name, iWatcherMusic.Enabled, v =>
                 {
                     return "Music Enabled " + v;
                 });
