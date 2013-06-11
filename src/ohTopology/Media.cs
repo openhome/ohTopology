@@ -7,7 +7,6 @@ using System.IO;
 using System.Xml;
 
 using OpenHome.Os.App;
-using OpenHome.MediaServer;
 
 namespace OpenHome.Av
 {

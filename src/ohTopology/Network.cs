@@ -5,7 +5,6 @@ using System.Collections;
 
 using OpenHome.Os;
 using OpenHome.Os.App;
-using OpenHome.MediaServer;
 using OpenHome.Net.ControlPoint;
 
 namespace OpenHome.Av
@@ -244,42 +243,26 @@ namespace OpenHome.Av
 
     public class Network : INetwork
     {
-        private object iLock;
-
         protected readonly IWatchableThread iThread;
 
+        private readonly DisposeHandler iDisposeHandler;
         private readonly ITagManager iTagManager;
-
-        private List<Device> iDevices;
-        private Dictionary<Type, WatchableUnordered<IDevice>> iDeviceLists;
+        private readonly List<Device> iDevices;
+        private readonly Dictionary<Type, WatchableUnordered<IDevice>> iDeviceLists;
 
         public Network(IWatchableThread aThread)
         {
-            iLock = new object();
-
             iThread = aThread;
 
+            iDisposeHandler = new DisposeHandler();
             iTagManager = new TagManager();
             iDevices = new List<Device>();
             iDeviceLists = new Dictionary<Type, WatchableUnordered<IDevice>>();
         }
 
-        public void Dispose()
-        {
-            iDevices.Clear();
-            iDevices = null;
-
-            foreach (WatchableUnordered<IDevice> l in iDeviceLists.Values)
-            {
-                l.Dispose();
-            }
-            iDeviceLists.Clear();
-            iDeviceLists = null;
-        }
-
         public void Add(Device aDevice)
         {
-            lock (iLock)
+            using (iDisposeHandler.Lock)
             {
                 iDevices.Add(aDevice);
 
@@ -295,7 +278,7 @@ namespace OpenHome.Av
 
         public void Remove(Device aDevice)
         {
-            lock (iLock)
+            using (iDisposeHandler.Lock)
             {
                 iDevices.Remove(aDevice);
 
@@ -311,7 +294,7 @@ namespace OpenHome.Av
 
         public IWatchableUnordered<IDevice> Create<T>() where T : IProxy
         {
-            lock (iLock)
+            using (iDisposeHandler.Lock)
             {
                 Type key = typeof(T);
 
@@ -340,9 +323,14 @@ namespace OpenHome.Av
         {
             get
             {
-                return (iTagManager);
+                using (iDisposeHandler.Lock)
+                {
+                    return (iTagManager);
+                }
             }
         }
+
+        // IWatchableThread
 
         public void Assert()
         {
@@ -366,36 +354,29 @@ namespace OpenHome.Av
             while (!complete)
             {
                 Device[] devices = null;
-                lock (iLock)
+
+                using (iDisposeHandler.Lock)
                 {
                     devices = iDevices.ToArray();
                 }
-                foreach (Device d in devices)
+                foreach (Device device in devices)
                 {
-                    complete |= d.Wait();
+                    complete |= device.Wait();
                 }
 
                 iThread.Wait();
             }
         }
 
-        public void Wait(Action aAction)
+        // IDisposable
+
+        public void Dispose()
         {
-            bool complete = false;
+            iDisposeHandler.Dispose();
 
-            while (!complete)
+            foreach (WatchableUnordered<IDevice> list in iDeviceLists.Values)
             {
-                Device[] devices = null;
-                lock (iLock)
-                {
-                    devices = iDevices.ToArray();
-                }
-                foreach (Device d in devices)
-                {
-                    complete |= d.Wait();
-                }
-
-                iThread.Wait(aAction);
+                list.Dispose();
             }
         }
     }

@@ -8,7 +8,6 @@ using System.Xml;
 using System.Xml.Linq;
 
 using OpenHome.Os.App;
-using OpenHome.MediaServer;
 
 using OpenHome.Net.ControlPoint;
 using OpenHome.Net.ControlPoint.Proxies;

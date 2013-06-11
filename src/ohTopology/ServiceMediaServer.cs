@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using System.IO;
 
 using OpenHome.Os.App;
-using OpenHome.MediaServer;
 
 using OpenHome.Net.ControlPoint;
 using OpenHome.Net.ControlPoint.Proxies;

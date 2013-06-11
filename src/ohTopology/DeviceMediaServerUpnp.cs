@@ -16,7 +16,7 @@ using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
 
 using OpenHome.Os.App;
-using OpenHome.MediaServer;
+
 using OpenHome.Http;
 using OpenHome.Http.Owin;
 
