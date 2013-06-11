@@ -10,15 +10,6 @@ namespace TestZone
 {
     class Program
     {
-        class ExceptionReporter : IExceptionReporter
-        {
-            public void ReportException(Exception e)
-            {
-                Console.WriteLine(e);
-                Environment.Exit(-1);
-            }
-        }
-
         class RoomControllerWatcher : IDisposable
         {
             private ResultWatcherFactory iFactory;
@@ -116,12 +107,9 @@ namespace TestZone
                 return 1;
             }
 
-            ExceptionReporter reporter = new ExceptionReporter();
-            WatchableThread thread = new WatchableThread(reporter);
-
             Mockable mocker = new Mockable();
 
-            Network network = new Network(thread);
+            Network network = new Network();
             DeviceInjectorMock mockInjector = new DeviceInjectorMock(network);
             mocker.Add("network", mockInjector);
 
@@ -137,7 +125,8 @@ namespace TestZone
             MockableScriptRunner runner = new MockableScriptRunner();
 
             RoomWatcher watcher = new RoomWatcher(network.TagManager, runner);
-            thread.Schedule(() =>
+            
+            network.Schedule(() =>
             {
                 house.Rooms.AddWatcher(watcher);
             });
@@ -145,14 +134,13 @@ namespace TestZone
             try
             {
                 runner.Run(network, new StringReader(File.ReadAllText(args[0])), mocker);
-                //runner.Run(thread, Console.In, mocker);
             }
             catch (MockableScriptRunner.AssertError)
             {
                 return 1;
             }
 
-            thread.Execute(() =>
+            network.Execute(() =>
             {
                 house.Rooms.RemoveWatcher(watcher);
                 watcher.Dispose();
@@ -173,8 +161,6 @@ namespace TestZone
             mockInjector.Dispose();
 
             network.Dispose();
-
-            thread.Dispose();
 
             return 0;
         }

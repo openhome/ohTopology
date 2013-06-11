@@ -300,7 +300,7 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            iNetwork.Wait();
+            iNetwork.Execute();
             iWatchable.Dispose();
         }
     }

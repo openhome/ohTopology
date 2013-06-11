@@ -234,7 +234,7 @@ namespace OpenHome.Av
         }
     }
 
-    public interface INetwork : IWatchableThread, IDisposable
+    public interface INetwork : IMockThread, IDisposable
     {
         ITagManager TagManager { get; }
         IWatchableUnordered<IDevice> Create<T>() where T : IProxy;
@@ -243,16 +243,26 @@ namespace OpenHome.Av
 
     public class Network : INetwork
     {
-        protected readonly IWatchableThread iThread;
+        private readonly IMockThread iThread;
 
         private readonly DisposeHandler iDisposeHandler;
         private readonly ITagManager iTagManager;
         private readonly List<Device> iDevices;
         private readonly Dictionary<Type, WatchableUnordered<IDevice>> iDeviceLists;
 
-        public Network(IWatchableThread aThread)
+        public Network()
         {
-            iThread = aThread;
+            iThread = new MockThread();
+
+            iDisposeHandler = new DisposeHandler();
+            iTagManager = new TagManager();
+            iDevices = new List<Device>();
+            iDeviceLists = new Dictionary<Type, WatchableUnordered<IDevice>>();
+        }
+
+        public Network(IWatchableThread aWatchableThread)
+        {
+            iThread = new MockThreadAdapter(aWatchableThread);
 
             iDisposeHandler = new DisposeHandler();
             iTagManager = new TagManager();
@@ -347,6 +357,8 @@ namespace OpenHome.Av
             iThread.Execute(aAction);
         }
 
+        // IMockThread
+
         public void Wait()
         {
             bool complete = false;
@@ -359,6 +371,9 @@ namespace OpenHome.Av
                 {
                     devices = iDevices.ToArray();
                 }
+
+                // potential problems here if a device is disposed while it is in this shallow copy
+
                 foreach (Device device in devices)
                 {
                     complete |= device.Wait();
@@ -378,6 +393,8 @@ namespace OpenHome.Av
             {
                 list.Dispose();
             }
+
+            iThread.Dispose();
         }
     }
 }

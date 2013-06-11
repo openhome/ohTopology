@@ -10,15 +10,6 @@ namespace TestTopology4
 {
     class Program
     {
-        class ExceptionReporter : IExceptionReporter
-        {
-            public void ReportException(Exception e)
-            {
-                Console.WriteLine(e);
-                Environment.Exit(-1);
-            }
-        }
-
         class RootWatcher : IDisposable
         {
             public RootWatcher(MockableScriptRunner aRunner, ITopology4Root aRoot)
@@ -177,12 +168,9 @@ namespace TestTopology4
                 return 1;
             }
 
-            ExceptionReporter reporter = new ExceptionReporter();
-            WatchableThread thread = new WatchableThread(reporter);
-
             Mockable mocker = new Mockable();
 
-            Network network = new Network(thread);
+            Network network = new Network();
             DeviceInjectorMock mockInjector = new DeviceInjectorMock(network);
             mocker.Add("network", mockInjector);
 
@@ -195,7 +183,8 @@ namespace TestTopology4
             MockableScriptRunner runner = new MockableScriptRunner();
 
             HouseWatcher watcher = new HouseWatcher(runner);
-            thread.Schedule(() =>
+            
+            network.Schedule(() =>
             {
                 topology4.Rooms.AddWatcher(watcher);
             });
@@ -209,7 +198,7 @@ namespace TestTopology4
                 return 1;
             }
 
-            thread.Execute(() =>
+            network.Execute(() =>
             {
                 topology4.Rooms.RemoveWatcher(watcher);
                 watcher.Dispose();
@@ -228,8 +217,6 @@ namespace TestTopology4
             mockInjector.Dispose();
 
             network.Dispose();
-
-            thread.Dispose();
 
             return 0;
         }

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 
 using OpenHome.Os.App;
 
@@ -11,6 +13,190 @@ namespace OpenHome.Av
     public interface IMockable
     {
         void Execute(IEnumerable<string> aValue);
+    }
+
+    public interface IMockThread : IWatchableThread, IDisposable
+    {
+        void Wait();
+    }
+
+    public class MockThread : IMockThread
+    {
+        private readonly object iLock;
+        private readonly List<Exception> iExceptions;
+        private Task iTask;
+        private int iRunningTaskId;
+
+        public MockThread()
+        {
+            iLock = new object();
+            iExceptions = new List<Exception>();
+            iTask = Task.Factory.StartNew(() => { });
+        }
+
+        // IWatchableThread
+
+        public void Assert()
+        {
+            lock (iLock)
+            {
+                Do.Assert(Task.CurrentId == iRunningTaskId);
+            }
+        }
+
+        public void Schedule(Action aAction)
+        {
+            lock (iLock)
+            {
+                iTask = iTask.ContinueWith(t =>
+                {
+                    lock (iLock)
+                    {
+                        iRunningTaskId = Task.CurrentId.Value;
+                    }
+
+                    try
+                    {
+                        aAction();
+                    }
+                    catch (Exception e)
+                    {
+                        lock (iLock)
+                        {
+                            iExceptions.Add(e);
+                        }
+                    }
+                });
+            }
+        }
+
+        public void Execute(Action aAction)
+        {
+            Task wait = null;
+
+            lock (iLock)
+            {
+                if (Task.CurrentId == iRunningTaskId)
+                {
+                    aAction();
+                    return;
+                }
+
+                wait = iTask = iTask.ContinueWith(t =>
+                {
+                    lock (iLock)
+                    {
+                        iRunningTaskId = wait.Id;
+                    }
+
+                    try
+                    {
+                        aAction();
+                    }
+                    catch (Exception e)
+                    {
+                        lock (iLock)
+                        {
+                            iExceptions.Add(e);
+                        }
+                    }
+                });
+            }
+
+            wait.Wait();
+        }
+
+        // IMockThread
+
+        public void Wait()
+        {
+            bool complete = false;
+
+            while (!complete)
+            {
+                Task wait = null;
+
+                lock (iLock)
+                {
+                    if (Task.CurrentId == iRunningTaskId)
+                    {
+                        break; // ignore wait if issued from the watchable thread
+                    }
+
+                    wait = iTask = iTask.ContinueWith(t =>
+                    {
+                        lock (iLock)
+                        {
+                            iRunningTaskId = wait.Id;
+                        }
+
+                        lock (iLock)
+                        {
+                            complete = (iTask.Id == wait.Id);
+                        }
+                    });
+                }
+
+                wait.Wait();
+            }
+
+            lock (iLock)
+            {
+                if (iExceptions.Any())
+                {
+                    var exception = new AggregateException(iExceptions);
+                    iExceptions.Clear();
+                    throw (exception);
+                }
+            }
+        }
+
+        // IDisposable
+
+        public void Dispose()
+        {
+            Wait();
+        }
+    }
+
+    internal class MockThreadAdapter : IMockThread
+    {
+        private readonly IWatchableThread iWatchableThread;
+
+        public MockThreadAdapter(IWatchableThread aWatchableThread)
+        {
+            iWatchableThread = aWatchableThread;
+        }
+
+        // IWatchableThread
+
+        public void Assert()
+        {
+            iWatchableThread.Assert();
+        }
+
+        public void Execute(Action aAction)
+        {
+            iWatchableThread.Execute(aAction);
+        }
+
+        public void Schedule(Action aAction)
+        {
+            iWatchableThread.Schedule(aAction);
+        }
+
+        // IMockThread
+
+        public void Wait()
+        {
+            throw new NotImplementedException();
+        }
+
+        // IDisposable
+
+        public void Dispose()
+        {
+        }
     }
 
     public class Mockable : IMockable
@@ -82,7 +268,7 @@ namespace OpenHome.Av
             iResultQueue = new Queue<string>();
         }
 
-        public void Run(IWatchableThread aThread, TextReader aStream, IMockable aMockable)
+        public void Run(IMockThread aThread, TextReader aStream, IMockable aMockable)
         {
             bool wait = true;
 
@@ -125,7 +311,15 @@ namespace OpenHome.Av
                     {
                         if (wait)
                         {
-                            aThread.Wait();
+                            try
+                            {
+                                aThread.Wait();
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e);
+                            }
+
                             wait = false;
                         }
 
@@ -145,7 +339,15 @@ namespace OpenHome.Av
                     }
 					else if (command == "empty")
 					{
-                        aThread.Wait();
+                        try
+                        {
+                            aThread.Wait();
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
 						Assert(iResultQueue.Count == 0);
 					}
                     else if (command == "break")

@@ -10,15 +10,6 @@ namespace TestLinnHouse
 {
     class Program
     {
-        class ExceptionReporter : IExceptionReporter
-        {
-            public void ReportException(Exception e)
-            {
-                Console.WriteLine(e);
-                Environment.Exit(-1);
-            }
-        }
-
         class RoomControllerWatcher : IDisposable
         {
             private ITagManager iTagManager;
@@ -198,12 +189,9 @@ namespace TestLinnHouse
                 return 1;
             }
 
-            ExceptionReporter reporter = new ExceptionReporter();
-            WatchableThread thread = new WatchableThread(reporter);
-
             Mockable mocker = new Mockable();
 
-            Network network = new Network(thread);
+            Network network = new Network();
             DeviceInjectorMock mockInjector = new DeviceInjectorMock(network);
             mocker.Add("network", mockInjector);
 
@@ -218,7 +206,8 @@ namespace TestLinnHouse
             MockableScriptRunner runner = new MockableScriptRunner();
 
             RoomWatcher watcher = new RoomWatcher(network.TagManager, house, runner);
-            thread.Schedule(() =>
+
+            network.Schedule(() =>
             {
                 house.Rooms.AddWatcher(watcher);
             });
@@ -233,7 +222,7 @@ namespace TestLinnHouse
                 return 1;
             }
 
-            thread.Execute(() =>
+            network.Execute(() =>
             {
                 house.Rooms.RemoveWatcher(watcher);
                 watcher.Dispose();
@@ -254,8 +243,6 @@ namespace TestLinnHouse
             mockInjector.Dispose();
 
             network.Dispose();
-
-            thread.Dispose();
 
             return 0;
         }

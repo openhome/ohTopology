@@ -31,9 +31,6 @@
     <OutputPath>..\..\build\TestZone\bin\Release</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ohOs">
-      <HintPath>..\..\dependencies\AnyPlatform\ohOs\ohOs.dll</HintPath>
-    </Reference>
     <Reference Include="ohOs.App.V1">
       <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
     </Reference>

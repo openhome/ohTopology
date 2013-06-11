@@ -11,15 +11,6 @@ namespace TestTopology2
 {
     class Program
     {
-        class ExceptionReporter : IExceptionReporter
-        {
-            public void ReportException(Exception e)
-            {
-                Console.WriteLine(e);
-                Environment.Exit(-1);
-            }
-        }
-
         class GroupWatcher : IUnorderedWatcher<ITopology2Group>, IDisposable
         {
             public GroupWatcher(MockableScriptRunner aRunner)
@@ -77,12 +68,9 @@ namespace TestTopology2
                 return 1;
             }
 
-            ExceptionReporter reporter = new ExceptionReporter();
-            WatchableThread thread = new WatchableThread(reporter);
-
             Mockable mocker = new Mockable();
 
-            Network network = new Network(thread);
+            Network network = new Network();
             DeviceInjectorMock mockInjector = new DeviceInjectorMock(network);
             mocker.Add("network", mockInjector);
 
@@ -92,7 +80,8 @@ namespace TestTopology2
             MockableScriptRunner runner = new MockableScriptRunner();
 
             GroupWatcher watcher = new GroupWatcher(runner);
-            thread.Schedule(() =>
+            
+            network.Schedule(() =>
             {
                 topology2.Groups.AddWatcher(watcher);
             });
@@ -106,7 +95,7 @@ namespace TestTopology2
                 return 1;
             }
 
-            thread.Execute(() =>
+            network.Execute(() =>
             {
                 topology2.Groups.RemoveWatcher(watcher);
                 watcher.Dispose();
@@ -119,8 +108,6 @@ namespace TestTopology2
             mockInjector.Dispose();
 
             network.Dispose();
-
-            thread.Dispose();
 
             return 0;
         }

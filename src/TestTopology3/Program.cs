@@ -10,15 +10,6 @@ namespace TestTopology3
 {
     class Program
     {
-        class ExceptionReporter : IExceptionReporter
-        {
-            public void ReportException(Exception e)
-            {
-                Console.WriteLine(e);
-                Environment.Exit(-1);
-            }
-        }
-
         class RoomWatcher : IUnorderedWatcher<ITopology3Room>, IDisposable
         {
             private readonly MockableScriptRunner iRunner;
@@ -72,12 +63,9 @@ namespace TestTopology3
                 return 1;
             }
 
-            ExceptionReporter reporter = new ExceptionReporter();
-            WatchableThread thread = new WatchableThread(reporter);
-
             Mockable mocker = new Mockable();
 
-            Network network = new Network(thread);
+            Network network = new Network();
             DeviceInjectorMock mockInjector = new DeviceInjectorMock(network);
             mocker.Add("network", mockInjector);
 
@@ -89,7 +77,8 @@ namespace TestTopology3
             MockableScriptRunner runner = new MockableScriptRunner();
 
             RoomWatcher watcher = new RoomWatcher(runner);
-            thread.Schedule(() =>
+            
+            network.Schedule(() =>
             {
                 topology3.Rooms.AddWatcher(watcher);
             });
@@ -103,7 +92,7 @@ namespace TestTopology3
                 return 1;
             }
 
-            thread.Execute(() =>
+            network.Execute(() =>
             {
                 topology3.Rooms.RemoveWatcher(watcher);
                 watcher.Dispose();
@@ -120,8 +109,6 @@ namespace TestTopology3
             mockInjector.Dispose();
 
             network.Dispose();
-
-            thread.Dispose();
 
             return 0;
         }

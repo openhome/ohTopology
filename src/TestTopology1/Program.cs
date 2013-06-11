@@ -10,15 +10,6 @@ namespace TestTopology
 {
     class Program
     {
-        class ExceptionReporter : IExceptionReporter
-        {
-            public void ReportException(Exception e)
-            {
-                Console.WriteLine(e);
-                Environment.Exit(-1);
-            }
-        }
-
         class ProductWatcher : IUnorderedWatcher<IProxyProduct>
         {
             public ProductWatcher(MockableScriptRunner aRunner)
@@ -59,12 +50,9 @@ namespace TestTopology
                 return 1;
             }
 
-            ExceptionReporter reporter = new ExceptionReporter();
-            WatchableThread thread = new WatchableThread(reporter);
-
             Mockable mocker = new Mockable();
 
-            Network network = new Network(thread);
+            Network network = new Network();
             DeviceInjectorMock mockInjector = new DeviceInjectorMock(network);
             mocker.Add("network", mockInjector);
 
@@ -73,7 +61,8 @@ namespace TestTopology
             MockableScriptRunner runner = new MockableScriptRunner();
 
             ProductWatcher watcher = new ProductWatcher(runner);
-            thread.Schedule(() =>
+            
+            network.Schedule(() =>
             {
                 topology.Products.AddWatcher(watcher);
             });
@@ -87,7 +76,7 @@ namespace TestTopology
                 return 1;
             }
 
-            thread.Execute(() =>
+            network.Execute(() =>
             {
                 topology.Products.RemoveWatcher(watcher);
             });
@@ -97,8 +86,6 @@ namespace TestTopology
             mockInjector.Dispose();
 
             network.Dispose();
-
-            thread.Dispose();
 
             return 0;
         }
