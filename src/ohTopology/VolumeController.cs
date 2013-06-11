@@ -5,18 +5,30 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
+    public interface IVolumeController
+    {
+        IWatchable<bool> HasVolume { get; }
+        IWatchable<bool> Mute { get; }
+        IWatchable<uint> Volume { get; }
+        IWatchable<uint> VolumeLimit { get; }
+        void SetMute(bool aMute);
+        void SetVolume(uint aVolume);
+        void VolumeInc();
+        void VolumeDec();
+    }
+
     class VolumeController : IWatcher<bool>, IWatcher<uint>, IDisposable
     {
-        public VolumeController(IDevice aDevice, Watchable<bool> aHasVolume, Watchable<bool> aMute, Watchable<uint> aValue, Watchable<uint> aVolumeLimit)
+        public VolumeController(INetwork aNetwork, IDevice aDevice, Watchable<bool> aHasVolume)
         {
             iDisposed = false;
 
             iDevice = aDevice;
 
             iHasVolume = aHasVolume;
-            iMute = aMute;
-            iValue = aValue;
-            iVolumeLimit = aVolumeLimit;
+            iMute = new Watchable<bool>(aNetwork, "Mute", false);
+            iValue = new Watchable<uint>(aNetwork, "Volume", 0);
+            iVolumeLimit = new Watchable<uint>(aNetwork, "VolumeLimit", 0);
 
             iDevice.Create<IProxyVolume>((volume) =>
             {
@@ -56,6 +68,15 @@ namespace OpenHome.Av
                 iVolume = null;
             }
 
+            iMute.Dispose();
+            iMute = null;
+
+            iValue.Dispose();
+            iValue = null;
+
+            iVolumeLimit.Dispose();
+            iVolumeLimit = null;
+
             iDisposed = true;
         }
 
@@ -64,6 +85,38 @@ namespace OpenHome.Av
             get
             {
                 return iDevice;
+            }
+        }
+
+        public IWatchable<bool> HasVolume
+        {
+            get
+            {
+                return iHasVolume;
+            }
+        }
+
+        public IWatchable<bool> Mute
+        {
+            get
+            {
+                return iMute;
+            }
+        }
+
+        public IWatchable<uint> Volume
+        {
+            get
+            {
+                return iValue;
+            }
+        }
+
+        public IWatchable<uint> VolumeLimit
+        {
+            get
+            {
+                return iVolumeLimit;
             }
         }
 
