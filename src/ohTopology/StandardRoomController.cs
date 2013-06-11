@@ -41,30 +41,30 @@ namespace OpenHome.Av
     {
         public StandardRoomController(IStandardRoom aRoom)
         {
-            iThread = aRoom.Network;
+            iNetwork = aRoom.Network;
             iRoom = aRoom;
 
             iLock = new object();
             iIsActive = true;
-            iActive = new Watchable<bool>(iThread, "Active", true);
+            iActive = new Watchable<bool>(iNetwork, "Active", true);
 
-            iHasVolume = new Watchable<bool>(iThread, "HasVolume", false);
-            iMute = new Watchable<bool>(iThread, "Mute", false);
-            iValue = new Watchable<uint>(iThread, "Volume", 0);
-            iVolumeLimit = new Watchable<uint>(iThread, "VolumeLimit", 0);
+            iHasVolume = new Watchable<bool>(iNetwork, "HasVolume", false);
+            iMute = new Watchable<bool>(iNetwork, "Mute", false);
+            iValue = new Watchable<uint>(iNetwork, "Volume", 0);
+            iVolumeLimit = new Watchable<uint>(iNetwork, "VolumeLimit", 0);
 
-            iHasSourceControl = new Watchable<bool>(iThread, "HasSourceControl", false);
-            iHasInfoNext = new Watchable<bool>(iThread, "HasInfoNext", false);
-            iInfoNext = new Watchable<IInfoMetadata>(iThread, "InfoNext", new RoomMetadata());
+            iHasSourceControl = new Watchable<bool>(iNetwork, "HasSourceControl", false);
+            iHasInfoNext = new Watchable<bool>(iNetwork, "HasInfoNext", false);
+            iInfoNext = new Watchable<IInfoMetadata>(iNetwork, "InfoNext", new RoomMetadata());
 
-            iCanPause = new Watchable<bool>(iThread, "CanPause", false);
-            iCanSkip = new Watchable<bool>(iThread, "CanSkip", false);
-            iCanSeek = new Watchable<bool>(iThread, "CanSeek", false);
-            iTransportState = new Watchable<string>(iThread, "TransportState", string.Empty);
+            iCanPause = new Watchable<bool>(iNetwork, "CanPause", false);
+            iCanSkip = new Watchable<bool>(iNetwork, "CanSkip", false);
+            iCanSeek = new Watchable<bool>(iNetwork, "CanSeek", false);
+            iTransportState = new Watchable<string>(iNetwork, "TransportState", string.Empty);
 
-            iHasPlayMode = new Watchable<bool>(iThread, "HasPlayMode", false);
-            iShuffle = new Watchable<bool>(iThread, "Shuffle", false);
-            iRepeat = new Watchable<bool>(iThread, "Repeat", false);
+            iHasPlayMode = new Watchable<bool>(iNetwork, "HasPlayMode", false);
+            iShuffle = new Watchable<bool>(iNetwork, "Shuffle", false);
+            iRepeat = new Watchable<bool>(iNetwork, "Repeat", false);
 
             iRoom.Source.AddWatcher(this);
 
@@ -77,7 +77,7 @@ namespace OpenHome.Av
             {
                 if (iIsActive)
                 {
-                    iThread.Execute(() =>
+                    iNetwork.Execute(() =>
                     {
                         iRoom.Source.RemoveWatcher(this);
                     });
@@ -161,7 +161,7 @@ namespace OpenHome.Av
 
         public void SetStandby(bool aValue)
         {
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 if (iActive.Value)
                 {
@@ -172,7 +172,7 @@ namespace OpenHome.Av
 
         public void SetRepeat(bool aValue)
         {
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 if (iActive.Value)
                 {
@@ -186,7 +186,7 @@ namespace OpenHome.Av
 
         public void SetShuffle(bool aValue)
         {
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 if (iActive.Value)
                 {
@@ -232,7 +232,7 @@ namespace OpenHome.Av
 
         public void SetMute(bool aMute)
         {
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 if (iActive.Value)
                 {
@@ -246,7 +246,7 @@ namespace OpenHome.Av
 
         public void SetVolume(uint aVolume)
         {
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 if (iActive.Value)
                 {
@@ -260,7 +260,7 @@ namespace OpenHome.Av
 
         public void VolumeInc()
         {
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 if (iActive.Value)
                 {
@@ -274,7 +274,7 @@ namespace OpenHome.Av
 
         public void VolumeDec()
         {
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 if (iActive.Value)
                 {
@@ -336,7 +336,7 @@ namespace OpenHome.Av
 
         public void Play()
         {
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 if (iActive.Value)
                 {
@@ -350,7 +350,7 @@ namespace OpenHome.Av
 
         public void Pause()
         {
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 if (iActive.Value)
                 {
@@ -364,7 +364,7 @@ namespace OpenHome.Av
 
         public void Stop()
         {
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 if (iActive.Value)
                 {
@@ -386,7 +386,7 @@ namespace OpenHome.Av
 
         public void Previous()
         {
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 if (iActive.Value)
                 {
@@ -400,7 +400,7 @@ namespace OpenHome.Av
 
         public void Next()
         {
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 if (iActive.Value)
                 {
@@ -422,7 +422,7 @@ namespace OpenHome.Av
 
         public void Seek(uint aSeconds)
         {
-            iThread.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 if (iActive.Value)
                 {
@@ -460,12 +460,12 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, ITopology4Source aValue)
         {
-            iSourceController = SourceController.Create(iThread, aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek, iHasPlayMode, iShuffle, iRepeat);
+            iSourceController = SourceController.Create(aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek, iHasPlayMode, iShuffle, iRepeat);
 
             if (aValue.Volumes.Count() > 0)
             {
                 ITopology4Group group = aValue.Volumes.ElementAt(0);
-                iVolumeController = new VolumeController(iThread, group.Device, iHasVolume, iMute, iValue, iVolumeLimit);
+                iVolumeController = new VolumeController(group.Device, iHasVolume, iMute, iValue, iVolumeLimit);
             }
         }
 
@@ -477,7 +477,7 @@ namespace OpenHome.Av
                 iSourceController = null;
             }
 
-            iSourceController = SourceController.Create(iThread, aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek, iHasPlayMode, iShuffle, iRepeat);
+            iSourceController = SourceController.Create(aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek, iHasPlayMode, iShuffle, iRepeat);
 
             if (aValue.Volumes.Count() > 0)
             {
@@ -487,12 +487,12 @@ namespace OpenHome.Av
                     if (group.Device != iVolumeController.Device)
                     {
                         iVolumeController.Dispose();
-                        iVolumeController = new VolumeController(iThread, group.Device, iHasVolume, iMute, iValue, iVolumeLimit);
+                        iVolumeController = new VolumeController(group.Device, iHasVolume, iMute, iValue, iVolumeLimit);
                     }
                 }
                 else
                 {
-                    iVolumeController = new VolumeController(iThread, group.Device, iHasVolume, iMute, iValue, iVolumeLimit);
+                    iVolumeController = new VolumeController(group.Device, iHasVolume, iMute, iValue, iVolumeLimit);
                 }
             }
             else
@@ -520,7 +520,7 @@ namespace OpenHome.Av
             }
         }
 
-        private IWatchableThread iThread;
+        private INetwork iNetwork;
         private IStandardRoom iRoom;
 
         private object iLock;

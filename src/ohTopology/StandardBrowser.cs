@@ -384,6 +384,7 @@ namespace OpenHome.Av
 
     public interface IStandardRoom : IJoinable
     {
+        INetwork Network { get; }
         string Name { get; }
 
         IWatchable<EStandby> Standby { get; }
@@ -402,8 +403,6 @@ namespace OpenHome.Av
         void SetStandby(bool aValue);
         void ListenTo(IStandardRoom aRoom);
         void Play(string aUri, IMediaMetadata aMetadata);
-
-        INetwork Network { get; }
     }
 
     public class StandardRoom : IStandardRoom, IWatcher<IEnumerable<ITopology4Root>>, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IMockable, IDisposable

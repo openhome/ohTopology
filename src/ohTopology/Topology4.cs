@@ -93,7 +93,7 @@ namespace OpenHome.Av
 
 
             MediaMetadata metadata = new MediaMetadata();
-            metadata.Add(aTagManager.Container.Title, aSource.Name);
+            metadata.Add(aTagManager.Audio.Title, aSource.Name);
             iPreset = new MediaPresetExternal(metadata, this);
         }
 
