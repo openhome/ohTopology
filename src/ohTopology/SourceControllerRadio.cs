@@ -7,7 +7,9 @@ namespace OpenHome.Av
 {
     public class SourceControllerRadio : IWatcher<string>, ISourceController
     {
-        public SourceControllerRadio(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasSourceControl, Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause, Watchable<bool> aCanSkip, Watchable<bool> aCanSeek)
+        public SourceControllerRadio(ITopology4Source aSource, Watchable<bool> aHasSourceControl,
+            Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause,
+            Watchable<bool> aCanSkip, Watchable<bool> aCanSeek, Watchable<bool> aHasPlayMode, Watchable<bool> aShuffle, Watchable<bool> aRepeat)
         {
             iLock = new object();
             iDisposed = false;
@@ -29,6 +31,7 @@ namespace OpenHome.Av
                     aCanSkip.Update(false);
                     iCanPause.Update(false);
                     iCanSeek.Update(false);
+                    aHasPlayMode.Update(false);
 
                     iRadio.TransportState.AddWatcher(this);
 
@@ -96,6 +99,16 @@ namespace OpenHome.Av
             iRadio.SeekSecondAbsolute(aSeconds);
         }
 
+        public void SetRepeat(bool aValue)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetShuffle(bool aValue)
+        {
+            throw new NotImplementedException();
+        }
+
         public void ItemOpen(string aId, string aValue)
         {
             iTransportState.Update(aValue);
@@ -108,16 +121,6 @@ namespace OpenHome.Av
 
         public void ItemClose(string aId, string aValue)
         {
-        }
-
-        public void SetRepeat(bool aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void SetShuffle(bool aValue)
-        {
-            throw new NotImplementedException();
         }
 
         private object iLock;

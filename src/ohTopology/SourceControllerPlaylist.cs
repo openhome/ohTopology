@@ -5,9 +5,11 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public class SourceControllerPlaylist : IWatcher<string>, ISourceController
+    public class SourceControllerPlaylist : IWatcher<string>, IWatcher<bool>, ISourceController
     {
-        public SourceControllerPlaylist(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasSourceControl, Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause, Watchable<bool> aCanSkip, Watchable<bool> aCanSeek)
+        public SourceControllerPlaylist(ITopology4Source aSource, Watchable<bool> aHasSourceControl,
+            Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause,
+            Watchable<bool> aCanSkip, Watchable<bool> aCanSeek, Watchable<bool> aHasPlayMode, Watchable<bool> aShuffle, Watchable<bool> aRepeat)
         {
             iDisposed = false;
 
@@ -18,6 +20,9 @@ namespace OpenHome.Av
             iCanPause = aCanPause;
             iCanSeek = aCanSeek;
             iTransportState = aTransportState;
+            iHasPlayMode = aHasPlayMode;
+            iShuffle = aShuffle;
+            iRepeat = aRepeat;
 
             aSource.Device.Create<IProxyPlaylist>((playlist) =>
             {
@@ -29,6 +34,10 @@ namespace OpenHome.Av
                     aCanSkip.Update(true);
 
                     iPlaylist.TransportState.AddWatcher(this);
+                    iPlaylist.Shuffle.AddWatcher(this);
+                    iPlaylist.Repeat.AddWatcher(this);
+
+                    iHasPlayMode.Update(true);
 
                     iHasSourceControl.Update(true);
                 }
@@ -49,7 +58,10 @@ namespace OpenHome.Av
             if (iPlaylist != null)
             {
                 iHasSourceControl.Update(false);
+                iHasPlayMode.Update(false);
 
+                iPlaylist.Shuffle.RemoveWatcher(this);
+                iPlaylist.Repeat.RemoveWatcher(this);
                 iPlaylist.TransportState.RemoveWatcher(this);
 
                 iPlaylist.Dispose();
@@ -119,6 +131,34 @@ namespace OpenHome.Av
         {
         }
 
+        public void ItemOpen(string aId, bool aValue)
+        {
+            if (aId == "Shuffle")
+            {
+                iShuffle.Update(aValue);
+            }
+            if (aId == "Repeat")
+            {
+                iRepeat.Update(aValue);
+            }
+        }
+
+        public void ItemUpdate(string aId, bool aValue, bool aPrevious)
+        {
+            if (aId == "Shuffle")
+            {
+                iShuffle.Update(aValue);
+            }
+            if (aId == "Repeat")
+            {
+                iRepeat.Update(aValue);
+            }
+        }
+
+        public void ItemClose(string aId, bool aValue)
+        {
+        }
+
         private bool iDisposed;
 
         private ITopology4Source iSource;
@@ -129,5 +169,8 @@ namespace OpenHome.Av
         private Watchable<bool> iCanPause;
         private Watchable<bool> iCanSeek;
         private Watchable<string> iTransportState;
+        private Watchable<bool> iHasPlayMode;
+        private Watchable<bool> iShuffle;
+        private Watchable<bool> iRepeat;
     }
 }

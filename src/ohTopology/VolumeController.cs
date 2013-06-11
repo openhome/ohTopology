@@ -7,7 +7,7 @@ namespace OpenHome.Av
 {
     class VolumeController : IWatcher<bool>, IWatcher<uint>, IDisposable
     {
-        public VolumeController(IWatchableThread aThread, IDevice aDevice, Watchable<bool> aHasVolume, Watchable<bool> aMute, Watchable<uint> aValue, Watchable<uint> aVolumeLimit)
+        public VolumeController(IDevice aDevice, Watchable<bool> aHasVolume, Watchable<bool> aMute, Watchable<uint> aValue, Watchable<uint> aVolumeLimit)
         {
             iDisposed = false;
 
