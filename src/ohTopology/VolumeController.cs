@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using System.Linq;
 
 using OpenHome.Os.App;
 
@@ -11,42 +12,26 @@ namespace OpenHome.Av
         IWatchable<bool> Mute { get; }
         IWatchable<uint> Volume { get; }
         IWatchable<uint> VolumeLimit { get; }
+
         void SetMute(bool aMute);
         void SetVolume(uint aVolume);
         void VolumeInc();
         void VolumeDec();
     }
 
-    class VolumeController : IWatcher<bool>, IWatcher<uint>, IDisposable
+    class StandardVolumeController : IWatcher<ITopology4Source>, IWatcher<bool>, IWatcher<uint>, IDisposable
     {
-        public VolumeController(INetwork aNetwork, IDevice aDevice, Watchable<bool> aHasVolume)
+        public StandardVolumeController(IStandardRoom aRoom)
         {
             iDisposed = false;
+            iRoom = aRoom;
 
-            iDevice = aDevice;
+            iHasVolume = new Watchable<bool>(aRoom.Network, "HasVolume", false);
+            iMute = new Watchable<bool>(aRoom.Network, "Mute", false);
+            iValue = new Watchable<uint>(aRoom.Network, "Volume", 0);
+            iVolumeLimit = new Watchable<uint>(aRoom.Network, "VolumeLimit", 0);
 
-            iHasVolume = aHasVolume;
-            iMute = new Watchable<bool>(aNetwork, "Mute", false);
-            iValue = new Watchable<uint>(aNetwork, "Volume", 0);
-            iVolumeLimit = new Watchable<uint>(aNetwork, "VolumeLimit", 0);
-
-            iDevice.Create<IProxyVolume>((volume) =>
-            {
-                if (!iDisposed)
-                {
-                    iVolume = volume;
-
-                    iVolume.Mute.AddWatcher(this);
-                    iVolume.Value.AddWatcher(this);
-                    iVolume.VolumeLimit.AddWatcher(this);
-
-                    iHasVolume.Update(true);
-                }
-                else
-                {
-                    volume.Dispose();
-                }
-            });
+            aRoom.Source.AddWatcher(this);
         }
 
         public void Dispose()
@@ -56,17 +41,9 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("VolumeController.Dispose");
             }
 
-            if (iVolume != null)
-            {
-                iHasVolume.Update(false);
+            iRoom.Source.RemoveWatcher(this);
 
-                iVolume.Mute.RemoveWatcher(this);
-                iVolume.Value.RemoveWatcher(this);
-                iVolume.VolumeLimit.RemoveWatcher(this);
-
-                iVolume.Dispose();
-                iVolume = null;
-            }
+            DestroyProxy();
 
             iMute.Dispose();
             iMute = null;
@@ -78,6 +55,14 @@ namespace OpenHome.Av
             iVolumeLimit = null;
 
             iDisposed = true;
+        }
+
+        public string Name
+        {
+            get
+            {
+                return iRoom.Name;
+            }
         }
 
         public IDevice Device
@@ -122,22 +107,110 @@ namespace OpenHome.Av
 
         public void SetMute(bool aValue)
         {
-            iVolume.SetMute(aValue);
+            if (iVolume != null)
+            {
+                iVolume.SetMute(aValue);
+            }
         }
 
         public void SetVolume(uint aValue)
         {
-            iVolume.SetVolume(aValue);
+            if (iVolume != null)
+            {
+                iVolume.SetVolume(aValue);
+            }
         }
 
         public void VolumeInc()
         {
-            iVolume.VolumeInc();
+            if (iVolume != null)
+            {
+                iVolume.VolumeInc();
+            }
         }
 
         public void VolumeDec()
         {
-            iVolume.VolumeDec();
+            if (iVolume != null)
+            {
+                iVolume.VolumeDec();
+            }
+        }
+
+        public void ItemOpen(string aId, ITopology4Source aValue)
+        {
+            if (aValue.Volumes.Count() > 0)
+            {
+                ITopology4Group group = aValue.Volumes.ElementAt(0);
+                CreateProxy(group.Device);
+            }
+        }
+
+        public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
+        {
+            if (aValue.Volumes.Count() > 0)
+            {
+                ITopology4Group group = aValue.Volumes.ElementAt(0);
+                if (iVolume != null)
+                {
+                    if (group.Device != iDevice)
+                    {
+                        DestroyProxy();
+                        CreateProxy(group.Device);
+                    }
+                }
+                else
+                {
+                    CreateProxy(group.Device);
+                }
+            }
+            else
+            {
+                DestroyProxy();
+            }
+        }
+
+        public void ItemClose(string aId, ITopology4Source aValue)
+        {
+            DestroyProxy();
+        }
+
+        private void CreateProxy(IDevice aDevice)
+        {
+            iDevice = aDevice;
+
+            iDevice.Create<IProxyVolume>((volume) =>
+            {
+                if (!iDisposed)
+                {
+                    iVolume = volume;
+
+                    iVolume.Mute.AddWatcher(this);
+                    iVolume.Value.AddWatcher(this);
+                    iVolume.VolumeLimit.AddWatcher(this);
+
+                    iHasVolume.Update(true);
+                }
+                else
+                {
+                    volume.Dispose();
+                }
+            });
+        }
+
+        private void DestroyProxy()
+        {
+            iHasVolume.Update(false);
+
+            if (iVolume != null)
+            {
+                iVolume.Mute.RemoveWatcher(this);
+                iVolume.Value.RemoveWatcher(this);
+                iVolume.VolumeLimit.RemoveWatcher(this);
+
+                iVolume.Dispose();
+                iVolume = null;
+            }
         }
 
         public void ItemOpen(string aId, bool aValue)
@@ -183,6 +256,7 @@ namespace OpenHome.Av
         }
 
         private bool iDisposed;
+        private IStandardRoom iRoom;
         private IProxyVolume iVolume;
 
         private IDevice iDevice;

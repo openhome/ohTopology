@@ -39,7 +39,7 @@ namespace OpenHome.Av
             iIsActive = true;
             iActive = new Watchable<bool>(iNetwork, "Active", true);
 
-            iHasVolume = new Watchable<bool>(iNetwork, "HasVolume", false);
+            iVolumeController = new StandardVolumeController(aRoom);
 
             iHasSourceControl = new Watchable<bool>(iNetwork, "HasSourceControl", false);
             iHasInfoNext = new Watchable<bool>(iNetwork, "HasInfoNext", false);
@@ -87,8 +87,8 @@ namespace OpenHome.Av
             iInfoNext.Dispose();
             iInfoNext = null;
 
-            iHasVolume.Dispose();
-            iHasVolume = null;
+            iVolumeController.Dispose();
+            iVolumeController = null;
 
             iTransportState.Dispose();
             iTransportState = null;
@@ -184,7 +184,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return iHasVolume;
+                return iVolumeController.HasVolume;
             }
         }
 
@@ -218,10 +218,7 @@ namespace OpenHome.Av
             {
                 if (iActive.Value)
                 {
-                    if (iHasVolume.Value)
-                    {
-                        iVolumeController.SetMute(aMute);
-                    }
+                    iVolumeController.SetMute(aMute);
                 }
             });
         }
@@ -232,10 +229,7 @@ namespace OpenHome.Av
             {
                 if (iActive.Value)
                 {
-                    if (iHasVolume.Value)
-                    {
-                        iVolumeController.SetVolume(aVolume);
-                    }
+                   iVolumeController.SetVolume(aVolume);
                 }
             });
         }
@@ -246,10 +240,7 @@ namespace OpenHome.Av
             {
                 if (iActive.Value)
                 {
-                    if (iHasVolume.Value)
-                    {
-                        iVolumeController.VolumeInc();
-                    }
+                    iVolumeController.VolumeInc();
                 }
             });
         }
@@ -260,10 +251,7 @@ namespace OpenHome.Av
             {
                 if (iActive.Value)
                 {
-                    if (iHasVolume.Value)
-                    {
-                        iVolumeController.VolumeDec();
-                    }
+                    iVolumeController.VolumeDec();
                 }
             });
         }
@@ -443,12 +431,6 @@ namespace OpenHome.Av
         public void ItemOpen(string aId, ITopology4Source aValue)
         {
             iSourceController = SourceController.Create(aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek, iHasPlayMode, iShuffle, iRepeat);
-
-            if (aValue.Volumes.Count() > 0)
-            {
-                ITopology4Group group = aValue.Volumes.ElementAt(0);
-                iVolumeController = new VolumeController(iNetwork, group.Device, iHasVolume);
-            }
         }
 
         public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
@@ -460,31 +442,6 @@ namespace OpenHome.Av
             }
 
             iSourceController = SourceController.Create(aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek, iHasPlayMode, iShuffle, iRepeat);
-
-            if (aValue.Volumes.Count() > 0)
-            {
-                ITopology4Group group = aValue.Volumes.ElementAt(0);
-                if (iVolumeController != null)
-                {
-                    if (group.Device != iVolumeController.Device)
-                    {
-                        iVolumeController.Dispose();
-                        iVolumeController = new VolumeController(iNetwork, group.Device, iHasVolume);
-                    }
-                }
-                else
-                {
-                    iVolumeController = new VolumeController(iNetwork, group.Device, iHasVolume);
-                }
-            }
-            else
-            {
-                if (iVolumeController != null)
-                {
-                    iVolumeController.Dispose();
-                    iVolumeController = null;
-                }
-            }
         }
 
         public void ItemClose(string aId, ITopology4Source aValue)
@@ -493,12 +450,6 @@ namespace OpenHome.Av
             {
                 iSourceController.Dispose();
                 iSourceController = null;
-            }
-
-            if (iVolumeController != null)
-            {
-                iVolumeController.Dispose();
-                iVolumeController = null;
             }
         }
 
@@ -509,8 +460,7 @@ namespace OpenHome.Av
         private bool iIsActive;
         private Watchable<bool> iActive;
 
-        private Watchable<bool> iHasVolume;
-        private VolumeController iVolumeController;
+        private StandardVolumeController iVolumeController;
 
         private ISourceController iSourceController;
         private Watchable<bool> iHasSourceControl;
