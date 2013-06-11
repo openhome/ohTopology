@@ -8,7 +8,6 @@ using System.Xml;
 using System.Xml.Linq;
 
 using OpenHome.Os.App;
-using OpenHome.MediaServer;
 
 using OpenHome.Net.ControlPoint;
 using OpenHome.Net.ControlPoint.Proxies;
@@ -200,11 +199,6 @@ namespace OpenHome.Av
 
         // IMediaServerSession
 
-        public Task<IWatchableContainer<IMediaDatum>> Query(string aValue)
-        {
-            throw new NotImplementedException();
-        }
-
         public Task<IWatchableContainer<IMediaDatum>> Browse(IMediaDatum aDatum)
         {
             if (aDatum == null)
@@ -217,6 +211,21 @@ namespace OpenHome.Av
             Do.Assert(datum != null);
 
             return (Browse(datum.Id));
+        }
+
+        public Task<IWatchableContainer<IMediaDatum>> Link(ITag aTag, string aValue)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IWatchableContainer<IMediaDatum>> Search(string aValue)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IWatchableContainer<IMediaDatum>> Query(string aValue)
+        {
+            throw new NotImplementedException();
         }
 
         // Disposable
@@ -440,12 +449,68 @@ namespace OpenHome.Av
 
             if (ids.Any())
             {
-                var datum = new MediaDatumUpnp(ids.First().Value, iNetwork.TagManager.Container.Title);
-                Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title);
-                return (datum);
+                var id = ids.First().Value;
+
+                var classes = aElement.Descendants(XName.Get("class", kNsUpnp));
+
+                if (classes.Any())
+                {
+                    var upnpClass = classes.First().Value;
+
+                    switch (upnpClass)
+                    {
+                        case "object.container.person.musicArtist":
+                            return (ParseContainerMusicArtist(aElement, id));
+                        case "object.container.album.musicAlbum":
+                            return (ParseContainerMusicAlbum(aElement, id));
+                        case "object.container.genre.musicGenre":
+                            return (ParseContainerMusicGenre(aElement, id));
+                        default:
+                            return (ParseContainerDefault(aElement, id));
+                    }
+                }
+
+                return (ParseContainerDefault(aElement, id));
             }
 
             return (null);
+        }
+
+        private IMediaDatum ParseContainerMusicArtist(XElement aElement, string aId)
+        {
+            var datum = new MediaDatumUpnp(aId, iNetwork.TagManager.Audio.Artist);
+
+            Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Artist);
+
+            return (datum);
+        }
+
+        private IMediaDatum ParseContainerMusicAlbum(XElement aElement, string aId)
+        {
+            var datum = new MediaDatumUpnp(aId, iNetwork.TagManager.Audio.AlbumTitle);
+
+            Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.AlbumTitle);
+            Convert(aElement, "artist", kNsUpnp, datum, iNetwork.TagManager.Audio.AlbumArtist);
+            Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
+            return (datum);
+        }
+
+        private IMediaDatum ParseContainerMusicGenre(XElement aElement, string aId)
+        {
+            var datum = new MediaDatumUpnp(aId, iNetwork.TagManager.Audio.Genre);
+
+            Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Genre);
+
+            return (datum);
+        }
+
+        private IMediaDatum ParseContainerDefault(XElement aElement, string aId)
+        {
+            var datum = new MediaDatumUpnp(aId, iNetwork.TagManager.Container.Title);
+
+            Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title);
+
+            return (datum);
         }
 
         private void Convert(XElement aElement, string aName, string aNamespace, MediaDatum aDatum, ITag aTag)
@@ -459,13 +524,6 @@ namespace OpenHome.Av
                     aDatum.Add(aTag, element.Value);
                 }
             }
-        }
-
-        private IMediaDatum CreateTestItem(string aTitle)
-        {
-            var datum = new MediaDatum();
-            datum.Add(iNetwork.TagManager.Audio.Title, aTitle);
-            return (datum);
         }
 
         // IWatchableFragment<IMediaDatum>

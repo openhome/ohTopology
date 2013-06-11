@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using System.IO;
 
 using OpenHome.Os.App;
-using OpenHome.MediaServer;
 
 using OpenHome.Net.ControlPoint;
 using OpenHome.Net.ControlPoint.Proxies;
@@ -16,8 +15,10 @@ namespace OpenHome.Av
 {
     public interface IMediaServerSession : IDisposable
     {
-        Task<IWatchableContainer<IMediaDatum>> Query(string aValue);
         Task<IWatchableContainer<IMediaDatum>> Browse(IMediaDatum aDatum); // null = home
+        Task<IWatchableContainer<IMediaDatum>> Link(ITag aTag, string aValue);
+        Task<IWatchableContainer<IMediaDatum>> Search(string aValue);
+        Task<IWatchableContainer<IMediaDatum>> Query(string aValue);
     }
 
     public interface IProxyMediaServer : IProxy
@@ -230,6 +231,22 @@ namespace OpenHome.Av
         public static bool SupportsBrowse(this IProxyMediaServer aProxy)
         {
             return (aProxy.Attributes.Contains("Browse"));
+        }
+
+        public static bool SupportsLink(this IProxyMediaServer aProxy)
+        {
+            return (aProxy.Attributes.Contains("Link"));
+        }
+
+        public static bool SupportsLink(this IProxyMediaServer aProxy, ITag aTag)
+        {
+            var value = string.Format("Link:{0}", aTag.FullName);
+            return (aProxy.Attributes.Contains(value));
+        }
+
+        public static bool SupportsSearch(this IProxyMediaServer aProxy)
+        {
+            return (aProxy.Attributes.Contains("Search"));
         }
 
         public static bool SupportsQuery(this IProxyMediaServer aProxy)

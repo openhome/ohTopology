@@ -33,9 +33,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ohMediaServer.Shared">
-      <HintPath>..\..\dependencies\AnyPlatform\ohMediaServer\ohMediaServer.Shared.dll</HintPath>
-    </Reference>
     <Reference Include="ohNet.net, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\dependencies\Windows-x86\ohNet-Windows-x86-Release\lib\ohNet.net.dll</HintPath>

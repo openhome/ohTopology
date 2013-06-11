@@ -10,7 +10,6 @@ using System.Net;
 using System.Net.Sockets;
 
 using OpenHome.Os.App;
-using OpenHome.MediaServer;
 
 using OpenHome.Av;
 

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using System.IO;
 
 using OpenHome.Os.App;
-using OpenHome.MediaServer;
 
 using OpenHome.Net.ControlPoint;
 using OpenHome.Net.ControlPoint.Proxies;
@@ -76,9 +75,6 @@ namespace OpenHome.Av
         private readonly IEnumerable<IMediaDatum> iAlbums;
         private readonly IEnumerable<IMediaDatum> iGenres;
         private readonly List<IMediaDatum> iRoot;
-
-        private IWatchableContainer<IMediaDatum> iContainer;
-
 
         public MediaServerSessionMock(INetwork aNetwork, IEnumerable<IMediaMetadata> aMetadata, ServiceMediaServerMock aService)
         {
@@ -165,8 +161,7 @@ namespace OpenHome.Av
 
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
-                iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(tracks));
-                return (iContainer);
+                return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(tracks)));
             }));
         }
 
@@ -174,8 +169,7 @@ namespace OpenHome.Av
         {
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
-                iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iArtists));
-                return (iContainer);
+                return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iArtists)));
             }));
         }
 
@@ -183,8 +177,7 @@ namespace OpenHome.Av
         {
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
-                iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iAlbums));
-                return (iContainer);
+                return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iAlbums)));
             }));
         }
 
@@ -192,8 +185,7 @@ namespace OpenHome.Av
         {
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
-                iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iGenres));
-                return (iContainer);
+                return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iGenres)));
             }));
         }
 
@@ -217,8 +209,7 @@ namespace OpenHome.Av
 
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
-                iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(albums));
-                return (iContainer);
+                return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(albums)));
             }));
         }
 
@@ -230,8 +221,7 @@ namespace OpenHome.Av
 
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
-                iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(tracks));
-                return (iContainer);
+                return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(tracks)));
             }));
         }
 
@@ -244,9 +234,95 @@ namespace OpenHome.Av
 
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
-                iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(tracks));
-                return (iContainer);
+                return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(tracks)));
             }));
+        }
+
+        private IEnumerable<IMediaDatum> SearchMetadata(string aValue)
+        {
+            var values = Tokeniser.Parse(aValue.ToLower());
+
+            if (values.Any())
+            {
+                foreach (var metadata in iMetadata)
+                {
+                    if (SearchMetadata(values, metadata))
+                    {
+                        yield return new MediaDatum(metadata);
+                    }
+                }
+            }
+        }
+
+        private bool SearchMetadata(IEnumerable<string> aValues, IMediaMetadata aMetadata)
+        {
+            foreach (var value in aValues)
+            {
+                if (!SearchMetadataToken(value, aMetadata))
+                {
+                    return (false);
+                }
+            }
+
+            return (true);
+        }
+
+        private bool SearchMetadataToken(string aValue, IMediaMetadata aMetadata)
+        {
+            if (aValue.EndsWith("*"))
+            {
+                return (SearchMetadataTokenStartsWith(aValue.Substring(0, aValue.Length - 1), aMetadata));
+            }
+
+            foreach (var metadatum in aMetadata)
+            {
+                if (metadatum.Key.IsSearchable)
+                {
+                    foreach (var value in metadatum.Value.Values)
+                    {
+                        var tokens = Tokeniser.Parse(value);
+
+                        foreach (var token in tokens)
+                        {
+                            if (token.ToLower() == aValue)
+                            {
+                                return (true);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return (false);
+        }
+
+        private bool SearchMetadataTokenStartsWith(string aValue, IMediaMetadata aMetadata)
+        {
+            if (aValue.Length == 0)
+            {
+                return (true);
+            }
+
+            foreach (var metadatum in aMetadata)
+            {
+                if (metadatum.Key.IsSearchable)
+                {
+                    foreach (var value in metadatum.Value.Values)
+                    {
+                        var tokens = Tokeniser.Parse(value);
+
+                        foreach (var token in tokens)
+                        {
+                            if (token.ToLower().StartsWith(aValue))
+                            {
+                                return (true);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return (false);
         }
 
         internal void Destroy(IWatchableContainer<IMediaDatum> aContainer)
@@ -255,19 +331,13 @@ namespace OpenHome.Av
 
         // IMediaServerSession
 
-        public Task<IWatchableContainer<IMediaDatum>> Query(string aValue)
-        {
-            throw new NotImplementedException();
-        }
-
         public Task<IWatchableContainer<IMediaDatum>> Browse(IMediaDatum aDatum)
         {
             if (aDatum == null)
             {
                 return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
                 {
-                    iContainer = new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iRoot));
-                    return (iContainer);
+                    return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iRoot)));
                 }));
             }
 
@@ -327,6 +397,40 @@ namespace OpenHome.Av
             var genre = aDatum[iNetwork.TagManager.Audio.Genre].Value;
 
             return (BrowseGenreTracks(genre));
+        }
+
+        public Task<IWatchableContainer<IMediaDatum>> Link(ITag aTag, string aValue)
+        {
+            if (aTag == iNetwork.TagManager.Audio.Artist)
+            {
+                return (BrowseArtistAlbums(aValue));
+            }
+
+            if (aTag == iNetwork.TagManager.Audio.Album)
+            {
+                return (BrowseAlbumTracks(aValue));
+            }
+
+            if (aTag == iNetwork.TagManager.Audio.Genre)
+            {
+                return (BrowseGenreTracks(aValue));
+            }
+
+            return (null);
+        }
+
+        public Task<IWatchableContainer<IMediaDatum>> Search(string aValue)
+        {
+            return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
+            {
+                var data = SearchMetadata(aValue);
+                return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(data)));
+            }));
+        }
+
+        public Task<IWatchableContainer<IMediaDatum>> Query(string aValue)
+        {
+            throw new NotImplementedException();
         }
 
         // Disposable
