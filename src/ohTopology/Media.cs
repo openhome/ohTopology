@@ -262,8 +262,15 @@ namespace OpenHome.Av
                     string c = document.SelectSingleNode("/didl:DIDL-Lite/*/upnp:class", nsManager).FirstChild.Value;
                     if (c.Contains("audioItem"))
                     {
+                        string title = document.SelectSingleNode("/didl:DIDL-Lite/didl:item/dc:title", nsManager).FirstChild.Value;
+                        metadata.Add(aTagManager.Audio.Title, title);
                         string uri = document.SelectSingleNode("/didl:DIDL-Lite/*/didl:res", nsManager).FirstChild.Value;
                         metadata.Add(aTagManager.Audio.Uri, uri);
+                        XmlNodeList albumart = document.SelectNodes("/didl:DIDL-Lite/didl:item/upnp:albumArtURI", nsManager);
+                        foreach (XmlNode n in albumart)
+                        {
+                            metadata.Add(aTagManager.Audio.Artwork, n.FirstChild.Value);
+                        }
                     }
                 }
                 catch (XmlException) { }
