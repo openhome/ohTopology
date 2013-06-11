@@ -10,6 +10,7 @@ namespace OpenHome.Av
     public interface IStandardRoomWatcher : IDisposable
     {
         IStandardRoom Room { get; }
+        IWatchable<bool> Active { get; }
         IWatchable<bool> Enabled { get; }
     }
 
@@ -19,7 +20,8 @@ namespace OpenHome.Av
         {
             iRoom = aRoom;
             iNetwork = aRoom.Network;
-            iActive = true;
+            iIsActive = true;
+            iActive = new Watchable<bool>(iNetwork, "Active", true);
             iEnabled = new Watchable<bool>(iNetwork, "Enabled", false);
 
             iRoom.Sources.AddWatcher(this);
@@ -29,14 +31,17 @@ namespace OpenHome.Av
 
         public virtual void Dispose()
         {
-            WatchableThread.Execute(() =>
+            lock (iActive)
             {
-                iRoom.Sources.RemoveWatcher(this);
-            });
+                if (iIsActive)
+                {
+                    iNetwork.Execute(() =>
+                    {
+                        iRoom.Sources.RemoveWatcher(this);
+                    });
 
-            if (iActive)
-            {
-                iRoom.UnJoin(SetInactive);
+                    iRoom.UnJoin(SetInactive);
+                }
             }
 
             iEnabled.Dispose();
@@ -50,6 +55,14 @@ namespace OpenHome.Av
             get
             {
                 return iRoom;
+            }
+        }
+
+        public IWatchable<bool> Active
+        {
+            get
+            {
+                return iActive;
             }
         }
 
@@ -86,25 +99,24 @@ namespace OpenHome.Av
             iEnabled.Update(aValue);
         }
 
-        protected IWatchableThread WatchableThread
-        {
-            get
-            {
-                return iRoom.Network;
-            }
-        }
-
         private void SetInactive()
         {
-            iRoom.Sources.RemoveWatcher(this);
-            iRoom.UnJoin(SetInactive);
-            iActive = false;
+            lock (iActive)
+            {
+                iIsActive = false;
+
+                iActive.Update(false);
+
+                iRoom.Sources.RemoveWatcher(this);
+                iRoom.UnJoin(SetInactive);
+            }
         }
 
         protected INetwork iNetwork;
 
         private IStandardRoom iRoom;
-        private bool iActive;
+        private bool iIsActive;
+        private Watchable<bool> iActive;
         private Watchable<bool> iEnabled;
     }
 
