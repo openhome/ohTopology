@@ -78,15 +78,9 @@ namespace TestLinnHouse
                             IWatchableFragment<IMediaPreset> fragment = w.Read(0, w.Total).Result;
                             foreach (IMediaPreset m in fragment.Data)
                             {
-                                if (m == null)
-                                {
-                                    info += "null";
-                                }
-                                else
-                                {
-                                    string didl = iTagManager.ToDidlLite(m.Metadata);
-                                    info += didl;
-                                }
+                                info += m.Index + " ";
+                                string didl = iTagManager.ToDidlLite(m.Metadata);
+                                info += didl;
                                 info += "\n";
                             }
                             info += "Presets end";
