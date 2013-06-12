@@ -297,7 +297,7 @@ namespace OpenHome.Av
                     }
                     else
                     {
-                        presets.Add(new MediaPresetRadio(id, Network.TagManager.FromDidlLite(string.Empty), string.Empty, this));
+                        presets.Add(MediaPreset.Empty);
                     }
                 }
 
@@ -449,7 +449,7 @@ namespace OpenHome.Av
             {
                 if (m == null)
                 {
-                    iPresets.Add(new MediaPresetRadio(0, m, string.Empty, this));
+                    iPresets.Add(MediaPreset.Empty);
                 }
                 else
                 {
