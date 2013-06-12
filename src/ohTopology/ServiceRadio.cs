@@ -13,17 +13,27 @@ namespace OpenHome.Av
 {
     class MediaPresetRadio : IMediaPreset
     {
+        private readonly uint iIndex;
         private readonly uint iId;
         private readonly IMediaMetadata iMetadata;
         private readonly string iUri;
         private readonly ServiceRadio iRadio;
 
-        public MediaPresetRadio(uint aId, IMediaMetadata aMetadata, string aUri, ServiceRadio aRadio)
+        public MediaPresetRadio(uint aIndex, uint aId, IMediaMetadata aMetadata, string aUri, ServiceRadio aRadio)
         {
+            iIndex = aIndex;
             iId = aId;
             iMetadata = aMetadata;
             iUri = aUri;
             iRadio = aRadio;
+        }
+
+        public uint Index
+        {
+            get
+            {
+                return iIndex;
+            }
         }
 
         public IMediaMetadata Metadata
@@ -285,6 +295,7 @@ namespace OpenHome.Av
                 document.LoadXml(channelList);
 
                 string[] ids = aIdList.Split(' ');
+                uint index = 1;
                 foreach (string i in ids)
                 {
                     uint id = uint.Parse(i);
@@ -293,12 +304,9 @@ namespace OpenHome.Av
                         XmlNode n = document.SelectSingleNode(string.Format("/ChannelList/Entry[Id={0}]/Metadata", id));
                         IMediaMetadata metadata = Network.TagManager.FromDidlLite(n.InnerText);
                         string uri = metadata[Network.TagManager.Audio.Uri].Value;
-                        presets.Add(new MediaPresetRadio(id, metadata, uri, this));
+                        presets.Add(new MediaPresetRadio(index, id, metadata, uri, this));
                     }
-                    else
-                    {
-                        presets.Add(null);
-                    }
+                    ++index;
                 }
 
                 return presets;
@@ -444,18 +452,16 @@ namespace OpenHome.Av
             iProtocolInfo = aProtocolInfo;
 
             iPresets = new List<IMediaPreset>();
+            uint index = 1;
             uint id = 1;
             foreach (IMediaMetadata m in aPresets)
             {
-                if (m == null)
+                if (m != null)
                 {
-                    iPresets.Add(null);
-                }
-                else
-                {
-                    iPresets.Add(new MediaPresetRadio(id, m, m[Network.TagManager.Audio.Uri].Value, this));
+                    iPresets.Add(new MediaPresetRadio(index, id, m, m[Network.TagManager.Audio.Uri].Value, this));
                     ++id;
                 }
+                ++index;
             }
             
             iId.Update(aId);

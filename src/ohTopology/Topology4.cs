@@ -9,13 +9,23 @@ namespace OpenHome.Av
 {
     internal class MediaPresetExternal : IMediaPreset
     {
+        private readonly uint iIndex;
         private readonly IMediaMetadata iMetadata;
         private readonly Topology4Source iSource;
 
-        public MediaPresetExternal(IMediaMetadata aMetadata, Topology4Source aSource)
+        public MediaPresetExternal(uint aIndex, IMediaMetadata aMetadata, Topology4Source aSource)
         {
+            iIndex = aIndex;
             iMetadata = aMetadata;
             iSource = aSource;
+        }
+
+        public uint Index
+        {
+            get
+            {
+                return iIndex;
+            }
         }
 
         public IMediaMetadata Metadata
@@ -94,7 +104,7 @@ namespace OpenHome.Av
 
             MediaMetadata metadata = new MediaMetadata();
             metadata.Add(aTagManager.Audio.Title, aSource.Name);
-            iPreset = new MediaPresetExternal(metadata, this);
+            iPreset = new MediaPresetExternal(iIndex, metadata, this);
         }
 
         public uint Index

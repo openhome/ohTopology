@@ -28,6 +28,7 @@ namespace OpenHome.Av
 
     public interface IMediaPreset
     {
+        uint Index { get; }
         IMediaMetadata Metadata { get; }
         void Play();
     }

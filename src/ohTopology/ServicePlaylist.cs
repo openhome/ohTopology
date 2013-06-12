@@ -14,15 +14,25 @@ namespace OpenHome.Av
 {
     class MediaPresetPlaylist : IMediaPreset
     {
+        private readonly uint iIndex;
         private readonly uint iId;
         private readonly IMediaMetadata iMetadata;
         private readonly ServicePlaylist iPlaylist;
 
-        public MediaPresetPlaylist(uint aId, IMediaMetadata aMetadata, ServicePlaylist aPlaylist)
+        public MediaPresetPlaylist(uint aIndex, uint aId, IMediaMetadata aMetadata, ServicePlaylist aPlaylist)
         {
+            iIndex = aIndex;
             iId = aId;
             iMetadata = aMetadata;
             iPlaylist = aPlaylist;
+        }
+
+        public uint Index
+        {
+            get
+            {
+                return iIndex;
+            }
         }
 
         public IMediaMetadata Metadata
@@ -373,11 +383,13 @@ namespace OpenHome.Av
                 document.LoadXml(trackList);
 
                 XmlNodeList list = document.SelectNodes("/TrackList/Entry");
+                uint index = 1;
                 foreach (XmlNode n in list)
                 {
                     uint id = uint.Parse(n["Id"].InnerText);
                     IMediaMetadata metadata = Network.TagManager.FromDidlLite(n["Metadata"].InnerText);
-                    tracks.Add(new MediaPresetPlaylist(id, metadata, this));
+                    tracks.Add(new MediaPresetPlaylist(index, id, metadata, this));
+                    ++index;
                 }
 
                 return tracks;
