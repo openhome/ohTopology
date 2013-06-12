@@ -414,7 +414,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return ((uint)iIdArray.Count());
+                return ((uint)iIdArray.Where(v => v != 0).Count());
             }
         }
 
