@@ -32,23 +32,6 @@ namespace OpenHome.Av
         void Play();
     }
 
-    public class MediaPreset : IMediaPreset
-    {
-        public static readonly IMediaPreset Empty = new MediaPreset();
-
-        private MediaPreset() { }
-
-        public IMediaMetadata Metadata
-        {
-            get { throw new NotSupportedException(); }
-        }
-
-        public void Play()
-        {
-            throw new NotSupportedException();
-        }
-    }
-
     public interface IWatchableFragment<T>
     {
         uint Index { get; }

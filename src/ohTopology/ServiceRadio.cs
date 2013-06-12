@@ -297,7 +297,7 @@ namespace OpenHome.Av
                     }
                     else
                     {
-                        presets.Add(MediaPreset.Empty);
+                        presets.Add(null);
                     }
                 }
 
@@ -449,7 +449,7 @@ namespace OpenHome.Av
             {
                 if (m == null)
                 {
-                    iPresets.Add(MediaPreset.Empty);
+                    iPresets.Add(null);
                 }
                 else
                 {

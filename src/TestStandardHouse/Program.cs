@@ -78,7 +78,7 @@ namespace TestLinnHouse
                             IWatchableFragment<IMediaPreset> fragment = w.Read(0, w.Total).Result;
                             foreach (IMediaPreset m in fragment.Data)
                             {
-                                if (m == MediaPreset.Empty)
+                                if (m == null)
                                 {
                                     info += "null";
                                 }
