@@ -10,22 +10,65 @@ namespace TestZone
 {
     class Program
     {
-        class RoomControllerWatcher : IDisposable
+        class RoomControllerWatcher : IWatcher<IZone>, IDisposable
         {
             private ResultWatcherFactory iFactory;
+            private IStandardRoom iRoom;
+            private IVolumeController iController;
 
             public RoomControllerWatcher(ITagManager aTagManager, MockableScriptRunner aRunner, IStandardRoom aRoom)
             {
                 iFactory = new ResultWatcherFactory(aRunner);
-                iFactory.Create<RoomMetadata>(aRoom.Name, aRoom.Metadata, (v) =>
-                {
-                    return "Metadata " + v.Enabled + " " + aTagManager.ToDidlLite(v.Metadata) + " " + v.Uri;
-                });
+                iRoom = aRoom;
+
+                iRoom.Zone.AddWatcher(this);
             }
 
             public void Dispose()
             {
+                iRoom.Zone.RemoveWatcher(this);
+
                 iFactory.Dispose();
+            }
+
+            private void CreateController(IZone aZone)
+            {
+                iController = VolumeController.Create(aZone);
+                iFactory.Create<bool>(iRoom.Name, iController.Mute, v => "Zone Mute " + v);
+            }
+
+            private void DestroyController()
+            {
+                iFactory.Destroy(iRoom.Name);
+                iController.Dispose();
+            }
+
+            public void ItemOpen(string aId, IZone aValue)
+            {
+                if (aValue.Active)
+                {
+                    CreateController(aValue);
+                }
+            }
+
+            public void ItemUpdate(string aId, IZone aValue, IZone aPrevious)
+            {
+                if (aPrevious.Active)
+                {
+                    DestroyController();
+                }
+                if (aValue.Active)
+                {
+                    CreateController(aValue);
+                }
+            }
+
+            public void ItemClose(string aId, IZone aValue)
+            {
+                if (aValue.Active)
+                {
+                    DestroyController();
+                }
             }
         }
 
@@ -74,6 +117,10 @@ namespace TestZone
                     });
 
                     return "Zone " + v.Active + " " + (v.Active ? v.Sender.Udn : "") + " " + v.Room.Name;
+                });
+                iFactory.Create<RoomMetadata>(aItem.Name, aItem.Metadata, (v) =>
+                {
+                    return "Metadata " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metadata) + " " + v.Uri;
                 });
 
                 iWatcherLookup.Add(aItem, new RoomControllerWatcher(iTagManager, iRunner, aItem));

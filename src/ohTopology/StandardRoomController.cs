@@ -39,7 +39,7 @@ namespace OpenHome.Av
             iIsActive = true;
             iActive = new Watchable<bool>(iNetwork, "Active", true);
 
-            iVolumeController = new StandardVolumeController(aRoom);
+            iVolumeController = VolumeController.Create(aRoom);
 
             iHasSourceControl = new Watchable<bool>(iNetwork, "HasSourceControl", false);
             iHasInfoNext = new Watchable<bool>(iNetwork, "HasInfoNext", false);
@@ -460,7 +460,7 @@ namespace OpenHome.Av
         private bool iIsActive;
         private Watchable<bool> iActive;
 
-        private StandardVolumeController iVolumeController;
+        private IVolumeController iVolumeController;
 
         private ISourceController iSourceController;
         private Watchable<bool> iHasSourceControl;

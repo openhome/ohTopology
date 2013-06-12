@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
 
@@ -6,7 +7,7 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public interface IVolumeController
+    public interface IVolumeController : IDisposable
     {
         IWatchable<bool> HasVolume { get; }
         IWatchable<bool> Mute { get; }
@@ -19,7 +20,20 @@ namespace OpenHome.Av
         void VolumeDec();
     }
 
-    class StandardVolumeController : IWatcher<ITopology4Source>, IWatcher<bool>, IWatcher<uint>, IDisposable
+    public class VolumeController
+    {
+        public static IVolumeController Create(IStandardRoom aRoom)
+        {
+            return new StandardVolumeController(aRoom);
+        }
+
+        public static IVolumeController Create(IZone aZone)
+        {
+            return new ZoneVolumeController(aZone);
+        }
+    }
+
+    class StandardVolumeController : IVolumeController, IWatcher<ITopology4Source>, IWatcher<bool>, IWatcher<uint>
     {
         public StandardVolumeController(IStandardRoom aRoom)
         {
@@ -264,5 +278,253 @@ namespace OpenHome.Av
         private Watchable<bool> iMute;
         private Watchable<uint> iValue;
         private Watchable<uint> iVolumeLimit;
+    }
+
+    class VolumeWatcher : IWatcher<bool>, IDisposable
+    {
+        private readonly ZoneVolumeController iController;
+        private IVolumeController iVolume;
+
+        public VolumeWatcher(ZoneVolumeController aController, IStandardRoom aRoom)
+        {
+            iController = aController;
+
+            iVolume = VolumeController.Create(aRoom);
+            iVolume.HasVolume.AddWatcher(this);
+        }
+
+        public void Dispose()
+        {
+            iVolume.HasVolume.RemoveWatcher(this);
+            iVolume.Dispose();
+        }
+
+        public void ItemOpen(string aId, bool aValue)
+        {
+            if (aValue)
+            {
+                iController.AddVolumeController(iVolume);
+            }
+        }
+
+        public void ItemUpdate(string aId, bool aValue, bool aPrevious)
+        {
+            if (aPrevious)
+            {
+                iController.RemoveVolumeController(iVolume);
+            }
+            if (aValue)
+            {
+                iController.AddVolumeController(iVolume);
+            }
+        }
+
+        public void ItemClose(string aId, bool aValue)
+        {
+            if (aValue)
+            {
+                iController.RemoveVolumeController(iVolume);
+            }
+        }
+    }
+
+    class ZoneVolumeController : IVolumeController, IUnorderedWatcher<IStandardRoom>, IWatcher<bool>, IDisposable
+    {
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly INetwork iNetwork;
+        private readonly IZone iZone;
+
+        private readonly Watchable<bool> iHasVolume; 
+        private readonly Watchable<bool> iMute;
+        private readonly Watchable<uint> iValue;
+        private readonly Watchable<uint> iVolumeLimit;
+
+        private readonly Dictionary<IStandardRoom, VolumeWatcher> iVolumeLookup;
+        private readonly List<IVolumeController> iVolumeControllers;
+
+        private uint iMuteCount;
+
+        public ZoneVolumeController(IZone aZone)
+        {
+            iDisposeHandler = new DisposeHandler();
+            iNetwork = aZone.Room.Network;
+            iZone = aZone;
+
+            iMuteCount = 0;
+            iVolumeLookup = new Dictionary<IStandardRoom, VolumeWatcher>();
+            iVolumeControllers = new List<IVolumeController>();
+
+            iHasVolume = new Watchable<bool>(iNetwork, "HasVolume", false);
+            iMute = new Watchable<bool>(iNetwork, "Mute", false);
+            iValue = new Watchable<uint>(iNetwork, "Value", 0);
+            iVolumeLimit = new Watchable<uint>(iNetwork, "VolumeLimit", 0);
+
+            VolumeWatcher w = new VolumeWatcher(this, aZone.Room);
+            iVolumeLookup.Add(aZone.Room, w);
+            iZone.Listeners.AddWatcher(this);
+        }
+
+        public void Dispose()
+        {
+            iDisposeHandler.Dispose();
+
+            iZone.Listeners.RemoveWatcher(this);
+
+            foreach (var kvp in iVolumeLookup)
+            {
+                kvp.Value.Dispose();
+            }
+
+            iHasVolume.Dispose();
+            iMute.Dispose();
+            iValue.Dispose();
+            iVolumeLimit.Dispose();
+        }
+
+        public IWatchable<bool> HasVolume
+        {
+	        get
+            {
+                return iHasVolume;
+            }
+        }
+
+        public IWatchable<bool> Mute
+        {
+	        get
+            {
+                return iMute;
+            }
+        }
+
+        public IWatchable<uint> Volume
+        {
+	        get
+            {
+                return iValue;
+            }
+        }
+
+        public IWatchable<uint> VolumeLimit
+        {
+	        get
+            {
+                return iVolumeLimit;
+            }
+        }
+
+        public void SetMute(bool aMute)
+        {
+            iNetwork.Schedule(() =>
+            {
+                iVolumeControllers.ForEach(v => v.SetMute(aMute));
+            });
+        }
+
+        public void SetVolume(uint aVolume)
+        {
+            iNetwork.Schedule(() =>
+            {
+                iVolumeControllers.ForEach(v => v.SetVolume(aVolume));
+            });
+        }
+
+        public void VolumeInc()
+        {
+            iNetwork.Schedule(() =>
+            {
+                iVolumeControllers.ForEach(v => v.VolumeInc());
+            });
+        }
+
+        public void VolumeDec()
+        {
+            iNetwork.Schedule(() =>
+            {
+                iVolumeControllers.ForEach(v => v.VolumeDec());
+            });
+        }
+
+        internal void AddVolumeController(IVolumeController aController)
+        {
+            iVolumeControllers.Add(aController);
+            aController.Mute.AddWatcher(this);
+        }
+
+        internal void RemoveVolumeController(IVolumeController aController)
+        {
+            iVolumeControllers.Remove(aController);
+            aController.Mute.RemoveWatcher(this);
+        }
+
+        private void EvaluateMute()
+        {
+            bool mute = false;
+
+            if (iMuteCount > 0)
+            {
+                if (iMuteCount == iVolumeControllers.Count)
+                {
+                    mute = true;
+                }
+            }
+
+            iMute.Update(mute);
+        }
+
+        public void UnorderedOpen()
+        {
+        }
+
+        public void UnorderedInitialised()
+        {
+        }
+
+        public void UnorderedClose()
+        {
+        }
+
+        public void UnorderedAdd(IStandardRoom aItem)
+        {
+            VolumeWatcher w = new VolumeWatcher(this, aItem);
+            iVolumeLookup.Add(aItem, w);
+        }
+
+        public void UnorderedRemove(IStandardRoom aItem)
+        {
+            iVolumeLookup[aItem].Dispose();
+            iVolumeLookup.Remove(aItem);
+        }
+
+        public void ItemOpen(string aId, bool aValue)
+        {
+            if (aValue)
+            {
+                ++iMuteCount;
+            }
+            EvaluateMute();
+        }
+
+        public void ItemUpdate(string aId, bool aValue, bool aPrevious)
+        {
+            if (aPrevious)
+            {
+                --iMuteCount;
+            }
+            if (aValue)
+            {
+                ++iMuteCount;
+            }
+            EvaluateMute();
+        }
+
+        public void ItemClose(string aId, bool aValue)
+        {
+            if (aValue)
+            {
+                --iMuteCount;
+            }
+            EvaluateMute();
+        }
     }
 }
