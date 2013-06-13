@@ -93,7 +93,7 @@ namespace OpenHome.Av
             iPendingSubscriptions.Add(aItem);
             aItem.Create<IProxyProduct>((product) =>
             {
-                if (iPendingSubscriptions.Contains(aItem))
+                if (!iDisposed && iPendingSubscriptions.Contains(aItem))
                 {
                     iProducts.Add(product);
                     iProductLookup.Add(aItem, product);
