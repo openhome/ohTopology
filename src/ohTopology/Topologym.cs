@@ -177,6 +177,7 @@ namespace OpenHome.Av
 
     class ReceiverWatcher : IWatcher<string>, IWatcher<IInfoMetadata>, IWatcher<ITopology2Source>, IDisposable
     {
+        private bool iDisposed;
         private Topologym iTopology;
         private TopologymGroup iGroup;
         private IProxyReceiver iReceiver;
@@ -185,6 +186,7 @@ namespace OpenHome.Av
 
         public ReceiverWatcher(Topologym aTopology, TopologymGroup aGroup)
         {
+            iDisposed = false;
             iTopology = aTopology;
             iGroup = aGroup;
 
@@ -214,6 +216,8 @@ namespace OpenHome.Av
 
             iGroup = null;
             iTopology = null;
+
+            iDisposed = true;
         }
 
         public string ListeningToUri
@@ -271,10 +275,17 @@ namespace OpenHome.Av
             {
                 iGroup.Device.Create<IProxyReceiver>((receiver) =>
                 {
-                    iReceiver = receiver;
-                    iReceiver.TransportState.AddWatcher(this);
-                    iReceiver.Metadata.AddWatcher(this);
-                    iTopology.ReceiverChanged(this);
+                    if (!iDisposed)
+                    {
+                        iReceiver = receiver;
+                        iReceiver.TransportState.AddWatcher(this);
+                        iReceiver.Metadata.AddWatcher(this);
+                        iTopology.ReceiverChanged(this);
+                    }
+                    else
+                    {
+                        receiver.Dispose();
+                    }
                 });
             }
         }
@@ -290,6 +301,7 @@ namespace OpenHome.Av
 
     class SenderWatcher : IWatcher<ISenderMetadata>, IWatcher<string>, IDisposable
     {
+        private bool iDisposed;
         private Topologym iTopology;
         private IDevice iDevice;
         private IProxySender iSender;
@@ -298,16 +310,24 @@ namespace OpenHome.Av
 
         public SenderWatcher(Topologym aTopology, ITopology2Group aGroup)
         {
+            iDisposed = false;
             iTopology = aTopology;
             iDevice = aGroup.Device;
             iMetadata = SenderMetadata.Empty;
 
             aGroup.Device.Create<IProxySender>((sender) =>
             {
-                iSender = sender;
-                iSender.Status.AddWatcher(this);
-                iSender.Metadata.AddWatcher(this);
-                iTopology.SenderChanged(this, SenderMetadata.Empty);
+                if (!iDisposed)
+                {
+                    iSender = sender;
+                    iSender.Status.AddWatcher(this);
+                    iSender.Metadata.AddWatcher(this);
+                    iTopology.SenderChanged(this, SenderMetadata.Empty);
+                }
+                else
+                {
+                    sender.Dispose();
+                }
             });
         }
 
@@ -328,6 +348,8 @@ namespace OpenHome.Av
 
             iDevice = null;
             iTopology = null;
+
+            iDisposed = true;
         }
 
         public bool Enabled
