@@ -280,30 +280,49 @@ namespace OpenHome.Av
         private Watchable<uint> iVolumeLimit;
     }
 
-    class VolumeWatcher : IWatcher<bool>, IDisposable
+    class VolumeWatcher : IWatcher<bool>, IWatcher<uint>, IDisposable
     {
         private readonly ZoneVolumeController iController;
-        private IVolumeController iVolume;
+        private readonly IVolumeController iVolume;
+        private uint iValue;
+        private uint iVolumeLimit;
+        private Watchable<uint> iWatchableValue;
 
         public VolumeWatcher(ZoneVolumeController aController, IStandardRoom aRoom)
         {
             iController = aController;
 
+            iWatchableValue = new Watchable<uint>(aRoom.Network, "Value", iValue);
+
             iVolume = VolumeController.Create(aRoom);
+            iVolume.Volume.AddWatcher(this);
+            iVolume.VolumeLimit.AddWatcher(this);
             iVolume.HasVolume.AddWatcher(this);
         }
 
         public void Dispose()
         {
             iVolume.HasVolume.RemoveWatcher(this);
+            iVolume.VolumeLimit.RemoveWatcher(this);
+            iVolume.Volume.RemoveWatcher(this);
             iVolume.Dispose();
+
+            iWatchableValue.Dispose();
+        }
+
+        public IWatchable<uint> Value
+        {
+            get
+            {
+                return iWatchableValue;
+            }
         }
 
         public void ItemOpen(string aId, bool aValue)
         {
             if (aValue)
             {
-                iController.AddVolumeController(iVolume);
+                iController.AddVolumeController(iVolume, this);
             }
         }
 
@@ -311,11 +330,11 @@ namespace OpenHome.Av
         {
             if (aPrevious)
             {
-                iController.RemoveVolumeController(iVolume);
+                iController.RemoveVolumeController(iVolume, this);
             }
             if (aValue)
             {
-                iController.AddVolumeController(iVolume);
+                iController.AddVolumeController(iVolume, this);
             }
         }
 
@@ -323,12 +342,54 @@ namespace OpenHome.Av
         {
             if (aValue)
             {
-                iController.RemoveVolumeController(iVolume);
+                iController.RemoveVolumeController(iVolume, this);
+            }
+        }
+
+        public void ItemOpen(string aId, uint aValue)
+        {
+            if (aId == "VolumeLimit")
+            {
+                iVolumeLimit = aValue;
+            }
+            if (aId == "Volume")
+            {
+                iValue = aValue;
+            }
+            EvaluateValue();
+        }
+
+        public void ItemUpdate(string aId, uint aValue, uint aPrevious)
+        {
+            if (aId == "VolumeLimit")
+            {
+                iVolumeLimit = aValue;
+            }
+            if (aId == "Volume")
+            {
+                iValue = aValue;
+            }
+            EvaluateValue();
+        }
+
+        public void ItemClose(string aId, uint aValue)
+        {
+        }
+
+        private void EvaluateValue()
+        {
+            if (iVolumeLimit == 0)
+            {
+                iWatchableValue.Update(0);
+            }
+            else
+            {
+                iWatchableValue.Update((uint)(((float)iValue / (float)iVolumeLimit) * 100));
             }
         }
     }
 
-    class ZoneVolumeController : IVolumeController, IUnorderedWatcher<IStandardRoom>, IWatcher<bool>, IDisposable
+    class ZoneVolumeController : IVolumeController, IUnorderedWatcher<IStandardRoom>, IWatcher<bool>, IWatcher<uint>, IDisposable
     {
         private readonly DisposeHandler iDisposeHandler;
         private readonly INetwork iNetwork;
@@ -342,6 +403,7 @@ namespace OpenHome.Av
         private readonly Dictionary<IStandardRoom, VolumeWatcher> iVolumeLookup;
         private readonly List<IVolumeController> iVolumeControllers;
 
+        private uint iTotalValue;
         private uint iMuteCount;
 
         public ZoneVolumeController(IZone aZone)
@@ -350,6 +412,7 @@ namespace OpenHome.Av
             iNetwork = aZone.Room.Network;
             iZone = aZone;
 
+            iTotalValue = 0;
             iMuteCount = 0;
             iVolumeLookup = new Dictionary<IStandardRoom, VolumeWatcher>();
             iVolumeControllers = new List<IVolumeController>();
@@ -357,7 +420,7 @@ namespace OpenHome.Av
             iHasVolume = new Watchable<bool>(iNetwork, "HasVolume", false);
             iMute = new Watchable<bool>(iNetwork, "Mute", false);
             iValue = new Watchable<uint>(iNetwork, "Value", 0);
-            iVolumeLimit = new Watchable<uint>(iNetwork, "VolumeLimit", 0);
+            iVolumeLimit = new Watchable<uint>(iNetwork, "VolumeLimit", 100);
 
             VolumeWatcher w = new VolumeWatcher(this, aZone.Room);
             iVolumeLookup.Add(aZone.Room, w);
@@ -445,16 +508,18 @@ namespace OpenHome.Av
             });
         }
 
-        internal void AddVolumeController(IVolumeController aController)
+        internal void AddVolumeController(IVolumeController aController, VolumeWatcher aWatcher)
         {
             iVolumeControllers.Add(aController);
             aController.Mute.AddWatcher(this);
+            aWatcher.Value.AddWatcher(this);
         }
 
-        internal void RemoveVolumeController(IVolumeController aController)
+        internal void RemoveVolumeController(IVolumeController aController, VolumeWatcher aWatcher)
         {
             iVolumeControllers.Remove(aController);
             aController.Mute.RemoveWatcher(this);
+            aWatcher.Value.RemoveWatcher(this);
         }
 
         private void EvaluateMute()
@@ -525,6 +590,32 @@ namespace OpenHome.Av
                 --iMuteCount;
             }
             EvaluateMute();
+        }
+
+        public void ItemOpen(string aId, uint aValue)
+        {
+            iTotalValue += aValue;
+            iValue.Update(iTotalValue / (uint)iVolumeControllers.Count());
+        }
+
+        public void ItemUpdate(string aId, uint aValue, uint aPrevious)
+        {
+            iTotalValue -= aPrevious;
+            iTotalValue += aValue;
+            iValue.Update(iTotalValue / (uint)iVolumeControllers.Count());
+        }
+
+        public void ItemClose(string aId, uint aValue)
+        {
+            iTotalValue -= aValue;
+            if (iVolumeControllers.Count() > 0)
+            {
+                iValue.Update(iTotalValue / (uint)iVolumeControllers.Count());
+            }
+            else
+            {
+                iValue.Update(0);
+            }
         }
     }
 }
