@@ -17,6 +17,7 @@ namespace OpenHome.Av
             iSource = aSource;
 
             iHasSourceControl = aHasSourceControl;
+            iHasContainer = aHasContainer;
             iCanPause = aCanPause;
             iCanSeek = aCanSeek;
             iTransportState = aTransportState;
