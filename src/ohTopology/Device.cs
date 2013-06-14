@@ -9,7 +9,7 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public interface IDevice
+    public interface IDevice : IJoinable
     {
         string Udn { get; }
         void Create<T>(Action<T> aCallback) where T : IProxy;
@@ -20,8 +20,9 @@ namespace OpenHome.Av
         public Device(string aUdn)
         {
             iUdn = aUdn;
-
             iDisposed = false;
+
+            iJoiners = new List<Action>();
             iServices = new Dictionary<Type, Service>();
         }
 
@@ -29,8 +30,19 @@ namespace OpenHome.Av
         {
             if (iDisposed)
             {
-                throw new ObjectDisposedException("WatchableDevice.Dispose");
+                throw new ObjectDisposedException("Device.Dispose");
             }
+
+            List<Action> linked = new List<Action>(iJoiners);
+            foreach (Action a in linked)
+            {
+                a();
+            }
+            if (iJoiners.Count > 0)
+            {
+                throw new Exception("Device joiners > 0");
+            }
+            iJoiners = null;
 
             foreach (IService s in iServices.Values)
             {
@@ -40,6 +52,16 @@ namespace OpenHome.Av
             iServices = null;
 
             iDisposed = true;
+        }
+
+        public void Join(Action aAction)
+        {
+            iJoiners.Add(aAction);
+        }
+
+        public void UnJoin(Action aAction)
+        {
+            iJoiners.Remove(aAction);
         }
 
         public string Udn
@@ -126,6 +148,7 @@ namespace OpenHome.Av
 
         private string iUdn;
         private bool iDisposed;
+        private List<Action> iJoiners;
 
         protected Dictionary<Type, Service> iServices;
     }

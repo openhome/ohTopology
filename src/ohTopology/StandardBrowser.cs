@@ -268,12 +268,6 @@ namespace OpenHome.Av
         private Watchable<RoomMetatext> iMetatext;
     }
 
-    public interface IJoinable
-    {
-        void Join(Action aAction);
-        void UnJoin(Action aAction);
-    }
-
     public class RoomSenderMetadata : ISenderMetadata
     {
         public RoomSenderMetadata()
@@ -446,7 +440,7 @@ namespace OpenHome.Av
             }
             if (iJoiners.Count > 0)
             {
-                throw new Exception("iJoiners.Count > 0");
+                throw new Exception("StandardRoom joiners > 0");
             }
             iJoiners = null;
 

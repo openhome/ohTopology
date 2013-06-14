@@ -79,6 +79,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ByteArray.cs" />
+    <Compile Include="Joinable.cs" />
     <Compile Include="Service.cs" />
     <Compile Include="ServiceMediaServerUpnp.cs" />
     <Compile Include="ServiceMediaServerMock.cs" />
