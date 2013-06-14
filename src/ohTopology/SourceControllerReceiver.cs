@@ -8,7 +8,7 @@ namespace OpenHome.Av
     public class SourceControllerReceiver : IWatcher<string>, ISourceController
     {
         public SourceControllerReceiver(ITopology4Source aSource, Watchable<bool> aHasSourceControl,
-            Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause,
+            Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<bool> aHasContainer, Watchable<string> aTransportState, Watchable<bool> aCanPause,
             Watchable<bool> aCanSkip, Watchable<bool> aCanSeek, Watchable<bool> aHasPlayMode, Watchable<bool> aShuffle, Watchable<bool> aRepeat)
         {
             iDisposed = false;
@@ -25,8 +25,10 @@ namespace OpenHome.Av
                     iReceiver = receiver;
 
                     aHasInfoNext.Update(false);
-                    aCanSkip.Update(false);
+                    aHasContainer.Update(false);
                     aCanPause.Update(true);
+                    aCanSkip.Update(false);
+                    aCanSeek.Update(false);
                     aHasPlayMode.Update(false);
 
                     iReceiver.TransportState.AddWatcher(this);
@@ -61,6 +63,14 @@ namespace OpenHome.Av
             iTransportState = null;
 
             iDisposed = true;
+        }
+
+        public Task<IWatchableContainer<IMediaPreset>> Container
+        {
+            get
+            {
+                throw new NotSupportedException();
+            }
         }
 
         public void Play()

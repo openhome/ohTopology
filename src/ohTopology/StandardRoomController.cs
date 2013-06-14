@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using OpenHome.Os.App;
 
@@ -14,6 +15,8 @@ namespace OpenHome.Av
 
         IWatchable<bool> HasInfoNext { get; }
         IWatchable<IInfoMetadata> InfoNext { get; }
+
+        IWatchable<bool> HasContainer { get; }
 
         IWatchable<bool> HasSourceControl { get; }
         IWatchable<string> TransportState { get; }
@@ -44,6 +47,7 @@ namespace OpenHome.Av
             iHasSourceControl = new Watchable<bool>(iNetwork, "HasSourceControl", false);
             iHasInfoNext = new Watchable<bool>(iNetwork, "HasInfoNext", false);
             iInfoNext = new Watchable<IInfoMetadata>(iNetwork, "InfoNext", new RoomMetadata());
+            iHasContainer = new Watchable<bool>(iNetwork, "HasQueue", false);
 
             iCanPause = new Watchable<bool>(iNetwork, "CanPause", false);
             iCanSkip = new Watchable<bool>(iNetwork, "CanSkip", false);
@@ -86,6 +90,9 @@ namespace OpenHome.Av
 
             iInfoNext.Dispose();
             iInfoNext = null;
+
+            iHasContainer.Dispose();
+            iHasContainer = null;
 
             iVolumeController.Dispose();
             iVolumeController = null;
@@ -288,6 +295,33 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<bool> HasContainer
+        {
+            get
+            {
+                return iHasContainer;
+            }
+        }
+
+        public Task<IWatchableContainer<IMediaPreset>> Container
+        {
+            get
+            {
+                Task<IWatchableContainer<IMediaPreset>> task = null;
+                iNetwork.Execute(() =>
+                {
+                    if (iActive.Value)
+                    {
+                        if (iHasSourceControl.Value)
+                        {
+                            task = iSourceController.Container;
+                        }
+                    }
+                });
+                return task;
+            }
+        }
+
         public IWatchable<string> TransportState
         {
             get
@@ -430,7 +464,7 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, ITopology4Source aValue)
         {
-            iSourceController = SourceController.Create(aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek, iHasPlayMode, iShuffle, iRepeat);
+            iSourceController = SourceController.Create(aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iHasContainer, iTransportState, iCanPause, iCanSkip, iCanSeek, iHasPlayMode, iShuffle, iRepeat);
         }
 
         public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
@@ -441,7 +475,7 @@ namespace OpenHome.Av
                 iSourceController = null;
             }
 
-            iSourceController = SourceController.Create(aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iTransportState, iCanPause, iCanSkip, iCanSeek, iHasPlayMode, iShuffle, iRepeat);
+            iSourceController = SourceController.Create(aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iHasContainer, iTransportState, iCanPause, iCanSkip, iCanSeek, iHasPlayMode, iShuffle, iRepeat);
         }
 
         public void ItemClose(string aId, ITopology4Source aValue)
@@ -466,6 +500,7 @@ namespace OpenHome.Av
         private Watchable<bool> iHasSourceControl;
         private Watchable<bool> iHasInfoNext;
         private Watchable<IInfoMetadata> iInfoNext;
+        private Watchable<bool> iHasContainer;
         private Watchable<string> iTransportState;
         private Watchable<bool> iCanPause;
         private Watchable<bool> iCanSkip;

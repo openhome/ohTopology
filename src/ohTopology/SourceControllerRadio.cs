@@ -8,7 +8,7 @@ namespace OpenHome.Av
     public class SourceControllerRadio : IWatcher<string>, ISourceController
     {
         public SourceControllerRadio(ITopology4Source aSource, Watchable<bool> aHasSourceControl,
-            Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<string> aTransportState, Watchable<bool> aCanPause,
+            Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<bool> aHasContainer, Watchable<string> aTransportState, Watchable<bool> aCanPause,
             Watchable<bool> aCanSkip, Watchable<bool> aCanSeek, Watchable<bool> aHasPlayMode, Watchable<bool> aShuffle, Watchable<bool> aRepeat)
         {
             iLock = new object();
@@ -28,9 +28,10 @@ namespace OpenHome.Av
                     iRadio = radio;
 
                     aHasInfoNext.Update(false);
-                    aCanSkip.Update(false);
+                    iHasContainer.Update(true);
                     iCanPause.Update(false);
                     iCanSeek.Update(false);
+                    aCanSkip.Update(false);
                     aHasPlayMode.Update(false);
 
                     iRadio.TransportState.AddWatcher(this);
@@ -54,6 +55,7 @@ namespace OpenHome.Av
             if (iRadio != null)
             {
                 iHasSourceControl.Update(false);
+                iHasContainer.Update(false);
 
                 iRadio.TransportState.RemoveWatcher(this);
 
@@ -62,11 +64,20 @@ namespace OpenHome.Av
             }
 
             iHasSourceControl = null;
+            iHasContainer = null;
             iCanPause = null;
             iCanSeek = null;
             iTransportState = null;
 
             iDisposed = true;
+        }
+
+        public Task<IWatchableContainer<IMediaPreset>> Container
+        {
+            get
+            {
+                return iRadio.Container;
+            }
         }
 
         public void Play()
@@ -130,6 +141,7 @@ namespace OpenHome.Av
         private IProxyRadio iRadio;
 
         private Watchable<bool> iHasSourceControl;
+        private Watchable<bool> iHasContainer;
         private Watchable<bool> iCanPause;
         private Watchable<bool> iCanSeek;
         private Watchable<string> iTransportState;
