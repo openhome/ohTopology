@@ -124,6 +124,8 @@ namespace OpenHome.Av
 
             iRepeat.Dispose();
             iRepeat = null;
+
+            iDisposed = true;
         }
 
         private void SetInactive()
