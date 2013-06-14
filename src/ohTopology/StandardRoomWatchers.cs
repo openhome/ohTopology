@@ -345,6 +345,17 @@ namespace OpenHome.Av
         {
         }
 
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            iConfigured.Dispose();
+            iConfigured = null;
+
+            iUnconfigured.Dispose();
+            iUnconfigured = null;
+        }
+
         public IWatchableContainer<IMediaPreset> Configured
         {
             get
@@ -371,17 +382,6 @@ namespace OpenHome.Av
         protected override void EvaluateEnabledUpdate(IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
         {
             EvaluateEnabled(aValue);
-        }
-
-        protected override void EvaluateEnabledClose(IEnumerable<ITopology4Source> aValue)
-        {
-            base.EvaluateEnabledClose(aValue);
-
-            iConfigured.Dispose();
-            iConfigured = null;
-
-            iUnconfigured.Dispose();
-            iUnconfigured = null;
         }
 
         private void EvaluateEnabled(IEnumerable<ITopology4Source> aValue)

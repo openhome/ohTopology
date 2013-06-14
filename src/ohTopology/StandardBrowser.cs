@@ -428,11 +428,6 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            iNetwork.Execute(() =>
-            {
-                iRoom.Roots.RemoveWatcher(this);
-            });
-
             List<Action> linked = new List<Action>(iJoiners);
             foreach (Action a in linked)
             {
@@ -443,6 +438,11 @@ namespace OpenHome.Av
                 throw new Exception("StandardRoom joiners > 0");
             }
             iJoiners = null;
+
+            iNetwork.Execute(() =>
+            {
+                iRoom.Roots.RemoveWatcher(this);
+            });
 
             iDetails.Dispose();
             iDetails = null;
