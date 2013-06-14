@@ -988,6 +988,7 @@ namespace OpenHome.Av
     {
         public StandardHouse(INetwork aNetwork, ITopology4 aTopology4)
         {
+            iDisposed = false;
             iNetwork = aNetwork;
             iTopology4 = aTopology4;
 
@@ -1009,7 +1010,7 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            if (iTopology4 == null)
+            if (iDisposed)
             {
                 throw new ObjectDisposedException("StandardHouse.Dispose");
             }
@@ -1051,6 +1052,7 @@ namespace OpenHome.Av
             iServerLookup = null;
 
             iTopology4 = null;
+            iDisposed = true;
         }
 
         public IWatchableOrdered<IStandardRoom> Rooms
@@ -1084,6 +1086,10 @@ namespace OpenHome.Av
         }
 
         public void UnorderedInitialised()
+        {
+        }
+
+        public void UnorderedClose()
         {
         }
 
@@ -1126,42 +1132,43 @@ namespace OpenHome.Av
 
         public void UnorderedAdd(IDevice aItem)
         {
-            aItem.Create<IProxyMediaServer>((t) =>
+            aItem.Create<IProxyMediaServer>((server) =>
             {
-                // calculate where to insert the server
-                int index = 0;
-                foreach (IProxyMediaServer ms in iWatchableServers.Values)
+                if (!iDisposed)
                 {
-                    if (t.ProductName.CompareTo(ms.ProductName) < 0)
+                    // calculate where to insert the server
+                    int index = 0;
+                    foreach (IProxyMediaServer ms in iWatchableServers.Values)
                     {
-                        break;
+                        if (server.ProductName.CompareTo(ms.ProductName) < 0)
+                        {
+                            break;
+                        }
+                        ++index;
                     }
-                    ++index;
-                }
 
-                // insert the server
-                iServerLookup.Add(aItem, t);
-                iWatchableServers.Add(t, (uint)index);
+                    // insert the server
+                    iServerLookup.Add(aItem, server);
+                    iWatchableServers.Add(server, (uint)index);
+                }
+                else
+                {
+                    server.Dispose();
+                }
             });
         }
 
         public void UnorderedRemove(IDevice aItem)
         {
-            // remove the corresponding server from the watchable collection
-            IProxyMediaServer proxy = iServerLookup[aItem];
-
-            iServerLookup.Remove(aItem);
-            iWatchableServers.Remove(proxy);
-
-            // schedule the server object for disposal
-            iNetwork.Schedule(() =>
+            IProxyMediaServer server;
+            if (iServerLookup.TryGetValue(aItem, out server))
             {
-                proxy.Dispose();
-            });
-        }
+                // remove the corresponding server from the watchable collection
+                iServerLookup.Remove(aItem);
+                iWatchableServers.Remove(server);
 
-        public void UnorderedClose()
-        {
+                server.Dispose();
+            }
         }
 
         public void Execute(IEnumerable<string> aValue)
@@ -1227,6 +1234,7 @@ namespace OpenHome.Av
             }
         }
 
+        private bool iDisposed;
         private INetwork iNetwork;
         private ITopology4 iTopology4;
 
