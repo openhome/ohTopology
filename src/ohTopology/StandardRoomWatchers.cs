@@ -39,8 +39,8 @@ namespace OpenHome.Av
                     {
                         iRoom.Sources.RemoveWatcher(this);
                     });
-
                     iRoom.UnJoin(SetInactive);
+                    iIsActive = false;
                 }
             }
 
@@ -103,12 +103,15 @@ namespace OpenHome.Av
         {
             lock (iActive)
             {
-                iIsActive = false;
+                if (iIsActive)
+                {
+                    iIsActive = false;
 
-                iActive.Update(false);
+                    iActive.Update(false);
 
-                iRoom.Sources.RemoveWatcher(this);
-                iRoom.UnJoin(SetInactive);
+                    iRoom.Sources.RemoveWatcher(this);
+                    iRoom.UnJoin(SetInactive);
+                }
             }
         }
 

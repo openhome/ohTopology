@@ -428,6 +428,11 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
+            if (iDisposed)
+            {
+                throw new ObjectDisposedException("StandardRoom.Dispose");
+            }
+
             List<Action> linked = new List<Action>(iJoiners);
             foreach (Action a in linked)
             {

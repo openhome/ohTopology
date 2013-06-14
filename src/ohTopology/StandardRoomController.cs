@@ -35,6 +35,7 @@ namespace OpenHome.Av
     {
         public StandardRoomController(IStandardRoom aRoom)
         {
+            iDisposed = false;
             iNetwork = aRoom.Network;
             iRoom = aRoom;
 
@@ -65,6 +66,11 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
+            if (iDisposed)
+            {
+                throw new ObjectDisposedException("StandardRoomController.Dispose");
+            }
+
             lock (iLock)
             {
                 if (iIsActive)
@@ -74,6 +80,7 @@ namespace OpenHome.Av
                         iRoom.Source.RemoveWatcher(this);
                     });
                     iRoom.UnJoin(SetInactive);
+                    iIsActive = false;
                 }
             }
 
@@ -123,12 +130,15 @@ namespace OpenHome.Av
         {
             lock (iLock)
             {
-                iIsActive = false;
+                if (iIsActive)
+                {
+                    iIsActive = false;
 
-                iActive.Update(false);
+                    iActive.Update(false);
 
-                iRoom.Source.RemoveWatcher(this);
-                iRoom.UnJoin(SetInactive);
+                    iRoom.Source.RemoveWatcher(this);
+                    iRoom.UnJoin(SetInactive);
+                }
             }
         }
 
@@ -487,6 +497,7 @@ namespace OpenHome.Av
             }
         }
 
+        private bool iDisposed;
         private INetwork iNetwork;
         private IStandardRoom iRoom;
 
