@@ -30,7 +30,7 @@ namespace TestLinnHouse
                 iTime = new StandardRoomTime(aRoom);
                 iWatcherExternal = new StandardRoomWatcherExternal(aRoom);
                 iWatcherRadio = new StandardRoomWatcherRadio(aRoom);
-                iWatcherMusic = new StandardRoomWatcherMusic(iHouse, aRoom);
+                iWatcherMusic = new StandardRoomWatcherMusic(aRoom);
 
                 iFactory.Create<bool>(iController.Name, iController.Active, v => "Controller Active " + v);
                 iFactory.Create<bool>(iController.Name, iController.HasVolume, v => "HasVolume " + v);

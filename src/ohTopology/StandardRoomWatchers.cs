@@ -154,27 +154,18 @@ namespace OpenHome.Av
         private readonly Watchable<bool> iEnabled;
     }
 
-    public class StandardRoomWatcherMusic : StandardRoomWatcher, IOrderedWatcher<IProxyMediaServer>
+    public class StandardRoomWatcherMusic : StandardRoomWatcher
     {
-        private IStandardHouse iHouse;
-        private uint iServerCount;
-        private bool iHasCompatibleSource;
         private IProxyPlaylist iPlaylist;
 
-        public StandardRoomWatcherMusic(IStandardHouse aHouse, IStandardRoom aRoom)
+        public StandardRoomWatcherMusic(IStandardRoom aRoom)
             : base(aRoom)
         {
-            iHouse = aHouse;
-            iServerCount = 0;
-
-            iHouse.Servers.AddWatcher(this);
         }
 
         public override void Dispose()
         {
             base.Dispose();
-
-            iHouse.Servers.RemoveWatcher(this);
 
             if (iPlaylist != null)
             {
@@ -187,17 +178,6 @@ namespace OpenHome.Av
             if (iPlaylist != null)
             {
                 iPlaylist.Dispose();
-            }
-        }
-
-        public IWatchableOrdered<IProxyMediaServer> Servers
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iHouse.Servers;
-                }
             }
         }
 
@@ -245,7 +225,6 @@ namespace OpenHome.Av
         {
             SetEnabled(false);
 
-            iHasCompatibleSource = false;
             foreach (ITopology4Source s in aValue)
             {
                 if (s.Type == "Playlist")
@@ -253,40 +232,11 @@ namespace OpenHome.Av
                     s.Device.Create<IProxyPlaylist>((playlist) =>
                     {
                         iPlaylist = playlist;
-                        iHasCompatibleSource = true;
-                        SetEnabled(iServerCount > 0);
+                        SetEnabled(true);
                     });
                     return;
                 }
             }
-        }
-
-        public void OrderedOpen()
-        {
-        }
-
-        public void OrderedInitialised()
-        {
-        }
-
-        public void OrderedClose()
-        {
-        }
-
-        public void OrderedAdd(IProxyMediaServer aItem, uint aIndex)
-        {
-            ++iServerCount;
-            SetEnabled(iHasCompatibleSource && (iServerCount > 0));
-        }
-
-        public void OrderedMove(IProxyMediaServer aItem, uint aFrom, uint aTo)
-        {
-        }
-
-        public void OrderedRemove(IProxyMediaServer aItem, uint aIndex)
-        {
-            --iServerCount;
-            SetEnabled(iHasCompatibleSource && (iServerCount > 0));
         }
     }
 

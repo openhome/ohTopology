@@ -33,7 +33,7 @@ Presets begin
 7 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Sky Radio News (World News)</dc:title><res protocolInfo="*:*:*:*" bitrate="4000">http://opml.radiotime.com/Tune.ashx?id=s81093&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s81093q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
 Presets end
 expect Kitchen open Presets Enabled True
-expect Kitchen open Music Enabled False
+expect Kitchen open Music Enabled True
 
 expect Room Added: Sitting Room at 1
 expect Sitting Room open Standby eOn
@@ -73,7 +73,7 @@ Presets begin
 7 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Sky Radio News (World News)</dc:title><res protocolInfo="*:*:*:*" bitrate="4000">http://opml.radiotime.com/Tune.ashx?id=s81093&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s81093q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
 Presets end
 expect Sitting Room open Presets Enabled True
-expect Sitting Room open Music Enabled False
+expect Sitting Room open Music Enabled True
 
 expect Room Added: Bedroom at 0
 expect Bedroom open Standby eOn
@@ -113,7 +113,7 @@ Presets begin
 7 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Sky Radio News (World News)</dc:title><res protocolInfo="*:*:*:*" bitrate="4000">http://opml.radiotime.com/Tune.ashx?id=s81093&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s81093q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
 Presets end
 expect Bedroom open Presets Enabled True
-expect Bedroom open Music Enabled False
+expect Bedroom open Music Enabled True
 
 expect Room Added: Dining Room at 1
 expect Dining Room open Standby eOn
@@ -146,12 +146,7 @@ Presets begin
 7 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Sky Radio News (World News)</dc:title><res protocolInfo="*:*:*:*" bitrate="4000">http://opml.radiotime.com/Tune.ashx?id=s81093&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s81093q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
 Presets end
 expect Dining Room open Presets Enabled True
-expect Dining Room open Music Enabled False
-
-expect Kitchen update Music Enabled True
-expect Sitting Room update Music Enabled True
-expect Bedroom update Music Enabled True
-expect Dining Room update Music Enabled True
+expect Dining Room open Music Enabled True
 empty
 
 // test adding a new room
