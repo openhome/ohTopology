@@ -121,6 +121,8 @@ namespace OpenHome.Av
             }
         }
 
+        protected virtual void OnSetInactive() { }
+
         private void SetInactive()
         {
             using (iDisposeHandler.Lock)
@@ -134,6 +136,9 @@ namespace OpenHome.Av
                         iActive.Update(false);
 
                         iRoom.Sources.RemoveWatcher(this);
+
+                        OnSetInactive();
+
                         iRoom.UnJoin(SetInactive);
                     }
                 }
@@ -171,6 +176,14 @@ namespace OpenHome.Av
 
             iHouse.Servers.RemoveWatcher(this);
 
+            if (iPlaylist != null)
+            {
+                iPlaylist.Dispose();
+            }
+        }
+
+        protected override void OnSetInactive()
+        {
             if (iPlaylist != null)
             {
                 iPlaylist.Dispose();
@@ -290,6 +303,14 @@ namespace OpenHome.Av
         {
             base.Dispose();
 
+            if (iRadio != null)
+            {
+                iRadio.Dispose();
+            }
+        }
+
+        protected override void OnSetInactive()
+        {
             if (iRadio != null)
             {
                 iRadio.Dispose();
