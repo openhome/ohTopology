@@ -282,7 +282,7 @@ namespace OpenHome.Av
             return task;
         }
 
-        public Task<IEnumerable<IMediaPreset>> ReadList(string aIdList)
+        public Task<IEnumerable<IMediaPreset>> ReadList(IList<uint> aIdArray, string aIdList)
         {
             Task<IEnumerable<IMediaPreset>> task = Task<IEnumerable<IMediaPreset>>.Factory.StartNew(() =>
             {
@@ -295,7 +295,6 @@ namespace OpenHome.Av
                 document.LoadXml(channelList);
 
                 string[] ids = aIdList.Split(' ');
-                uint index = 1;
                 foreach (string i in ids)
                 {
                     uint id = uint.Parse(i);
@@ -304,9 +303,8 @@ namespace OpenHome.Av
                         XmlNode n = document.SelectSingleNode(string.Format("/ChannelList/Entry[Id={0}]/Metadata", id));
                         IMediaMetadata metadata = Network.TagManager.FromDidlLite(n.InnerText);
                         string uri = metadata[Network.TagManager.Audio.Uri].Value;
-                        presets.Add(new MediaPresetRadio(index, id, metadata, uri, this));
+                        presets.Add(new MediaPresetRadio((uint)aIdArray.IndexOf(id), id, metadata, uri, this));
                     }
-                    ++index;
                 }
 
                 return presets;
@@ -435,7 +433,7 @@ namespace OpenHome.Av
                 {
                     idList += string.Format("{0} ", iIdArray[(int)i]);
                 }
-                return new WatchableFragment<IMediaPreset>(aIndex, iRadio.ReadList(idList.TrimEnd(' ')).Result);
+                return new WatchableFragment<IMediaPreset>(aIndex, iRadio.ReadList(iIdArray, idList.TrimEnd(' ')).Result);
             });
             return task;
         }
