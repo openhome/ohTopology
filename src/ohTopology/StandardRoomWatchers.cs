@@ -178,6 +178,7 @@ namespace OpenHome.Av
             if (iPlaylist != null)
             {
                 iPlaylist.Dispose();
+                iPlaylist = null;
             }
         }
 
@@ -264,6 +265,7 @@ namespace OpenHome.Av
             if (iRadio != null)
             {
                 iRadio.Dispose();
+                iRadio = null;
             }
         }
 
