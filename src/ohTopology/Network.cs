@@ -236,6 +236,7 @@ namespace OpenHome.Av
 
     public interface INetwork : IMockThread, IDisposable
     {
+        IIdCache IdCache { get; }
         ITagManager TagManager { get; }
         IWatchableUnordered<IDevice> Create<T>() where T : IProxy;
         //void Refresh();
@@ -246,25 +247,28 @@ namespace OpenHome.Av
         private readonly IMockThread iThread;
 
         private readonly DisposeHandler iDisposeHandler;
+        private readonly IdCache iCache;
         private readonly ITagManager iTagManager;
         private readonly List<Device> iDevices;
         private readonly Dictionary<Type, WatchableUnordered<IDevice>> iDeviceLists;
 
-        public Network()
+        public Network(uint aMaxCacheEntries)
         {
             iThread = new MockThread();
 
             iDisposeHandler = new DisposeHandler();
+            iCache = new IdCache(aMaxCacheEntries);
             iTagManager = new TagManager();
             iDevices = new List<Device>();
             iDeviceLists = new Dictionary<Type, WatchableUnordered<IDevice>>();
         }
 
-        public Network(IWatchableThread aWatchableThread)
+        public Network(IWatchableThread aWatchableThread, uint aMaxCacheEntries)
         {
             iThread = new MockThreadAdapter(aWatchableThread);
 
             iDisposeHandler = new DisposeHandler();
+            iCache = new IdCache(aMaxCacheEntries);
             iTagManager = new TagManager();
             iDevices = new List<Device>();
             iDeviceLists = new Dictionary<Type, WatchableUnordered<IDevice>>();
@@ -325,6 +329,17 @@ namespace OpenHome.Av
                         }
                     }
                     return list;
+                }
+            }
+        }
+
+        public IIdCache IdCache
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iCache;
                 }
             }
         }

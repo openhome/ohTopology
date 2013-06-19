@@ -84,7 +84,7 @@ namespace OpenHome.Av
 
         public void Create<T>(Action<T> aCallback) where T : IProxy
         {
-            iServices[typeof(T)].Create<T>(this, aCallback);
+            iServices[typeof(T)].Create<T>(aCallback);
         }
 
         private IService GetService(string aType)

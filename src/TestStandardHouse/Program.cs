@@ -15,6 +15,7 @@ namespace TestLinnHouse
             private ITagManager iTagManager;
             private IStandardHouse iHouse;
             private ResultWatcherFactory iFactory;
+            private ResultWatcherFactory iFactoryRadioPresets;
             private IStandardRoomController iController;
             private IStandardRoomTime iTime;
             private StandardRoomWatcherExternal iWatcherExternal;
@@ -26,6 +27,7 @@ namespace TestLinnHouse
                 iTagManager = aTagManager;
                 iHouse = aHouse;
                 iFactory = new ResultWatcherFactory(aRunner);
+                iFactoryRadioPresets = new ResultWatcherFactory(aRunner);
                 iController = new StandardRoomController(aRoom);
                 iTime = new StandardRoomTime(aRoom);
                 iWatcherExternal = new StandardRoomWatcherExternal(aRoom);
@@ -72,7 +74,7 @@ namespace TestLinnHouse
                     if (v)
                     {
                         IWatchableContainer<IMediaPreset> container = iWatcherRadio.Container.Result;
-                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherRadio.Room.Name, container.Snapshot, w =>
+                        iFactoryRadioPresets.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherRadio.Room.Name, container.Snapshot, w =>
                         {
                             string info = "\nPresets begin\n";
                             IWatchableFragment<IMediaPreset> fragment = w.Read(0, w.Total).Result;
@@ -87,6 +89,10 @@ namespace TestLinnHouse
                             return info;
                         });
                     }
+                    else
+                    {
+                        iFactoryRadioPresets.Destroy(iWatcherRadio.Room.Name);
+                    }
 
                     return "Presets Enabled " + v;
                 });
@@ -100,6 +106,7 @@ namespace TestLinnHouse
             public void Dispose()
             {
                 iFactory.Dispose();
+                iFactoryRadioPresets.Dispose();
                 iController.Dispose();
                 iTime.Dispose();
                 iWatcherExternal.Dispose();
@@ -185,17 +192,11 @@ namespace TestLinnHouse
 
             Mockable mocker = new Mockable();
 
-            Network network = new Network();
+            Network network = new Network(50);
             DeviceInjectorMock mockInjector = new DeviceInjectorMock(network);
             mocker.Add("network", mockInjector);
 
-            Topology1 topology1 = new Topology1(network);
-            Topology2 topology2 = new Topology2(topology1);
-            Topologym topologym = new Topologym(topology2);
-            Topology3 topology3 = new Topology3(topologym);
-            Topology4 topology4 = new Topology4(topology3);
-
-            StandardHouse house = new StandardHouse(network, topology4);
+            StandardHouse house = new StandardHouse(network);
 
             MockableScriptRunner runner = new MockableScriptRunner();
 
@@ -223,16 +224,6 @@ namespace TestLinnHouse
             });
 
             house.Dispose();
-
-            topology4.Dispose();
-
-            topology3.Dispose();
-
-            topologym.Dispose();
-
-            topology2.Dispose();
-
-            topology1.Dispose();
 
             mockInjector.Dispose();
 

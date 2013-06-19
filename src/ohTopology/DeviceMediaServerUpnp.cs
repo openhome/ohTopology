@@ -76,7 +76,7 @@ namespace OpenHome.Av
             string productName = GetDeviceValueFrom(upnpFriendlyName);
             string productUrl = GetDeviceValueFrom(upnpPresentationUrl);
 
-            iService = new ServiceMediaServerUpnp(aNetwork, new string[] { "Browse" },
+            iService = new ServiceMediaServerUpnp(aNetwork, this, new string[] { "Browse" },
                             manufacturerImageUri, manufacturerInfo, manufacturerName, manufacturerUrl,
                             modelImageUri, modelInfo, modelName, modelUrl,
                             productImageUri, productInfo, productName, productUrl,

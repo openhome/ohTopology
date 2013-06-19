@@ -20,12 +20,12 @@ namespace OpenHome.Av
 
         private readonly List<IMediaServerSession> iSessions;
         
-        public ServiceMediaServerMock(INetwork aNetwork, IEnumerable<string> aAttributes, 
+        public ServiceMediaServerMock(INetwork aNetwork, IDevice aDevice, IEnumerable<string> aAttributes, 
             string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl,
             string aModelImageUri, string aModelInfo, string aModelName, string aModelUrl,
             string aProductImageUri, string aProductInfo, string aProductName, string aProductUrl,
             IEnumerable<IMediaMetadata> aMetadata, IDeviceMediaServerMockUriProvider aUriProvider)
-            : base(aNetwork, aAttributes,
+            : base(aNetwork, aDevice, aAttributes,
             aManufacturerImageUri, aManufacturerInfo, aManufacturerName, aManufacturerUrl,
             aModelImageUri, aModelInfo, aModelName, aModelUrl,
             aProductImageUri, aProductInfo, aProductName, aProductUrl)
@@ -38,7 +38,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return (new ProxyMediaServer(aDevice, this));
+            return (new ProxyMediaServer(this));
         }
 
         public override Task<IMediaServerSession> CreateSession()

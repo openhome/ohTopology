@@ -25,8 +25,8 @@ namespace OpenHome.Av
 
     public abstract class ServiceReceiver : Service
     {
-        protected ServiceReceiver(INetwork aNetwork)
-            : base(aNetwork)
+        protected ServiceReceiver(INetwork aNetwork, IDevice aDevice)
+            : base(aNetwork, aDevice)
         {
             iMetadata = new Watchable<IInfoMetadata>(Network, "Metadata", InfoMetadata.Empty);
             iTransportState = new Watchable<string>(Network, "TransportState", string.Empty);
@@ -45,7 +45,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return new ProxyReceiver(aDevice, this);
+            return new ProxyReceiver(this);
         }
 
         public IWatchable<IInfoMetadata> Metadata
@@ -84,11 +84,11 @@ namespace OpenHome.Av
 
     class ServiceReceiverNetwork : ServiceReceiver
     {
-        public ServiceReceiverNetwork(INetwork aNetwork, CpDevice aDevice)
-            : base(aNetwork)
+        public ServiceReceiverNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
+            : base(aNetwork, aDevice)
         {
             iSubscribed = new ManualResetEvent(false);
-            iService = new CpProxyAvOpenhomeOrgReceiver1(aDevice);
+            iService = new CpProxyAvOpenhomeOrgReceiver1(aCpDevice);
 
             iService.SetPropertyMetadataChanged(HandleMetadataChanged);
             iService.SetPropertyTransportStateChanged(HandleTransportStateChanged);
@@ -179,8 +179,8 @@ namespace OpenHome.Av
 
     class ServiceReceiverMock : ServiceReceiver, IMockable
     {
-        public ServiceReceiverMock(INetwork aNetwork, string aMetadata, string aProtocolInfo, string aTransportState, string aUri)
-            : base(aNetwork)
+        public ServiceReceiverMock(INetwork aNetwork, IDevice aDevice, string aMetadata, string aProtocolInfo, string aTransportState, string aUri)
+            : base(aNetwork, aDevice)
         {
             iProtocolInfo = aProtocolInfo;
 
@@ -244,8 +244,8 @@ namespace OpenHome.Av
 
     public class ProxyReceiver : Proxy<ServiceReceiver>, IProxyReceiver
     {
-        public ProxyReceiver(IDevice aDevice, ServiceReceiver aService)
-            : base(aDevice, aService)
+        public ProxyReceiver(ServiceReceiver aService)
+            : base(aService)
         {
         }
 

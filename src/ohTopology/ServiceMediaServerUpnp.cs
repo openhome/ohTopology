@@ -21,12 +21,12 @@ namespace OpenHome.Av
 
         private readonly List<MediaServerSessionUpnp> iSessions;
         
-        public ServiceMediaServerUpnp(INetwork aNetwork, IEnumerable<string> aAttributes, 
+        public ServiceMediaServerUpnp(INetwork aNetwork, IDevice aDevice, IEnumerable<string> aAttributes, 
             string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl,
             string aModelImageUri, string aModelInfo, string aModelName, string aModelUrl,
             string aProductImageUri, string aProductInfo, string aProductName, string aProductUrl,
             CpProxyUpnpOrgContentDirectory1 aUpnpProxy)
-            : base(aNetwork, aAttributes,
+            : base(aNetwork, aDevice, aAttributes,
             aManufacturerImageUri, aManufacturerInfo, aManufacturerName, aManufacturerUrl,
             aModelImageUri, aModelInfo, aModelName, aModelUrl,
             aProductImageUri, aProductInfo, aProductName, aProductUrl)
@@ -37,7 +37,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return (new ProxyMediaServer(aDevice, this));
+            return (new ProxyMediaServer(this));
         }
 
         public override Task<IMediaServerSession> CreateSession()

@@ -6,19 +6,21 @@ namespace OpenHome.Av
 {
     public interface IService : IMockable, IDisposable
     {
-        void Create<T>(IDevice aDevice, Action<T> aCallback) where T : IProxy;
+        void Create<T>(Action<T> aCallback) where T : IProxy;
     }
 
     public abstract class Service : IService
     {
         private readonly INetwork iNetwork;
+        private readonly IDevice iDevice;
         private uint iRefCount;
         protected Task iSubscribeTask;
         private List<Task> iTasks;
 
-        protected Service(INetwork aNetwork)
+        protected Service(INetwork aNetwork, IDevice aDevice)
         {
             iNetwork = aNetwork;
+            iDevice = aDevice;
             iRefCount = 0;
             iSubscribeTask = new Task(() => { });
             iTasks = new List<Task>();
@@ -32,6 +34,14 @@ namespace OpenHome.Av
             }
         }
 
+        public IDevice Device
+        {
+            get
+            {
+                return iDevice;
+            }
+        }
+
         public virtual void Dispose()
         {
             if (iRefCount > 0)
@@ -40,7 +50,7 @@ namespace OpenHome.Av
             }
         }
 
-        public void Create<T>(IDevice aDevice, Action<T> aCallback) where T : IProxy
+        public void Create<T>(Action<T> aCallback) where T : IProxy
         {
             if (iRefCount == 0)
             {
@@ -54,13 +64,13 @@ namespace OpenHome.Av
                 {
                     iNetwork.Schedule(() =>
                     {
-                        aCallback((T)OnCreate(aDevice));
+                        aCallback((T)OnCreate(iDevice));
                     });
                 });
             }
             else
             {
-                aCallback((T)OnCreate(aDevice));
+                aCallback((T)OnCreate(iDevice));
             }
         }
 
@@ -153,12 +163,10 @@ namespace OpenHome.Av
 
     public class Proxy<T> where T : Service
     {
-        private readonly IDevice iDevice;
         protected readonly T iService;
 
-        protected Proxy(IDevice aDevice, T aService)
+        protected Proxy(T aService)
         {
-            iDevice = aDevice;
             iService = aService;
         }
 
@@ -168,7 +176,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return (iDevice);
+                return (iService.Device);
             }
         }
 

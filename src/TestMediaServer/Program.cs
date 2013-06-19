@@ -467,7 +467,7 @@ namespace TestMediaServer
             ExceptionReporter reporter = new ExceptionReporter();
             WatchableThread watchableThread = new WatchableThread(reporter);
 
-            using (var network = new Network(watchableThread))
+            using (var network = new Network(watchableThread, 50))
             {
                 using (DeviceInjectorMock mockInjector = new DeviceInjectorMock(network))
                 {

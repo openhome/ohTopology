@@ -32,23 +32,22 @@ namespace OpenHome.Av
 
         public virtual void Dispose()
         {
-            using (iDisposeHandler.Lock)
+            lock (iActive)
             {
-                lock (iActive)
+                if (iIsActive)
                 {
-                    if (iIsActive)
+                    iNetwork.Execute(() =>
                     {
-                        iNetwork.Execute(() =>
-                        {
-                            iRoom.Sources.RemoveWatcher(this);
-                        });
-                        iRoom.UnJoin(SetInactive);
-                        iIsActive = false;
-                    }
+                        iRoom.Sources.RemoveWatcher(this);
+                    });
+                    iRoom.UnJoin(SetInactive);
+                    iIsActive = false;
                 }
-
-                iEnabled.Dispose();
             }
+
+            iEnabled.Dispose();
+
+            iDisposeHandler.Dispose();
         }
 
         public IStandardRoom Room
@@ -175,9 +174,12 @@ namespace OpenHome.Av
 
         protected override void OnSetInactive()
         {
-            if (iPlaylist != null)
+            using (iDisposeHandler.Lock)
             {
-                iPlaylist.Dispose();
+                if (iPlaylist != null)
+                {
+                    iPlaylist.Dispose();
+                }
             }
         }
 
@@ -261,9 +263,12 @@ namespace OpenHome.Av
 
         protected override void OnSetInactive()
         {
-            if (iRadio != null)
+            using (iDisposeHandler.Lock)
             {
-                iRadio.Dispose();
+                if (iRadio != null)
+                {
+                    iRadio.Dispose();
+                }
             }
         }
 
@@ -271,7 +276,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iRadio.Container;
+                using (iDisposeHandler.Lock)
+                {
+                    return iRadio.Container;
+                }
             }
         }
 

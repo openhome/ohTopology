@@ -991,11 +991,16 @@ namespace OpenHome.Av
 
     public class StandardHouse : IUnorderedWatcher<ITopology4Room>, IUnorderedWatcher<IDevice>, IStandardHouse, IMockable, IDisposable
     {
-        public StandardHouse(INetwork aNetwork, ITopology4 aTopology4)
+        public StandardHouse(INetwork aNetwork)
         {
             iDisposed = false;
             iNetwork = aNetwork;
-            iTopology4 = aTopology4;
+
+            iTopology1 = new Topology1(aNetwork);
+            iTopology2 = new Topology2(iTopology1);
+            iTopologym = new Topologym(iTopology2);
+            iTopology3 = new Topology3(iTopologym);
+            iTopology4 = new Topology4(iTopology3);
 
             iWatchableServers = new WatchableOrdered<IProxyMediaServer>(iNetwork);
             iMediaServers = iNetwork.Create<IProxyMediaServer>();
@@ -1056,7 +1061,12 @@ namespace OpenHome.Av
 
             iServerLookup = null;
 
-            iTopology4 = null;
+            iTopology4.Dispose();
+            iTopology3.Dispose();
+            iTopologym.Dispose();
+            iTopology2.Dispose();
+            iTopology1.Dispose();
+
             iDisposed = true;
         }
 
@@ -1241,7 +1251,11 @@ namespace OpenHome.Av
 
         private bool iDisposed;
         private INetwork iNetwork;
-        private ITopology4 iTopology4;
+        private Topology1 iTopology1;
+        private Topology2 iTopology2;
+        private Topologym iTopologym;
+        private Topology3 iTopology3;
+        private Topology4 iTopology4;
 
         private WatchableOrdered<IProxyMediaServer> iWatchableServers;
         private IWatchableUnordered<IDevice> iMediaServers;

@@ -19,8 +19,8 @@ namespace OpenHome.Av
 
     public abstract class ServiceTime : Service
     {
-        protected ServiceTime(INetwork aNetwork)
-            : base(aNetwork)
+        protected ServiceTime(INetwork aNetwork, IDevice aDevice)
+            : base(aNetwork, aDevice)
         {
             iDuration = new Watchable<uint>(Network, "Duration", 0);
             iSeconds = new Watchable<uint>(Network, "Seconds", 0);
@@ -39,7 +39,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return new ProxyTime(aDevice, this);
+            return new ProxyTime(this);
         }
 
         public IWatchable<uint> Duration
@@ -64,11 +64,11 @@ namespace OpenHome.Av
 
     class ServiceTimeNetwork : ServiceTime
     {
-        public ServiceTimeNetwork(INetwork aNetwork, CpDevice aDevice)
-            : base(aNetwork)
+        public ServiceTimeNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
+            : base(aNetwork, aDevice)
         {
             iSubscribed = new ManualResetEvent(false);
-            iService = new CpProxyAvOpenhomeOrgTime1(aDevice);
+            iService = new CpProxyAvOpenhomeOrgTime1(aCpDevice);
 
             iService.SetPropertyDurationChanged(HandleDurationChanged);
             iService.SetPropertySecondsChanged(HandleSecondsChanged);
@@ -130,8 +130,8 @@ namespace OpenHome.Av
 
     class ServiceTimeMock : ServiceTime, IMockable
     {
-        public ServiceTimeMock(INetwork aNetwork, uint aSeconds, uint aDuration)
-            : base(aNetwork)
+        public ServiceTimeMock(INetwork aNetwork, IDevice aDevice, uint aSeconds, uint aDuration)
+            : base(aNetwork, aDevice)
         {
             iDuration.Update(aDuration);
             iSeconds.Update(aSeconds);
@@ -159,8 +159,8 @@ namespace OpenHome.Av
 
     public class ProxyTime : Proxy<ServiceTime>, IProxyTime
     {
-        public ProxyTime(IDevice aDevice, ServiceTime aService)
-            : base(aDevice, aService)
+        public ProxyTime(ServiceTime aService)
+            : base(aService)
         {
         }
 

@@ -80,8 +80,8 @@ namespace OpenHome.Av
 
     public abstract class ServicePlaylist : Service
     {
-        protected ServicePlaylist(INetwork aNetwork)
-            : base(aNetwork)
+        protected ServicePlaylist(INetwork aNetwork, IDevice aDevice)
+            : base(aNetwork, aDevice)
         {
             iId = new Watchable<uint>(Network, "Id", 0);
             iTransportState = new Watchable<string>(Network, "TransportState", string.Empty);
@@ -108,7 +108,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return new ProxyPlaylist(aDevice, this);
+            return new ProxyPlaylist(this);
         }
 
         public IWatchable<uint> Id
@@ -188,12 +188,11 @@ namespace OpenHome.Av
 
     class ServicePlaylistNetwork : ServicePlaylist
     {
-        public ServicePlaylistNetwork(INetwork aNetwork, CpDevice aDevice)
-            : base(aNetwork)
+        public ServicePlaylistNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
+            : base(aNetwork, aDevice)
         {
             iSubscribed = new ManualResetEvent(false);
-            iService = new CpProxyAvOpenhomeOrgPlaylist1(aDevice);
-            iContainer = new PlaylistContainerNetwork(Network, this);
+            iService = new CpProxyAvOpenhomeOrgPlaylist1(aCpDevice);
 
             iService.SetPropertyIdChanged(HandleIdChanged);
             iService.SetPropertyIdArrayChanged(HandleIdArrayChanged);
@@ -206,8 +205,17 @@ namespace OpenHome.Av
 
         public override void Dispose()
         {
-            iContainer.Dispose();
-            iContainer = null;
+            if (iContainer != null)
+            {
+                iContainer.Dispose();
+                iContainer = null;
+            }
+
+            if (iCacheSession != null)
+            {
+                iCacheSession.Dispose();
+                iCacheSession = null;
+            }
             
             iSubscribed.Dispose();
             iSubscribed = null;
@@ -222,6 +230,9 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
+                iCacheSession = Network.IdCache.CreateSession(string.Format("Playlist({0})", Device.Udn), ReadList);
+                iContainer = new PlaylistContainer(Network, iCacheSession, this);
+
                 iService.Subscribe();
                 iSubscribed.WaitOne();
             });
@@ -238,6 +249,11 @@ namespace OpenHome.Av
 
         protected override void OnUnsubscribe()
         {
+            iContainer.Dispose();
+            iContainer = null;
+            iCacheSession.Dispose();
+            iCacheSession = null;
+
             iService.Unsubscribe();
             iSubscribed.Reset();
         }
@@ -370,14 +386,21 @@ namespace OpenHome.Av
             return task;
         }
 
-        public Task<IEnumerable<IMediaPreset>> ReadList(IList<uint> aIdArray, string aIdList)
+        private Task<IEnumerable<IIdCacheEntry>> ReadList(IEnumerable<uint> aIdList)
         {
-            Task<IEnumerable<IMediaPreset>> task = Task<IEnumerable<IMediaPreset>>.Factory.StartNew(() =>
+            Task<IEnumerable<IIdCacheEntry>> task = Task<IEnumerable<IIdCacheEntry>>.Factory.StartNew(() =>
             {
-                string trackList;
-                iService.SyncReadList(aIdList, out trackList);
+                string idList = string.Empty;
+                foreach (uint id in aIdList)
+                {
+                    idList += string.Format("{0} ", id);
+                }
+                idList.Trim(' ');
 
-                List<IMediaPreset> tracks = new List<IMediaPreset>();
+                string trackList;
+                iService.SyncReadList(idList, out trackList);
+
+                List<IIdCacheEntry> entries = new List<IIdCacheEntry>();
 
                 XmlDocument document = new XmlDocument();
                 document.LoadXml(trackList);
@@ -387,10 +410,11 @@ namespace OpenHome.Av
                 {
                     uint id = uint.Parse(n["Id"].InnerText);
                     IMediaMetadata metadata = Network.TagManager.FromDidlLite(n["Metadata"].InnerText);
-                    tracks.Add(new MediaPresetPlaylist((uint)aIdArray.IndexOf(id), id, metadata, this));
+                    string uri = n["Uri"].InnerText;
+                    entries.Add(new IdCacheEntry(metadata, uri));
                 }
 
-                return tracks;
+                return entries;
             });
             return task;
         }
@@ -419,7 +443,9 @@ namespace OpenHome.Av
         {
             Network.Schedule(() =>
             {
-                iContainer.UpdateSnapshot(ByteArray.Unpack(iService.PropertyIdArray()));
+                IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
+                iCacheSession.SetValid(idArray);
+                iContainer.UpdateSnapshot(idArray);
             });
         }
 
@@ -449,48 +475,60 @@ namespace OpenHome.Av
 
         private ManualResetEvent iSubscribed;
         private CpProxyAvOpenhomeOrgPlaylist1 iService;
-        private PlaylistContainerNetwork iContainer;
+        private PlaylistContainer iContainer;
+        private IIdCacheSession iCacheSession;
     }
 
-    class PlaylistContainerNetwork : IWatchableContainer<IMediaPreset>, IDisposable
+    class PlaylistContainer : IWatchableContainer<IMediaPreset>, IDisposable
     {
-        private Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
-        private ServicePlaylistNetwork iPlaylist;
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly ServicePlaylist iPlaylist;
+        private readonly IIdCacheSession iCacheSession;
+        private readonly Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
 
-        public PlaylistContainerNetwork(INetwork aNetwork, ServicePlaylistNetwork aPlaylist)
+        public PlaylistContainer(INetwork aNetwork, IIdCacheSession aCacheSession, ServicePlaylist aPlaylist)
         {
+            iDisposeHandler = new DisposeHandler();
             iPlaylist = aPlaylist;
-            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new PlaylistSnapshotNetwork(new List<uint>(), iPlaylist));
+            iCacheSession = aCacheSession;
+            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new PlaylistSnapshot(iCacheSession, new List<uint>(), iPlaylist));
         }
 
         public void Dispose()
         {
+            iDisposeHandler.Dispose();
             iSnapshot.Dispose();
-            iSnapshot = null;
-            iPlaylist = null;
         }
 
         public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
         {
             get
             {
-                return iSnapshot;
+                using (iDisposeHandler.Lock)
+                {
+                    return iSnapshot;
+                }
             }
         }
 
         public void UpdateSnapshot(IList<uint> aIdArray)
         {
-            iSnapshot.Update(new PlaylistSnapshotNetwork(aIdArray, iPlaylist));
+            using (iDisposeHandler.Lock)
+            {
+                iSnapshot.Update(new PlaylistSnapshot(iCacheSession, aIdArray, iPlaylist));
+            }
         }
     }
 
-    class PlaylistSnapshotNetwork : IWatchableSnapshot<IMediaPreset>
+    class PlaylistSnapshot : IWatchableSnapshot<IMediaPreset>
     {
+        private readonly IIdCacheSession iCacheSession;
         private readonly IList<uint> iIdArray;
-        private readonly ServicePlaylistNetwork iPlaylist;
+        private readonly ServicePlaylist iPlaylist;
 
-        public PlaylistSnapshotNetwork(IList<uint> aIdArray, ServicePlaylistNetwork aPlaylist)
+        public PlaylistSnapshot(IIdCacheSession aCacheSession, IList<uint> aIdArray, ServicePlaylist aPlaylist)
         {
+            iCacheSession = aCacheSession;
             iIdArray = aIdArray;
             iPlaylist = aPlaylist;
         }
@@ -515,12 +553,23 @@ namespace OpenHome.Av
         {
             Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
             {
-                string idList = string.Empty;
+                List<uint> idList = new List<uint>();
                 for (uint i = aIndex; i < aIndex + aCount; ++i)
                 {
-                    idList += string.Format("{0} ", iIdArray[(int)i]);
+                    idList.Add(iIdArray.ElementAt((int)i));
                 }
-                return new WatchableFragment<IMediaPreset>(aIndex, iPlaylist.ReadList(iIdArray, idList.TrimEnd(' ')).Result);
+
+                List<IMediaPreset> tracks = new List<IMediaPreset>();
+                IEnumerable<IIdCacheEntry> entries = iCacheSession.Entries(idList).Result;
+                uint index = aIndex;
+                foreach (IIdCacheEntry e in entries)
+                {
+                    uint id = iIdArray.ElementAt((int)index);
+                    tracks.Add(new MediaPresetPlaylist((uint)(iIdArray.IndexOf(id) + 1), id, e.Metadata, iPlaylist));
+                    ++index;
+                }
+
+                return new WatchableFragment<IMediaPreset>(aIndex, tracks);
             });
             return task;
         }
@@ -528,20 +577,67 @@ namespace OpenHome.Av
 
     class ServicePlaylistMock : ServicePlaylist, IMockable
     {
-        private IList<IMediaPreset> iTracks;
+        private IIdCacheSession iCacheSession;
+        private PlaylistContainer iContainer;
+        private IList<IMediaMetadata> iTracks;
+        private List<uint> iIdArray;
 
-        public ServicePlaylistMock(INetwork aNetwork, uint aId, IList<IMediaMetadata> aTracks, bool aRepeat, bool aShuffle, string aTransportState, string aProtocolInfo, uint aTracksMax)
-            : base(aNetwork)
+        public ServicePlaylistMock(INetwork aNetwork, IDevice aDevice, uint aId, IList<IMediaMetadata> aTracks, bool aRepeat, bool aShuffle, string aTransportState, string aProtocolInfo, uint aTracksMax)
+            : base(aNetwork, aDevice)
         {
             iTracksMax = aTracksMax;
             iProtocolInfo = aProtocolInfo;
 
-            iTracks = new List<IMediaPreset>();
+            iIdArray = new List<uint>();
+            uint id = 1;
+            foreach (IMediaMetadata m in aTracks)
+            {
+                iIdArray.Add(id);
+                ++id;
+            }
+            iTracks = aTracks;
 
             iId.Update(aId);
             iTransportState.Update(aTransportState);
             iRepeat.Update(aRepeat);
             iShuffle.Update(aShuffle);
+        }
+
+        public override void Dispose()
+        {
+            if (iContainer != null)
+            {
+                iContainer.Dispose();
+                iContainer = null;
+            }
+
+            if (iCacheSession != null)
+            {
+                iCacheSession.Dispose();
+                iCacheSession = null;
+            }
+
+            base.Dispose();
+        }
+
+        protected override Task OnSubscribe()
+        {
+            iCacheSession = Network.IdCache.CreateSession(string.Format("Playlist({0})", Device.Udn), ReadList);
+            iCacheSession.SetValid(iIdArray);
+            iContainer = new PlaylistContainer(Network, iCacheSession, this);
+            iContainer.UpdateSnapshot(iIdArray);
+
+            return base.OnSubscribe();
+        }
+
+        protected override void OnUnsubscribe()
+        {
+            iCacheSession.Dispose();
+            iCacheSession = null;
+            iContainer.Dispose();
+            iContainer = null;
+
+            base.OnUnsubscribe();
         }
 
         public override Task Play()
@@ -711,10 +807,29 @@ namespace OpenHome.Av
             {
                 Task<IWatchableContainer<IMediaPreset>> task = Task<IWatchableContainer<IMediaPreset>>.Factory.StartNew(() =>
                 {
-                    return new PlaylistContainerMock(Network, new PlaylistSnapshotMock(iTracks));
+                    return iContainer;
                 });
                 return task;
             }
+        }
+
+        private Task<IEnumerable<IIdCacheEntry>> ReadList(IEnumerable<uint> aIdList)
+        {
+            Task<IEnumerable<IIdCacheEntry>> task = Task<IEnumerable<IIdCacheEntry>>.Factory.StartNew(() =>
+            {
+                List<IdCacheEntry> entries = new List<IdCacheEntry>();
+
+                lock (iIdArray)
+                {
+                    foreach (uint id in aIdList)
+                    {
+                        IMediaMetadata metadata = iTracks[iIdArray.IndexOf(id)];
+                        entries.Add(new IdCacheEntry(metadata, metadata[Network.TagManager.Audio.Uri].Value));
+                    }
+                }
+                return entries;
+            });
+            return task;
         }
 
         public override void Execute(IEnumerable<string> aValue)
@@ -826,8 +941,8 @@ namespace OpenHome.Av
 
     public class ProxyPlaylist : Proxy<ServicePlaylist>, IProxyPlaylist
     {
-        public ProxyPlaylist(IDevice aDevice, ServicePlaylist aService)
-            : base(aDevice, aService)
+        public ProxyPlaylist(ServicePlaylist aService)
+            : base(aService)
         {
         }
 

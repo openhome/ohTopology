@@ -79,8 +79,8 @@ namespace OpenHome.Av
 
     public abstract class ServiceRadio : Service
     {
-        protected ServiceRadio(INetwork aNetwork)
-            : base(aNetwork)
+        protected ServiceRadio(INetwork aNetwork, IDevice aDevice)
+            : base(aNetwork, aDevice)
         {
             iId = new Watchable<uint>(aNetwork, "Id", 0);
             iTransportState = new Watchable<string>(aNetwork, "TransportState", string.Empty);
@@ -103,7 +103,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return new ProxyRadio(aDevice, this);
+            return new ProxyRadio(this);
         }
         
         public IWatchable<uint> Id
@@ -166,12 +166,11 @@ namespace OpenHome.Av
 
     class ServiceRadioNetwork : ServiceRadio
     {
-        public ServiceRadioNetwork(INetwork aNetwork, CpDevice aDevice)
-            : base(aNetwork)
+        public ServiceRadioNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
+            : base(aNetwork, aDevice)
         {
             iSubscribed = new ManualResetEvent(false);
-            iService = new CpProxyAvOpenhomeOrgRadio1(aDevice);
-            iContainer = new RadioContainerNetwork(Network, this);
+            iService = new CpProxyAvOpenhomeOrgRadio1(aCpDevice);
 
             iService.SetPropertyIdChanged(HandleIdChanged);
             iService.SetPropertyIdArrayChanged(HandleIdArrayChanged);
@@ -183,8 +182,17 @@ namespace OpenHome.Av
 
         public override void Dispose()
         {
-            iContainer.Dispose();
-            iContainer = null;
+            if (iContainer != null)
+            {
+                iContainer.Dispose();
+                iContainer = null;
+            }
+
+            if (iCacheSession != null)
+            {
+                iCacheSession.Dispose();
+                iCacheSession = null;
+            }
 
             iSubscribed.Dispose();
             iSubscribed = null;
@@ -199,6 +207,9 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
+                iCacheSession = Network.IdCache.CreateSession(string.Format("Radio({0})", Device.Udn), ReadList);
+                iContainer = new RadioContainer(Network, iCacheSession, this);
+
                 iService.Subscribe();
                 iSubscribed.WaitOne();
             });
@@ -216,6 +227,12 @@ namespace OpenHome.Av
         protected override void OnUnsubscribe()
         {
             iService.Unsubscribe();
+
+            iContainer.Dispose();
+            iContainer = null;
+            iCacheSession.Dispose();
+            iCacheSession = null;
+
             iSubscribed.Reset();
         }
 
@@ -282,32 +299,37 @@ namespace OpenHome.Av
             return task;
         }
 
-        public Task<IEnumerable<IMediaPreset>> ReadList(IList<uint> aIdArray, string aIdList)
+        private Task<IEnumerable<IIdCacheEntry>> ReadList(IEnumerable<uint> aIdList)
         {
-            Task<IEnumerable<IMediaPreset>> task = Task<IEnumerable<IMediaPreset>>.Factory.StartNew(() =>
+            Task<IEnumerable<IIdCacheEntry>> task = Task<IEnumerable<IIdCacheEntry>>.Factory.StartNew(() =>
             {
-                string channelList;
-                iService.SyncReadList(aIdList, out channelList);
+                string idList = string.Empty;
+                foreach(uint id in aIdList)
+                {
+                    idList += string.Format("{0} ", id);
+                }
+                idList.Trim(' ');
 
-                List<IMediaPreset> presets = new List<IMediaPreset>();
+                string channelList;
+                iService.SyncReadList(idList, out channelList);
+
+                List<IIdCacheEntry> entries = new List<IIdCacheEntry>();
 
                 XmlDocument document = new XmlDocument();
                 document.LoadXml(channelList);
 
-                string[] ids = aIdList.Split(' ');
-                foreach (string i in ids)
+                foreach (uint id in aIdList)
                 {
-                    uint id = uint.Parse(i);
                     if (id > 0)
                     {
                         XmlNode n = document.SelectSingleNode(string.Format("/ChannelList/Entry[Id={0}]/Metadata", id));
                         IMediaMetadata metadata = Network.TagManager.FromDidlLite(n.InnerText);
                         string uri = metadata[Network.TagManager.Audio.Uri].Value;
-                        presets.Add(new MediaPresetRadio((uint)aIdArray.IndexOf(id), id, metadata, uri, this));
+                        entries.Add(new IdCacheEntry(metadata, uri));
                     }
                 }
 
-                return presets;
+                return entries;
             });
             return task;
         }
@@ -336,7 +358,9 @@ namespace OpenHome.Av
         {
             Network.Schedule(() =>
             {
-                iContainer.UpdateSnapshot(ByteArray.Unpack(iService.PropertyIdArray()));
+                IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
+                iCacheSession.SetValid(idArray.Where(v => v != 0).ToList());
+                iContainer.UpdateSnapshot(idArray);
             });
         }
 
@@ -362,48 +386,60 @@ namespace OpenHome.Av
 
         private ManualResetEvent iSubscribed;
         private CpProxyAvOpenhomeOrgRadio1 iService;
-        private RadioContainerNetwork iContainer;
+        private RadioContainer iContainer;
+        private IIdCacheSession iCacheSession;
     }
 
-    class RadioContainerNetwork : IWatchableContainer<IMediaPreset>, IDisposable
+    class RadioContainer : IWatchableContainer<IMediaPreset>, IDisposable
     {
-        private Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
-        private ServiceRadioNetwork iRadio;
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly ServiceRadio iRadio;
+        private readonly IIdCacheSession iCacheSession;
+        private readonly Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
 
-        public RadioContainerNetwork(INetwork aNetwork, ServiceRadioNetwork aRadio)
+        public RadioContainer(INetwork aNetwork, IIdCacheSession aCacheSession, ServiceRadio aRadio)
         {
+            iDisposeHandler = new DisposeHandler();
             iRadio = aRadio;
-            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new RadioSnapshotNetwork(new List<uint>(), iRadio));
+            iCacheSession = aCacheSession;
+            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new RadioSnapshot(iCacheSession, new List<uint>(), iRadio));
         }
 
         public void Dispose()
         {
+            iDisposeHandler.Dispose();
             iSnapshot.Dispose();
-            iSnapshot = null;
-            iRadio = null;
         }
 
         public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
         {
             get
             {
-                return iSnapshot;
+                using (iDisposeHandler.Lock)
+                {
+                    return iSnapshot;
+                }
             }
         }
 
         public void UpdateSnapshot(IList<uint> aIdArray)
         {
-            iSnapshot.Update(new RadioSnapshotNetwork(aIdArray, iRadio));
+            using (iDisposeHandler.Lock)
+            {
+                iSnapshot.Update(new RadioSnapshot(iCacheSession, aIdArray, iRadio));
+            }
         }
     }
 
-    class RadioSnapshotNetwork : IWatchableSnapshot<IMediaPreset>
+    class RadioSnapshot : IWatchableSnapshot<IMediaPreset>
     {
+        private readonly IIdCacheSession iCacheSession;
         private readonly IList<uint> iIdArray;
-        private readonly ServiceRadioNetwork iRadio;
+        private readonly ServiceRadio iRadio;
 
-        public RadioSnapshotNetwork(IList<uint> aIdArray, ServiceRadioNetwork aRadio)
+        public RadioSnapshot(IIdCacheSession aCacheSession, IList<uint> aIdArray, ServiceRadio aRadio)
         {
+            iCacheSession = aCacheSession;
             iIdArray = aIdArray;
             iRadio = aRadio;
         }
@@ -428,12 +464,23 @@ namespace OpenHome.Av
         {
             Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
             {
-                string idList = string.Empty;
+                List<uint> idList = new List<uint>();
                 for (uint i = aIndex; i < aIndex + aCount; ++i)
                 {
-                    idList += string.Format("{0} ", iIdArray[(int)i]);
+                    idList.Add(iIdArray.Where(v => v != 0).ElementAt((int)i));
                 }
-                return new WatchableFragment<IMediaPreset>(aIndex, iRadio.ReadList(iIdArray, idList.TrimEnd(' ')).Result);
+
+                List<IMediaPreset> presets = new List<IMediaPreset>();
+                IEnumerable<IIdCacheEntry> entries = iCacheSession.Entries(idList).Result;
+                uint index = aIndex;
+                foreach(IIdCacheEntry e in entries)
+                {
+                    uint id = iIdArray.Where(v => v != 0).ElementAt((int)index);
+                    presets.Add(new MediaPresetRadio((uint)(iIdArray.IndexOf(id) + 1), id, e.Metadata, e.Uri, iRadio));
+                    ++index;
+                }
+
+                return new WatchableFragment<IMediaPreset>(aIndex, presets);
             });
             return task;
         }
@@ -441,30 +488,73 @@ namespace OpenHome.Av
 
     class ServiceRadioMock : ServiceRadio, IMockable
     {
-        private IList<IMediaPreset> iPresets;
+        private IIdCacheSession iCacheSession;
+        private RadioContainer iContainer;
+        private IList<IMediaMetadata> iPresets;
+        private List<uint> iIdArray;
 
-        public ServiceRadioMock(INetwork aNetwork, uint aId, IList<IMediaMetadata> aPresets, IInfoMetadata aMetadata, string aProtocolInfo, string aTransportState, uint aChannelsMax)
-            : base(aNetwork)
+        public ServiceRadioMock(INetwork aNetwork, IDevice aDevice, uint aId, IList<IMediaMetadata> aPresets, IInfoMetadata aMetadata, string aProtocolInfo, string aTransportState, uint aChannelsMax)
+            : base(aNetwork, aDevice)
         {
             iChannelsMax = aChannelsMax;
             iProtocolInfo = aProtocolInfo;
 
-            iPresets = new List<IMediaPreset>();
-            uint index = 1;
+            iIdArray = new List<uint>();
             uint id = 1;
             foreach (IMediaMetadata m in aPresets)
             {
-                if (m != null)
+                if (m == null)
                 {
-                    iPresets.Add(new MediaPresetRadio(index, id, m, m[Network.TagManager.Audio.Uri].Value, this));
-                    ++id;
+                    iIdArray.Add(0);
                 }
-                ++index;
+                else
+                {
+                    iIdArray.Add(id);
+                }
+                ++id;
             }
+            iPresets = aPresets;
             
             iId.Update(aId);
             iMetadata.Update(aMetadata);
             iTransportState.Update(aTransportState);
+        }
+
+        public override void Dispose()
+        {
+            if (iContainer != null)
+            {
+                iContainer.Dispose();
+                iContainer = null;
+            }
+
+            if (iCacheSession != null)
+            {
+                iCacheSession.Dispose();
+                iCacheSession = null;
+            }
+
+            base.Dispose();
+        }
+
+        protected override Task OnSubscribe()
+        {
+            iCacheSession = Network.IdCache.CreateSession(string.Format("Radio({0})", Device.Udn), ReadList);
+            iCacheSession.SetValid(iIdArray.Where(v => v != 0).ToList());
+            iContainer = new RadioContainer(Network, iCacheSession, this);
+            iContainer.UpdateSnapshot(iIdArray);
+
+            return base.OnSubscribe();
+        }
+
+        protected override void OnUnsubscribe()
+        {
+            iCacheSession.Dispose();
+            iCacheSession = null;
+            iContainer.Dispose();
+            iContainer = null;
+
+            base.OnUnsubscribe();
         }
 
         public override Task Play()
@@ -549,10 +639,28 @@ namespace OpenHome.Av
             {
                 Task<IWatchableContainer<IMediaPreset>> task = Task<IWatchableContainer<IMediaPreset>>.Factory.StartNew(() =>
                 {
-                    return new RadioContainerMock(Network, new RadioSnapshotMock(iPresets));
+                    return iContainer;
                 });
                 return task;
             }
+        }
+
+        private Task<IEnumerable<IIdCacheEntry>> ReadList(IEnumerable<uint> aIdList)
+        {
+            Task<IEnumerable<IIdCacheEntry>> task = Task<IEnumerable<IIdCacheEntry>>.Factory.StartNew(() =>
+            {
+                List<IdCacheEntry> entries = new List<IdCacheEntry>();
+                lock(iIdArray)
+                {
+                    foreach (uint id in aIdList)
+                    {
+                        IMediaMetadata metadata = iPresets[iIdArray.IndexOf(id)];
+                        entries.Add(new IdCacheEntry(metadata, metadata[Network.TagManager.Audio.Uri].Value)); 
+                    }
+                }
+                return entries;
+            });
+            return task;
         }
 
         public override void Execute(IEnumerable<string> aValue)
@@ -627,65 +735,10 @@ namespace OpenHome.Av
         }
     }
 
-    class RadioContainerMock : IWatchableContainer<IMediaPreset>
-    {
-        public readonly Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
-
-        public RadioContainerMock(INetwork aNetwork, IWatchableSnapshot<IMediaPreset> aSnapshot)
-        {
-            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", aSnapshot);
-        }
-
-        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
-        {
-            get 
-            {
-                return iSnapshot;
-            }
-        }
-    }
-
-    class RadioSnapshotMock : IWatchableSnapshot<IMediaPreset>
-    {
-        private readonly IEnumerable<IMediaPreset> iData;
-
-        public RadioSnapshotMock(IEnumerable<IMediaPreset> aData)
-        {
-            iData = aData;
-        }
-
-        public uint Total
-        {
-            get
-            {
-                return ((uint)iData.Count());
-            }
-        }
-
-        public IEnumerable<uint> AlphaMap
-        {
-            get
-            {
-                return null;
-            }
-        }
-
-        public Task<IWatchableFragment<IMediaPreset>> Read(uint aIndex, uint aCount)
-        {
-            Do.Assert(aIndex + aCount <= Total);
-
-            Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
-            {
-                return new WatchableFragment<IMediaPreset>(aIndex, iData.Skip((int)aIndex).Take((int)aCount));
-            });
-            return task;
-        }
-    }
-
     public class ProxyRadio : Proxy<ServiceRadio>, IProxyRadio
     {
-        public ProxyRadio(IDevice aDevice, ServiceRadio aService)
-            : base(aDevice, aService)
+        public ProxyRadio(ServiceRadio aService)
+            : base(aService)
         {
         }
 

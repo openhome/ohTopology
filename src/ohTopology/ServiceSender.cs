@@ -84,8 +84,8 @@ namespace OpenHome.Av
 
     public abstract class ServiceSender : Service
     {
-        protected ServiceSender(INetwork aNetwork)
-            : base(aNetwork)
+        protected ServiceSender(INetwork aNetwork, IDevice aDevice)
+            : base(aNetwork, aDevice)
         {
             iAudio = new Watchable<bool>(Network, "Audio", false);
             iMetadata = new Watchable<ISenderMetadata>(Network, "Metadata", SenderMetadata.Empty);
@@ -108,7 +108,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return new ProxySender(aDevice, this);
+            return new ProxySender(this);
         }
 
         public IWatchable<bool> Audio
@@ -161,11 +161,11 @@ namespace OpenHome.Av
 
     class ServiceSenderNetwork : ServiceSender
     {
-        public ServiceSenderNetwork(INetwork aNetwork, CpDevice aDevice)
-            : base(aNetwork)
+        public ServiceSenderNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
+            : base(aNetwork, aDevice)
         {
             iSubscribed = new ManualResetEvent(false);
-            iService = new CpProxyAvOpenhomeOrgSender1(aDevice);
+            iService = new CpProxyAvOpenhomeOrgSender1(aCpDevice);
 
             iService.SetPropertyAudioChanged(HandleAudioChanged);
             iService.SetPropertyMetadataChanged(HandleMetadataChanged);
@@ -239,8 +239,8 @@ namespace OpenHome.Av
 
     class ServiceSenderMock : ServiceSender, IMockable
     {
-        public ServiceSenderMock(INetwork aNetwork, string aAttributes, string aPresentationUrl, bool aAudio, ISenderMetadata aMetadata, string aStatus)
-            : base(aNetwork)
+        public ServiceSenderMock(INetwork aNetwork, IDevice aDevice, string aAttributes, string aPresentationUrl, bool aAudio, ISenderMetadata aMetadata, string aStatus)
+            : base(aNetwork, aDevice)
         {
             iAttributes = aAttributes;
             iPresentationUrl = aPresentationUrl;
@@ -287,8 +287,8 @@ namespace OpenHome.Av
 
     public class ProxySender : Proxy<ServiceSender>, IProxySender
     {
-        public ProxySender(IDevice aDevice, ServiceSender aService)
-            : base(aDevice, aService)
+        public ProxySender(ServiceSender aService)
+            : base(aService)
         {
         }
 
