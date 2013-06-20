@@ -204,6 +204,7 @@ namespace OpenHome.Av
                     switch (result)
                     {
                         case 0:
+                            exit = true;
                             iSemaphoreFinished.Release();
                             return;
                         case 1:
@@ -226,7 +227,7 @@ namespace OpenHome.Av
                     job.Start();
                     job.Wait();
                 }
-            });
+            }, TaskCreationOptions.LongRunning);
         }
 
         public void Dispose()
