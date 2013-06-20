@@ -401,12 +401,11 @@ namespace OpenHome.Av
 
     public class StandardRoom : IStandardRoom, IWatcher<IEnumerable<ITopology4Root>>, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IMockable, IDisposable
     {
-        public StandardRoom(StandardHouse aHouse, ITopology4Room aRoom)
+        public StandardRoom(INetwork aNetwork, ITopology4Room aRoom)
         {
             iDisposed = false;
 
-            iNetwork = aHouse.Network;
-            iHouse = aHouse;
+            iNetwork = aNetwork;
             iRoom = aRoom;
 
             iJoiners = new List<Action>();
@@ -468,7 +467,6 @@ namespace OpenHome.Av
 
             iRoots = null;
             iRoom = null;
-            iHouse = null;
             iNetwork = null;
         }
 
@@ -846,7 +844,6 @@ namespace OpenHome.Av
 
         private bool iDisposed;
         private INetwork iNetwork;
-        private StandardHouse iHouse;
         private ITopology4Room iRoom;
 
         private IEnumerable<ITopology4Root> iRoots;
@@ -1109,7 +1106,7 @@ namespace OpenHome.Av
 
         public void UnorderedAdd(ITopology4Room aRoom)
         {
-            StandardRoom room = new StandardRoom(this, aRoom);
+            StandardRoom room = new StandardRoom(iNetwork, aRoom);
 
             // calculate where to insert the room
             int index = 0;

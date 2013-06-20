@@ -471,7 +471,6 @@ namespace OpenHome.Av
                 XmlNodeList list = document.SelectNodes("/TrackList/Entry");
                 foreach (XmlNode n in list)
                 {
-                    uint id = uint.Parse(n["Id"].InnerText);
                     IMediaMetadata metadata = Network.TagManager.FromDidlLite(n["Metadata"].InnerText);
                     string uri = n["Uri"].InnerText;
                     entries.Add(new IdCacheEntry(metadata, uri));

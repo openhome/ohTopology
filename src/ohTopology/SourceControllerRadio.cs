@@ -11,10 +11,7 @@ namespace OpenHome.Av
             Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<bool> aHasContainer, Watchable<string> aTransportState, Watchable<bool> aCanPause,
             Watchable<bool> aCanSkip, Watchable<bool> aCanSeek, Watchable<bool> aHasPlayMode, Watchable<bool> aShuffle, Watchable<bool> aRepeat)
         {
-            iLock = new object();
             iDisposed = false;
-
-            iSource = aSource;
 
             iHasSourceControl = aHasSourceControl;
             iHasContainer = aHasContainer;
@@ -135,10 +132,8 @@ namespace OpenHome.Av
         {
         }
 
-        private object iLock;
         private bool iDisposed;
 
-        private ITopology4Source iSource;
         private IProxyRadio iRadio;
 
         private Watchable<bool> iHasSourceControl;

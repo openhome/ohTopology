@@ -13,8 +13,6 @@ namespace OpenHome.Av
         {
             iDisposed = false;
 
-            iSource = aSource;
-
             iHasSourceControl = aHasSourceControl;
             iHasInfoNext = aHasInfoNext;
             iHasContainer = aHasContainer;
@@ -178,7 +176,6 @@ namespace OpenHome.Av
 
         private bool iDisposed;
 
-        private ITopology4Source iSource;
         private IProxyPlaylist iPlaylist;
 
         private Watchable<bool> iHasSourceControl;

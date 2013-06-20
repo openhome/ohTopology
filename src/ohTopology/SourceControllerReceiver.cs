@@ -13,8 +13,6 @@ namespace OpenHome.Av
         {
             iDisposed = false;
 
-            iSource = aSource;
-
             iHasSourceControl = aHasSourceControl;
             iTransportState = aTransportState;
 
@@ -129,7 +127,6 @@ namespace OpenHome.Av
 
         private bool iDisposed;
 
-        private ITopology4Source iSource;
         private IProxyReceiver iReceiver;
 
         private Watchable<bool> iHasSourceControl;
