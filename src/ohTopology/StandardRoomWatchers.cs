@@ -550,16 +550,11 @@ namespace OpenHome.Av
 
     class ExternalSnapshot : IWatchableSnapshot<IMediaPreset>
     {
-        private readonly IList<IMediaPreset> iSources;
+        private readonly IList<ITopology4Source> iSources;
 
         public ExternalSnapshot(IList<ITopology4Source> aSources)
         {
-            iSources = new List<IMediaPreset>();
-
-            foreach (ITopology4Source s in aSources)
-            {
-                iSources.Add(s.Preset);
-            }
+            iSources = aSources;
         }
 
         public uint Total
@@ -582,7 +577,9 @@ namespace OpenHome.Av
         {
             Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
             {
-                return new WatchableFragment<IMediaPreset>(aIndex, iSources.Skip((int)aIndex).Take((int)aCount));
+                List<IMediaPreset> presets = new List<IMediaPreset>();
+                iSources.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v => presets.Add(v.Preset));
+                return new WatchableFragment<IMediaPreset>(aIndex, presets);
             });
             return task;
         }

@@ -11,28 +11,59 @@ using OpenHome.Net.ControlPoint;
 
 namespace OpenHome.Av
 {
-    class MediaPresetRadio : IMediaPreset
+    class MediaPresetRadio : IMediaPreset, IWatcher<uint>
     {
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly INetwork iNetwork;
         private readonly uint iIndex;
         private readonly uint iId;
         private readonly IMediaMetadata iMetadata;
         private readonly string iUri;
         private readonly ServiceRadio iRadio;
+        private readonly Watchable<bool> iPlaying;
+        private bool iDisposed;
 
-        public MediaPresetRadio(uint aIndex, uint aId, IMediaMetadata aMetadata, string aUri, ServiceRadio aRadio)
+        public MediaPresetRadio(INetwork aNetwork, uint aIndex, uint aId, IMediaMetadata aMetadata, string aUri, ServiceRadio aRadio)
         {
+            iDisposed = false;
+            iDisposeHandler = new DisposeHandler();
+
+            iNetwork = aNetwork;
             iIndex = aIndex;
             iId = aId;
             iMetadata = aMetadata;
             iUri = aUri;
             iRadio = aRadio;
+
+            iPlaying = new Watchable<bool>(iNetwork, "Playing", false);
+            iNetwork.Schedule(() =>
+            {
+                if (!iDisposed)
+                {
+                    iRadio.Id.AddWatcher(this);
+                }
+            });
+        }
+
+        public void Dispose()
+        {
+            iDisposeHandler.Dispose();
+            iNetwork.Execute(() =>
+            {
+                iRadio.Id.RemoveWatcher(this);
+                iDisposed = true;
+            });
+            iPlaying.Dispose();
         }
 
         public uint Index
         {
             get
             {
-                return iIndex;
+                using (iDisposeHandler.Lock)
+                {
+                    return iIndex;
+                }
             }
         }
 
@@ -40,19 +71,51 @@ namespace OpenHome.Av
         {
             get
             {
-                return iMetadata;
+                using (iDisposeHandler.Lock)
+                {
+                    return iMetadata;
+                }
+            }
+        }
+
+        public IWatchable<bool> Playing
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iPlaying;
+                }
             }
         }
 
         public void Play()
         {
-            if (iId > 0)
+            using (iDisposeHandler.Lock)
             {
-                iRadio.SetId(iId, iUri).ContinueWith((t) =>
+                if (iId > 0)
                 {
-                    iRadio.Play();
-                });
+                    iRadio.SetId(iId, iUri).ContinueWith((t) =>
+                    {
+                        iRadio.Play();
+                    });
+                }
             }
+        }
+
+        public void ItemOpen(string aId, uint aValue)
+        {
+            iPlaying.Update(aValue == iId);
+        }
+
+        public void ItemUpdate(string aId, uint aValue, uint aPrevious)
+        {
+            iPlaying.Update(aValue == iId);
+        }
+
+        public void ItemClose(string aId, uint aValue)
+        {
+            iPlaying.Update(false);
         }
     }
 
@@ -393,6 +456,7 @@ namespace OpenHome.Av
     class RadioContainer : IWatchableContainer<IMediaPreset>, IDisposable
     {
         private readonly DisposeHandler iDisposeHandler;
+        private readonly INetwork iNetwork;
         private readonly ServiceRadio iRadio;
         private readonly IIdCacheSession iCacheSession;
         private readonly Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
@@ -400,9 +464,10 @@ namespace OpenHome.Av
         public RadioContainer(INetwork aNetwork, IIdCacheSession aCacheSession, ServiceRadio aRadio)
         {
             iDisposeHandler = new DisposeHandler();
+            iNetwork = aNetwork;
             iRadio = aRadio;
             iCacheSession = aCacheSession;
-            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new RadioSnapshot(iCacheSession, new List<uint>(), iRadio));
+            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new RadioSnapshot(iNetwork, iCacheSession, new List<uint>(), iRadio));
         }
 
         public void Dispose()
@@ -426,19 +491,21 @@ namespace OpenHome.Av
         {
             using (iDisposeHandler.Lock)
             {
-                iSnapshot.Update(new RadioSnapshot(iCacheSession, aIdArray, iRadio));
+                iSnapshot.Update(new RadioSnapshot(iNetwork, iCacheSession, aIdArray, iRadio));
             }
         }
     }
 
     class RadioSnapshot : IWatchableSnapshot<IMediaPreset>
     {
+        private readonly INetwork iNetwork;
         private readonly IIdCacheSession iCacheSession;
         private readonly IList<uint> iIdArray;
         private readonly ServiceRadio iRadio;
 
-        public RadioSnapshot(IIdCacheSession aCacheSession, IList<uint> aIdArray, ServiceRadio aRadio)
+        public RadioSnapshot(INetwork aNetwork, IIdCacheSession aCacheSession, IList<uint> aIdArray, ServiceRadio aRadio)
         {
+            iNetwork = aNetwork;
             iCacheSession = aCacheSession;
             iIdArray = aIdArray;
             iRadio = aRadio;
@@ -476,7 +543,7 @@ namespace OpenHome.Av
                 foreach(IIdCacheEntry e in entries)
                 {
                     uint id = iIdArray.Where(v => v != 0).ElementAt((int)index);
-                    presets.Add(new MediaPresetRadio((uint)(iIdArray.IndexOf(id) + 1), id, e.Metadata, e.Uri, iRadio));
+                    presets.Add(new MediaPresetRadio(iNetwork, (uint)(iIdArray.IndexOf(id) + 1), id, e.Metadata, e.Uri, iRadio));
                     ++index;
                 }
 

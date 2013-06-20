@@ -26,10 +26,11 @@ namespace OpenHome.Av
         IEnumerable<ITag> Type { get; }
     }
 
-    public interface IMediaPreset
+    public interface IMediaPreset : IDisposable
     {
         uint Index { get; }
         IMediaMetadata Metadata { get; }
+        IWatchable<bool> Playing { get; }
         void Play();
     }
 

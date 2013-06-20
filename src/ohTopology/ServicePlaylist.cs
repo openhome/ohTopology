@@ -12,26 +12,57 @@ using OpenHome.Os;
 
 namespace OpenHome.Av
 {
-    class MediaPresetPlaylist : IMediaPreset
+    class MediaPresetPlaylist : IMediaPreset, IWatcher<uint>
     {
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly INetwork iNetwork;
         private readonly uint iIndex;
         private readonly uint iId;
         private readonly IMediaMetadata iMetadata;
         private readonly ServicePlaylist iPlaylist;
+        private readonly Watchable<bool> iPlaying;
+        private bool iDisposed;
 
-        public MediaPresetPlaylist(uint aIndex, uint aId, IMediaMetadata aMetadata, ServicePlaylist aPlaylist)
+        public MediaPresetPlaylist(INetwork aNetwork, uint aIndex, uint aId, IMediaMetadata aMetadata, ServicePlaylist aPlaylist)
         {
+            iDisposed = false;
+            iDisposeHandler = new DisposeHandler();
+
+            iNetwork = aNetwork;
             iIndex = aIndex;
             iId = aId;
             iMetadata = aMetadata;
             iPlaylist = aPlaylist;
+
+            iPlaying = new Watchable<bool>(iNetwork, "Playing", false);
+            iNetwork.Schedule(() =>
+            {
+                if (!iDisposed)
+                {
+                    iPlaylist.Id.AddWatcher(this);
+                }
+            });
+        }
+
+        public void Dispose()
+        {
+            iDisposeHandler.Dispose();
+            iNetwork.Execute(() =>
+            {
+                iPlaylist.Id.RemoveWatcher(this);
+                iDisposed = true;
+            });
+            iPlaying.Dispose();
         }
 
         public uint Index
         {
             get
             {
-                return iIndex;
+                using (iDisposeHandler.Lock)
+                {
+                    return iIndex;
+                }
             }
         }
 
@@ -39,13 +70,45 @@ namespace OpenHome.Av
         {
             get
             {
-                return iMetadata;
+                using (iDisposeHandler.Lock)
+                {
+                    return iMetadata;
+                }
+            }
+        }
+
+        public IWatchable<bool> Playing
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iPlaying;
+                }
             }
         }
 
         public void Play()
         {
-            iPlaylist.SeekId(iId);
+            using (iDisposeHandler.Lock)
+            {
+                iPlaylist.SeekId(iId);
+            }
+        }
+
+        public void ItemOpen(string aId, uint aValue)
+        {
+            iPlaying.Update(aValue == iId);
+        }
+
+        public void ItemUpdate(string aId, uint aValue, uint aPrevious)
+        {
+            iPlaying.Update(aValue == iId);
+        }
+
+        public void ItemClose(string aId, uint aValue)
+        {
+            iPlaying.Update(false);
         }
     }
 
@@ -482,6 +545,7 @@ namespace OpenHome.Av
     class PlaylistContainer : IWatchableContainer<IMediaPreset>, IDisposable
     {
         private readonly DisposeHandler iDisposeHandler;
+        private readonly INetwork iNetwork;
         private readonly ServicePlaylist iPlaylist;
         private readonly IIdCacheSession iCacheSession;
         private readonly Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
@@ -489,9 +553,11 @@ namespace OpenHome.Av
         public PlaylistContainer(INetwork aNetwork, IIdCacheSession aCacheSession, ServicePlaylist aPlaylist)
         {
             iDisposeHandler = new DisposeHandler();
+
+            iNetwork = aNetwork;
             iPlaylist = aPlaylist;
             iCacheSession = aCacheSession;
-            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new PlaylistSnapshot(iCacheSession, new List<uint>(), iPlaylist));
+            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new PlaylistSnapshot(iNetwork, iCacheSession, new List<uint>(), iPlaylist));
         }
 
         public void Dispose()
@@ -515,19 +581,21 @@ namespace OpenHome.Av
         {
             using (iDisposeHandler.Lock)
             {
-                iSnapshot.Update(new PlaylistSnapshot(iCacheSession, aIdArray, iPlaylist));
+                iSnapshot.Update(new PlaylistSnapshot(iNetwork, iCacheSession, aIdArray, iPlaylist));
             }
         }
     }
 
     class PlaylistSnapshot : IWatchableSnapshot<IMediaPreset>
     {
+        private readonly INetwork iNetwork;
         private readonly IIdCacheSession iCacheSession;
         private readonly IList<uint> iIdArray;
         private readonly ServicePlaylist iPlaylist;
 
-        public PlaylistSnapshot(IIdCacheSession aCacheSession, IList<uint> aIdArray, ServicePlaylist aPlaylist)
+        public PlaylistSnapshot(INetwork aNetwork, IIdCacheSession aCacheSession, IList<uint> aIdArray, ServicePlaylist aPlaylist)
         {
+            iNetwork = aNetwork;
             iCacheSession = aCacheSession;
             iIdArray = aIdArray;
             iPlaylist = aPlaylist;
@@ -565,7 +633,7 @@ namespace OpenHome.Av
                 foreach (IIdCacheEntry e in entries)
                 {
                     uint id = iIdArray.ElementAt((int)index);
-                    tracks.Add(new MediaPresetPlaylist((uint)(iIdArray.IndexOf(id) + 1), id, e.Metadata, iPlaylist));
+                    tracks.Add(new MediaPresetPlaylist(iNetwork, (uint)(iIdArray.IndexOf(id) + 1), id, e.Metadata, iPlaylist));
                     ++index;
                 }
 

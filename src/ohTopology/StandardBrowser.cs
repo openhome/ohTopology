@@ -447,6 +447,7 @@ namespace OpenHome.Av
             iNetwork.Execute(() =>
             {
                 iRoom.Roots.RemoveWatcher(this);
+                iDisposed = true;
             });
 
             iDetails.Dispose();
@@ -469,8 +470,6 @@ namespace OpenHome.Av
             iRoom = null;
             iHouse = null;
             iNetwork = null;
-
-            iDisposed = true;
         }
 
         public string Name
