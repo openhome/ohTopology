@@ -301,7 +301,7 @@ namespace OpenHome.Av
 
                     if (command == "mock")
                     {
-                        Console.WriteLine(line);
+                        //Console.WriteLine(line);
 
                         aMockable.Execute(commands.Skip(1));
 

@@ -16,11 +16,13 @@ namespace TestLinnHouse
             private IStandardHouse iHouse;
             private ResultWatcherFactory iFactory;
             private ResultWatcherFactory iFactoryRadioPresets;
+            private ResultWatcherFactory iFactoryRadioPresetsPlaying;
             private IStandardRoomController iController;
             private IStandardRoomTime iTime;
             private StandardRoomWatcherExternal iWatcherExternal;
             private StandardRoomWatcherRadio iWatcherRadio;
             private StandardRoomWatcherMusic iWatcherMusic;
+            private IWatchableFragment<IMediaPreset> iRadioPresets;
 
             public RoomControllerWatcher(ITagManager aTagManager, IStandardHouse aHouse, MockableScriptRunner aRunner, IStandardRoom aRoom)
             {
@@ -28,6 +30,7 @@ namespace TestLinnHouse
                 iHouse = aHouse;
                 iFactory = new ResultWatcherFactory(aRunner);
                 iFactoryRadioPresets = new ResultWatcherFactory(aRunner);
+                iFactoryRadioPresetsPlaying = new ResultWatcherFactory(aRunner);
                 iController = new StandardRoomController(aRoom);
                 iTime = new StandardRoomTime(aRoom);
                 iWatcherExternal = new StandardRoomWatcherExternal(aRoom);
@@ -78,15 +81,30 @@ namespace TestLinnHouse
                         IWatchableContainer<IMediaPreset> container = iWatcherRadio.Container.Result;
                         iFactoryRadioPresets.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherRadio.Room.Name, container.Snapshot, w =>
                         {
+                            if (iRadioPresets != null)
+                            {
+                                iFactoryRadioPresetsPlaying.Destroy(iWatcherRadio.Room.Name);
+                                foreach (IMediaPreset p in iRadioPresets.Data)
+                                {
+                                    p.Dispose();
+                                }
+                                iRadioPresets = null;
+                            }
+
                             string info = "\nPresets begin\n";
                             IWatchableFragment<IMediaPreset> fragment = w.Read(0, w.Total).Result;
+                            iRadioPresets = fragment;
                             foreach (IMediaPreset p in fragment.Data)
                             {
+                                iFactoryRadioPresetsPlaying.Create<bool>(iWatcherRadio.Room.Name, p.Playing, x =>
+                                {
+                                    return "Playing " + p.Index + " " + x;
+                                });
+                                
                                 info += p.Index + " ";
                                 string didl = iTagManager.ToDidlLite(p.Metadata);
                                 info += didl;
                                 info += "\n";
-                                p.Dispose();
                             }
                             info += "Presets end";
                             return info;
@@ -94,6 +112,15 @@ namespace TestLinnHouse
                     }
                     else
                     {
+                        if (iRadioPresets != null)
+                        {
+                            iFactoryRadioPresetsPlaying.Destroy(iWatcherRadio.Room.Name);
+                            foreach (IMediaPreset p in iRadioPresets.Data)
+                            {
+                                p.Dispose();
+                            }
+                            iRadioPresets = null;
+                        }
                         iFactoryRadioPresets.Destroy(iWatcherRadio.Room.Name);
                     }
 
@@ -110,6 +137,15 @@ namespace TestLinnHouse
             {
                 iFactory.Dispose();
                 iFactoryRadioPresets.Dispose();
+                iFactoryRadioPresetsPlaying.Dispose();
+                if (iRadioPresets != null)
+                {
+                    foreach (IMediaPreset p in iRadioPresets.Data)
+                    {
+                        p.Dispose();
+                    }
+                    iRadioPresets = null;
+                }
                 iController.Dispose();
                 iTime.Dispose();
                 iWatcherExternal.Dispose();
