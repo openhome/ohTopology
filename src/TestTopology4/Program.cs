@@ -14,7 +14,6 @@ namespace TestTopology4
         {
             public RootWatcher(MockableScriptRunner aRunner, ITopology4Root aRoot)
             {
-                iRunner = aRunner;
                 iFactory = new ResultWatcherFactory(aRunner);
                 iFactory.Create<ITopology4Source>(aRoot.Name, aRoot.Source, v => 
                 {
@@ -45,7 +44,6 @@ namespace TestTopology4
                 iFactory.Dispose();
             }
 
-            private MockableScriptRunner iRunner;
             private ResultWatcherFactory iFactory;
         }
 

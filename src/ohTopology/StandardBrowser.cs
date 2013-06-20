@@ -870,7 +870,6 @@ namespace OpenHome.Av
         private StandardHouse iHouse;
         private IStandardRoom iRoom;
         private bool iRoomsInitialised;
-        private ITopology4Source iSource;
         private ITopologymSender iSender;
 
         public RoomWatcher(StandardHouse aHouse, IStandardRoom aRoom)
@@ -897,7 +896,6 @@ namespace OpenHome.Av
             {
                 aValue.Group.Sender.AddWatcher(this);
             }
-            iSource = aValue;
         }
 
         public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
@@ -910,7 +908,6 @@ namespace OpenHome.Av
             {
                 aValue.Group.Sender.AddWatcher(this);
             }
-            iSource = aValue;
         }
 
         public void ItemClose(string aId, ITopology4Source aValue)
@@ -919,7 +916,6 @@ namespace OpenHome.Av
             {
                 aValue.Group.Sender.RemoveWatcher(this);
             }
-            iSource = null;
         }
 
         public void ItemOpen(string aId, ITopologymSender aValue)
