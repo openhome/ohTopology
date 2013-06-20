@@ -83,6 +83,10 @@ namespace OpenHome.Av
 
         public void Unsubscribe()
         {
+            if (iRefCount == 0)
+            {
+                throw new Exception("Service not subscribed");
+            }
             --iRefCount;
             if (iRefCount == 0)
             {
