@@ -32,7 +32,7 @@ namespace OpenHome.Av
                     iPlaylist = playlist;
 
                     iHasContainer.Update(true);
-                    iHasInfoNext.Update(true);
+                    iHasInfoNext.Update(false);
                     iCanSkip.Update(true);
                     iCanSeek.Update(false);
                     iHasPlayMode.Update(true);
@@ -153,6 +153,7 @@ namespace OpenHome.Av
             if (aId == "Shuffle")
             {
                 iShuffle.Update(aValue);
+                iHasInfoNext.Update(!aValue);
             }
             if (aId == "Repeat")
             {
@@ -165,6 +166,7 @@ namespace OpenHome.Av
             if (aId == "Shuffle")
             {
                 iShuffle.Update(aValue);
+                iHasInfoNext.Update(!aValue);
             }
             if (aId == "Repeat")
             {
