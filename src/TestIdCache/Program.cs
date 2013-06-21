@@ -79,14 +79,6 @@ namespace TestIdCache
 
         static int Main(string[] args)
         {
-            /*if (args.Length != 1)
-            {
-                Console.WriteLine("Usage: TestCachId.exe <testscript>");
-                return 1;
-            }*/
-
-            Mockable mocker = new Mockable();
-
             Network network = new Network(50);
             IIdCache cache = network.IdCache;
             CacheWatcher watcher = new CacheWatcher();
@@ -140,6 +132,8 @@ namespace TestIdCache
                 Assert(e.Uri == index.ToString());
                 ++index;
             }
+
+            session.Dispose();
 
             network.Dispose();
 

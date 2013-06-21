@@ -54,6 +54,8 @@ namespace OpenHome.Av
             {
                 iHasSourceControl.Update(false);
                 iHasContainer.Update(false);
+                iCanPause.Update(false);
+                iCanSeek.Update(false);
 
                 iRadio.TransportState.RemoveWatcher(this);
 

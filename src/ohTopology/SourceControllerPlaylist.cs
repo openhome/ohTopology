@@ -34,6 +34,7 @@ namespace OpenHome.Av
                     iHasContainer.Update(true);
                     iHasInfoNext.Update(true);
                     iCanSkip.Update(true);
+                    iCanSeek.Update(false);
                     iHasPlayMode.Update(true);
 
                     iPlaylist.TransportState.AddWatcher(this);
@@ -62,6 +63,7 @@ namespace OpenHome.Av
                 iHasContainer.Update(false);
                 iHasInfoNext.Update(false);
                 iCanSkip.Update(false);
+                iCanSeek.Update(false);
                 iHasPlayMode.Update(false);
 
                 iPlaylist.Shuffle.RemoveWatcher(this);
