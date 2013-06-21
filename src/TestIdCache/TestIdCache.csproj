@@ -30,6 +30,10 @@
     <OutputPath>..\..\build\TestTopology1\bin\Release</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ohOs.App.V1, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
