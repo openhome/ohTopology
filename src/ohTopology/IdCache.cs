@@ -49,10 +49,14 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
+            if (iSessions.Count > 0)
+            {
+                throw new Exception("IdCache disposed with active sessions");
+            }
+
             iDisposeHandler.Dispose();
             iCache.Clear();
             iLastAccessed.Clear();
-            iSessions.Clear();
             iCacheEntries = 0;
         }
 
