@@ -190,7 +190,7 @@ def build(context):
 def test(context):
     python("waf", "test")
 
-    cli(['build/TestIdCache/bin/%(debugmode)s/TestIdCache.exe' % { debugmode' : context.options.debugmode.title() })
+    cli(['build/TestIdCache/bin/%(debugmode)s/TestIdCache.exe' % { debugmode' : context.options.debugmode.title() }])
     def run_test(test):
         prog = 'build/Test%(test)s/bin/%(debugmode)s/Test%(test)s.exe'
         scrp = 'build/Test%(test)s/bin/%(debugmode)s/%(test)sTestScript.txt'
