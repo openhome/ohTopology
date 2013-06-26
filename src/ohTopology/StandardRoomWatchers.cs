@@ -156,6 +156,7 @@ namespace OpenHome.Av
     public class StandardRoomWatcherMusic : StandardRoomWatcher
     {
         private IProxyPlaylist iPlaylist;
+        private IPlaylistWriter iPlaylistWriter;
 
         public StandardRoomWatcherMusic(IStandardRoom aRoom)
             : base(aRoom)
@@ -170,6 +171,7 @@ namespace OpenHome.Av
             {
                 iPlaylist.Dispose();
                 iPlaylist = null;
+                iPlaylistWriter = null;
             }
         }
 
@@ -181,6 +183,7 @@ namespace OpenHome.Av
                 {
                     iPlaylist.Dispose();
                     iPlaylist = null;
+                    iPlaylistWriter = null;
                 }
             }
         }
@@ -196,13 +199,13 @@ namespace OpenHome.Av
             }
         }
 
-        public IProxyPlaylist Playlist
+        public IPlaylistWriter Playlist
         {
             get
             {
                 using (iDisposeHandler.Lock)
                 {
-                    return iPlaylist;
+                    return iPlaylistWriter;
                 }
             }
         }
@@ -220,6 +223,7 @@ namespace OpenHome.Av
             {
                 iPlaylist.Dispose();
                 iPlaylist = null;
+                iPlaylistWriter = null;
             }
 
             EvaluateEnabled(aValue);
@@ -236,6 +240,7 @@ namespace OpenHome.Av
                     s.Device.Create<IProxyPlaylist>((playlist) =>
                     {
                         iPlaylist = playlist;
+                        iPlaylistWriter = new PlaylistWriter(playlist);
                         SetEnabled(true);
                     });
                     return;
