@@ -129,7 +129,7 @@ namespace OpenHome.Av
         Task SeekSecondAbsolute(uint aValue);
         Task SeekSecondRelative(int aValue);
 
-        Task<uint> Insert(uint aAfterId, string aUri, string aMetadata);
+        Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata);
         Task DeleteId(uint aValue);
         Task DeleteAll();
         Task SetRepeat(bool aValue);
@@ -231,7 +231,7 @@ namespace OpenHome.Av
         public abstract Task SeekIndex(uint aValue);
         public abstract Task SeekSecondAbsolute(uint aValue);
         public abstract Task SeekSecondRelative(int aValue);
-        public abstract Task<uint> Insert(uint aAfterId, string aUri, string aMetadata);
+        public abstract Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata);
         public abstract Task DeleteId(uint aValue);
         public abstract Task DeleteAll();
         public abstract Task SetRepeat(bool aValue);
@@ -402,12 +402,12 @@ namespace OpenHome.Av
             return task;
         }
 
-        public override Task<uint> Insert(uint aAfterId, string aUri, string aMetadata)
+        public override Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata)
         {
             Task<uint> task = Task.Factory.StartNew(() =>
             {
                 uint newId;
-                iService.SyncInsert(aAfterId, aUri, aMetadata, out newId);
+                iService.SyncInsert(aAfterId, aUri, Network.TagManager.ToDidlLite(aMetadata), out newId);
                 return newId;
             });
             return task;
@@ -810,7 +810,7 @@ namespace OpenHome.Av
             return task;
         }
 
-        public override Task<uint> Insert(uint aAfterId, string aUri, string aMetadata)
+        public override Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata)
         {
             Task<uint> task = Task<uint>.Factory.StartNew(() =>
             {
@@ -1088,7 +1088,7 @@ namespace OpenHome.Av
             return iService.SeekSecondRelative(aValue);
         }
 
-        public Task<uint> Insert(uint aAfterId, string aUri, string aMetadata)
+        public Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata)
         {
             return iService.Insert(aAfterId, aUri, aMetadata);
         }
