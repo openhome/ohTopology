@@ -5,7 +5,7 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public class SourceControllerPlaylist : IWatcher<string>, IWatcher<bool>, IWatcher<IInfoDetails>, ISourceController
+    public class SourceControllerPlaylist : IWatcher<string>, IWatcher<bool>, IWatcher<IInfoDetails>, IWatcher<IInfoMetadata>, ISourceController
     {
         public SourceControllerPlaylist(ITopology4Source aSource, Watchable<bool> aHasSourceControl,
             Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<bool> aHasContainer, Watchable<string> aTransportState, Watchable<bool> aCanPause,
@@ -32,7 +32,8 @@ namespace OpenHome.Av
                     iPlaylist = playlist;
 
                     iHasContainer.Update(true);
-                    
+
+                    iHasInfoNext.Update(true);
                     iCanSkip.Update(true);
                     iCanSeek.Update(false);
                     iHasPlayMode.Update(true);
@@ -40,6 +41,7 @@ namespace OpenHome.Av
                     iPlaylist.TransportState.AddWatcher(this);
                     iPlaylist.Shuffle.AddWatcher(this);
                     iPlaylist.Repeat.AddWatcher(this);
+                    iPlaylist.InfoNext.AddWatcher(this);
 
                     iHasSourceControl.Update(true);
                 }
@@ -72,6 +74,7 @@ namespace OpenHome.Av
 
             if (iPlaylist != null)
             {
+                iPlaylist.InfoNext.RemoveWatcher(this);
                 iPlaylist.Shuffle.RemoveWatcher(this);
                 iPlaylist.Repeat.RemoveWatcher(this);
                 iPlaylist.TransportState.RemoveWatcher(this);
@@ -214,6 +217,21 @@ namespace OpenHome.Av
 
         public void ItemClose(string aId, IInfoDetails aValue)
         {
+        }
+
+        public void ItemOpen(string aId, IInfoMetadata aValue)
+        {
+            iInfoNext.Update(aValue);
+        }
+
+        public void ItemUpdate(string aId, IInfoMetadata aValue, IInfoMetadata aPrevious)
+        {
+            iInfoNext.Update(aValue);
+        }
+
+        public void ItemClose(string aId, IInfoMetadata aValue)
+        {
+            iInfoNext.Update(InfoMetadata.Empty);
         }
 
         private bool iDisposed;

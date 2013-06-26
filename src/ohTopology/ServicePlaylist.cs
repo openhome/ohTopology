@@ -126,6 +126,7 @@ namespace OpenHome.Av
     public interface IProxyPlaylist : IProxy
     {
         IWatchable<uint> Id { get; }
+        IWatchable<IInfoMetadata> InfoNext { get; }
         IWatchable<string> TransportState { get; }
         IWatchable<bool> Repeat { get; }
         IWatchable<bool> Shuffle { get; }
@@ -158,6 +159,7 @@ namespace OpenHome.Av
             : base(aNetwork, aDevice)
         {
             iId = new Watchable<uint>(Network, "Id", 0);
+            iInfoNext = new Watchable<IInfoMetadata>(Network, "InfoNext", InfoMetadata.Empty);
             iTransportState = new Watchable<string>(Network, "TransportState", string.Empty);
             iRepeat = new Watchable<bool>(Network, "Repeat", false);
             iShuffle = new Watchable<bool>(Network, "Shuffle", true);
@@ -169,6 +171,9 @@ namespace OpenHome.Av
 
             iId.Dispose();
             iId = null;
+
+            iInfoNext.Dispose();
+            iInfoNext = null;
 
             iTransportState.Dispose();
             iTransportState = null;
@@ -190,6 +195,14 @@ namespace OpenHome.Av
             get
             {
                 return iId;
+            }
+        }
+
+        public IWatchable<IInfoMetadata> InfoNext
+        {
+            get
+            {
+                return iInfoNext;
             }
         }
 
@@ -255,6 +268,7 @@ namespace OpenHome.Av
 
         protected IWatchableThread iThread;
         protected Watchable<uint> iId;
+        protected Watchable<IInfoMetadata> iInfoNext;
         protected Watchable<string> iTransportState;
         protected Watchable<bool> iRepeat;
         protected Watchable<bool> iShuffle;
@@ -508,7 +522,25 @@ namespace OpenHome.Av
         {
             Network.Schedule(() =>
             {
-                iId.Update(iService.PropertyId());
+                uint id = iService.PropertyId();
+                IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
+                iId.Update(id);
+                int index = idArray.IndexOf(id);
+                if (index > -1 && index < idArray.Count)
+                {
+                    iCacheSession.Entries(new uint[] { idArray.ElementAt(index + 1) }).ContinueWith((t) =>
+                    {
+                        Network.Schedule(() =>
+                        {
+                            IIdCacheEntry entry = t.Result.ElementAt(0);
+                            iInfoNext.Update(new InfoMetadata(entry.Metadata, entry.Uri));
+                        });
+                    });
+                }
+                else
+                {
+                    iInfoNext.Update(InfoMetadata.Empty);
+                }
             });
         }
 
@@ -1027,6 +1059,11 @@ namespace OpenHome.Av
         public IWatchable<uint> Id
         {
             get { return iService.Id; }
+        }
+
+        public IWatchable<IInfoMetadata> InfoNext
+        {
+            get { return iService.InfoNext; }
         }
 
         public IWatchable<string> TransportState
