@@ -523,6 +523,10 @@ namespace OpenHome.Av
             {
                 return false;
             }
+            if (aSource.Name == "Front Aux")
+            {
+                return false;
+            }
 
             return true;
         }
