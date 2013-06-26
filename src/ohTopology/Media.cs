@@ -273,10 +273,34 @@ namespace OpenHome.Av
                         metadata.Add(aTagManager.Audio.Uri, uri);
                     }
 
-                    XmlNodeList albumart = document.SelectNodes("/didl:DIDL-Lite/didl:item/upnp:albumArtURI", nsManager);
+                    XmlNodeList albumart = document.SelectNodes("/didl:DIDL-Lite/*/upnp:albumArtURI", nsManager);
                     foreach (XmlNode n in albumart)
                     {
                         metadata.Add(aTagManager.Audio.Artwork, n.FirstChild.Value);
+                    }
+
+                    XmlNode album = document.SelectSingleNode("/didl:DIDL-Lite/*/upnp:album", nsManager);
+                    if (album != null)
+                    {
+                        metadata.Add(aTagManager.Audio.Album, album.FirstChild.Value);
+                    }
+
+                    XmlNode artist = document.SelectSingleNode("/didl:DIDL-Lite/*/upnp:artist", nsManager);
+                    if (artist != null)
+                    {
+                        metadata.Add(aTagManager.Audio.Artist, artist.FirstChild.Value);
+                    }
+
+                    XmlNodeList genre = document.SelectNodes("/didl:DIDL-Lite/*/upnp:genre", nsManager);
+                    foreach (XmlNode n in genre)
+                    {
+                        metadata.Add(aTagManager.Audio.Genre, n.FirstChild.Value);
+                    }
+
+                    XmlNode albumartist = document.SelectSingleNode("/didl:DIDL-Lite/*/upnp:artist[@role='AlbumArtist']", nsManager);
+                    if (albumartist != null)
+                    {
+                        metadata.Add(aTagManager.Audio.AlbumArtist, albumartist.FirstChild.Value);
                     }
                 }
                 catch (XmlException) { }
