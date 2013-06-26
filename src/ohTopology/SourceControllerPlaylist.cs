@@ -5,7 +5,7 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public class SourceControllerPlaylist : IWatcher<string>, IWatcher<bool>, ISourceController
+    public class SourceControllerPlaylist : IWatcher<string>, IWatcher<bool>, IWatcher<IInfoDetails>, ISourceController
     {
         public SourceControllerPlaylist(ITopology4Source aSource, Watchable<bool> aHasSourceControl,
             Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<bool> aHasContainer, Watchable<string> aTransportState, Watchable<bool> aCanPause,
@@ -32,7 +32,7 @@ namespace OpenHome.Av
                     iPlaylist = playlist;
 
                     iHasContainer.Update(true);
-                    iHasInfoNext.Update(false);
+                    
                     iCanSkip.Update(true);
                     iCanSeek.Update(false);
                     iHasPlayMode.Update(true);
@@ -48,6 +48,19 @@ namespace OpenHome.Av
                     playlist.Dispose();
                 }
             });
+            aSource.Device.Create<IProxyInfo>((info) =>
+            {
+                if (!iDisposed)
+                {
+                    iInfo = info;
+
+                    iInfo.Details.AddWatcher(this);
+                }
+                else
+                {
+                    info.Dispose();
+                }
+            });
         }
 
         public void Dispose()
@@ -59,13 +72,6 @@ namespace OpenHome.Av
 
             if (iPlaylist != null)
             {
-                iHasSourceControl.Update(false);
-                iHasContainer.Update(false);
-                iHasInfoNext.Update(false);
-                iCanSkip.Update(false);
-                iCanSeek.Update(false);
-                iHasPlayMode.Update(false);
-
                 iPlaylist.Shuffle.RemoveWatcher(this);
                 iPlaylist.Repeat.RemoveWatcher(this);
                 iPlaylist.TransportState.RemoveWatcher(this);
@@ -73,6 +79,22 @@ namespace OpenHome.Av
                 iPlaylist.Dispose();
                 iPlaylist = null;
             }
+
+            if (iInfo != null)
+            {
+                iInfo.Details.RemoveWatcher(this);
+
+                iInfo.Dispose();
+                iInfo = null;
+            }
+
+            iHasSourceControl.Update(false);
+            iHasContainer.Update(false);
+            iHasInfoNext.Update(false);
+            iCanPause.Update(false);
+            iCanSkip.Update(false);
+            iCanSeek.Update(false);
+            iHasPlayMode.Update(false);
 
             iHasSourceControl = null;
             iHasContainer = null;
@@ -178,9 +200,26 @@ namespace OpenHome.Av
         {
         }
 
+        public void ItemOpen(string aId, IInfoDetails aValue)
+        {
+            iCanPause.Update(aValue.Duration > 0);
+            iCanSeek.Update(aValue.Duration > 0);
+        }
+
+        public void ItemUpdate(string aId, IInfoDetails aValue, IInfoDetails aPrevious)
+        {
+            iCanPause.Update(aValue.Duration > 0);
+            iCanSeek.Update(aValue.Duration > 0);
+        }
+
+        public void ItemClose(string aId, IInfoDetails aValue)
+        {
+        }
+
         private bool iDisposed;
 
         private IProxyPlaylist iPlaylist;
+        private IProxyInfo iInfo;
 
         private Watchable<bool> iHasSourceControl;
         private Watchable<IInfoMetadata> iInfoNext;

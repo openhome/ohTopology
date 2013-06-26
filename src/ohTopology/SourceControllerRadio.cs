@@ -5,7 +5,7 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public class SourceControllerRadio : IWatcher<string>, ISourceController
+    public class SourceControllerRadio : IWatcher<string>, IWatcher<IInfoDetails>, ISourceController
     {
         public SourceControllerRadio(ITopology4Source aSource, Watchable<bool> aHasSourceControl,
             Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<bool> aHasContainer, Watchable<string> aTransportState, Watchable<bool> aCanPause,
@@ -41,6 +41,19 @@ namespace OpenHome.Av
                     radio.Dispose();
                 }
             });
+            aSource.Device.Create<IProxyInfo>((info) =>
+            {
+                if (!iDisposed)
+                {
+                    iInfo = info;
+
+                    iInfo.Details.AddWatcher(this);
+                }
+                else
+                {
+                    info.Dispose();
+                }
+            });
         }
 
         public void Dispose()
@@ -52,16 +65,24 @@ namespace OpenHome.Av
 
             if (iRadio != null)
             {
-                iHasSourceControl.Update(false);
-                iHasContainer.Update(false);
-                iCanPause.Update(false);
-                iCanSeek.Update(false);
-
                 iRadio.TransportState.RemoveWatcher(this);
 
                 iRadio.Dispose();
                 iRadio = null;
             }
+
+            if (iInfo != null)
+            {
+                iInfo.Details.RemoveWatcher(this);
+
+                iInfo.Dispose();
+                iInfo = null;
+            }
+
+            iHasSourceControl.Update(false);
+            iHasContainer.Update(false);
+            iCanPause.Update(false);
+            iCanSeek.Update(false);
 
             iHasSourceControl = null;
             iHasContainer = null;
@@ -134,9 +155,26 @@ namespace OpenHome.Av
         {
         }
 
+        public void ItemOpen(string aId, IInfoDetails aValue)
+        {
+            iCanPause.Update(aValue.Duration > 0);
+            iCanSeek.Update(aValue.Duration > 0);
+        }
+
+        public void ItemUpdate(string aId, IInfoDetails aValue, IInfoDetails aPrevious)
+        {
+            iCanPause.Update(aValue.Duration > 0);
+            iCanSeek.Update(aValue.Duration > 0);
+        }
+
+        public void ItemClose(string aId, IInfoDetails aValue)
+        {
+        }
+
         private bool iDisposed;
 
         private IProxyRadio iRadio;
+        private IProxyInfo iInfo;
 
         private Watchable<bool> iHasSourceControl;
         private Watchable<bool> iHasContainer;
