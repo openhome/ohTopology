@@ -29,6 +29,7 @@ namespace OpenHome.Av
     public interface IMediaPreset : IDisposable
     {
         uint Index { get; }
+        uint Id { get; }
         IMediaMetadata Metadata { get; }
         IWatchable<bool> Playing { get; }
         void Play();
