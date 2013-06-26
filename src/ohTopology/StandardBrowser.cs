@@ -432,22 +432,22 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("StandardRoom.Dispose");
             }
 
-            List<Action> linked = new List<Action>(iJoiners);
-            foreach (Action a in linked)
-            {
-                a();
-            }
-            if (iJoiners.Count > 0)
-            {
-                throw new Exception("StandardRoom joiners > 0");
-            }
-            iJoiners = null;
-
             iNetwork.Execute(() =>
             {
+                List<Action> linked = new List<Action>(iJoiners);
+                foreach (Action a in linked)
+                {
+                    a();
+                }
+                if (iJoiners.Count > 0)
+                {
+                    throw new Exception("StandardRoom joiners > 0");
+                }
+                
                 iRoom.Roots.RemoveWatcher(this);
                 iDisposed = true;
             });
+            iJoiners = null;
 
             iDetails.Dispose();
             iDetails = null;
