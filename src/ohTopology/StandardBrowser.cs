@@ -973,6 +973,186 @@ namespace OpenHome.Av
         public void OrderedRemove(IStandardRoom aItem, uint aIndex) { }
     }
 
+    class SendersWatcher : IUnorderedWatcher<IDevice>, IDisposable
+    {
+        private readonly WatchableOrdered<IProxySender> iWatchableSenders;
+        private readonly IWatchableUnordered<IDevice> iSenders;
+        private readonly Dictionary<IDevice, IProxySender> iSenderLookup;
+        private bool iDisposed;
+
+        public SendersWatcher(INetwork aNetwork)
+        {
+            iDisposed = false;
+            iWatchableSenders = new WatchableOrdered<IProxySender>(aNetwork);
+            iSenders = aNetwork.Create<IProxySender>();
+            iSenderLookup = new Dictionary<IDevice, IProxySender>();
+
+            aNetwork.Schedule(() =>
+            {
+                iSenders.AddWatcher(this);
+            });
+        }
+
+        public void Dispose()
+        {
+            iSenders.RemoveWatcher(this);
+
+            foreach (var kvp in iSenderLookup)
+            {
+                kvp.Value.Dispose();
+            }
+
+            iWatchableSenders.Dispose();
+
+            iDisposed = true;
+        }
+
+        public IWatchableOrdered<IProxySender> Senders
+        {
+            get
+            {
+                return iWatchableSenders;
+            }
+        }
+
+        public void UnorderedOpen() { }
+
+        public void UnorderedInitialised() { }
+
+        public void UnorderedClose() { }
+
+        public void UnorderedAdd(IDevice aItem)
+        {
+            aItem.Create<IProxySender>((sender) =>
+            {
+                if (!iDisposed)
+                {
+                    // calculate where to insert the sender
+                    int index = 0;
+                    foreach (IProxySender s in iWatchableSenders.Values)
+                    {
+                        if (sender.Metadata.Value.Name.CompareTo(s.Metadata.Value.Name) < 0)
+                        {
+                            break;
+                        }
+                        ++index;
+                    }
+
+                    // insert the sender
+                    iSenderLookup.Add(aItem, sender);
+                    iWatchableSenders.Add(sender, (uint)index);
+                }
+                else
+                {
+                    sender.Dispose();
+                }
+            });
+        }
+
+        public void UnorderedRemove(IDevice aItem)
+        {
+            IProxySender sender;
+            if (iSenderLookup.TryGetValue(aItem, out sender))
+            {
+                // remove the corresponding sender from the watchable collection
+                iSenderLookup.Remove(aItem);
+                iWatchableSenders.Remove(sender);
+
+                sender.Dispose();
+            }
+        }
+    }
+
+    class MediaServersWatcher : IUnorderedWatcher<IDevice>, IDisposable
+    {
+        private readonly WatchableOrdered<IProxyMediaServer> iWatchableMediaServers;
+        private readonly IWatchableUnordered<IDevice> iMediaServers;
+        private readonly Dictionary<IDevice, IProxyMediaServer> iMediaServerLookup;
+        private bool iDisposed;
+
+        public MediaServersWatcher(INetwork aNetwork)
+        {
+            iDisposed = false;
+            iWatchableMediaServers = new WatchableOrdered<IProxyMediaServer>(aNetwork);
+            iMediaServers = aNetwork.Create<IProxyMediaServer>();
+            iMediaServerLookup = new Dictionary<IDevice, IProxyMediaServer>();
+
+            aNetwork.Schedule(() =>
+            {
+                iMediaServers.AddWatcher(this);
+            });
+        }
+
+        public void Dispose()
+        {
+            iMediaServers.RemoveWatcher(this);
+
+            foreach (var kvp in iMediaServerLookup)
+            {
+                kvp.Value.Dispose();
+            }
+
+            iWatchableMediaServers.Dispose();
+
+            iDisposed = true;
+        }
+
+        public IWatchableOrdered<IProxyMediaServer> MediaServers
+        {
+            get
+            {
+                return iWatchableMediaServers;
+            }
+        }
+
+        public void UnorderedOpen() { }
+
+        public void UnorderedInitialised() { }
+
+        public void UnorderedClose() { }
+
+        public void UnorderedAdd(IDevice aItem)
+        {
+            aItem.Create<IProxyMediaServer>((server) =>
+            {
+                if (!iDisposed)
+                {
+                    // calculate where to insert the sender
+                    int index = 0;
+                    foreach (IProxyMediaServer ms in iWatchableMediaServers.Values)
+                    {
+                        if (server.ProductName.CompareTo(ms.ProductName) < 0)
+                        {
+                            break;
+                        }
+                        ++index;
+                    }
+
+                    // insert the sender
+                    iMediaServerLookup.Add(aItem, server);
+                    iWatchableMediaServers.Add(server, (uint)index);
+                }
+                else
+                {
+                    server.Dispose();
+                }
+            });
+        }
+
+        public void UnorderedRemove(IDevice aItem)
+        {
+            IProxyMediaServer server;
+            if (iMediaServerLookup.TryGetValue(aItem, out server))
+            {
+                // remove the corresponding sender from the watchable collection
+                iMediaServerLookup.Remove(aItem);
+                iWatchableMediaServers.Remove(server);
+
+                server.Dispose();
+            }
+        }
+    }
+
     public interface IStandardHouse
     {
         IWatchableOrdered<IStandardRoom> Rooms { get; }
@@ -980,12 +1160,11 @@ namespace OpenHome.Av
         INetwork Network { get; }
     }
 
-    public class StandardHouse : IUnorderedWatcher<ITopology4Room>, IUnorderedWatcher<IDevice>, IStandardHouse, IMockable, IDisposable
+    public class StandardHouse : IUnorderedWatcher<ITopology4Room>, IStandardHouse, IMockable, IDisposable
     {
         public StandardHouse(INetwork aNetwork)
         {
             iDisposeHandler = new DisposeHandler();
-            iDisposed = false;
             iNetwork = aNetwork;
 
             iTopology1 = new Topology1(aNetwork);
@@ -993,19 +1172,16 @@ namespace OpenHome.Av
             iTopologym = new Topologym(iTopology2);
             iTopology3 = new Topology3(iTopologym);
             iTopology4 = new Topology4(iTopology3);
-
-            iWatchableServers = new WatchableOrdered<IProxyMediaServer>(iNetwork);
-            iMediaServers = iNetwork.Create<IProxyMediaServer>();
-            iServerLookup = new Dictionary<IDevice, IProxyMediaServer>();
  
             iWatchableRooms = new WatchableOrdered<IStandardRoom>(iNetwork);
             iRoomLookup = new Dictionary<ITopology4Room, StandardRoom>();
-
             iRoomWatchers = new Dictionary<ITopology4Room, RoomWatcher>();
+
+            iMediaServersWatcher = new MediaServersWatcher(aNetwork);
+            iSendersWatcher = new SendersWatcher(aNetwork);
 
             iNetwork.Schedule(() =>
             {
-                iMediaServers.AddWatcher(this);
                 iTopology4.Rooms.AddWatcher(this);
             });
         }
@@ -1016,12 +1192,8 @@ namespace OpenHome.Av
 
             iNetwork.Execute(() =>
             {
-                iMediaServers.RemoveWatcher(this);
-
-                foreach (var kvp in iServerLookup)
-                {
-                    kvp.Value.Dispose();
-                }
+                iMediaServersWatcher.Dispose();
+                iSendersWatcher.Dispose();
 
                 iTopology4.Rooms.RemoveWatcher(this);
 
@@ -1039,15 +1211,12 @@ namespace OpenHome.Av
             iWatchableRooms.Dispose();
             iRoomLookup.Clear();
             iRoomWatchers.Clear();
-            iWatchableServers.Dispose();
 
             iTopology4.Dispose();
             iTopology3.Dispose();
             iTopologym.Dispose();
             iTopology2.Dispose();
             iTopology1.Dispose();
-
-            iDisposed = true;
         }
 
         public IWatchableOrdered<IStandardRoom> Rooms
@@ -1067,7 +1236,18 @@ namespace OpenHome.Av
             {
                 using (iDisposeHandler.Lock)
                 {
-                    return iWatchableServers;
+                    return iMediaServersWatcher.MediaServers;
+                }
+            }
+        }
+
+        public IWatchableOrdered<IProxySender> Senders
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iSendersWatcher.Senders;
                 }
             }
         }
@@ -1134,86 +1314,48 @@ namespace OpenHome.Av
             room.Dispose();
         }
 
-        public void UnorderedAdd(IDevice aItem)
-        {
-            aItem.Create<IProxyMediaServer>((server) =>
-            {
-                if (!iDisposed)
-                {
-                    // calculate where to insert the server
-                    int index = 0;
-                    foreach (IProxyMediaServer ms in iWatchableServers.Values)
-                    {
-                        if (server.ProductName.CompareTo(ms.ProductName) < 0)
-                        {
-                            break;
-                        }
-                        ++index;
-                    }
-
-                    // insert the server
-                    iServerLookup.Add(aItem, server);
-                    iWatchableServers.Add(server, (uint)index);
-                }
-                else
-                {
-                    server.Dispose();
-                }
-            });
-        }
-
-        public void UnorderedRemove(IDevice aItem)
-        {
-            IProxyMediaServer server;
-            if (iServerLookup.TryGetValue(aItem, out server))
-            {
-                // remove the corresponding server from the watchable collection
-                iServerLookup.Remove(aItem);
-                iWatchableServers.Remove(server);
-
-                server.Dispose();
-            }
-        }
-
         public void Execute(IEnumerable<string> aValue)
         {
-            iNetwork.Execute(() =>
+            using (iDisposeHandler.Lock)
             {
-                string command = aValue.First().ToLowerInvariant();
-
-                if (command == "zone")
+                iNetwork.Execute(() =>
                 {
-                    IEnumerable<string> value = aValue.Skip(1);
+                    string command = aValue.First().ToLowerInvariant();
 
-                    string name = value.First();
-
-                    foreach (StandardRoom r1 in iRoomLookup.Values)
+                    if (command == "zone")
                     {
-                        if (r1.Name == name)
+                        IEnumerable<string> value = aValue.Skip(1);
+
+                        string name = value.First();
+
+                        foreach (StandardRoom r1 in iRoomLookup.Values)
                         {
-                            value = value.Skip(1);
-
-                            command = value.First().ToLowerInvariant();
-
-                            if (command == "add")
+                            if (r1.Name == name)
                             {
                                 value = value.Skip(1);
 
-                                name = value.First();
+                                command = value.First().ToLowerInvariant();
 
-                                foreach (StandardRoom r2 in iRoomLookup.Values)
+                                if (command == "add")
                                 {
-                                    if (r2.Name == name)
+                                    value = value.Skip(1);
+
+                                    name = value.First();
+
+                                    foreach (StandardRoom r2 in iRoomLookup.Values)
                                     {
-                                        r2.ListenTo(r1);
-                                        return;
+                                        if (r2.Name == name)
+                                        {
+                                            r2.ListenTo(r1);
+                                            return;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
         }
 
         internal void AddToZone(IDevice aDevice, IStandardRoom aRoom)
@@ -1239,7 +1381,6 @@ namespace OpenHome.Av
         }
 
         private readonly DisposeHandler iDisposeHandler;
-        private bool iDisposed;
         private readonly INetwork iNetwork;
         private readonly Topology1 iTopology1;
         private readonly Topology2 iTopology2;
@@ -1247,12 +1388,11 @@ namespace OpenHome.Av
         private readonly Topology3 iTopology3;
         private readonly Topology4 iTopology4;
 
-        private readonly WatchableOrdered<IProxyMediaServer> iWatchableServers;
-        private readonly IWatchableUnordered<IDevice> iMediaServers;
-        private readonly Dictionary<IDevice, IProxyMediaServer> iServerLookup;
-
         private readonly WatchableOrdered<IStandardRoom> iWatchableRooms;
         private readonly Dictionary<ITopology4Room, StandardRoom> iRoomLookup;
+
+        private readonly MediaServersWatcher iMediaServersWatcher;
+        private readonly SendersWatcher iSendersWatcher;
 
         private readonly Dictionary<ITopology4Room, RoomWatcher> iRoomWatchers;
     }

@@ -77,6 +77,15 @@ namespace OpenHome.Av
         }
     }
 
+    public class DeviceInjectorSender : DeviceInjector
+    {
+        public DeviceInjectorSender(Network aNetwork)
+            : base(aNetwork)
+        {
+            iDeviceList = new CpDeviceListUpnpServiceType("av.openhome.org", "Sender", 1, Added, Removed);
+        }
+    }
+
     public class DeviceInjectorContentDirectory : DeviceInjector
     {
         public DeviceInjectorContentDirectory(Network aNetwork)
