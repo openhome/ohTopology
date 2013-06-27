@@ -867,27 +867,26 @@ namespace OpenHome.Av
 
     class RoomWatcher : IWatcher<ITopology4Source>, IWatcher<ITopologymSender>, IOrderedWatcher<IStandardRoom>, IDisposable
     {
-        private StandardHouse iHouse;
-        private IStandardRoom iRoom;
+        private readonly StandardHouse iHouse;
+        private readonly IWatchableOrdered<IStandardRoom> iRooms;
+        private readonly IStandardRoom iRoom;
         private bool iRoomsInitialised;
         private ITopologymSender iSender;
 
-        public RoomWatcher(StandardHouse aHouse, IStandardRoom aRoom)
+        public RoomWatcher(StandardHouse aHouse, IWatchableOrdered<IStandardRoom> aRooms, IStandardRoom aRoom)
         {
             iHouse = aHouse;
+            iRooms = aRooms;
             iRoom = aRoom;
 
             iRoom.Source.AddWatcher(this);
-            iHouse.Rooms.AddWatcher(this);
+            iRooms.AddWatcher(this);
         }
 
         public void Dispose()
         {
-            iHouse.Rooms.RemoveWatcher(this);
+            iRooms.RemoveWatcher(this);
             iRoom.Source.RemoveWatcher(this);
-
-            iRoom = null;
-            iHouse = null;
         }
 
         public void ItemOpen(string aId, ITopology4Source aValue)
@@ -1013,6 +1012,8 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
+            iDisposeHandler.Dispose();
+
             iNetwork.Execute(() =>
             {
                 iMediaServers.RemoveWatcher(this);
@@ -1047,8 +1048,6 @@ namespace OpenHome.Av
             iTopology1.Dispose();
 
             iDisposed = true;
-
-            iDisposeHandler.Dispose();
         }
 
         public IWatchableOrdered<IStandardRoom> Rooms
@@ -1118,7 +1117,7 @@ namespace OpenHome.Av
             iWatchableRooms.Add(room, (uint)index);
 
             // do this here so that room is added before other rooms are informed of this room listening to them
-            iRoomWatchers.Add(aRoom, new RoomWatcher(this, room));
+            iRoomWatchers.Add(aRoom, new RoomWatcher(this, iWatchableRooms, room));
         }
 
         public void UnorderedRemove(ITopology4Room aRoom)
