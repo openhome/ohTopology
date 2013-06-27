@@ -526,7 +526,7 @@ namespace OpenHome.Av
                 IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
                 iId.Update(id);
                 int index = idArray.IndexOf(id);
-                if (index > -1 && index < idArray.Count)
+                if (index > -1 && index < idArray.Count && idArray.Count > 1)
                 {
                     iCacheSession.Entries(new uint[] { idArray.ElementAt(index + 1) }).ContinueWith((t) =>
                     {
@@ -687,25 +687,55 @@ namespace OpenHome.Av
 
     class ServicePlaylistMock : ServicePlaylist, IMockable
     {
+        private uint iIdFactory;
         private IIdCacheSession iCacheSession;
         private PlaylistContainer iContainer;
-        private IList<IMediaMetadata> iTracks;
+        private List<TrackMock> iTracks;
         private List<uint> iIdArray;
+
+        private class TrackMock
+        {
+            private readonly string iUri;
+            private readonly IMediaMetadata iMetadata;
+
+            public TrackMock(string aUri, IMediaMetadata aMetadata)
+            {
+                iUri = aUri;
+                iMetadata = aMetadata;
+            }
+
+            public string Uri
+            {
+                get
+                {
+                    return iUri;
+                }
+            }
+
+            public IMediaMetadata Metadata
+            {
+                get
+                {
+                    return iMetadata;
+                }
+            }
+        }
 
         public ServicePlaylistMock(INetwork aNetwork, IDevice aDevice, uint aId, IList<IMediaMetadata> aTracks, bool aRepeat, bool aShuffle, string aTransportState, string aProtocolInfo, uint aTracksMax)
             : base(aNetwork, aDevice)
         {
+            iIdFactory = 1;
             iTracksMax = aTracksMax;
             iProtocolInfo = aProtocolInfo;
 
             iIdArray = new List<uint>();
-            uint id = 1;
+            iTracks = new List<TrackMock>();
             foreach (IMediaMetadata m in aTracks)
             {
-                iIdArray.Add(id);
-                ++id;
+                iIdArray.Add(iIdFactory);
+                iTracks.Add(new TrackMock(m[Network.TagManager.Audio.Uri].Value, m));
+                ++iIdFactory;
             }
-            iTracks = aTracks;
 
             iId.Update(aId);
             iTransportState.Update(aTransportState);
@@ -792,6 +822,11 @@ namespace OpenHome.Av
             {
                 Network.Schedule(() =>
                 {
+                    int index = iIdArray.IndexOf(iId.Value);
+                    if (index > 0)
+                    {
+                        iId.Update(iIdArray.ElementAt(index - 1));
+                    }
                 });
             });
             return task;
@@ -803,6 +838,11 @@ namespace OpenHome.Av
             {
                 Network.Schedule(() =>
                 {
+                    int index = iIdArray.IndexOf(iId.Value);
+                    if (index < iIdArray.Count - 1)
+                    {
+                        iId.Update(iIdArray.ElementAt(index + 1));
+                    }
                 });
             });
             return task;
@@ -826,6 +866,7 @@ namespace OpenHome.Av
             {
                 Network.Schedule(() =>
                 {
+                    iId.Update(iIdArray.ElementAt(aValue));
                 });
             });
             return task;
@@ -857,10 +898,17 @@ namespace OpenHome.Av
         {
             Task<uint> task = Task<uint>.Factory.StartNew(() =>
             {
+                uint newId = 0;
                 Network.Execute(() =>
                 {
+                    int index = iIdArray.IndexOf(aAfterId);
+                    newId = iIdFactory;
+                    iIdArray.Insert(index + 1, newId);
+                    iTracks.Insert(index + 1, new TrackMock(aUri, aMetadata));
+                    ++iIdFactory;
+                    iContainer.UpdateSnapshot(iIdArray);
                 });
-                return 0;
+                return newId;
             });
             return task;
         }
@@ -871,6 +919,13 @@ namespace OpenHome.Av
             {
                 Network.Schedule(() =>
                 {
+                    int index = iIdArray.IndexOf(aValue);
+                    iIdArray.Remove(aValue);
+                    if (index < iIdArray.Count)
+                    {
+                        iId.Update(iIdArray.ElementAt(index));
+                    }
+                    iContainer.UpdateSnapshot(iIdArray);
                 });
             });
             return task;
@@ -882,6 +937,9 @@ namespace OpenHome.Av
             {
                 Network.Schedule(() =>
                 {
+                    iIdArray.Clear();
+                    iId.Update(0);
+                    iContainer.UpdateSnapshot(iIdArray);
                 });
             });
             return task;
@@ -933,8 +991,8 @@ namespace OpenHome.Av
                 {
                     foreach (uint id in aIdList)
                     {
-                        IMediaMetadata metadata = iTracks[iIdArray.IndexOf(id)];
-                        entries.Add(new IdCacheEntry(metadata, metadata[Network.TagManager.Audio.Uri].Value));
+                        TrackMock track = iTracks[iIdArray.IndexOf(id)];
+                        entries.Add(new IdCacheEntry(track.Metadata, track.Uri));
                     }
                 }
                 return entries;
