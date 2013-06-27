@@ -199,7 +199,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IPlaylistWriter Playlist
+        public IPlaylistWriter PlaylistWriter
         {
             get
             {
