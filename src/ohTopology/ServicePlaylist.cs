@@ -321,25 +321,19 @@ namespace OpenHome.Av
 
         public override void Dispose()
         {
-            if (iContainer != null)
-            {
-                iContainer.Dispose();
-                iContainer = null;
-            }
+            // cause in flight or blocked subscription to complete
+            iSubscribed.Set();
 
-            if (iCacheSession != null)
-            {
-                iCacheSession.Dispose();
-                iCacheSession = null;
-            }
-            
+            base.Dispose();
+
             iSubscribed.Dispose();
             iSubscribed = null;
 
+            Do.Assert(iContainer == null);
+            Do.Assert(iCacheSession == null);
+
             iService.Dispose();
             iService = null;
-
-            base.Dispose();
         }
 
         protected override Task OnSubscribe()

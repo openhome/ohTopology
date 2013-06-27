@@ -49,7 +49,10 @@ namespace OpenHome.Av
                 iSubscribeTask.Wait();
             }
 
-            iCancelSubscribe.Dispose();
+            lock (iCancelSubscribe)
+            {
+                iCancelSubscribe.Dispose();
+            }
 
             if (iRefCount > 0)
             {
