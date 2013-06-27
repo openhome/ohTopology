@@ -32,6 +32,8 @@ namespace OpenHome.Av
 
         public virtual void Dispose()
         {
+            iDisposeHandler.Dispose();
+
             lock (iActive)
             {
                 if (iIsActive)
@@ -46,8 +48,6 @@ namespace OpenHome.Av
             }
 
             iEnabled.Dispose();
-
-            iDisposeHandler.Dispose();
         }
 
         public IStandardRoom Room
@@ -85,27 +85,18 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, IEnumerable<ITopology4Source> aValue)
         {
-            using (iDisposeHandler.Lock)
-            {
-                EvaluateEnabledOpen(aValue);
-            }
+            EvaluateEnabledOpen(aValue);
         }
 
         public void ItemUpdate(string aId, IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
         {
-            using (iDisposeHandler.Lock)
-            {
-                EvaluateEnabledUpdate(aValue, aPrevious);
-            }
+            EvaluateEnabledUpdate(aValue, aPrevious);
         }
 
         public void ItemClose(string aId, IEnumerable<ITopology4Source> aValue)
         {
-            using (iDisposeHandler.Lock)
-            {
-                EvaluateEnabledClose(aValue);
-                iEnabled.Update(false);
-            }
+            EvaluateEnabledClose(aValue);
+            iEnabled.Update(false);
         }
 
         protected abstract void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue);
@@ -114,10 +105,7 @@ namespace OpenHome.Av
         
         protected void SetEnabled(bool aValue)
         {
-            using (iDisposeHandler.Lock)
-            {
-                iEnabled.Update(aValue);
-            }
+            iEnabled.Update(aValue);
         }
 
         protected virtual void OnSetInactive() { }
