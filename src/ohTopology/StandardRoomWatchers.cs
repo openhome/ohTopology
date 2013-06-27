@@ -304,6 +304,7 @@ namespace OpenHome.Av
             if (iRadio != null)
             {
                 iRadio.Dispose();
+                iRadio = null;
             }
 
             EvaluateEnabled(aValue);
