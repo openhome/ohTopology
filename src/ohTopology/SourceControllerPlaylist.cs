@@ -32,8 +32,6 @@ namespace OpenHome.Av
                     iPlaylist = playlist;
 
                     iHasContainer.Update(true);
-
-                    iHasInfoNext.Update(true);
                     iCanSkip.Update(true);
                     iCanSeek.Update(false);
                     iHasPlayMode.Update(true);
@@ -221,16 +219,19 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, IInfoMetadata aValue)
         {
+            iHasInfoNext.Update(!(aValue == InfoMetadata.Empty));
             iInfoNext.Update(aValue);
         }
 
         public void ItemUpdate(string aId, IInfoMetadata aValue, IInfoMetadata aPrevious)
         {
+            iHasInfoNext.Update(!(aValue == InfoMetadata.Empty));
             iInfoNext.Update(aValue);
         }
 
         public void ItemClose(string aId, IInfoMetadata aValue)
         {
+            iHasInfoNext.Update(false);
             iInfoNext.Update(InfoMetadata.Empty);
         }
 

@@ -554,7 +554,7 @@ namespace OpenHome.Av
                 IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
                 iId.Update(id);
                 int index = idArray.IndexOf(id);
-                if (index > -1 && index < idArray.Count && idArray.Count > 1)
+                if ((index > -1) && (index < idArray.Count - 1) && (idArray.Count > 1))
                 {
                     iCacheSession.Entries(new uint[] { idArray.ElementAt(index + 1) }).ContinueWith((t) =>
                     {
