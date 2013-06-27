@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Threading;
+
+using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
@@ -11,26 +14,57 @@ namespace OpenHome.Av
 
     public abstract class Service : IService
     {
+        private readonly DisposeHandler iDisposeHandler;
         private readonly INetwork iNetwork;
         private readonly IDevice iDevice;
+        private readonly CancellationTokenSource iCancelSubscribe;
+        private readonly List<Task> iTasks;
         private uint iRefCount;
+
         protected Task iSubscribeTask;
-        private List<Task> iTasks;
 
         protected Service(INetwork aNetwork, IDevice aDevice)
         {
+            iDisposeHandler = new DisposeHandler();
+            iCancelSubscribe = new CancellationTokenSource();
             iNetwork = aNetwork;
             iDevice = aDevice;
             iRefCount = 0;
-            iSubscribeTask = new Task(() => { });
+            iSubscribeTask = null;
             iTasks = new List<Task>();
+        }
+
+        public virtual void Dispose()
+        {
+            iDisposeHandler.Dispose();
+
+            lock (iCancelSubscribe)
+            {
+                iCancelSubscribe.Cancel();
+            }
+
+            // wait for any inflight subscriptions to complete
+            if (iSubscribeTask != null)
+            {
+                iSubscribeTask.Wait();
+            }
+
+            iCancelSubscribe.Dispose();
+
+            if (iRefCount > 0)
+            {
+                throw new Exception("Disposing of Service with outstanding subscriptions");
+            }
         }
 
         public INetwork Network
         {
             get
             {
-                return (iNetwork);
+                using (iDisposeHandler.Lock)
+                {
+                    return (iNetwork);
+                }
             }
         }
 
@@ -38,39 +72,47 @@ namespace OpenHome.Av
         {
             get
             {
-                return iDevice;
-            }
-        }
-
-        public virtual void Dispose()
-        {
-            if (iRefCount > 0)
-            {
-                throw new Exception("Disposing of Service with outstanding subscriptions");
+                using (iDisposeHandler.Lock)
+                {
+                    return iDevice;
+                }
             }
         }
 
         public void Create<T>(Action<T> aCallback) where T : IProxy
         {
-            if (iRefCount == 0)
+            using (iDisposeHandler.Lock)
             {
-                iSubscribeTask = OnSubscribe();
-            }
-            ++iRefCount;
-
-            if (iSubscribeTask != null)
-            {
-                iSubscribeTask.ContinueWith((t) =>
+                if (iRefCount == 0)
                 {
-                    iNetwork.Schedule(() =>
+                    iSubscribeTask = OnSubscribe();
+                }
+                ++iRefCount;
+
+                if (iSubscribeTask != null)
+                {
+                    iSubscribeTask.ContinueWith((t) =>
                     {
-                        aCallback((T)OnCreate(iDevice));
+                        lock (iCancelSubscribe)
+                        {
+                            if (!iCancelSubscribe.IsCancellationRequested)
+                            {
+                                iNetwork.Schedule(() =>
+                                {
+                                    aCallback((T)OnCreate(iDevice));
+                                });
+                            }
+                            else
+                            {
+                                Unsubscribe();
+                            }
+                        }
                     });
-                });
-            }
-            else
-            {
-                aCallback((T)OnCreate(iDevice));
+                }
+                else
+                {
+                    aCallback((T)OnCreate(iDevice));
+                }
             }
         }
 
