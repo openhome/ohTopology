@@ -985,6 +985,7 @@ namespace OpenHome.Av
     {
         public StandardHouse(INetwork aNetwork)
         {
+            iDisposeHandler = new DisposeHandler();
             iDisposed = false;
             iNetwork = aNetwork;
 
@@ -1012,11 +1013,6 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            if (iDisposed)
-            {
-                throw new ObjectDisposedException("StandardHouse.Dispose");
-            }
-
             iNetwork.Execute(() =>
             {
                 iMediaServers.RemoveWatcher(this);
@@ -1040,18 +1036,9 @@ namespace OpenHome.Av
                 }
             });
             iWatchableRooms.Dispose();
-            iWatchableRooms = null;
-
             iRoomLookup.Clear();
-            iRoomLookup = null;
-
             iRoomWatchers.Clear();
-            iRoomWatchers = null;
-
             iWatchableServers.Dispose();
-            iWatchableServers = null;
-
-            iServerLookup = null;
 
             iTopology4.Dispose();
             iTopology3.Dispose();
@@ -1060,13 +1047,18 @@ namespace OpenHome.Av
             iTopology1.Dispose();
 
             iDisposed = true;
+
+            iDisposeHandler.Dispose();
         }
 
         public IWatchableOrdered<IStandardRoom> Rooms
         {
             get
             {
-                return iWatchableRooms;
+                using (iDisposeHandler.Lock)
+                {
+                    return iWatchableRooms;
+                }
             }
         }
 
@@ -1074,7 +1066,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iWatchableServers;
+                using (iDisposeHandler.Lock)
+                {
+                    return iWatchableServers;
+                }
             }
         }
 
@@ -1082,7 +1077,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iNetwork;
+                using (iDisposeHandler.Lock)
+                {
+                    return iNetwork;
+                }
             }
         }
 
@@ -1241,21 +1239,22 @@ namespace OpenHome.Av
             }
         }
 
+        private readonly DisposeHandler iDisposeHandler;
         private bool iDisposed;
-        private INetwork iNetwork;
-        private Topology1 iTopology1;
-        private Topology2 iTopology2;
-        private Topologym iTopologym;
-        private Topology3 iTopology3;
-        private Topology4 iTopology4;
+        private readonly INetwork iNetwork;
+        private readonly Topology1 iTopology1;
+        private readonly Topology2 iTopology2;
+        private readonly Topologym iTopologym;
+        private readonly Topology3 iTopology3;
+        private readonly Topology4 iTopology4;
 
-        private WatchableOrdered<IProxyMediaServer> iWatchableServers;
-        private IWatchableUnordered<IDevice> iMediaServers;
-        private Dictionary<IDevice, IProxyMediaServer> iServerLookup;
+        private readonly WatchableOrdered<IProxyMediaServer> iWatchableServers;
+        private readonly IWatchableUnordered<IDevice> iMediaServers;
+        private readonly Dictionary<IDevice, IProxyMediaServer> iServerLookup;
 
-        private WatchableOrdered<IStandardRoom> iWatchableRooms;
-        private Dictionary<ITopology4Room, StandardRoom> iRoomLookup;
+        private readonly WatchableOrdered<IStandardRoom> iWatchableRooms;
+        private readonly Dictionary<ITopology4Room, StandardRoom> iRoomLookup;
 
-        private Dictionary<ITopology4Room, RoomWatcher> iRoomWatchers;
+        private readonly Dictionary<ITopology4Room, RoomWatcher> iRoomWatchers;
     }
 }

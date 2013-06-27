@@ -11,7 +11,7 @@ using OpenHome.Net.ControlPoint;
 
 namespace OpenHome.Av
 {
-    class MediaPresetRadio : IMediaPreset, IWatcher<uint>
+    class MediaPresetRadio : IMediaPreset, IWatcher<uint>, IWatcher<string>
     {
         private readonly DisposeHandler iDisposeHandler;
         private readonly INetwork iNetwork;
@@ -21,6 +21,8 @@ namespace OpenHome.Av
         private readonly string iUri;
         private readonly ServiceRadio iRadio;
         private readonly Watchable<bool> iPlaying;
+        private uint iCurrentId;
+        private string iCurrentTransportState;
         private bool iDisposed;
 
         public MediaPresetRadio(INetwork aNetwork, uint aIndex, uint aId, IMediaMetadata aMetadata, string aUri, ServiceRadio aRadio)
@@ -41,6 +43,7 @@ namespace OpenHome.Av
                 if (!iDisposed)
                 {
                     iRadio.Id.AddWatcher(this);
+                    iRadio.TransportState.AddWatcher(this);
                 }
             });
         }
@@ -51,6 +54,7 @@ namespace OpenHome.Av
             iNetwork.Execute(() =>
             {
                 iRadio.Id.RemoveWatcher(this);
+                iRadio.TransportState.RemoveWatcher(this);
                 iDisposed = true;
             });
             iPlaying.Dispose();
@@ -114,17 +118,41 @@ namespace OpenHome.Av
             }
         }
 
+        private void EvaluatePlaying()
+        {
+            iPlaying.Update(iCurrentId == iId && iCurrentTransportState == "Playing");
+        }
+
         public void ItemOpen(string aId, uint aValue)
         {
-            iPlaying.Update(aValue == iId);
+            iCurrentId = aValue;
+            EvaluatePlaying();
         }
 
         public void ItemUpdate(string aId, uint aValue, uint aPrevious)
         {
-            iPlaying.Update(aValue == iId);
+            iCurrentId = aValue;
+            EvaluatePlaying();
         }
 
         public void ItemClose(string aId, uint aValue)
+        {
+            iPlaying.Update(false);
+        }
+
+        public void ItemOpen(string aId, string aValue)
+        {
+            iCurrentTransportState = aValue;
+            EvaluatePlaying();
+        }
+
+        public void ItemUpdate(string aId, string aValue, string aPrevious)
+        {
+            iCurrentTransportState = aValue;
+            EvaluatePlaying();
+        }
+
+        public void ItemClose(string aId, string aValue)
         {
             iPlaying.Update(false);
         }
