@@ -39,13 +39,14 @@ namespace OpenHome.Av
         {
             iDisposed = false;
             iRoom = aRoom;
+            iSource = aRoom.Source;
 
             iHasVolume = new Watchable<bool>(aRoom.Network, "HasVolume", false);
             iMute = new Watchable<bool>(aRoom.Network, "Mute", false);
             iValue = new Watchable<uint>(aRoom.Network, "Volume", 0);
             iVolumeLimit = new Watchable<uint>(aRoom.Network, "VolumeLimit", 0);
 
-            aRoom.Source.AddWatcher(this);
+            iSource.AddWatcher(this);
         }
 
         public void Dispose()
@@ -55,7 +56,7 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("VolumeController.Dispose");
             }
 
-            iRoom.Source.RemoveWatcher(this);
+            iSource.RemoveWatcher(this);
 
             DestroyProxy();
 
@@ -271,6 +272,7 @@ namespace OpenHome.Av
 
         private bool iDisposed;
         private IStandardRoom iRoom;
+        private IWatchable<ITopology4Source> iSource;
         private IProxyVolume iVolume;
 
         private IDevice iDevice;

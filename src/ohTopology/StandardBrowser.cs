@@ -168,7 +168,7 @@ namespace OpenHome.Av
 
     class InfoWatcher : IWatcher<IInfoDetails>, IWatcher<IInfoMetadata>, IWatcher<IInfoMetatext>, IDisposable
     {
-        public InfoWatcher(IWatchableThread aThread, IDevice aDevice, Watchable<RoomDetails> aDetails, Watchable<RoomMetadata> aMetadata, Watchable<RoomMetatext> aMetatext)
+        public InfoWatcher(INetwork aNetwork, IDevice aDevice, Watchable<RoomDetails> aDetails, Watchable<RoomMetadata> aMetadata, Watchable<RoomMetatext> aMetatext)
         {
             iDisposed = false;
 
@@ -403,6 +403,7 @@ namespace OpenHome.Av
     {
         public StandardRoom(INetwork aNetwork, ITopology4Room aRoom)
         {
+            iDisposeHandler = new DisposeHandler();
             iDisposed = false;
 
             iNetwork = aNetwork;
@@ -427,10 +428,7 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            if (iDisposed)
-            {
-                throw new ObjectDisposedException("StandardRoom.Dispose");
-            }
+            iDisposeHandler.Dispose();
 
             iNetwork.Execute(() =>
             {
@@ -474,7 +472,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iRoom.Name;
+                using (iDisposeHandler.Lock)
+                {
+                    return iRoom.Name;
+                }
             }
         }
 
@@ -482,7 +483,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iRoom.Standby;
+                using (iDisposeHandler.Lock)
+                {
+                    return iRoom.Standby;
+                }
             }
         }
 
@@ -498,7 +502,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iMetadata;
+                using (iDisposeHandler.Lock)
+                {
+                    return iMetadata;
+                }
             }
         }
 
@@ -506,7 +513,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iMetatext;
+                using (iDisposeHandler.Lock)
+                {
+                    return iMetatext;
+                }
             }
         }
 
@@ -514,7 +524,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iWatchableSource;
+                using (iDisposeHandler.Lock)
+                {
+                    return iWatchableSource;
+                }
             }
         }
 
@@ -522,13 +535,19 @@ namespace OpenHome.Av
         {
             get
             {
-                return iWatchableSources;
+                using (iDisposeHandler.Lock)
+                {
+                    return iWatchableSources;
+                }
             }
         }
 
         public void Join(Action aAction)
         {
-            iJoiners.Add(aAction);
+            using (iDisposeHandler.Lock)
+            {
+                iJoiners.Add(aAction);
+            }
         }
 
         public void UnJoin(Action aAction)
@@ -538,14 +557,20 @@ namespace OpenHome.Av
 
         public void SetStandby(bool aValue)
         {
-            iRoom.SetStandby(aValue);
+            using (iDisposeHandler.Lock)
+            {
+                iRoom.SetStandby(aValue);
+            }
         }
 
         public IWatchable<IZone> Zone
         {
             get
             {
-                return iWatchableZone;
+                using (iDisposeHandler.Lock)
+                {
+                    return iWatchableZone;
+                }
             }
         }
 
@@ -553,7 +578,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iZoneable;
+                using (iDisposeHandler.Lock)
+                {
+                    return iZoneable;
+                }
             }
         }
 
@@ -561,51 +589,60 @@ namespace OpenHome.Av
         {
             get
             {
-                return iSenders;
+                using (iDisposeHandler.Lock)
+                {
+                    return iSenders;
+                }
             }
         }
 
         public void ListenTo(IStandardRoom aRoom)
         {
-            foreach (ITopology4Source s in iSources)
+            using (iDisposeHandler.Lock)
             {
-                if (s.Type == "Receiver")
+                foreach (ITopology4Source s in iSources)
                 {
-                    s.Device.Create<IProxyReceiver>((receiver) =>
+                    if (s.Type == "Receiver")
                     {
-                        aRoom.Zone.Value.Sender.Create<IProxySender>((sender) =>
+                        s.Device.Create<IProxyReceiver>((receiver) =>
                         {
-                            if (!iDisposed)
+                            aRoom.Zone.Value.Sender.Create<IProxySender>((sender) =>
                             {
-                                Task action = receiver.SetSender(sender.Metadata.Value);
-                                action.ContinueWith((t) => { receiver.Play(); });
-                                receiver.Dispose();
-                                sender.Dispose();
-                            }
-                            else
-                            {
-                                receiver.Dispose();
-                                sender.Dispose();
-                            }
+                                if (!iDisposed)
+                                {
+                                    Task action = receiver.SetSender(sender.Metadata.Value);
+                                    action.ContinueWith((t) => { receiver.Play(); });
+                                    receiver.Dispose();
+                                    sender.Dispose();
+                                }
+                                else
+                                {
+                                    receiver.Dispose();
+                                    sender.Dispose();
+                                }
+                            });
                         });
-                    });
-                    return;
+                        return;
+                    }
                 }
             }
         }
 
         public void Play(string aUri, IMediaMetadata aMetadata)
         {
-            foreach (ITopology4Source s in iSources)
+            using (iDisposeHandler.Lock)
             {
-                if (s.Type == "Radio")
+                foreach (ITopology4Source s in iSources)
                 {
-                    s.Device.Create<IProxyRadio>((radio) =>
+                    if (s.Type == "Radio")
                     {
-                        radio.SetChannel(aUri, aMetadata);
-                        radio.Dispose();
-                    });
-                    return;
+                        s.Device.Create<IProxyRadio>((radio) =>
+                        {
+                            radio.SetChannel(aUri, aMetadata);
+                            radio.Dispose();
+                        });
+                        return;
+                    }
                 }
             }
         }
@@ -614,21 +651,18 @@ namespace OpenHome.Av
         {
             get
             {
-                return iNetwork;
+                using (iDisposeHandler.Lock)
+                {
+                    return iNetwork;
+                }
             }
         }
 
-        public void UnorderedOpen()
-        {
-        }
+        public void UnorderedOpen() { }
 
-        public void UnorderedInitialised()
-        {
-        }
+        public void UnorderedInitialised() { }
 
-        public void UnorderedClose()
-        {
-        }
+        public void UnorderedClose() { }
 
         public void ItemOpen(string aId, IEnumerable<ITopology4Root> aValue)
         {
@@ -842,6 +876,7 @@ namespace OpenHome.Av
             return false;
         }
 
+        private readonly DisposeHandler iDisposeHandler;
         private bool iDisposed;
         private INetwork iNetwork;
         private ITopology4Room iRoom;

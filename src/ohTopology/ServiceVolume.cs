@@ -236,6 +236,11 @@ namespace OpenHome.Av
             return task;
         }
 
+        protected virtual void OnCancelSubscribe()
+        {
+            iSubscribed.Set();
+        }
+
         private void HandleInitialEvent()
         {
             iSubscribed.Set();

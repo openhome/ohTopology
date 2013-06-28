@@ -38,6 +38,7 @@ namespace OpenHome.Av
             iDisposed = false;
             iNetwork = aRoom.Network;
             iRoom = aRoom;
+            iSource = aRoom.Source;
 
             iLock = new object();
             iIsActive = true;
@@ -59,8 +60,7 @@ namespace OpenHome.Av
             iShuffle = new Watchable<bool>(iNetwork, "Shuffle", false);
             iRepeat = new Watchable<bool>(iNetwork, "Repeat", false);
 
-            iRoom.Source.AddWatcher(this);
-
+            iSource.AddWatcher(this);
             iRoom.Join(SetInactive);
         }
 
@@ -77,7 +77,7 @@ namespace OpenHome.Av
                 {
                     iNetwork.Execute(() =>
                     {
-                        iRoom.Source.RemoveWatcher(this);
+                        iSource.RemoveWatcher(this);
                     });
                     iRoom.UnJoin(SetInactive);
                     iIsActive = false;
@@ -138,7 +138,7 @@ namespace OpenHome.Av
 
                     iActive.Update(false);
 
-                    iRoom.Source.RemoveWatcher(this);
+                    iSource.RemoveWatcher(this);
                     iRoom.UnJoin(SetInactive);
                 }
             }
@@ -502,6 +502,7 @@ namespace OpenHome.Av
         private bool iDisposed;
         private INetwork iNetwork;
         private IStandardRoom iRoom;
+        private IWatchable<ITopology4Source> iSource;
 
         private object iLock;
         private bool iIsActive;
