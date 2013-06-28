@@ -42,6 +42,8 @@ namespace OpenHome.Av
 
         public SenderMetadata(string aMetadata)
         {
+            iMetadata = aMetadata;
+
             XmlDocument doc = new XmlDocument();
             XmlNamespaceManager nsManager = new XmlNamespaceManager(doc.NameTable);
             nsManager.AddNamespace("didl", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
@@ -74,12 +76,13 @@ namespace OpenHome.Av
 
         public override string ToString()
         {
-            return base.ToString();
+            return iMetadata;
         }
 
         private string iName;
         private string iUri;
         private string iArtworkUri;
+        private string iMetadata;
     }
 
     public abstract class ServiceSender : Service
