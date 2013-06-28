@@ -20,13 +20,15 @@ namespace OpenHome.Av
         {
             iDisposeHandler = new DisposeHandler();
             iRoom = aRoom;
+            iSources = aRoom.Sources;
             iNetwork = aRoom.Network;
+
+            iLock = new object();
             iIsActive = true;
             iActive = new Watchable<bool>(iNetwork, "Active", true);
             iEnabled = new Watchable<bool>(iNetwork, "Enabled", false);
 
-            iRoom.Sources.AddWatcher(this);
-
+            iSources.AddWatcher(this);
             iRoom.Join(SetInactive);
         }
 
@@ -34,13 +36,13 @@ namespace OpenHome.Av
         {
             iDisposeHandler.Dispose();
 
-            lock (iActive)
+            lock (iLock)
             {
                 if (iIsActive)
                 {
                     iNetwork.Execute(() =>
                     {
-                        iRoom.Sources.RemoveWatcher(this);
+                        iSources.RemoveWatcher(this);
                     });
                     iRoom.UnJoin(SetInactive);
                     iIsActive = false;
@@ -112,22 +114,19 @@ namespace OpenHome.Av
 
         private void SetInactive()
         {
-            using (iDisposeHandler.Lock)
+            lock (iLock)
             {
-                lock (iActive)
+                if (iIsActive)
                 {
-                    if (iIsActive)
-                    {
-                        iIsActive = false;
 
-                        iActive.Update(false);
+                    iActive.Update(false);
 
-                        iRoom.Sources.RemoveWatcher(this);
+                    iSources.RemoveWatcher(this);
 
-                        OnSetInactive();
+                    OnSetInactive();
 
-                        iRoom.UnJoin(SetInactive);
-                    }
+                    iRoom.UnJoin(SetInactive);
+                    iIsActive = false;
                 }
             }
         }
@@ -136,6 +135,9 @@ namespace OpenHome.Av
         protected readonly INetwork iNetwork;
 
         private readonly IStandardRoom iRoom;
+        private readonly IWatchable<IEnumerable<ITopology4Source>> iSources;
+
+        private readonly object iLock;
         private bool iIsActive;
         private readonly Watchable<bool> iActive;
         private readonly Watchable<bool> iEnabled;

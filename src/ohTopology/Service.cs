@@ -18,6 +18,7 @@ namespace OpenHome.Av
         private readonly INetwork iNetwork;
         private readonly IDevice iDevice;
         private readonly CancellationTokenSource iCancelSubscribe;
+        private readonly ManualResetEvent iSubscribed;
         private readonly List<Task> iTasks;
         private uint iRefCount;
 
@@ -27,6 +28,7 @@ namespace OpenHome.Av
         {
             iDisposeHandler = new DisposeHandler();
             iCancelSubscribe = new CancellationTokenSource();
+            iSubscribed = new ManualResetEvent(true);
             iNetwork = aNetwork;
             iDevice = aDevice;
             iRefCount = 0;
@@ -41,6 +43,7 @@ namespace OpenHome.Av
             lock (iCancelSubscribe)
             {
                 iCancelSubscribe.Cancel();
+                OnCancelSubscribe();
             }
 
             // wait for any inflight subscriptions to complete
@@ -49,10 +52,9 @@ namespace OpenHome.Av
                 iSubscribeTask.Wait();
             }
 
-            lock (iCancelSubscribe)
-            {
-                iCancelSubscribe.Dispose();
-            }
+            iSubscribed.WaitOne();
+
+            iCancelSubscribe.Dispose();
 
             if (iRefCount > 0)
             {
@@ -94,6 +96,8 @@ namespace OpenHome.Av
 
                 if (iSubscribeTask != null)
                 {
+                    iSubscribed.Reset();
+
                     iSubscribeTask.ContinueWith((t) =>
                     {
                         lock (iCancelSubscribe)
@@ -110,6 +114,8 @@ namespace OpenHome.Av
                                 Unsubscribe();
                             }
                         }
+
+                        iSubscribed.Set();
                     });
                 }
                 else
@@ -125,6 +131,8 @@ namespace OpenHome.Av
         {
             return null;
         }
+
+        protected virtual void OnCancelSubscribe() { }
 
         public void Unsubscribe()
         {

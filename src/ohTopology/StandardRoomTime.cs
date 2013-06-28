@@ -14,52 +14,157 @@ namespace OpenHome.Av
         IWatchable<uint> Seconds { get; }
     }
 
-    public class StandardRoomTime : IWatcher<ITopology4Source>, IWatcher<uint>, IStandardRoomTime
+    class TimeWatcher : IWatcher<uint>, IDisposable
+    {
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly IDevice iDevice;
+        private readonly Watchable<bool> iHasTime;
+        private readonly Watchable<uint> iSeconds;
+        private readonly Watchable<uint> iDuration;
+        private bool iDisposed;
+        private IProxyTime iTime;
+
+        public TimeWatcher(INetwork aNetwork, IDevice aDevice, Watchable<bool> aHasTime, Watchable<uint> aSeconds, Watchable<uint> aDuration)
+        {
+            iDisposeHandler = new DisposeHandler();
+            iDevice = aDevice;
+            iHasTime = aHasTime;
+            iSeconds = aSeconds;
+            iDuration = aDuration;
+            iDisposed = false;
+
+            iDevice.Create<IProxyTime>((time) =>
+            {
+                if (!iDisposed)
+                {
+                    iTime = time;
+
+                    iTime.Seconds.AddWatcher(this);
+                    iTime.Duration.AddWatcher(this);
+
+                    iHasTime.Update(true);
+                }
+                else
+                {
+                    time.Dispose();
+                }
+            });
+        }
+
+        public void Dispose()
+        {
+            iDisposeHandler.Dispose();
+
+            if (iTime != null)
+            {
+                iTime.Seconds.RemoveWatcher(this);
+                iTime.Duration.RemoveWatcher(this);
+
+                iTime.Dispose();
+                iTime = null;
+            }
+
+            iHasTime.Update(false);
+
+            iDisposed = true;
+        }
+
+        public void ItemOpen(string aId, uint aValue)
+        {
+            if (aId == "Seconds")
+            {
+                iSeconds.Update(aValue);
+            }
+            if (aId == "Duration")
+            {
+                iDuration.Update(aValue);
+            }
+        }
+
+        public void ItemUpdate(string aId, uint aValue, uint aPrevious)
+        {
+            if (aId == "Seconds")
+            {
+                iSeconds.Update(aValue);
+            }
+            if (aId == "Duration")
+            {
+                iDuration.Update(aValue);
+            }
+        }
+
+        public void ItemClose(string aId, uint aValue)
+        {
+            if (aId == "Seconds")
+            {
+                iSeconds.Update(0);
+            }
+            if (aId == "Duration")
+            {
+                iDuration.Update(0);
+            }
+        }
+    }
+
+    public class StandardRoomTime : IWatcher<ITopology4Source>, IStandardRoomTime
     {
         public StandardRoomTime(IStandardRoom aRoom)
         {
-            iThread = aRoom.Network;
+            iDisposeHandler = new DisposeHandler();
+            iNetwork = aRoom.Network;
             iRoom = aRoom;
+            iSource = aRoom.Source;
 
             iLock = new object();
             iIsActive = true;
-            iActive = new Watchable<bool>(iThread, string.Format("Active({0})", aRoom.Name), true);
+            iActive = new Watchable<bool>(iNetwork, "Active", true);
 
-            iRoom.Source.AddWatcher(this);
+            iHasTime = new Watchable<bool>(iNetwork, "HasTime", false);
+            iDuration = new Watchable<uint>(iNetwork, "Duration", 0);
+            iSeconds = new Watchable<uint>(iNetwork, "Seconds", 0);
 
+            iSource.AddWatcher(this);
             iRoom.Join(SetInactive);
         }
 
         public void Dispose()
         {
+            iDisposeHandler.Dispose();
+
             lock (iLock)
             {
                 if (iIsActive)
                 {
-                    iThread.Execute(() =>
+                    iNetwork.Execute(() =>
                     {
-                        iRoom.Source.RemoveWatcher(this);
+                        iSource.RemoveWatcher(this);
                     });
                     iRoom.UnJoin(SetInactive);
+                    iIsActive = false;
                 }
             }
 
-            iRoom = null;
+            Do.Assert(iTimeWatcher == null);
 
+            iHasTime.Dispose();
+            iDuration.Dispose();
+            iSeconds.Dispose();
             iActive.Dispose();
-            iActive = null;
         }
 
         private void SetInactive()
         {
             lock (iLock)
             {
-                iIsActive = false;
+                if (iIsActive)
+                {
+                    iIsActive = false;
 
-                iActive.Update(false);
+                    iActive.Update(false);
 
-                iRoom.Source.RemoveWatcher(this);
-                iRoom.UnJoin(SetInactive);
+                    iRoom.Source.RemoveWatcher(this);
+                    iRoom.UnJoin(SetInactive);
+                }
             }
         }
 
@@ -67,7 +172,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iRoom.Name;
+                using (iDisposeHandler.Lock)
+                {
+                    return iRoom.Name;
+                }
             }
         }
 
@@ -75,7 +183,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iActive;
+                using (iDisposeHandler.Lock)
+                {
+                    return iActive;
+                }
             }
         }
 
@@ -83,7 +194,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iHasTime;
+                using (iDisposeHandler.Lock)
+                {
+                    return iHasTime;
+                }
             }
         }
 
@@ -91,7 +205,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iDuration;
+                using (iDisposeHandler.Lock)
+                {
+                    return iDuration;
+                }
             }
         }
 
@@ -99,32 +216,32 @@ namespace OpenHome.Av
         {
             get
             {
-                return iSeconds;
+                using (iDisposeHandler.Lock)
+                {
+                    return iSeconds;
+                }
             }
         }
 
         public void ItemOpen(string aId, ITopology4Source aValue)
         {
-            iHasTime = new Watchable<bool>(iThread, string.Format("HasTime({0})", iRoom.Name), false);
-            iDuration = new Watchable<uint>(iThread, string.Format("Duration({0})", iRoom.Name), 0);
-            iSeconds = new Watchable<uint>(iThread, string.Format("Seconds({0})", iRoom.Name), 0);
-
             if (aValue.HasTime)
             {
-                Subscribe(aValue.Device);
+                iTimeWatcher = new TimeWatcher(iNetwork, aValue.Device, iHasTime, iSeconds, iDuration);
             }
         }
 
         public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
         {
-            if (aPrevious.HasTime && !aValue.HasTime || aPrevious.HasTime && aValue.HasTime && aPrevious.Device != aValue.Device)
+            if ((aPrevious.HasTime && !aValue.HasTime) || (aPrevious.HasTime && aValue.HasTime && aPrevious.Device != aValue.Device))
             {
-                Unsubscribe();
+                iTimeWatcher.Dispose();
+                iTimeWatcher = null;
             }
 
-            if (!aPrevious.HasTime && aValue.HasTime || aPrevious.HasTime && aValue.HasTime && aPrevious.Device != aValue.Device)
+            if ((!aPrevious.HasTime && aValue.HasTime) || (aPrevious.HasTime && aValue.HasTime && aPrevious.Device != aValue.Device))
             {
-                Subscribe(aValue.Device);
+                iTimeWatcher = new TimeWatcher(iNetwork, aValue.Device, iHasTime, iSeconds, iDuration);
             }
         }
 
@@ -132,80 +249,23 @@ namespace OpenHome.Av
         {
             if (aValue.HasTime)
             {
-                Unsubscribe();
-            }
-
-            iHasTime.Dispose();
-            iHasTime = null;
-
-            iDuration.Dispose();
-            iDuration = null;
-
-            iSeconds.Dispose();
-            iSeconds = null;
-        }
-
-        private void Subscribe(IDevice aDevice)
-        {
-            aDevice.Create<IProxyTime>((time) =>
-            {
-                iTime = time;
-                iTime.Duration.AddWatcher(this);
-                iTime.Seconds.AddWatcher(this);
-
-                iHasTime.Update(true);
-            });
-        }
-
-        private void Unsubscribe()
-        {
-            iTime.Duration.RemoveWatcher(this);
-            iTime.Seconds.RemoveWatcher(this);
-
-            iTime.Dispose();
-            iTime = null;
-
-            iHasTime.Update(false);
-        }
-
-        public void ItemOpen(string aId, uint aValue)
-        {
-            if (aId == "Duration")
-            {
-                iDuration.Update(aValue);
-            }
-            if (aId == "Seconds")
-            {
-                iSeconds.Update(aValue);
+                iTimeWatcher.Dispose();
+                iTimeWatcher = null;
             }
         }
 
-        public void ItemUpdate(string aId, uint aValue, uint aPrevious)
-        {
-            if (aId == "Duration")
-            {
-                iDuration.Update(aValue);
-            }
-            if (aId == "Seconds")
-            {
-                iSeconds.Update(aValue);
-            }
-        }
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly INetwork iNetwork;
+        private readonly IStandardRoom iRoom;
+        private readonly IWatchable<ITopology4Source> iSource;
 
-        public void ItemClose(string aId, uint aValue)
-        {
-        }
-
-        private IWatchableThread iThread;
-        private IStandardRoom iRoom;
-
-        private object iLock;
+        private readonly object iLock;
         private bool iIsActive;
-        private Watchable<bool> iActive;
+        private readonly Watchable<bool> iActive;
 
-        private IProxyTime iTime;
-        private Watchable<bool> iHasTime;
-        private Watchable<uint> iDuration;
-        private Watchable<uint> iSeconds;
+        private TimeWatcher iTimeWatcher;
+        private readonly Watchable<bool> iHasTime;
+        private readonly Watchable<uint> iDuration;
+        private readonly Watchable<uint> iSeconds;
     }
 }
