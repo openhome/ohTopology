@@ -2,7 +2,7 @@
     {   "name": "ohNet",
         "type": "openhome",
         "platform-specific": true,
-        "version": "1.0.715",
+        "version": "1.0.746",
         "archive-suffix": "-${titlecase-debugmode}",
         "configure-args": [
             "--ohnet-lib-dir", "${dest}${name}-${platform}-${titlecase-debugmode}/lib",
@@ -16,7 +16,7 @@
     {   "name": "ohNet-AnyPlatform",
         "type": "openhome",
         "platform-specific": true,
-        "version": "1.0.715",
+        "version": "1.0.746",
         "archive-suffix": "-Release",
 		"archive-directory": "${binary-repo}/ohNet/",
         "archive-filename": "${archive-prefix}ohNet-${version}-${archive-platform}${archive-suffix}${archive-extension}",
@@ -24,7 +24,7 @@
         "strip-archive-dirs":1
     },
     {   "name": "ohOs",  
-        "archive-path": "http://openhome.org/releases/artifacts/ohOs2/ohOs2-0.0.402-AnyPlatform-Release.tar.gz",  
+        "archive-path": "http://openhome.org/releases/artifacts/ohOs2/ohOs2-0.0.443-AnyPlatform-Release.tar.gz",  
         "dest": "dependencies/AnyPlatform/ohOs",  
         "strip-archive-dirs":1  
     },
@@ -34,7 +34,7 @@
         "strip-archive-dirs":1
     },
     {   "name": "ohOs.App.V1",
-        "archive-path": "http://openhome.org/releases/artifacts/ohOs.App.V1/ohOs.App.V1-0.0.423-AnyPlatform-Release.tar.gz",
+        "archive-path": "http://openhome.org/releases/artifacts/ohOs.App.V1/ohOs.App.V1-0.0.443-AnyPlatform-Release.tar.gz",
         "dest": "dependencies/AnyPlatform/ohOs.App.V1",
         "strip-archive-dirs":1
     },

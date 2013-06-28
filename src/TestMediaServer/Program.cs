@@ -453,19 +453,9 @@ namespace TestMediaServer
 
     class Program
     {
-        class ExceptionReporter : IExceptionReporter
-        {
-            public void ReportException(Exception e)
-            {
-                Console.WriteLine(e);
-                Environment.Exit(-1);
-            }
-        }
-
         static void Main(string[] args)
         {
-            ExceptionReporter reporter = new ExceptionReporter();
-            WatchableThread watchableThread = new WatchableThread(reporter);
+            WatchableThread watchableThread = new WatchableThread(ReportException);
 
             using (var network = new Network(watchableThread, 50))
             {
@@ -485,6 +475,12 @@ namespace TestMediaServer
                     Console.ReadKey();
                 }
             }
+        }
+
+        static void ReportException(Exception e)
+        {
+            Console.WriteLine(e);
+            Environment.Exit(-1);
         }
     }
 }

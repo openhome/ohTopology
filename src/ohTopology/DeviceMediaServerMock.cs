@@ -157,7 +157,7 @@ namespace OpenHome.Av
 
             if (album == null)
             {
-                aEnvironment.FlushSendNotFound();
+                aEnvironment.SendNotFound();
                 return;
             }
 
@@ -165,7 +165,7 @@ namespace OpenHome.Av
 
             if (!tracks.Any())
             {
-                aEnvironment.FlushSendNotFound();
+                aEnvironment.SendNotFound();
                 return;
             }
 
@@ -173,7 +173,7 @@ namespace OpenHome.Av
 
             if (artist == null)
             {
-                aEnvironment.FlushSendNotFound();
+                aEnvironment.SendNotFound();
                 return;
             }
 
@@ -181,11 +181,11 @@ namespace OpenHome.Av
 
             if (title == null)
             {
-                aEnvironment.FlushSendNotFound();
+                aEnvironment.SendNotFound();
                 return;
             }
 
-            aEnvironment.FlushSend(GetAlbumArtworkPng(artist.Value, title.Value), "image/png");
+            aEnvironment.Send(GetAlbumArtworkPng(artist.Value, title.Value), "image/png");
         }
 
         private byte[] GetAlbumArtworkPng(string aArtist, string aTitle)
@@ -232,7 +232,7 @@ namespace OpenHome.Av
 
         private void ProcessRequestAudio(IHttpEnvironment aEnvironment)
         {
-            aEnvironment.FlushSendNotFound();
+            aEnvironment.SendNotFound();
         }
 
         // IMockMediaServerUriProvider

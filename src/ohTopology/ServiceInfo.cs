@@ -275,7 +275,7 @@ namespace OpenHome.Av
             return task;
         }
 
-        protected virtual void OnCancelSubscribe()
+        protected override void OnCancelSubscribe()
         {
             iSubscribed.Set();
         }
