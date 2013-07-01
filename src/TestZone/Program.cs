@@ -46,7 +46,7 @@ namespace TestZone
 
             public void ItemOpen(string aId, IZone aValue)
             {
-                if (aValue.Active)
+                if (aValue.Enabled)
                 {
                     CreateController(aValue);
                 }
@@ -54,11 +54,11 @@ namespace TestZone
 
             public void ItemUpdate(string aId, IZone aValue, IZone aPrevious)
             {
-                if (aPrevious.Active)
+                if (aPrevious.Enabled)
                 {
                     DestroyController();
                 }
-                if (aValue.Active)
+                if (aValue.Enabled)
                 {
                     CreateController(aValue);
                 }
@@ -66,7 +66,7 @@ namespace TestZone
 
             public void ItemClose(string aId, IZone aValue)
             {
-                if (aValue.Active)
+                if (aValue.Enabled)
                 {
                     DestroyController();
                 }
@@ -117,7 +117,7 @@ namespace TestZone
                         return "Listener " + w.Name;
                     });
 
-                    return "Zone " + v.Active + " " + (v.Active ? v.Sender.Udn : "") + " " + v.Room.Name;
+                    return "Zone " + v.Enabled + " " + (v.Enabled ? v.Sender.Udn : "") + " " + v.Room.Name;
                 });
                 iFactory.Create<RoomMetadata>(aItem.Name, aItem.Metadata, (v) =>
                 {

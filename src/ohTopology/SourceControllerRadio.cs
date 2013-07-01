@@ -5,7 +5,7 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public class SourceControllerRadio : IWatcher<string>, IWatcher<IInfoDetails>, ISourceController
+    class SourceControllerRadio : IWatcher<string>, IWatcher<IInfoDetails>, ISourceController
     {
         public SourceControllerRadio(ITopology4Source aSource, Watchable<bool> aHasSourceControl,
             Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<bool> aHasContainer, Watchable<string> aTransportState, Watchable<bool> aCanPause,

@@ -311,28 +311,28 @@ namespace OpenHome.Av
 
     public interface IZone
     {
-        bool Active { get; }
+        bool Enabled { get; }
         IStandardRoom Room { get; }
         IDevice Sender { get; }
         IWatchableUnordered<IStandardRoom> Listeners { get; }
     }
 
-    public class Zone : IZone
+    class Zone : IZone
     {
-        public Zone(bool aActive, StandardRoom aRoom, IDevice aDevice)
+        public Zone(bool aEnabled, StandardRoom aRoom, IDevice aDevice)
         {
-            iActive = aActive;
+            iEnabled = aEnabled;
             iRoom = aRoom;
             iDevice = aDevice;
 
             iListeners = new WatchableUnordered<IStandardRoom>(aRoom.Network);
         }
 
-        public bool Active
+        public bool Enabled
         {
             get
             {
-                return iActive;
+                return iEnabled;
             }
         }
 
@@ -360,17 +360,17 @@ namespace OpenHome.Av
             }
         }
 
-        public void AddToZone(IStandardRoom aRoom)
+        internal void AddToZone(IStandardRoom aRoom)
         {
             iListeners.Add(aRoom);
         }
 
-        public void RemoveFromZone(IStandardRoom aRoom)
+        internal void RemoveFromZone(IStandardRoom aRoom)
         {
             iListeners.Remove(aRoom);
         }
 
-        private bool iActive;
+        private bool iEnabled;
         private StandardRoom iRoom;
         private IDevice iDevice;
         private WatchableUnordered<IStandardRoom> iListeners;
@@ -399,7 +399,7 @@ namespace OpenHome.Av
         void Play(string aUri, IMediaMetadata aMetadata);
     }
 
-    public class StandardRoom : IStandardRoom, IWatcher<IEnumerable<ITopology4Root>>, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IMockable, IDisposable
+    class StandardRoom : IStandardRoom, IWatcher<IEnumerable<ITopology4Root>>, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IMockable, IDisposable
     {
         public StandardRoom(INetwork aNetwork, ITopology4Room aRoom)
         {
@@ -817,7 +817,7 @@ namespace OpenHome.Av
                 {
                     if (root == g)
                     {
-                        if (!iWatchableZone.Value.Active)
+                        if (!iWatchableZone.Value.Enabled)
                         {
                             iZone = new Zone(true, this, root.Device);
                             iWatchableZone.Update(iZone);
@@ -828,7 +828,7 @@ namespace OpenHome.Av
             }
             else
             {
-                if (iWatchableZone.Value.Active)
+                if (iWatchableZone.Value.Enabled)
                 {
                     iZone = new Zone(false, this, null);
                     iWatchableZone.Update(iZone);
