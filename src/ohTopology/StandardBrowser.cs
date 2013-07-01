@@ -376,6 +376,42 @@ namespace OpenHome.Av
         private WatchableUnordered<IStandardRoom> iListeners;
     }
 
+    public interface IListeningTo
+    {
+        bool Enabled { get; }
+        IStandardRoom Room { get; }
+    }
+
+    class ListeningTo : IListeningTo
+    {
+        public static readonly ListeningTo Empty = new ListeningTo();
+
+        private bool iEnabled;
+        private IStandardRoom iRoom;
+
+        protected ListeningTo()
+        {
+            iEnabled = false;
+            iRoom = null;
+        }
+
+        public ListeningTo(IStandardRoom aRoom)
+        {
+            iEnabled = true;
+            iRoom = aRoom;
+        }
+
+        public bool Enabled
+        {
+            get { return iEnabled; }
+        }
+
+        public IStandardRoom Room
+        {
+            get { return iRoom; }
+        }
+    }
+
     public interface IStandardRoom : IJoinable
     {
         INetwork Network { get; }
@@ -389,6 +425,7 @@ namespace OpenHome.Av
         // multi-room interface
         IWatchable<IZone> Zone { get; }
         IWatchable<bool> Zoneable { get; }
+        IWatchable<IListeningTo> Listening { get; }
 
         IWatchable<ITopology4Source> Source { get; }
         IWatchable<IEnumerable<ITopology4Source>> Sources { get; }
@@ -422,6 +459,7 @@ namespace OpenHome.Av
             iZoneable = new Watchable<bool>(iNetwork, "HasReceiver", false);
             iZone = new Zone(false, this, null);
             iWatchableZone = new Watchable<IZone>(iNetwork, "Zone", iZone);
+            iWatchableListeningTo = new Watchable<IListeningTo>(iNetwork, "ListeningTo", ListeningTo.Empty);
 
             iRoom.Roots.AddWatcher(this);
         }
@@ -581,6 +619,17 @@ namespace OpenHome.Av
                 using (iDisposeHandler.Lock)
                 {
                     return iZoneable;
+                }
+            }
+        }
+
+        public IWatchable<IListeningTo> Listening
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iWatchableListeningTo;
                 }
             }
         }
@@ -854,26 +903,38 @@ namespace OpenHome.Av
         {
         }
 
-        internal bool AddToZone(IDevice aDevice, IStandardRoom aRoom)
+        internal bool AddToZone(IDevice aDevice, StandardRoom aRoom)
         {
             if (iRoots.First().Device == aDevice)
             {
                 iZone.AddToZone(aRoom);
+                aRoom.AddedToZone(iZone);
                 return true;
             }
 
             return false;
         }
 
-        internal bool RemoveFromZone(IDevice aDevice, IStandardRoom aRoom)
+        internal bool RemoveFromZone(IDevice aDevice, StandardRoom aRoom)
         {
             if (iRoots.First().Device == aDevice)
             {
                 iZone.RemoveFromZone(aRoom);
+                aRoom.RemovedFromZone(iZone);
                 return true;
             }
 
             return false;
+        }
+
+        internal void AddedToZone(IZone aZone)
+        {
+            iWatchableListeningTo.Update(new ListeningTo(aZone.Room));
+        }
+
+        internal void RemovedFromZone(IZone aZone)
+        {
+            iWatchableListeningTo.Update(ListeningTo.Empty);
         }
 
         private readonly DisposeHandler iDisposeHandler;
@@ -893,6 +954,7 @@ namespace OpenHome.Av
         private Watchable<bool> iZoneable;
         private Zone iZone;
         private Watchable<IZone> iWatchableZone;
+        private Watchable<IListeningTo> iWatchableListeningTo;
 
         private InfoWatcher iInfoWatcher;
         private Watchable<RoomDetails> iDetails;
@@ -904,11 +966,11 @@ namespace OpenHome.Av
     {
         private readonly StandardHouse iHouse;
         private readonly IWatchableOrdered<IStandardRoom> iRooms;
-        private readonly IStandardRoom iRoom;
+        private readonly StandardRoom iRoom;
         private bool iRoomsInitialised;
         private ITopologymSender iSender;
 
-        public RoomWatcher(StandardHouse aHouse, IWatchableOrdered<IStandardRoom> aRooms, IStandardRoom aRoom)
+        public RoomWatcher(StandardHouse aHouse, IWatchableOrdered<IStandardRoom> aRooms, StandardRoom aRoom)
         {
             iHouse = aHouse;
             iRooms = aRooms;
@@ -1393,7 +1455,7 @@ namespace OpenHome.Av
             }
         }
 
-        internal void AddToZone(IDevice aDevice, IStandardRoom aRoom)
+        internal void AddToZone(IDevice aDevice, StandardRoom aRoom)
         {
             foreach (StandardRoom r in iRoomLookup.Values)
             {
@@ -1404,7 +1466,7 @@ namespace OpenHome.Av
             }
         }
 
-        internal void RemoveFromZone(IDevice aDevice, IStandardRoom aRoom)
+        internal void RemoveFromZone(IDevice aDevice, StandardRoom aRoom)
         {
             foreach (StandardRoom r in iRoomLookup.Values)
             {
