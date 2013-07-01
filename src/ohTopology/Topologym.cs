@@ -522,8 +522,11 @@ namespace OpenHome.Av
                 iReceiverLookup[aItem].Dispose();
                 iReceiverLookup.Remove(aItem);
 
-                iSenderLookup[aItem].Dispose();
-                iSenderLookup.Remove(aItem);
+                if (aItem.Attributes.Contains("Sender"))
+                {
+                    iSenderLookup[aItem].Dispose();
+                    iSenderLookup.Remove(aItem);
+                }
 
                 group.Dispose();
             }
