@@ -314,7 +314,7 @@ namespace OpenHome.Av
         bool Enabled { get; }
         IStandardRoom Room { get; }
         IDevice Sender { get; }
-        IWatchableUnordered<IStandardRoom> Listeners { get; }
+        IWatchableOrdered<IStandardRoom> Listeners { get; }
     }
 
     class Zone : IZone
@@ -325,7 +325,7 @@ namespace OpenHome.Av
             iRoom = aRoom;
             iDevice = aDevice;
 
-            iListeners = new WatchableUnordered<IStandardRoom>(aRoom.Network);
+            iListeners = new WatchableOrdered<IStandardRoom>(aRoom.Network);
         }
 
         public bool Enabled
@@ -352,7 +352,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchableUnordered<IStandardRoom> Listeners
+        public IWatchableOrdered<IStandardRoom> Listeners
         {
             get
             {
@@ -362,7 +362,19 @@ namespace OpenHome.Av
 
         internal void AddToZone(IStandardRoom aRoom)
         {
-            iListeners.Add(aRoom);
+            // calculate where to insert the sender
+            int index = 0;
+            foreach (IStandardRoom r in iListeners.Values)
+            {
+                if (r.Name.CompareTo(r.Name) < 0)
+                {
+                    break;
+                }
+                ++index;
+            }
+
+            // insert the room
+            iListeners.Add(aRoom, (uint)index);
         }
 
         internal void RemoveFromZone(IStandardRoom aRoom)
@@ -373,7 +385,7 @@ namespace OpenHome.Av
         private bool iEnabled;
         private StandardRoom iRoom;
         private IDevice iDevice;
-        private WatchableUnordered<IStandardRoom> iListeners;
+        private WatchableOrdered<IStandardRoom> iListeners;
     }
 
     public interface IListeningTo

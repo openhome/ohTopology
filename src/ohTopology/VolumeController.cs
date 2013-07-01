@@ -391,7 +391,7 @@ namespace OpenHome.Av
         }
     }
 
-    class ZoneVolumeController : IVolumeController, IUnorderedWatcher<IStandardRoom>, IWatcher<bool>, IWatcher<uint>, IDisposable
+    class ZoneVolumeController : IVolumeController, IOrderedWatcher<IStandardRoom>, IWatcher<bool>, IWatcher<uint>, IDisposable
     {
         private readonly DisposeHandler iDisposeHandler;
         private readonly INetwork iNetwork;
@@ -539,25 +539,27 @@ namespace OpenHome.Av
             iMute.Update(mute);
         }
 
-        public void UnorderedOpen()
+        public void OrderedOpen()
         {
         }
 
-        public void UnorderedInitialised()
+        public void OrderedInitialised()
         {
         }
 
-        public void UnorderedClose()
+        public void OrderedClose()
         {
         }
 
-        public void UnorderedAdd(IStandardRoom aItem)
+        public void OrderedAdd(IStandardRoom aItem, uint aIndex)
         {
             VolumeWatcher w = new VolumeWatcher(this, aItem);
             iVolumeLookup.Add(aItem, w);
         }
 
-        public void UnorderedRemove(IStandardRoom aItem)
+        public void OrderedMove(IStandardRoom aItem, uint aFrom, uint aTo) { }
+
+        public void OrderedRemove(IStandardRoom aItem, uint aIndex)
         {
             iVolumeLookup[aItem].Dispose();
             iVolumeLookup.Remove(aItem);
