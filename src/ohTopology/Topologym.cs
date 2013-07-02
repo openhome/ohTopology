@@ -515,18 +515,18 @@ namespace OpenHome.Av
             TopologymGroup group;
             if (iGroupLookup.TryGetValue(aItem, out group))
             {
+                if (aItem.Attributes.Contains("Sender"))
+                {
+                    iSenderLookup[aItem].Dispose();
+                    iSenderLookup.Remove(aItem);
+                }
+
                 // schedule higher layer notification
                 iGroups.Remove(group);
                 iGroupLookup.Remove(aItem);
 
                 iReceiverLookup[aItem].Dispose();
                 iReceiverLookup.Remove(aItem);
-
-                if (aItem.Attributes.Contains("Sender"))
-                {
-                    iSenderLookup[aItem].Dispose();
-                    iSenderLookup.Remove(aItem);
-                }
 
                 group.Dispose();
             }

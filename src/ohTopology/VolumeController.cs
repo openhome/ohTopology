@@ -27,7 +27,7 @@ namespace OpenHome.Av
             return new StandardVolumeController(aRoom);
         }
 
-        public static IVolumeController Create(IZone aZone)
+        public static IVolumeController Create(IZoneSender aZone)
         {
             return new ZoneVolumeController(aZone);
         }
@@ -395,7 +395,7 @@ namespace OpenHome.Av
     {
         private readonly DisposeHandler iDisposeHandler;
         private readonly INetwork iNetwork;
-        private readonly IZone iZone;
+        private readonly IZoneSender iZone;
 
         private readonly Watchable<bool> iHasVolume; 
         private readonly Watchable<bool> iMute;
@@ -408,7 +408,7 @@ namespace OpenHome.Av
         private uint iTotalValue;
         private uint iMuteCount;
 
-        public ZoneVolumeController(IZone aZone)
+        public ZoneVolumeController(IZoneSender aZone)
         {
             iDisposeHandler = new DisposeHandler();
             iNetwork = aZone.Room.Network;

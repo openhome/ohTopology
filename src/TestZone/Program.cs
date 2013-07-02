@@ -10,7 +10,7 @@ namespace TestZone
 {
     class Program
     {
-        class RoomControllerWatcher : IWatcher<IZone>, IDisposable
+        class RoomControllerWatcher : IWatcher<IZoneSender>, IDisposable
         {
             private ResultWatcherFactory iFactory;
             private IStandardRoom iRoom;
@@ -21,17 +21,17 @@ namespace TestZone
                 iFactory = new ResultWatcherFactory(aRunner);
                 iRoom = aRoom;
 
-                iRoom.Zone.AddWatcher(this);
+                iRoom.ZoneSender.AddWatcher(this);
             }
 
             public void Dispose()
             {
-                iRoom.Zone.RemoveWatcher(this);
+                iRoom.ZoneSender.RemoveWatcher(this);
 
                 iFactory.Dispose();
             }
 
-            private void CreateController(IZone aZone)
+            private void CreateController(IZoneSender aZone)
             {
                 iController = VolumeController.Create(aZone);
                 iFactory.Create<bool>(iRoom.Name, iController.Mute, v => "Zone Mute " + v);
@@ -44,7 +44,7 @@ namespace TestZone
                 iController.Dispose();
             }
 
-            public void ItemOpen(string aId, IZone aValue)
+            public void ItemOpen(string aId, IZoneSender aValue)
             {
                 if (aValue.Enabled)
                 {
@@ -52,7 +52,7 @@ namespace TestZone
                 }
             }
 
-            public void ItemUpdate(string aId, IZone aValue, IZone aPrevious)
+            public void ItemUpdate(string aId, IZoneSender aValue, IZoneSender aPrevious)
             {
                 if (aPrevious.Enabled)
                 {
@@ -64,7 +64,7 @@ namespace TestZone
                 }
             }
 
-            public void ItemClose(string aId, IZone aValue)
+            public void ItemClose(string aId, IZoneSender aValue)
             {
                 if (aValue.Enabled)
                 {
@@ -110,14 +110,18 @@ namespace TestZone
             {
                 iRunner.Result(string.Format("Room Added: {0} at {1}", aItem.Name, aIndex));
 
-                iFactory.Create<IZone>(aItem.Name, aItem.Zone, (v) =>
+                iFactory.Create<IZoneSender>(aItem.Name, aItem.ZoneSender, (v) =>
                 {
                     iFactory.Create<IStandardRoom>(aItem.Name, v.Listeners, (w) =>
                     {
                         return "Listener " + w.Name;
                     });
 
-                    return "Zone " + v.Enabled + " " + (v.Enabled ? v.Sender.Udn : "") + " " + v.Room.Name;
+                    return "ZoneSender " + v.Enabled + " " + (v.Enabled ? v.Sender.Udn : "") + " " + v.Room.Name;
+                });
+                iFactory.Create<IZoneReceiver>(aItem.Name, aItem.ZoneReceiver, (v) =>
+                {
+                    return "ZoneReceiver " + v.Enabled + " " + (v.ZoneSender != null ? v.ZoneSender.Room.Name : "");
                 });
                 iFactory.Create<RoomMetadata>(aItem.Name, aItem.Metadata, (v) =>
                 {
