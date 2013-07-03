@@ -314,6 +314,7 @@ namespace OpenHome.Av
         bool Enabled { get; }
         IStandardRoom Room { get; }
         IDevice Sender { get; }
+        IWatchable<bool> HasListeners { get; }
         IWatchableOrdered<IStandardRoom> Listeners { get; }
     }
 
@@ -335,6 +336,7 @@ namespace OpenHome.Av
             iRoom = aRoom;
             iDevice = aDevice;
 
+            iHasListeners = new Watchable<bool>(aRoom.Network, "HasListeners", false);
             iListeners = new WatchableOrdered<IStandardRoom>(aRoom.Network);
         }
 
@@ -362,6 +364,14 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<bool> HasListeners
+        {
+            get
+            {
+                return iHasListeners;
+            }
+        }
+
         public IWatchableOrdered<IStandardRoom> Listeners
         {
             get
@@ -385,16 +395,19 @@ namespace OpenHome.Av
 
             // insert the room
             iListeners.Add(aRoom, (uint)index);
+            iHasListeners.Update(iListeners.Values.Count() > 0);
         }
 
         internal void RemoveFromZone(IStandardRoom aRoom)
         {
             iListeners.Remove(aRoom);
+            iHasListeners.Update(iListeners.Values.Count() > 0);
         }
 
         private bool iEnabled;
         private StandardRoom iRoom;
         private IDevice iDevice;
+        private Watchable<bool> iHasListeners;
         private WatchableOrdered<IStandardRoom> iListeners;
     }
 

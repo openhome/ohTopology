@@ -2,6 +2,7 @@
 mock network medium
 
 expect Room Added: Kitchen at 0
+expect Kitchen open HasListeners False
 expect Kitchen open ZoneSender True 4c494e4e-0026-0f99-1111-ef000004013f Kitchen
 expect Kitchen open ZoneReceiver True 
 expect Kitchen open Metadata True  
@@ -9,6 +10,7 @@ expect Kitchen open Zone Mute False
 expect Kitchen open Zone Volume 50
 
 expect Room Added: Sitting Room at 1
+expect Sitting Room open HasListeners False
 expect Sitting Room open ZoneSender True 4c494e4e-0026-0f99-1112-ef000004013f Sitting Room
 expect Sitting Room open ZoneReceiver True 
 expect Sitting Room open Metadata True  
@@ -16,6 +18,7 @@ expect Sitting Room open Zone Mute False
 expect Sitting Room open Zone Volume 50
 
 expect Room Added: Bedroom at 0
+expect Bedroom open HasListeners False
 expect Bedroom open ZoneSender True 4c494e4e-0026-0f99-1113-ef000004013f Bedroom
 expect Bedroom open ZoneReceiver True 
 expect Bedroom open Metadata True  
@@ -23,6 +26,7 @@ expect Bedroom open Zone Mute False
 expect Bedroom open Zone Volume 50
 
 expect Room Added: Dining Room at 1
+expect Dining Room open HasListeners False
 expect Dining Room open ZoneSender True 4c494e4e-0026-0f99-1114-ef000004013f Dining Room
 expect Dining Room open ZoneReceiver True 
 expect Dining Room open Metadata True  
@@ -37,6 +41,7 @@ empty
 // add bedroom to kitchen zone
 mock house zone Kitchen add Bedroom
 expect Kitchen add Listener Bedroom
+expect Kitchen update HasListeners True
 expect Bedroom update ZoneReceiver True Kitchen
 empty
 
@@ -58,6 +63,7 @@ expect Room Removed: Bedroom at 0
 empty
 mock network add 4c494e4e-0026-0f99-1113-ef000004013f
 expect Room Added: Bedroom at 0
+expect Bedroom open HasListeners False
 expect Bedroom open ZoneSender True 4c494e4e-0026-0f99-1113-ef000004013f Bedroom
 expect Bedroom open ZoneReceiver True 
 expect Bedroom open Metadata True  
@@ -72,18 +78,21 @@ mock network remove 4c494e4e-0026-0f99-1111-ef000004013f
 expect Kitchen remove Listener Bedroom
 expect Bedroom update ZoneReceiver True 
 expect Kitchen remove Listener Dining Room
+expect Kitchen update HasListeners False
 expect Dining Room update ZoneReceiver True 
 expect Room Removed: Kitchen at 2
 empty
 
 mock network add 4c494e4e-0026-0f99-1111-ef000004013f
 expect Room Added: Kitchen at 2
+expect Kitchen open HasListeners False
 expect Kitchen open ZoneSender True 4c494e4e-0026-0f99-1111-ef000004013f Kitchen
 expect Kitchen open ZoneReceiver True 
 expect Kitchen open Metadata True  
 expect Kitchen open Zone Mute False
 expect Kitchen open Zone Volume 50
 expect Kitchen add Listener Dining Room
+expect Kitchen update HasListeners True
 expect Dining Room update ZoneReceiver True Kitchen
 expect Kitchen add Listener Bedroom
 expect Bedroom update ZoneReceiver True Kitchen

@@ -112,6 +112,11 @@ namespace TestZone
 
                 iFactory.Create<IZoneSender>(aItem.Name, aItem.ZoneSender, (v) =>
                 {
+                    iFactory.Create<bool>(aItem.Name, v.HasListeners, (w) =>
+                    {
+                        return "HasListeners " + w;
+                    });
+
                     iFactory.Create<IStandardRoom>(aItem.Name, v.Listeners, (w) =>
                     {
                         return "Listener " + w.Name;
