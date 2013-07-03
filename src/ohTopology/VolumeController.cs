@@ -9,6 +9,8 @@ namespace OpenHome.Av
 {
     public interface IVolumeController : IDisposable
     {
+        string Name { get; }
+
         IWatchable<bool> HasVolume { get; }
         IWatchable<bool> Mute { get; }
         IWatchable<uint> Volume { get; }
@@ -444,6 +446,14 @@ namespace OpenHome.Av
             iMute.Dispose();
             iValue.Dispose();
             iVolumeLimit.Dispose();
+        }
+
+        public string Name
+        {
+            get
+            {
+                return iZone.Room.Name;
+            }
         }
 
         public IWatchable<bool> HasVolume
