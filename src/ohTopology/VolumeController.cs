@@ -525,6 +525,7 @@ namespace OpenHome.Av
             iVolumeControllers.Add(aController);
             aController.Mute.AddWatcher(this);
             aWatcher.Value.AddWatcher(this);
+            iHasVolume.Update(iVolumeControllers.Count() > 0);
         }
 
         internal void RemoveVolumeController(IVolumeController aController, VolumeWatcher aWatcher)
@@ -532,6 +533,7 @@ namespace OpenHome.Av
             iVolumeControllers.Remove(aController);
             aController.Mute.RemoveWatcher(this);
             aWatcher.Value.RemoveWatcher(this);
+            iHasVolume.Update(iVolumeControllers.Count() > 0);
         }
 
         private void EvaluateMute()

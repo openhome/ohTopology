@@ -34,6 +34,7 @@ namespace TestZone
             private void CreateController(IZoneSender aZone)
             {
                 iController = VolumeController.Create(aZone);
+                iFactory.Create<bool>(iRoom.Name, iController.HasVolume, v => "Zone HasVolume " + v);
                 iFactory.Create<bool>(iRoom.Name, iController.Mute, v => "Zone Mute " + v);
                 iFactory.Create<uint>(iRoom.Name, iController.Volume, v => "Zone Volume " + v);
             }
