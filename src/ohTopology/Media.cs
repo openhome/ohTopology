@@ -242,7 +242,32 @@ namespace OpenHome.Av
             {
                 return string.Empty;
             }
-            return aMetadata[aTagManager.System.Folder].Value;
+            if (aMetadata[aTagManager.System.Folder] != null)
+            {
+                return aMetadata[aTagManager.System.Folder].Value;
+            }
+
+            XmlDocument document = new XmlDocument();
+
+            XmlElement didl = document.CreateElement("DIDL-Lite", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+
+            XmlElement container = document.CreateElement("item", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+
+            XmlElement title = document.CreateElement("dc", "title", "http://purl.org/dc/elements/1.1/");
+            title.AppendChild(document.CreateTextNode(aMetadata[aTagManager.Audio.Title].Value));
+
+            container.AppendChild(title);
+
+            XmlElement cls = document.CreateElement("upnp", "class", "urn:schemas-upnp-org:metadata-1-0/upnp/");
+            cls.AppendChild(document.CreateTextNode("object.item.audioItem.musicTrack"));
+
+            container.AppendChild(cls);
+
+            didl.AppendChild(container);
+
+            document.AppendChild(didl);
+
+            return document.OuterXml;
         }
 
         public static IMediaMetadata FromDidlLite(this ITagManager aTagManager, string aMetadata)
