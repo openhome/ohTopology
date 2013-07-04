@@ -234,7 +234,10 @@ namespace OpenHome.Av
 
         public void SetSender(ITopologymSender aSender)
         {
-            iGroup.SetSender(aSender);
+            if (iGroup.Sender.Value.Device != aSender.Device)
+            {
+                iGroup.SetSender(aSender);
+            }
         }
 
         public void ItemOpen(string aId, string aValue)

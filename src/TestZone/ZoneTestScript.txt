@@ -59,6 +59,26 @@ expect Kitchen add Listener Dining Room
 expect Dining Room update ZoneReceiver True Kitchen
 empty
 
+// check that "Stopped" removes Dining Room from Kitchen and "Waiting"/"Buffering" adds Dining Room to Kitchen
+mock network update 4c494e4e-0026-0f99-1114-ef000004013f receiver transportstate Stopped
+expect Kitchen remove Listener Dining Room
+expect Dining Room update ZoneReceiver True 
+empty
+mock network update 4c494e4e-0026-0f99-1114-ef000004013f receiver transportstate Waiting
+expect Kitchen add Listener Dining Room
+expect Dining Room update ZoneReceiver True Kitchen
+empty
+mock network update 4c494e4e-0026-0f99-1114-ef000004013f receiver transportstate Stopped
+expect Kitchen remove Listener Dining Room
+expect Dining Room update ZoneReceiver True 
+empty
+mock network update 4c494e4e-0026-0f99-1114-ef000004013f receiver transportstate Buffering
+expect Kitchen add Listener Dining Room
+expect Dining Room update ZoneReceiver True Kitchen
+empty
+mock network update 4c494e4e-0026-0f99-1114-ef000004013f receiver transportstate Playing
+empty
+
 // remove bedroom
 mock network remove 4c494e4e-0026-0f99-1113-ef000004013f
 expect Kitchen remove Listener Bedroom
