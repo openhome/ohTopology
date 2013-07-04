@@ -234,10 +234,7 @@ namespace OpenHome.Av
 
         public void SetSender(ITopologymSender aSender)
         {
-            if (iGroup.Sender.Value.Device != aSender.Device)
-            {
-                iGroup.SetSender(aSender);
-            }
+            iGroup.SetSender(aSender);
         }
 
         public void ItemOpen(string aId, string aValue)
@@ -302,17 +299,18 @@ namespace OpenHome.Av
         }
     }
 
-    class SenderWatcher : IWatcher<ISenderMetadata>, IWatcher<string>, IDisposable
+    class SenderWatcher : IWatcher<ISenderMetadata>, IDisposable
     {
+        private DisposeHandler iDisposeHandler;
+        private readonly Topologym iTopology;
+        private readonly IDevice iDevice;
         private bool iDisposed;
-        private Topologym iTopology;
-        private IDevice iDevice;
         private IProxySender iSender;
-        private bool iEnabled;
         private ISenderMetadata iMetadata;
 
         public SenderWatcher(Topologym aTopology, ITopology2Group aGroup)
         {
+            iDisposeHandler = new DisposeHandler();
             iDisposed = false;
             iTopology = aTopology;
             iDevice = aGroup.Device;
@@ -323,9 +321,8 @@ namespace OpenHome.Av
                 if (!iDisposed)
                 {
                     iSender = sender;
-                    iSender.Status.AddWatcher(this);
                     iSender.Metadata.AddWatcher(this);
-                    iTopology.SenderChanged(this, SenderMetadata.Empty);
+                    iTopology.SenderChanged(iDevice, iMetadata.Uri, string.Empty);
                 }
                 else
                 {
@@ -336,38 +333,31 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
+            iDisposeHandler.Dispose();
+
             ISenderMetadata previous = iMetadata;
 
             if (iSender != null)
             {
-                iSender.Status.RemoveWatcher(this);
                 iSender.Metadata.RemoveWatcher(this);
 
                 iSender.Dispose();
                 iSender = null;
             }
 
-            iTopology.SenderChanged(this, previous);
-
-            iDevice = null;
-            iTopology = null;
+            iTopology.SenderChanged(iDevice, iMetadata.Uri, previous.Uri);
 
             iDisposed = true;
-        }
-
-        public bool Enabled
-        {
-            get
-            {
-                return iEnabled;
-            }
         }
 
         public string Uri
         {
             get
             {
-                return iMetadata.Uri;
+                using (iDisposeHandler.Lock)
+                {
+                    return iMetadata.Uri;
+                }
             }
         }
 
@@ -375,7 +365,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iDevice;
+                using (iDisposeHandler.Lock)
+                {
+                    return iDevice;
+                }
             }
         }
 
@@ -387,28 +380,12 @@ namespace OpenHome.Av
         public void ItemUpdate(string aId, ISenderMetadata aValue, ISenderMetadata aPrevious)
         {
             iMetadata = aValue;
-            iTopology.SenderChanged(this, aPrevious);
+            iTopology.SenderChanged(iDevice, iMetadata.Uri, aPrevious.Uri);
         }
 
         public void ItemClose(string aId, ISenderMetadata aValue)
         {
             iMetadata = SenderMetadata.Empty;
-        }
-
-        public void ItemOpen(string aId, string aValue)
-        {
-            iEnabled = (aValue == "Enabled");
-        }
-
-        public void ItemUpdate(string aId, string aValue, string aPrevious)
-        {
-            iEnabled = (aValue == "Enabled");
-            iTopology.SenderChanged(this, null);
-        }
-
-        public void ItemClose(string aId, string aValue)
-        {
-            iEnabled = false;
         }
     }
 
@@ -555,25 +532,18 @@ namespace OpenHome.Av
             }
         }
 
-        internal void SenderChanged(SenderWatcher aSender, ISenderMetadata aPrevious)
+        internal void SenderChanged(IDevice aDevice, string aUri, string aPreviousUri)
         {
             foreach (ReceiverWatcher r in iReceiverLookup.Values)
             {
-                if (aPrevious != null && aPrevious.Uri == r.ListeningToUri)
+                if (aPreviousUri == r.ListeningToUri)
                 {
                     r.SetSender(TopologymSender.Empty);
                 }
-                else if (aSender.Uri == r.ListeningToUri)
+                else if (aUri == r.ListeningToUri)
                 {
                     // set TopologymGroup sender
-                    if (aSender.Enabled)
-                    {
-                        r.SetSender(new TopologymSender(aSender.Device));
-                    }
-                    else
-                    {
-                        r.SetSender(TopologymSender.Empty);
-                    }
+                    r.SetSender(new TopologymSender(aDevice));
                 }
             }
         }

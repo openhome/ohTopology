@@ -33,6 +33,17 @@ namespace TestZone
 
             private void CreateController(IZoneSender aZone)
             {
+                iFactory.Create<bool>(iRoom.Name, aZone.HasListeners, (v) =>
+                {
+                    return "HasListeners " + v;
+                });
+
+                iFactory.Create<IStandardRoom>(iRoom.Name, aZone.Listeners, (v) =>
+                {
+                    return "Listener " + v.Name;
+                });
+
+
                 iController = VolumeController.Create(aZone);
                 iFactory.Create<bool>(iRoom.Name, iController.HasVolume, v => "Zone HasVolume " + v);
                 iFactory.Create<bool>(iRoom.Name, iController.Mute, v => "Zone Mute " + v);
@@ -113,16 +124,6 @@ namespace TestZone
 
                 iFactory.Create<IZoneSender>(aItem.Name, aItem.ZoneSender, (v) =>
                 {
-                    iFactory.Create<bool>(aItem.Name, v.HasListeners, (w) =>
-                    {
-                        return "HasListeners " + w;
-                    });
-
-                    iFactory.Create<IStandardRoom>(aItem.Name, v.Listeners, (w) =>
-                    {
-                        return "Listener " + w.Name;
-                    });
-
                     return "ZoneSender " + v.Enabled + " " + (v.Enabled ? v.Sender.Udn : "") + " " + v.Room.Name;
                 });
                 iFactory.Create<IZoneReceiver>(aItem.Name, aItem.ZoneReceiver, (v) =>
