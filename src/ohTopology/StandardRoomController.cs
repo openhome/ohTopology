@@ -242,7 +242,7 @@ namespace OpenHome.Av
             });
         }
 
-        public void SetVolume(uint aVolume)
+        /*public void SetVolume(uint aVolume)
         {
             iNetwork.Schedule(() =>
             {
@@ -251,7 +251,7 @@ namespace OpenHome.Av
                    iVolumeController.SetVolume(aVolume);
                 }
             });
-        }
+        }*/
 
         public void VolumeInc()
         {

@@ -17,7 +17,6 @@ namespace OpenHome.Av
         IWatchable<uint> VolumeLimit { get; }
 
         void SetMute(bool aMute);
-        void SetVolume(uint aVolume);
         void VolumeInc();
         void VolumeDec();
     }
@@ -130,13 +129,13 @@ namespace OpenHome.Av
             }
         }
 
-        public void SetVolume(uint aValue)
+        /*public void SetVolume(uint aValue)
         {
             if (iVolume != null)
             {
                 iVolume.SetVolume(aValue);
             }
-        }
+        }*/
 
         public void VolumeInc()
         {
@@ -496,13 +495,13 @@ namespace OpenHome.Av
             });
         }
 
-        public void SetVolume(uint aVolume)
+        /*public void SetVolume(uint aVolume)
         {
             iNetwork.Schedule(() =>
             {
                 iVolumeControllers.ForEach(v => v.SetVolume(aVolume));
             });
-        }
+        }*/
 
         public void VolumeInc()
         {
