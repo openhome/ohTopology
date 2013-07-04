@@ -79,6 +79,22 @@ empty
 mock network update 4c494e4e-0026-0f99-1114-ef000004013f receiver transportstate Playing
 empty
 
+// check adding rooms to a sender that comes online later
+mock network update 4c494e4e-0026-0f99-1111-ef000004013f sender status Disabled
+expect Kitchen remove Listener Bedroom
+expect Bedroom update ZoneReceiver True 
+expect Kitchen remove Listener Dining Room
+expect Kitchen update HasListeners False
+expect Dining Room update ZoneReceiver True 
+empty
+mock network update 4c494e4e-0026-0f99-1111-ef000004013f sender status Enabled
+expect Kitchen add Listener Bedroom
+expect Kitchen update HasListeners True
+expect Bedroom update ZoneReceiver True Kitchen
+expect Kitchen add Listener Dining Room
+expect Dining Room update ZoneReceiver True Kitchen
+empty
+
 // remove bedroom
 mock network remove 4c494e4e-0026-0f99-1113-ef000004013f
 expect Kitchen remove Listener Bedroom
