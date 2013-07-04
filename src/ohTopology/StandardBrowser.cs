@@ -921,7 +921,7 @@ namespace OpenHome.Av
 
         internal bool AddToZone(IDevice aDevice, StandardRoom aRoom)
         {
-            if (iRoots.First().Device == aDevice)
+            if (iZoneSender.Sender == aDevice)
             {
                 iZoneSender.AddToZone(aRoom);
                 aRoom.AddedToZone(iZoneSender);
@@ -933,7 +933,7 @@ namespace OpenHome.Av
 
         internal bool RemoveFromZone(IDevice aDevice, StandardRoom aRoom)
         {
-            if (iRoots.First().Device == aDevice)
+            if (iZoneSender.Sender == aDevice)
             {
                 iZoneSender.RemoveFromZone(aRoom);
                 aRoom.RemovedFromZone(iZoneSender);

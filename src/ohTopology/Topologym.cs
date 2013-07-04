@@ -224,7 +224,7 @@ namespace OpenHome.Av
         {
             get
             {
-                if (string.IsNullOrEmpty(iTransportState) || iTransportState != "Playing")
+                if (string.IsNullOrEmpty(iTransportState) || iTransportState == "Stopped")
                 {
                     return null;
                 }
