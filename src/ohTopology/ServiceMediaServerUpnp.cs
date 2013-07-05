@@ -513,7 +513,7 @@ namespace OpenHome.Av
             var datum = new MediaDatumUpnp(aId, iNetwork.TagManager.Container.Title);
 
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title);
-            Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
+            Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Container.Artwork);
 
             return (datum);
         }
