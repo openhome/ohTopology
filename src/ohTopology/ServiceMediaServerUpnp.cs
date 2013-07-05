@@ -441,7 +441,7 @@ namespace OpenHome.Av
             var datum = new MediaDatum();
 
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Title);
-            Convert(aElement, "album", kNsUpnp, datum, iNetwork.TagManager.Audio.Album);
+            Convert(aElement, "album", kNsUpnp, datum, iNetwork.TagManager.Audio.AlbumTitle);
             Convert(aElement, "artist", kNsUpnp, datum, iNetwork.TagManager.Audio.Artist);
             Convert(aElement, "res", kNsDidlLite, datum, iNetwork.TagManager.Audio.Uri);
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
