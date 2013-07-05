@@ -7,7 +7,7 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public interface IStandardRoomController : ISourceController, IVolumeController
+    public interface IStandardRoomController : IDisposable
     {
         string Name { get; }
 
@@ -29,6 +29,31 @@ namespace OpenHome.Av
 
         IWatchable<EStandby> Standby { get; }
         void SetStandby(bool aValue);
+
+        // Source Control
+        Task<IWatchableContainer<IMediaPreset>> Container { get; }
+
+        void Play();
+        void Pause();
+        void Stop();
+
+        void Previous();
+        void Next();
+
+        void Seek(uint aSeconds);
+
+        void SetRepeat(bool aValue);
+        void SetShuffle(bool aValue);
+
+        // Volume Control
+        IWatchable<bool> HasVolume { get; }
+        IWatchable<bool> Mute { get; }
+        IWatchable<uint> Volume { get; }
+        IWatchable<uint> VolumeLimit { get; }
+
+        void SetMute(bool aMute);
+        void VolumeInc();
+        void VolumeDec();
     }
 
     public class StandardRoomController : IWatcher<ITopology4Source>, IStandardRoomController, IDisposable
