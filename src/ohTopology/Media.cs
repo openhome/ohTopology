@@ -274,6 +274,30 @@ namespace OpenHome.Av
                 container.AppendChild(artwork);
             }
 
+            if (aMetadata[aTagManager.Audio.AlbumTitle] != null)
+            {
+                XmlElement albumtitle = document.CreateElement("upnp", "album", kNsUpnp);
+                albumtitle.AppendChild(document.CreateTextNode(aMetadata[aTagManager.Audio.AlbumTitle].Value));
+                container.AppendChild(albumtitle);
+            }
+
+            foreach(var a in aMetadata[aTagManager.Audio.Artist].Values)
+            {
+                XmlElement artist = document.CreateElement("upnp", "artist", kNsUpnp);
+                artist.AppendChild(document.CreateTextNode(a));
+                container.AppendChild(artist);
+            }
+
+            if (aMetadata[aTagManager.Audio.AlbumArtist] != null)
+            {
+                XmlElement albumartist = document.CreateElement("upnp", "artist", kNsUpnp);
+                albumartist.AppendChild(document.CreateTextNode(aMetadata[aTagManager.Audio.AlbumArtist].Value));
+                XmlAttribute role = document.CreateAttribute("upnp", "role", kNsUpnp);
+                role.AppendChild(document.CreateTextNode("albumartist"));
+                albumartist.Attributes.Append(role);
+                container.AppendChild(albumartist);
+            }
+
             didl.AppendChild(container);
 
             document.AppendChild(didl);
