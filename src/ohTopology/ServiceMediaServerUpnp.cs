@@ -440,6 +440,7 @@ namespace OpenHome.Av
         {
             var datum = new MediaDatum();
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Title);
+            Convert(aElement, "res", kNsDidlLite, datum, iNetwork.TagManager.Audio.Uri);
             return (datum);
         }
 
