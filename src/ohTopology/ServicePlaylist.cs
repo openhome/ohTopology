@@ -170,6 +170,8 @@ namespace OpenHome.Av
         Task SeekSecondRelative(int aValue);
 
         Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata);
+        Task<uint> InsertNext(string aUri, IMediaMetadata aMetadata);
+        Task<uint> InsertEnd(string aUri, IMediaMetadata aMetadata);
         Task DeleteId(uint aValue);
         Task DeleteAll();
         Task SetRepeat(bool aValue);
@@ -284,6 +286,8 @@ namespace OpenHome.Av
         public abstract Task SeekSecondAbsolute(uint aValue);
         public abstract Task SeekSecondRelative(int aValue);
         public abstract Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata);
+        public abstract Task<uint> InsertNext(string aUri, IMediaMetadata aMetadata);
+        public abstract Task<uint> InsertEnd(string aUri, IMediaMetadata aMetadata);
         public abstract Task DeleteId(uint aValue);
         public abstract Task DeleteAll();
         public abstract Task SetRepeat(bool aValue);
@@ -460,6 +464,30 @@ namespace OpenHome.Av
             {
                 uint newId;
                 iService.SyncInsert(aAfterId, aUri, Network.TagManager.ToDidlLite(aMetadata), out newId);
+                return newId;
+            });
+            return task;
+        }
+
+        public override Task<uint> InsertNext(string aUri, IMediaMetadata aMetadata)
+        {
+            Task<uint> task = Task.Factory.StartNew(() =>
+            {
+                uint id = iService.PropertyId();
+                uint newId;
+                iService.SyncInsert(id, aUri, Network.TagManager.ToDidlLite(aMetadata), out newId);
+                return newId;
+            });
+            return task;
+        }
+
+        public override Task<uint> InsertEnd(string aUri, IMediaMetadata aMetadata)
+        {
+            Task<uint> task = Task.Factory.StartNew(() =>
+            {
+                IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
+                uint newId;
+                iService.SyncInsert(idArray.Last(), aUri, Network.TagManager.ToDidlLite(aMetadata), out newId);
                 return newId;
             });
             return task;
@@ -940,6 +968,44 @@ namespace OpenHome.Av
             return task;
         }
 
+        public override Task<uint> InsertNext(string aUri, IMediaMetadata aMetadata)
+        {
+            Task<uint> task = Task<uint>.Factory.StartNew(() =>
+            {
+                uint newId = 0;
+                Network.Execute(() =>
+                {
+                    int index = iIdArray.IndexOf(iId.Value);
+                    newId = iIdFactory;
+                    iIdArray.Insert(index + 1, newId);
+                    iTracks.Insert(index + 1, new TrackMock(aUri, aMetadata));
+                    ++iIdFactory;
+                    iContainer.UpdateSnapshot(iIdArray);
+                });
+                return newId;
+            });
+            return task;
+        }
+
+        public override Task<uint> InsertEnd(string aUri, IMediaMetadata aMetadata)
+        {
+            Task<uint> task = Task<uint>.Factory.StartNew(() =>
+            {
+                uint newId = 0;
+                Network.Execute(() =>
+                {
+                    int index = iIdArray.Count - 1;
+                    newId = iIdFactory;
+                    iIdArray.Insert(index + 1, newId);
+                    iTracks.Insert(index + 1, new TrackMock(aUri, aMetadata));
+                    ++iIdFactory;
+                    iContainer.UpdateSnapshot(iIdArray);
+                });
+                return newId;
+            });
+            return task;
+        }
+
         public override Task DeleteId(uint aValue)
         {
             Task task = Task.Factory.StartNew(() =>
@@ -1224,6 +1290,16 @@ namespace OpenHome.Av
         public Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata)
         {
             return iService.Insert(aAfterId, aUri, aMetadata);
+        }
+
+        public Task<uint> InsertNext(string aUri, IMediaMetadata aMetadata)
+        {
+            return iService.InsertNext(aUri, aMetadata);
+        }
+
+        public Task<uint> InsertEnd(string aUri, IMediaMetadata aMetadata)
+        {
+            return iService.InsertEnd(aUri, aMetadata);
         }
 
         public Task DeleteId(uint aValue)

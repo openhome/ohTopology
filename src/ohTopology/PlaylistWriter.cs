@@ -6,6 +6,8 @@ namespace OpenHome.Av
     public interface IPlaylistWriter
     {
         Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata, bool aPlay);
+        Task<uint> InsertNext(string aUri, IMediaMetadata aMetadata, bool aPlay);
+        Task<uint> InsertEnd(string aUri, IMediaMetadata aMetadata, bool aPlay);
         Task DeleteId(uint aValue);
         Task DeleteAll();
     }
@@ -24,6 +26,42 @@ namespace OpenHome.Av
             Task<uint> t1 = Task<uint>.Factory.StartNew(() =>
             {
                 Task<uint> t2 = iPlaylist.Insert(aAfterId, aUri, aMetadata);
+                t2.ContinueWith((t) =>
+                {
+                    uint id = t.Result;
+                    if (aPlay)
+                    {
+                        iPlaylist.SeekId(id);
+                    }
+                });
+                return t2.Result;
+            });
+            return t1;
+        }
+
+        public Task<uint> InsertNext(string aUri, IMediaMetadata aMetadata, bool aPlay)
+        {
+            Task<uint> t1 = Task<uint>.Factory.StartNew(() =>
+            {
+                Task<uint> t2 = iPlaylist.InsertNext(aUri, aMetadata);
+                t2.ContinueWith((t) =>
+                {
+                    uint id = t.Result;
+                    if (aPlay)
+                    {
+                        iPlaylist.SeekId(id);
+                    }
+                });
+                return t2.Result;
+            });
+            return t1;
+        }
+
+        public Task<uint> InsertEnd(string aUri, IMediaMetadata aMetadata, bool aPlay)
+        {
+            Task<uint> t1 = Task<uint>.Factory.StartNew(() =>
+            {
+                Task<uint> t2 = iPlaylist.InsertEnd(aUri, aMetadata);
                 t2.ContinueWith((t) =>
                 {
                     uint id = t.Result;
