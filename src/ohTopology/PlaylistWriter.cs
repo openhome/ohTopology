@@ -5,7 +5,7 @@ namespace OpenHome.Av
 {
     public interface IPlaylistWriter
     {
-        Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata);
+        Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata, bool aPlay);
         Task DeleteId(uint aValue);
         Task DeleteAll();
     }
@@ -19,9 +19,22 @@ namespace OpenHome.Av
             iPlaylist = aPlaylist;
         }
 
-        public Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata)
+        public Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata, bool aPlay)
         {
-            return iPlaylist.Insert(aAfterId, aUri, aMetadata);
+            Task<uint> t1 = Task<uint>.Factory.StartNew(() =>
+            {
+                Task<uint> t2 = iPlaylist.Insert(aAfterId, aUri, aMetadata);
+                t2.ContinueWith((t) =>
+                {
+                    uint id = t.Result;
+                    if (aPlay)
+                    {
+                        iPlaylist.SeekId(id);
+                    }
+                });
+                return t2.Result;
+            });
+            return t1;
         }
 
         public Task DeleteId(uint aValue)
