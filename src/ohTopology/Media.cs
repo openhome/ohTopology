@@ -236,6 +236,10 @@ namespace OpenHome.Av
 
     public static class MediaExtensions
     {
+        private static readonly string kNsDidl = "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/";
+        private static readonly string kNsDc = "http://purl.org/dc/elements/1.1/";
+        private static readonly string kNsUpnp = "urn:schemas-upnp-org:metadata-1-0/upnp/";
+
         public static string ToDidlLite(this ITagManager aTagManager, IMediaMetadata aMetadata)
         {
             if (aMetadata == null)
@@ -249,19 +253,26 @@ namespace OpenHome.Av
 
             XmlDocument document = new XmlDocument();
 
-            XmlElement didl = document.CreateElement("DIDL-Lite", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+            XmlElement didl = document.CreateElement("DIDL-Lite", kNsDidl);
 
-            XmlElement container = document.CreateElement("item", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+            XmlElement container = document.CreateElement("item", kNsDidl);
 
-            XmlElement title = document.CreateElement("dc", "title", "http://purl.org/dc/elements/1.1/");
+            XmlElement title = document.CreateElement("dc", "title", kNsDc);
             title.AppendChild(document.CreateTextNode(aMetadata[aTagManager.Audio.Title].Value));
 
             container.AppendChild(title);
 
-            XmlElement cls = document.CreateElement("upnp", "class", "urn:schemas-upnp-org:metadata-1-0/upnp/");
+            XmlElement cls = document.CreateElement("upnp", "class", kNsUpnp);
             cls.AppendChild(document.CreateTextNode("object.item.audioItem.musicTrack"));
 
             container.AppendChild(cls);
+
+            foreach (var a in aMetadata[aTagManager.Audio.Artwork].Values)
+            {
+                XmlElement artwork = document.CreateElement("upnp", "albumArtURI", kNsUpnp);
+                artwork.AppendChild(document.CreateTextNode(a));
+                container.AppendChild(artwork);
+            }
 
             didl.AppendChild(container);
 
@@ -278,9 +289,9 @@ namespace OpenHome.Av
             {
                 XmlDocument document = new XmlDocument();
                 XmlNamespaceManager nsManager = new XmlNamespaceManager(document.NameTable);
-                nsManager.AddNamespace("didl", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
-                nsManager.AddNamespace("upnp", "urn:schemas-upnp-org:metadata-1-0/upnp/");
-                nsManager.AddNamespace("dc", "http://purl.org/dc/elements/1.1/");
+                nsManager.AddNamespace("didl", kNsDidl);
+                nsManager.AddNamespace("upnp", kNsUpnp);
+                nsManager.AddNamespace("dc", kNsDc);
                 nsManager.AddNamespace("ldl", "urn:linn-co-uk/DIDL-Lite");
 
                 try
