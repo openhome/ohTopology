@@ -822,8 +822,11 @@ namespace OpenHome.Av
                 r.Senders.RemoveWatcher(this);
             }
 
-            iInfoWatcher.Dispose();
-            iInfoWatcher = null;
+            if (iInfoWatcher != null)
+            {
+                iInfoWatcher.Dispose();
+                iInfoWatcher = null;
+            }
 
             iWatchableSources.Dispose();
             iWatchableSources = null;
