@@ -716,6 +716,8 @@ namespace OpenHome.Av
 
         public Task<IWatchableFragment<IMediaPreset>> Read(uint aIndex, uint aCount)
         {
+            Do.Assert(aIndex + aCount <= Total);
+
             Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
             {
                 List<uint> idList = new List<uint>();
