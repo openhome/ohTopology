@@ -474,6 +474,7 @@ namespace OpenHome.Av
             Task<uint> task = Task.Factory.StartNew(() =>
             {
                 uint id = iService.PropertyId();
+
                 uint newId;
                 iService.SyncInsert(id, aUri, Network.TagManager.ToDidlLite(aMetadata), out newId);
                 return newId;
@@ -485,9 +486,16 @@ namespace OpenHome.Av
         {
             Task<uint> task = Task.Factory.StartNew(() =>
             {
+                uint id = 0;
+
                 IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
+                if (idArray.Count > 0)
+                {
+                    id = idArray.Last();
+                }
+
                 uint newId;
-                iService.SyncInsert(idArray.Last(), aUri, Network.TagManager.ToDidlLite(aMetadata), out newId);
+                iService.SyncInsert(id, aUri, Network.TagManager.ToDidlLite(aMetadata), out newId);
                 return newId;
             });
             return task;
@@ -959,6 +967,10 @@ namespace OpenHome.Av
                 Network.Execute(() =>
                 {
                     int index = iIdArray.IndexOf(aAfterId);
+                    if (index == -1)
+                    {
+                        throw new Exception("Id not found");
+                    }
                     newId = iIdFactory;
                     iIdArray.Insert(index + 1, newId);
                     iTracks.Insert(index + 1, new TrackMock(aUri, aMetadata));
@@ -978,6 +990,10 @@ namespace OpenHome.Av
                 Network.Execute(() =>
                 {
                     int index = iIdArray.IndexOf(iId.Value);
+                    if (index == -1)
+                    {
+                        index = 0;
+                    }
                     newId = iIdFactory;
                     iIdArray.Insert(index + 1, newId);
                     iTracks.Insert(index + 1, new TrackMock(aUri, aMetadata));
@@ -997,6 +1013,10 @@ namespace OpenHome.Av
                 Network.Execute(() =>
                 {
                     int index = iIdArray.Count - 1;
+                    if (index == -1)
+                    {
+                        index = 0;
+                    }
                     newId = iIdFactory;
                     iIdArray.Insert(index + 1, newId);
                     iTracks.Insert(index + 1, new TrackMock(aUri, aMetadata));
