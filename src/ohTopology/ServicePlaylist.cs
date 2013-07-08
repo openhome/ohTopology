@@ -585,25 +585,10 @@ namespace OpenHome.Av
         {
             Network.Schedule(() =>
             {
-                uint id = iService.PropertyId();
                 IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
+                uint id = iService.PropertyId();
                 iId.Update(id);
-                int index = idArray.IndexOf(id);
-                if ((index > -1) && (index < idArray.Count - 1) && (idArray.Count > 1))
-                {
-                    iCacheSession.Entries(new uint[] { idArray.ElementAt(index + 1) }).ContinueWith((t) =>
-                    {
-                        Network.Schedule(() =>
-                        {
-                            IIdCacheEntry entry = t.Result.ElementAt(0);
-                            iInfoNext.Update(new InfoMetadata(entry.Metadata, entry.Uri));
-                        });
-                    });
-                }
-                else
-                {
-                    iInfoNext.Update(InfoMetadata.Empty);
-                }
+                EvaluateInfoNext(id, idArray);
             });
         }
 
@@ -614,7 +599,28 @@ namespace OpenHome.Av
                 IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
                 iCacheSession.SetValid(idArray);
                 iContainer.UpdateSnapshot(idArray);
+                EvaluateInfoNext(iId.Value, idArray);
             });
+        }
+
+        private void EvaluateInfoNext(uint aId, IList<uint> aIdArray)
+        {
+            int index = aIdArray.IndexOf(aId);
+            if ((index > -1) && (index < aIdArray.Count - 1) && (aIdArray.Count > 1))
+            {
+                iCacheSession.Entries(new uint[] { aIdArray.ElementAt(index + 1) }).ContinueWith((t) =>
+                {
+                    Network.Schedule(() =>
+                    {
+                        IIdCacheEntry entry = t.Result.ElementAt(0);
+                        iInfoNext.Update(new InfoMetadata(entry.Metadata, entry.Uri));
+                    });
+                });
+            }
+            else
+            {
+                iInfoNext.Update(InfoMetadata.Empty);
+            }
         }
 
         private void HandleTransportStateChanged()
