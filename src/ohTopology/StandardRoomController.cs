@@ -79,7 +79,7 @@ namespace OpenHome.Av
             iCanPause = new Watchable<bool>(iNetwork, "CanPause", false);
             iCanSkip = new Watchable<bool>(iNetwork, "CanSkip", false);
             iCanSeek = new Watchable<bool>(iNetwork, "CanSeek", false);
-            iTransportState = new Watchable<string>(iNetwork, "TransportState", string.Empty);
+            iTransportState = new Watchable<string>(iNetwork, "TransportState", "Stopped");
 
             iHasPlayMode = new Watchable<bool>(iNetwork, "HasPlayMode", false);
             iShuffle = new Watchable<bool>(iNetwork, "Shuffle", false);
