@@ -37,9 +37,6 @@
       <HintPath>..\..\dependencies\AnyPlatform\ohOs\ohOs.App.V1.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="ohMediaServer.Shared">
-      <HintPath>..\..\dependencies\AnyPlatform\ohMediaServer\ohMediaServer.Shared.dll</HintPath>
-    </Reference>
     <Reference Include="ohOs">
       <HintPath>..\..\dependencies\AnyPlatform\ohOs\ohOs.dll</HintPath>
     </Reference>

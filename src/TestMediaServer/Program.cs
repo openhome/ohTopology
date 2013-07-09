@@ -6,7 +6,6 @@ using System.Text;
 using OpenHome.Os;
 using OpenHome.Os.App;
 using OpenHome.Av;
-using OpenHome.MediaServer;
 
 namespace TestMediaServer
 {
