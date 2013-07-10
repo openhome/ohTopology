@@ -91,6 +91,9 @@
     <Compile Include="SourceControllerPlaylist.cs" />
     <Compile Include="SourceControllerRadio.cs" />
     <Compile Include="SourceControllerReceiver.cs" />
+    <Compile Include="StandardRoomInfo.cs" />
+    <Compile Include="StandardMedia.cs" />
+    <Compile Include="StandardRoom.cs" />
     <Compile Include="StandardRoomController.cs" />
     <Compile Include="StandardRoomTime.cs" />
     <Compile Include="StandardRoomWatchers.cs" />
@@ -99,7 +102,7 @@
     <Compile Include="ServiceMediaServer.cs" />
     <Compile Include="DeviceMediaServerMock.cs" />
     <Compile Include="DeviceFactory.cs" />
-    <Compile Include="StandardBrowser.cs" />
+    <Compile Include="StandardHouse.cs" />
     <Compile Include="Mockable.cs" />
     <Compile Include="Network.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
