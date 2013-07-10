@@ -37,11 +37,11 @@ namespace OpenHome.Av
         private readonly HttpFramework iHttpFramework;
         private readonly List<Tuple<Color, Color>> iColors;
 
-        public DeviceMediaServerMock(INetwork aNetwork, string aUdn, string aAppRoot)
+        public DeviceMediaServerMock(INetwork aNetwork, string aUdn, string aResourceRoot)
             : base(aUdn)
         {
             iNetwork = aNetwork;
-            iMetadata = ReadMetadata(aNetwork, aAppRoot);
+            iMetadata = ReadMetadata(aNetwork, aResourceRoot);
             iHttpFramework = new HttpFramework(10);
 
             iColors = new List<Tuple<Color, Color>>();
@@ -80,11 +80,11 @@ namespace OpenHome.Av
             iColors.Add(new Tuple<Color, Color>(aForeground, aBackground));
         }
 
-        private IEnumerable<IMediaMetadata> ReadMetadata(INetwork aNetwork, string aAppRoot)
+        private IEnumerable<IMediaMetadata> ReadMetadata(INetwork aNetwork, string aResourceRoot)
         {
             ZipConstants.DefaultCodePage = Encoding.Default.CodePage; // without this linux fails to unzip due to missing codepage 850
 
-            var path = Path.Combine(aAppRoot, "MockMediaServer.zip");
+            var path = Path.Combine(aResourceRoot, "MockMediaServer.zip");
 
             using (var file = File.Open(path, FileMode.Open))
             {

@@ -199,9 +199,9 @@ namespace OpenHome.Av
             return device;
         }
 
-        public static Device CreateMediaServer(INetwork aNetwork, string aUdn)
+        public static Device CreateMediaServer(INetwork aNetwork, string aUdn, string aResourceRoot)
         {
-            return (new DeviceMediaServerMock(aNetwork, aUdn, Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)));
+            return (new DeviceMediaServerMock(aNetwork, aUdn, aResourceRoot));
         }
     }
 }

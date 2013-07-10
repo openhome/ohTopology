@@ -103,11 +103,13 @@ namespace OpenHome.Av
     public class DeviceInjectorMock : IMockable, IDisposable
     {
         private Network iNetwork;
+        private string iResourceRoot;
         private Dictionary<string, Device> iMockDevices;
 
-        public DeviceInjectorMock(Network aNetwork)
+        public DeviceInjectorMock(Network aNetwork, string aResourceRoot)
         {
             iNetwork = aNetwork;
+            iResourceRoot = aResourceRoot;
             iMockDevices = new Dictionary<string, Device>();
         }
 
@@ -134,7 +136,7 @@ namespace OpenHome.Av
                 if (command == "small")
                 {
                     CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
-                    CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000"));
+                    CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000", iResourceRoot));
                     return;
                 }
                 else if (command == "medium")
@@ -143,7 +145,7 @@ namespace OpenHome.Av
                     CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
                     CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
                     CreateAndAdd(DeviceFactory.CreateDs(iNetwork, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
-                    CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000"));
+                    CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000", iResourceRoot));
                     return;
                 }
                 else if (command == "large")

@@ -458,7 +458,7 @@ namespace TestMediaServer
 
             using (var network = new Network(watchableThread, 50))
             {
-                using (DeviceInjectorMock mockInjector = new DeviceInjectorMock(network))
+                using (DeviceInjectorMock mockInjector = new DeviceInjectorMock(network, System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location)))
                 {
                     network.Execute(() =>
                     {

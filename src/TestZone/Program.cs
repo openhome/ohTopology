@@ -169,7 +169,7 @@ namespace TestZone
             Mockable mocker = new Mockable();
 
             Network network = new Network(50);
-            DeviceInjectorMock mockInjector = new DeviceInjectorMock(network);
+            DeviceInjectorMock mockInjector = new DeviceInjectorMock(network, Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
             mocker.Add("network", mockInjector);
 
             StandardHouse house = new StandardHouse(network);
