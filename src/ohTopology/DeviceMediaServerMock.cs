@@ -86,7 +86,7 @@ namespace OpenHome.Av
 
             var path = Path.Combine(aResourceRoot, "MockMediaServer.zip");
 
-            using (var file = File.Open(path, FileMode.Open))
+            using (var file = File.Open(path, FileMode.Open, FileAccess.Read))
             {
                 var zip = new ZipFile(file);
 
