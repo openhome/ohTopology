@@ -18,6 +18,7 @@ namespace TestLinnHouse
             private ResultWatcherFactory iFactoryRadioPresetsPlaying;
             private IStandardRoomController iController;
             private IStandardRoomTime iTime;
+            private IStandardRoomInfo iInfo;
             private StandardRoomWatcherExternal iWatcherExternal;
             private StandardRoomWatcherRadio iWatcherRadio;
             private StandardRoomWatcherMusic iWatcherMusic;
@@ -31,9 +32,14 @@ namespace TestLinnHouse
                 iFactoryRadioPresetsPlaying = new ResultWatcherFactory(aRunner);
                 iController = new StandardRoomController(aRoom);
                 iTime = new StandardRoomTime(aRoom);
+                iInfo = new StandardRoomInfo(aRoom);
                 iWatcherExternal = new StandardRoomWatcherExternal(aRoom);
                 iWatcherRadio = new StandardRoomWatcherRadio(aRoom);
                 iWatcherMusic = new StandardRoomWatcherMusic(aRoom);
+
+                iFactory.Create<RoomDetails>(iInfo.Name, iInfo.Details, v => "Details " + v.Enabled + " " + v.BitDepth + " " + v.BitRate + " " + v.CodecName + " " + v.Duration + " " + v.Lossless + " " + v.SampleRate);
+                iFactory.Create<RoomMetadata>(iInfo.Name, iInfo.Metadata, v => "Metadata " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metadata) + " " + v.Uri);
+                iFactory.Create<RoomMetatext>(iInfo.Name, iInfo.Metatext, v => "Metatext " + v.Enabled + " " + v.Metatext);
 
                 iFactory.Create<bool>(iController.Name, iController.Active, v => "Controller Active " + v);
                 iFactory.Create<bool>(iController.Name, iController.HasVolume, v => "HasVolume " + v);
@@ -194,9 +200,6 @@ namespace TestLinnHouse
             {
                 iRunner.Result(string.Format("Room Added: {0} at {1}", aItem.Name, aIndex));
                 iFactory.Create<EStandby>(aItem.Name, aItem.Standby, v => "Standby " + v);
-                iFactory.Create<RoomDetails>(aItem.Name, aItem.Details, v => "Details " + v.Enabled + " " + v.BitDepth + " " + v.BitRate + " " + v.CodecName + " " + v.Duration + " " + v.Lossless + " " + v.SampleRate);
-                iFactory.Create<RoomMetadata>(aItem.Name, aItem.Metadata, v => "Metadata " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metadata) + " " + v.Uri);
-                iFactory.Create<RoomMetatext>(aItem.Name, aItem.Metatext, v => "Metatext " + v.Enabled + " " + v.Metatext);
                 iFactory.Create<IZoneSender>(aItem.Name, aItem.ZoneSender, v => "Zone " + v.Enabled + " " + ((v.Sender == null) ? "" : v.Sender.Udn));
 
                 iWatcherLookup.Add(aItem, new RoomControllerWatcher(iTagManager, iRunner, aItem));

@@ -130,10 +130,6 @@ namespace TestZone
                 {
                     return "ZoneReceiver " + v.Enabled + " " + (v.ZoneSender != null ? v.ZoneSender.Room.Name : "");
                 });
-                iFactory.Create<RoomMetadata>(aItem.Name, aItem.Metadata, (v) =>
-                {
-                    return "Metadata " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metadata) + " " + v.Uri;
-                });
 
                 iWatcherLookup.Add(aItem, new RoomControllerWatcher(iTagManager, iRunner, aItem));
             }

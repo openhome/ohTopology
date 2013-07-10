@@ -4,10 +4,10 @@ mock network medium
 // test network is populated with 4 devices
 expect Room Added: Kitchen at 0
 expect Kitchen open Standby eOn
+expect Kitchen open Zone True 4c494e4e-0026-0f99-1111-ef000004013f
 expect Kitchen open Details True 0 0  0 False 0
 expect Kitchen open Metadata True  
 expect Kitchen open Metatext True 
-expect Kitchen open Zone True 4c494e4e-0026-0f99-1111-ef000004013f
 expect Kitchen open Controller Active True
 expect Kitchen open HasVolume True
 expect Kitchen open HasSourceControl True
@@ -42,10 +42,10 @@ expect Kitchen open Music Enabled True
 
 expect Room Added: Sitting Room at 1
 expect Sitting Room open Standby eOn
+expect Sitting Room open Zone True 4c494e4e-0026-0f99-1112-ef000004013f
 expect Sitting Room open Details True 0 0  0 False 0
 expect Sitting Room open Metadata True  
 expect Sitting Room open Metatext True 
-expect Sitting Room open Zone True 4c494e4e-0026-0f99-1112-ef000004013f
 expect Sitting Room open Controller Active True
 expect Sitting Room open HasVolume True
 expect Sitting Room open HasSourceControl True
@@ -87,10 +87,10 @@ expect Sitting Room open Music Enabled True
 
 expect Room Added: Bedroom at 0
 expect Bedroom open Standby eOn
+expect Bedroom open Zone True 4c494e4e-0026-0f99-1113-ef000004013f
 expect Bedroom open Details True 0 0  0 False 0
 expect Bedroom open Metadata True  
 expect Bedroom open Metatext True 
-expect Bedroom open Zone True 4c494e4e-0026-0f99-1113-ef000004013f
 expect Bedroom open Controller Active True
 expect Bedroom open HasVolume True
 expect Bedroom open HasSourceControl True
@@ -132,10 +132,10 @@ expect Bedroom open Music Enabled True
 
 expect Room Added: Dining Room at 1
 expect Dining Room open Standby eOn
+expect Dining Room open Zone True 4c494e4e-0026-0f99-1114-ef000004013f
 expect Dining Room open Details True 0 0  0 False 0
 expect Dining Room open Metadata True  
 expect Dining Room open Metatext True 
-expect Dining Room open Zone True 4c494e4e-0026-0f99-1114-ef000004013f
 expect Dining Room open Controller Active True
 expect Dining Room open HasVolume True
 expect Dining Room open HasSourceControl True
@@ -174,10 +174,10 @@ mock network create ds 67
 mock network add 67
 expect Room Added: Main Room at 3
 expect Main Room open Standby eOn
+expect Main Room open Zone True 67
 expect Main Room open Details True 0 0  0 False 0
 expect Main Room open Metadata True  
 expect Main Room open Metatext True 
-expect Main Room open Zone True 67
 expect Main Room open Controller Active True
 expect Main Room open HasVolume True
 expect Main Room open HasSourceControl True
@@ -235,10 +235,10 @@ empty
 mock network add 67
 expect Room Added: Main Room at 3
 expect Main Room open Standby eOn
+expect Main Room open Zone True 67
 expect Main Room open Details True 50 100 flac 500 True 44000
 expect Main Room open Metadata True blah http://blah
 expect Main Room open Metatext True testing
-expect Main Room open Zone True 67
 expect Main Room open Controller Active True
 expect Main Room open HasVolume True
 expect Main Room open HasSourceControl True
@@ -362,30 +362,30 @@ Presets end
 expect Main Room update Presets Enabled True
 expect Main Room update Music Enabled False
 expect Main Room update Music Enabled True
+expect Main Room update HasSourceControl False
+expect Main Room update HasSourceControl True
+expect Main Room update HasTime False
+expect Main Room update HasTime True
 expect Main Room update Details False 0 0  0 False 0
 expect Main Room update Metadata False  
 expect Main Room update Metatext False 
 expect Main Room update Details True 1 2 mp3 3 False 4
 expect Main Room update Metadata True Ds68 http://Ds68
 expect Main Room update Metatext True Ds68
-expect Main Room update HasSourceControl False
-expect Main Room update HasSourceControl True
-expect Main Room update HasTime False
-expect Main Room update HasTime True
 empty
 
 // change to radio source to check create source controller
 mock network update 67 product sourceindex 1
+expect Main Room update HasSourceControl False
+expect Main Room update HasSourceControl True
+expect Main Room update HasTime False
+expect Main Room update HasTime True
 expect Main Room update Details False 0 0  0 False 0
 expect Main Room update Metadata False  
 expect Main Room update Metatext False 
 expect Main Room update Details True 50 100 flac 500 True 44000
 expect Main Room update Metadata True blah http://blah
 expect Main Room update Metatext True testing
-expect Main Room update HasSourceControl False
-expect Main Room update HasSourceControl True
-expect Main Room update HasTime False
-expect Main Room update HasTime True
 empty
 
 mock network update 67 radio transportstate Playing
@@ -476,10 +476,10 @@ expect Main Room update HasSourceControl False
 expect Main Room update HasSourceControl True
 expect Room Added: Test Room at 5
 expect Test Room open Standby eOn
+expect Test Room open Zone True 50
 expect Test Room open Details True 0 0  0 False 0
 expect Test Room open Metadata True  
 expect Test Room open Metatext True 
-expect Test Room open Zone True 50
 expect Test Room open Controller Active True
 expect Test Room open HasVolume True
 expect Test Room open HasSourceControl True

@@ -388,9 +388,6 @@ namespace OpenHome.Av
         string Name { get; }
 
         IWatchable<EStandby> Standby { get; }
-        IWatchable<RoomDetails> Details { get; }
-        IWatchable<RoomMetadata> Metadata { get; }
-        IWatchable<RoomMetatext> Metatext { get; }
 
         // multi-room interface
         IWatchable<IZoneSender> ZoneSender { get; }
@@ -421,10 +418,6 @@ namespace OpenHome.Av
             iSources = new List<ITopology4Source>();
             iSenders = new List<ITopology4Group>();
 
-            iDetails = new Watchable<RoomDetails>(iNetwork, "Details", new RoomDetails());
-            iMetadata = new Watchable<RoomMetadata>(iNetwork, "Metadata", new RoomMetadata());
-            iMetatext = new Watchable<RoomMetatext>(iNetwork, "Metatext", new RoomMetatext());
-
             iZoneSender = new ZoneSender(this);
             iWatchableZoneSender = new Watchable<IZoneSender>(iNetwork, "ZoneSender", iZoneSender);
             iZoneReceiver = new ZoneReceiver(false);
@@ -453,12 +446,6 @@ namespace OpenHome.Av
                 iDisposed = true;
             });
 
-            iDetails.Dispose();
-
-            iMetadata.Dispose();
-
-            iMetatext.Dispose();
-
             iWatchableZoneSender.Dispose();
             iZoneSender = null;
 
@@ -485,39 +472,6 @@ namespace OpenHome.Av
                 using (iDisposeHandler.Lock)
                 {
                     return iRoom.Standby;
-                }
-            }
-        }
-
-        public IWatchable<RoomDetails> Details
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iDetails;
-                }
-            }
-        }
-
-        public IWatchable<RoomMetadata> Metadata
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iMetadata;
-                }
-            }
-        }
-
-        public IWatchable<RoomMetatext> Metatext
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iMetatext;
                 }
             }
         }
@@ -720,12 +674,6 @@ namespace OpenHome.Av
                 r.Senders.RemoveWatcher(this);
             }
 
-            if (iInfoWatcher != null)
-            {
-                iInfoWatcher.Dispose();
-                iInfoWatcher = null;
-            }
-
             iWatchableSources.Dispose();
             iWatchableSources = null;
 
@@ -756,34 +704,12 @@ namespace OpenHome.Av
         {
             ITopology4Source source = iCurrentSources[0];
             iWatchableSource = new Watchable<ITopology4Source>(iNetwork, "Source", source);
-            if (source.HasInfo)
-            {
-                iInfoWatcher = new InfoWatcher(iNetwork, source.Device, iDetails, iMetadata, iMetatext);
-            }
             iSource = source;
         }
 
         private void SelectSource()
         {
             ITopology4Source source = iCurrentSources[0];
-
-            if (iSource.Device != source.Device)
-            {
-                if (iInfoWatcher != null)
-                {
-                    iInfoWatcher.Dispose();
-                    iInfoWatcher = null;
-                }
-
-                if (source.HasInfo)
-                {
-                    iInfoWatcher = new InfoWatcher(iNetwork, source.Device, iDetails, iMetadata, iMetatext);
-                }
-            }
-            else if (!iSource.HasInfo && source.HasInfo)
-            {
-                iInfoWatcher = new InfoWatcher(iNetwork, source.Device, iDetails, iMetadata, iMetatext);
-            }
 
             iWatchableSource.Update(source);
             iSource = source;
@@ -913,10 +839,5 @@ namespace OpenHome.Av
         private readonly Watchable<IZoneSender> iWatchableZoneSender;
         private ZoneReceiver iZoneReceiver;
         private readonly Watchable<IZoneReceiver> iWatchableZoneReceiver;
-
-        private InfoWatcher iInfoWatcher;
-        private readonly Watchable<RoomDetails> iDetails;
-        private readonly Watchable<RoomMetadata> iMetadata;
-        private readonly Watchable<RoomMetatext> iMetatext;
     }
 }
