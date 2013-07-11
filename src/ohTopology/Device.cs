@@ -15,6 +15,23 @@ namespace OpenHome.Av
         void Create<T>(Action<T> aCallback) where T : IProxy;
     }
 
+    public class ServiceNotFoundException : Exception
+    {
+        public ServiceNotFoundException()
+        {
+        }
+
+        public ServiceNotFoundException(string aMessage)
+            : base(aMessage)
+        {
+        }
+
+        public ServiceNotFoundException(string aMessage, Exception aInnerException)
+            : base(aMessage, aInnerException)
+        {
+        }
+    }
+
     public class Device : IDevice, IMockable, IDisposable
     {
         public Device(string aUdn)
@@ -84,7 +101,14 @@ namespace OpenHome.Av
 
         public void Create<T>(Action<T> aCallback) where T : IProxy
         {
-            iServices[typeof(T)].Create<T>(aCallback);
+            try
+            {
+                iServices[typeof(T)].Create<T>(aCallback);
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new ServiceNotFoundException("Cannot find service of type " + typeof(T) + " on " + iUdn);
+            }
         }
 
         private IService GetService(string aType)
@@ -123,7 +147,7 @@ namespace OpenHome.Av
             }
             else
             {
-                throw new NotSupportedException();
+                throw new ServiceNotFoundException();
             }
         }
 

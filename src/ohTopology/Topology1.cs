@@ -95,7 +95,16 @@ namespace OpenHome.Av
             {
                 if (!iDisposed && iPendingSubscriptions.Contains(aItem))
                 {
-                    iProducts.Add(product);
+                    try
+                    {
+                        iProducts.Add(product);
+                    }
+                    catch (ServiceNotFoundException)
+                    {
+                        // NOTE: we need to log the fact that product is not added due to a service not being found
+                        product.Dispose();
+                        return;
+                    }
                     iProductLookup.Add(aItem, product);
                     iPendingSubscriptions.Remove(aItem);
                 }
