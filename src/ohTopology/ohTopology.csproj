@@ -69,6 +69,9 @@
     <Reference Include="ohNet.net">
       <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\ohNet.net.dll</HintPath>
     </Reference>
+    <Reference Include="ohOs">
+      <HintPath>..\..\dependencies\AnyPlatform\ohOs\ohOs.dll</HintPath>
+    </Reference>
     <Reference Include="ohOs.App.V1">
       <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
     </Reference>
