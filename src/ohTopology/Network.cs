@@ -11,13 +11,15 @@ namespace OpenHome.Av
 {
     public abstract class DeviceInjector : IDisposable
     {
-        private Network iNetwork;
-        private Dictionary<string, Device> iCpDeviceLookup;
+        private readonly Network iNetwork;
+        private readonly Dictionary<string, Device> iCpDeviceLookup;
 
+        protected readonly DisposeHandler iDisposeHandler;
         protected CpDeviceListUpnpServiceType iDeviceList;
 
         protected DeviceInjector(Network aNetwork)
         {
+            iDisposeHandler = new DisposeHandler();
             iNetwork = aNetwork;
 
             iCpDeviceLookup = new Dictionary<string, Device>();
@@ -46,13 +48,26 @@ namespace OpenHome.Av
 
         protected virtual Device Create(INetwork aNetwork, CpDevice aDevice)
         {
-            return (DeviceFactory.Create(aNetwork, aDevice));
+            using (iDisposeHandler.Lock)
+            {
+                return (DeviceFactory.Create(aNetwork, aDevice));
+            }
+        }
+
+        public void Refresh()
+        {
+            using (iDisposeHandler.Lock)
+            {
+                iDeviceList.Refresh();
+            }
         }
 
         // IDisposable
 
         public void Dispose()
         {
+            iDisposeHandler.Dispose();
+
             iDeviceList.Dispose();
             iDeviceList = null;
 
@@ -64,7 +79,6 @@ namespace OpenHome.Av
                 }
             });
             iCpDeviceLookup.Clear();
-            iCpDeviceLookup = null;
         }
     }
 
@@ -96,7 +110,10 @@ namespace OpenHome.Av
 
         protected override Device Create(INetwork aNetwork, CpDevice aDevice)
         {
-            return (new DeviceMediaServerUpnp(aNetwork, aDevice));
+            using (iDisposeHandler.Lock)
+            {
+                return (new DeviceMediaServerUpnp(aNetwork, aDevice));
+            }
         }
     }
 
@@ -250,7 +267,6 @@ namespace OpenHome.Av
         IIdCache IdCache { get; }
         ITagManager TagManager { get; }
         IWatchableUnordered<IDevice> Create<T>() where T : IProxy;
-        //void Refresh();
     }
 
     public class Network : INetwork
