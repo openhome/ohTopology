@@ -101,14 +101,11 @@ namespace OpenHome.Av
 
         public void Create<T>(Action<T> aCallback) where T : IProxy
         {
-            try
-            {
-                iServices[typeof(T)].Create<T>(aCallback);
-            }
-            catch (KeyNotFoundException)
+            if (!iServices.ContainsKey(typeof(T)))
             {
                 throw new ServiceNotFoundException("Cannot find service of type " + typeof(T) + " on " + iUdn);
             }
+            iServices[typeof(T)].Create<T>(aCallback);
         }
 
         private IService GetService(string aType)
