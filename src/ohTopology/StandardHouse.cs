@@ -13,6 +13,7 @@ namespace OpenHome.Av
         private readonly StandardHouse iHouse;
         private readonly IWatchableOrdered<IStandardRoom> iRooms;
         private readonly StandardRoom iRoom;
+        private readonly IWatchable<ITopology4Source> iSource;
         private bool iRoomsInitialised;
         private ITopologymSender iSender;
 
@@ -22,8 +23,9 @@ namespace OpenHome.Av
             iHouse = aHouse;
             iRooms = aRooms;
             iRoom = aRoom;
+            iSource = iRoom.Source;
 
-            iRoom.Source.AddWatcher(this);
+            iSource.AddWatcher(this);
             iRooms.AddWatcher(this);
         }
 
@@ -40,7 +42,7 @@ namespace OpenHome.Av
             }
 
             iRooms.RemoveWatcher(this);
-            iRoom.Source.RemoveWatcher(this);
+            iSource.RemoveWatcher(this);
         }
 
         public void ItemOpen(string aId, ITopology4Source aValue)
@@ -397,7 +399,7 @@ namespace OpenHome.Av
             StandardRoom room = new StandardRoom(iNetwork, aRoom);
 
             // calculate where to insert the room
-            int index = 0;
+            uint index = 0;
             foreach (IStandardRoom r in iWatchableRooms.Values)
             {
                 if (room.Name.CompareTo(r.Name) < 0)
@@ -409,7 +411,7 @@ namespace OpenHome.Av
 
             // insert the room
             iRoomLookup.Add(aRoom, room);
-            iWatchableRooms.Add(room, (uint)index);
+            iWatchableRooms.Add(room, index);
 
             // do this here so that room is added before other rooms are informed of this room listening to them
             iRoomWatchers.Add(aRoom, new RoomWatcher(this, iWatchableRooms, room));
