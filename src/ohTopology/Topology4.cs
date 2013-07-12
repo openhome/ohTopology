@@ -7,7 +7,7 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    internal class MediaPresetExternal : IMediaPreset, IWatcher<ITopology4Source>
+    class MediaPresetExternal : IMediaPreset, IWatcher<ITopology4Source>
     {
         private readonly DisposeHandler iDisposeHandler;
         private readonly INetwork iNetwork;
