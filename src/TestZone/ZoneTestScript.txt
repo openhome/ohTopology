@@ -130,11 +130,11 @@ expect Kitchen open HasListeners False
 expect Kitchen open Zone HasVolume True
 expect Kitchen open Zone Mute False
 expect Kitchen open Zone Volume 50
-expect Kitchen add Listener Dining Room
-expect Kitchen update HasListeners True
-expect Dining Room update ZoneReceiver True Kitchen
 expect Kitchen add Listener Bedroom
+expect Kitchen update HasListeners True
 expect Bedroom update ZoneReceiver True Kitchen
+expect Kitchen add Listener Dining Room
+expect Dining Room update ZoneReceiver True Kitchen
 empty
 
 // mute all rooms in kitchen zone
@@ -170,4 +170,18 @@ expect Kitchen update Zone Volume 66
 empty
 mock network update 4c494e4e-0026-0f99-1111-ef000004013f volume value 100
 expect Kitchen update Zone Volume 83
+empty
+
+// test adding and removing of satellite rooms
+mock network update 4c494e4e-0026-0f99-1112-ef000004013f product source 3 name Dining Room
+expect Room Removed: Sitting Room at 3
+expect Dining Room add Satellite Sitting Room
+empty
+
+mock network remove 4c494e4e-0026-0f99-1112-ef000004013f
+expect Dining Room remove Satellite Sitting Room
+empty
+
+mock network add 4c494e4e-0026-0f99-1112-ef000004013f
+expect Dining Room add Satellite Sitting Room
 empty

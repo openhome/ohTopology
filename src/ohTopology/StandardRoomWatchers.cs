@@ -525,30 +525,39 @@ namespace OpenHome.Av
 
     class ExternalContainer : IWatchableContainer<IMediaPreset>, IDisposable
     {
-        private Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
 
         public ExternalContainer(INetwork aNetwork)
         {
+            iDisposeHandler = new DisposeHandler();
             iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new ExternalSnapshot(new List<ITopology4Source>()));
         }
 
         public void Dispose()
         {
+            iDisposeHandler.Dispose();
+
             iSnapshot.Dispose();
-            iSnapshot = null;
         }
 
         public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
         {
             get
             {
-                return iSnapshot;
+                using (iDisposeHandler.Lock)
+                {
+                    return iSnapshot;
+                }
             }
         }
 
         public void UpdateSnapshot(IList<ITopology4Source> aSources)
         {
-            iSnapshot.Update(new ExternalSnapshot(aSources));
+            using (iDisposeHandler.Lock)
+            {
+                iSnapshot.Update(new ExternalSnapshot(aSources));
+            }
         }
     }
 

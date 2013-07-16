@@ -130,6 +130,10 @@ namespace TestZone
                 {
                     return "ZoneReceiver " + v.Enabled + " " + (v.ZoneSender != null ? v.ZoneSender.Room.Name : "");
                 });
+                iFactory.Create<IStandardRoom>(aItem.Name, aItem.Satallites, (v) =>
+                {
+                    return "Satellite " + v.Name;
+                });
 
                 iWatcherLookup.Add(aItem, new RoomControllerWatcher(iTagManager, iRunner, aItem));
             }

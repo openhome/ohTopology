@@ -390,6 +390,7 @@ namespace OpenHome.Av
         IWatchable<EStandby> Standby { get; }
 
         // multi-room interface
+        IWatchableOrdered<IStandardRoom> Satallites { get; }
         IWatchable<IZoneSender> ZoneSender { get; }
         IWatchable<IZoneReceiver> ZoneReceiver { get; }
 
@@ -422,6 +423,7 @@ namespace OpenHome.Av
             iWatchableZoneSender = new Watchable<IZoneSender>(iNetwork, "ZoneSender", iZoneSender);
             iZoneReceiver = new ZoneReceiver(false);
             iWatchableZoneReceiver = new Watchable<IZoneReceiver>(iNetwork, "ZoneReceiver", iZoneReceiver);
+            iSatallites = new WatchableOrdered<IStandardRoom>(iNetwork);
 
             iRoom.Roots.AddWatcher(this);
         }
@@ -516,6 +518,17 @@ namespace OpenHome.Av
             using (iDisposeHandler.Lock)
             {
                 iRoom.SetStandby(aValue);
+            }
+        }
+
+        public IWatchableOrdered<IStandardRoom> Satallites
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iSatallites;
+                }
             }
         }
 
@@ -789,6 +802,27 @@ namespace OpenHome.Av
         {
         }
 
+        internal void AddSatellite(IStandardRoom aRoom)
+        {
+            // calculate where to insert the room
+            uint index = 0;
+            foreach (IStandardRoom r in iSatallites.Values)
+            {
+                if (aRoom.Name.CompareTo(r.Name) < 0)
+                {
+                    break;
+                }
+                ++index;
+            }
+
+            iSatallites.Add(aRoom, index);
+        }
+
+        internal void RemoveSatellite(IStandardRoom aRoom)
+        {
+            iSatallites.Remove(aRoom);
+        }
+
         internal bool AddToZone(IDevice aDevice, StandardRoom aRoom)
         {
             if (iZoneSender.Sender == aDevice)
@@ -835,6 +869,7 @@ namespace OpenHome.Av
         private Watchable<ITopology4Source> iWatchableSource;
         private Watchable<IEnumerable<ITopology4Source>> iWatchableSources;
 
+        private readonly WatchableOrdered<IStandardRoom> iSatallites;
         private ZoneSender iZoneSender;
         private readonly Watchable<IZoneSender> iWatchableZoneSender;
         private ZoneReceiver iZoneReceiver;
