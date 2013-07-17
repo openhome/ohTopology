@@ -18,6 +18,7 @@ namespace OpenHome.Av
 
     public interface IMediaMetadata : IEnumerable<KeyValuePair<ITag, IMediaValue>>
     {
+        Uri Artwork { get; }
         IMediaValue this[ITag aTag] { get; }
     }
 
@@ -152,11 +153,32 @@ namespace OpenHome.Av
 
     public class MediaMetadata : MediaDictionary, IMediaMetadata
     {
+        private readonly Uri iArtwork;
+
         public MediaMetadata()
         {
         }
 
+        public MediaMetadata(string aArtwork)
+        {
+            try
+            {
+                iArtwork = new Uri(aArtwork);
+            }
+            catch
+            {
+            }
+        }
+
         // IEnumerable<KeyValuePair<ITag, IMediaServer>>
+
+        public Uri Artwork
+        {
+            get
+            {
+                return (iArtwork);
+            }
+        }
 
         public IEnumerator<KeyValuePair<ITag, IMediaValue>> GetEnumerator()
         {
