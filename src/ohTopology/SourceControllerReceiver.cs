@@ -5,7 +5,7 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public class SourceControllerReceiver : IWatcher<string>, ISourceController
+    class SourceControllerReceiver : IWatcher<string>, ISourceController
     {
         public SourceControllerReceiver(ITopology4Source aSource, Watchable<bool> aHasSourceControl,
             Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<bool> aHasContainer, Watchable<string> aTransportState, Watchable<bool> aCanPause,
@@ -13,9 +13,8 @@ namespace OpenHome.Av
         {
             iDisposed = false;
 
-            iSource = aSource;
-
             iHasSourceControl = aHasSourceControl;
+            iCanPause = aCanPause;
             iTransportState = aTransportState;
 
             aSource.Device.Create<IProxyReceiver>((receiver) =>
@@ -26,7 +25,7 @@ namespace OpenHome.Av
 
                     aHasInfoNext.Update(false);
                     aHasContainer.Update(false);
-                    aCanPause.Update(true);
+                    iCanPause.Update(true);
                     aCanSkip.Update(false);
                     aCanSeek.Update(false);
                     aHasPlayMode.Update(false);
@@ -51,13 +50,14 @@ namespace OpenHome.Av
 
             if (iReceiver != null)
             {
-                iHasSourceControl.Update(false);
-
                 iReceiver.TransportState.RemoveWatcher(this);
 
                 iReceiver.Dispose();
                 iReceiver = null;
             }
+
+            iCanPause.Update(false);
+            iHasSourceControl.Update(false);
 
             iHasSourceControl = null;
             iTransportState = null;
@@ -129,10 +129,10 @@ namespace OpenHome.Av
 
         private bool iDisposed;
 
-        private ITopology4Source iSource;
         private IProxyReceiver iReceiver;
 
         private Watchable<bool> iHasSourceControl;
+        private Watchable<bool> iCanPause;
         private Watchable<string> iTransportState;
     }
 }

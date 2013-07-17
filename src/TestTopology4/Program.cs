@@ -14,7 +14,6 @@ namespace TestTopology4
         {
             public RootWatcher(MockableScriptRunner aRunner, ITopology4Root aRoot)
             {
-                iRunner = aRunner;
                 iFactory = new ResultWatcherFactory(aRunner);
                 iFactory.Create<ITopology4Source>(aRoot.Name, aRoot.Source, v => 
                 {
@@ -45,7 +44,6 @@ namespace TestTopology4
                 iFactory.Dispose();
             }
 
-            private MockableScriptRunner iRunner;
             private ResultWatcherFactory iFactory;
         }
 
@@ -170,8 +168,8 @@ namespace TestTopology4
 
             Mockable mocker = new Mockable();
 
-            Network network = new Network();
-            DeviceInjectorMock mockInjector = new DeviceInjectorMock(network);
+            Network network = new Network(50);
+            DeviceInjectorMock mockInjector = new DeviceInjectorMock(network, Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
             mocker.Add("network", mockInjector);
 
             Topology1 topology1 = new Topology1(network);

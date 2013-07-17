@@ -7,24 +7,68 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    internal class MediaPresetExternal : IMediaPreset
+    class MediaPresetExternal : IMediaPreset, IWatcher<ITopology4Source>
     {
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly INetwork iNetwork;
         private readonly uint iIndex;
         private readonly IMediaMetadata iMetadata;
         private readonly Topology4Source iSource;
+        private readonly Topology4Group iGroup;
+        private readonly Watchable<bool> iPlaying;
+        private bool iDisposed;
 
-        public MediaPresetExternal(uint aIndex, IMediaMetadata aMetadata, Topology4Source aSource)
+        public MediaPresetExternal(INetwork aNetwork, Topology4Group aGroup, uint aIndex, IMediaMetadata aMetadata, Topology4Source aSource)
         {
+            iDisposed = false;
+            iDisposeHandler = new DisposeHandler();
+
+            iNetwork = aNetwork;
             iIndex = aIndex;
             iMetadata = aMetadata;
             iSource = aSource;
+            iGroup = aGroup;
+
+            iPlaying = new Watchable<bool>(aNetwork, "Playing", false);
+            aNetwork.Schedule(() =>
+            {
+                if (!iDisposed)
+                {
+                    iGroup.Source.AddWatcher(this);
+                }
+            });
+        }
+
+        public void Dispose()
+        {
+            iDisposeHandler.Dispose();
+            iNetwork.Execute(() =>
+            {
+                iGroup.Source.RemoveWatcher(this);
+                iDisposed = true;
+            });
+            iPlaying.Dispose();
         }
 
         public uint Index
         {
             get
             {
-                return iIndex;
+                using (iDisposeHandler.Lock)
+                {
+                    return iIndex;
+                }
+            }
+        }
+
+        public uint Id
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iIndex;
+                }
             }
         }
 
@@ -32,13 +76,45 @@ namespace OpenHome.Av
         {
             get
             {
-                return iMetadata;
+                using (iDisposeHandler.Lock)
+                {
+                    return iMetadata;
+                }
+            }
+        }
+
+        public IWatchable<bool> Playing
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iPlaying;
+                }
             }
         }
 
         public void Play()
         {
-            iSource.Select();
+            using (iDisposeHandler.Lock)
+            {
+                iSource.Select();
+            }
+        }
+
+        public void ItemOpen(string aId, ITopology4Source aValue)
+        {
+            iPlaying.Update(aValue == iSource);
+        }
+
+        public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
+        {
+            iPlaying.Update(aValue == iSource);
+        }
+
+        public void ItemClose(string aId, ITopology4Source aValue)
+        {
+            iPlaying.Update(false);
         }
     }
 
@@ -90,28 +166,73 @@ namespace OpenHome.Av
         }
     }
 
+    class Topology4SourceNull : ITopology4Source
+    {
+        public ITopology4Group Group
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public uint Index
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public string Name
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public string Type
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public bool Visible
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public IMediaPreset Preset
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public IEnumerable<ITopology4Group> Volumes
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public IDevice Device
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public bool HasInfo
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public bool HasTime
+        {
+            get { throw new NotImplementedException(); }
+        }
+    }
+
     class Topology4Source : ITopology4Source
     {
-        public Topology4Source(ITagManager aTagManager, Topology4Group aGroup, ITopology2Source aSource)
+        public Topology4Source(INetwork aNetwork, Topology4Group aGroup, ITopology2Source aSource)
         {
+            iNetwork = aNetwork;
             iGroup = aGroup;
-
-            iIndex = aSource.Index;
-            iName = aSource.Name;
-            iType = aSource.Type;
-            iVisible = aSource.Visible;
-
-
-            MediaMetadata metadata = new MediaMetadata();
-            metadata.Add(aTagManager.Audio.Title, aSource.Name);
-            iPreset = new MediaPresetExternal(iIndex, metadata, this);
+            iSource = aSource;
         }
 
         public uint Index
         {
             get
             {
-                return iIndex;
+                return iSource.Index;
             }
         }
 
@@ -119,7 +240,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return iName;
+                return iSource.Name;
             }
         }
 
@@ -135,7 +256,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return iType;
+                return iSource.Type;
             }
         }
 
@@ -143,7 +264,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return iVisible;
+                return iSource.Visible;
             }
         }
 
@@ -151,7 +272,9 @@ namespace OpenHome.Av
         {
             get
             {
-                return iPreset;
+                MediaMetadata metadata = new MediaMetadata();
+                metadata.Add(iNetwork.TagManager.Audio.Title, iSource.Name);
+                return new MediaPresetExternal(iNetwork, iGroup, iSource.Index, metadata, this);
             }
         }
 
@@ -181,16 +304,12 @@ namespace OpenHome.Av
 
         internal void Select()
         {
-            iGroup.SetSourceIndex(iIndex);
+            iGroup.SetSourceIndex(iSource.Index);
         }
 
+        private INetwork iNetwork;
         private Topology4Group iGroup;
-
-        private uint iIndex;
-        private string iName;
-        private string iType;
-        private bool iVisible;
-        private IMediaPreset iPreset;
+        private ITopology2Source iSource;
 
         private IEnumerable<ITopology4Group> iVolumes;
         private IDevice iDevice;
@@ -218,7 +337,7 @@ namespace OpenHome.Av
         {
             iDisposed = false;
 
-            iThread = aNetwork;
+            iNetwork = aNetwork;
             iName = aName;
             iGroup = aGroup;
 
@@ -226,11 +345,12 @@ namespace OpenHome.Av
 
             iSources = new List<Topology4Source>();
             iVisibleSources = new List<ITopology4Source>();
-            iSenders = new Watchable<IEnumerable<ITopology4Group>>(iThread, "senders", new List<ITopology4Group>());
+            iWatchableSource = new Watchable<ITopology4Source>(iNetwork, "source", new Topology4SourceNull());
+            iSenders = new Watchable<IEnumerable<ITopology4Group>>(iNetwork, "senders", new List<ITopology4Group>());
 
             foreach (ITopology2Source s in aSources)
             {
-                Topology4Source source = new Topology4Source(aNetwork.TagManager, this, s);
+                Topology4Source source = new Topology4Source(aNetwork, this, s);
                 iSources.Add(source);
             }
 
@@ -258,6 +378,9 @@ namespace OpenHome.Av
         {
             iGroup.SourceIndex.RemoveWatcher(this);
             iGroup = null;
+
+            iWatchableSource.Dispose();
+            iWatchableSource = null;
    
             if (iSender != null)
             {
@@ -439,7 +562,6 @@ namespace OpenHome.Av
         public void ItemOpen(string aId, uint aValue)
         {
             iSourceIndex = aValue;
-            iWatchableSource = new Watchable<ITopology4Source>(iThread, string.Format("Source({0})", iName), EvaluateSource());
         }
 
         public void ItemUpdate(string aId, uint aValue, uint aPrevious)
@@ -450,11 +572,6 @@ namespace OpenHome.Av
 
         public void ItemClose(string aId, uint aValue)
         {
-            iThread.Schedule(() =>
-            {
-                iWatchableSource.Dispose();
-                iWatchableSource = null;
-            });
         }
 
         private ITopology4Source EvaluateSource()
@@ -529,7 +646,7 @@ namespace OpenHome.Av
 
         private bool iDisposed;
 
-        private IWatchableThread iThread;
+        private INetwork iNetwork;
         private ITopologymGroup iGroup;
 
         private string iName;

@@ -41,8 +41,8 @@ namespace OpenHome.Av
 
     internal class ProxyMediaServer : Proxy<ServiceMediaServer>, IProxyMediaServer
     {
-        public ProxyMediaServer(IDevice aDevice, ServiceMediaServer aService)
-            : base(aDevice, aService)
+        public ProxyMediaServer(ServiceMediaServer aService)
+            : base(aService)
         {
         }
 
@@ -135,11 +135,11 @@ namespace OpenHome.Av
         private readonly string iProductName;
         private readonly string iProductUrl;
 
-        protected ServiceMediaServer(INetwork aNetwork, IEnumerable<string> aAttributes, 
+        protected ServiceMediaServer(INetwork aNetwork, IDevice aDevice, IEnumerable<string> aAttributes, 
             string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl,
             string aModelImageUri, string aModelInfo, string aModelName, string aModelUrl,
             string aProductImageUri, string aProductInfo, string aProductName, string aProductUrl)
-            : base (aNetwork)
+            : base (aNetwork, aDevice)
         {
             iAttributes = aAttributes;
             iManufacturerImageUri = aManufacturerImageUri;

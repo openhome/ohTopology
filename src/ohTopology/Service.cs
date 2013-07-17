@@ -1,66 +1,127 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Threading;
+
+using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
     public interface IService : IMockable, IDisposable
     {
-        void Create<T>(IDevice aDevice, Action<T> aCallback) where T : IProxy;
+        void Create<T>(Action<T> aCallback) where T : IProxy;
     }
 
     public abstract class Service : IService
     {
+        private readonly DisposeHandler iDisposeHandler;
         private readonly INetwork iNetwork;
+        private readonly IDevice iDevice;
+        private readonly CancellationTokenSource iCancelSubscribe;
+        private readonly ManualResetEvent iSubscribed;
+        private readonly List<Task> iTasks;
         private uint iRefCount;
+
         protected Task iSubscribeTask;
-        private List<Task> iTasks;
 
-        protected Service(INetwork aNetwork)
+        protected Service(INetwork aNetwork, IDevice aDevice)
         {
+            iDisposeHandler = new DisposeHandler();
+            iCancelSubscribe = new CancellationTokenSource();
+            iSubscribed = new ManualResetEvent(true);
             iNetwork = aNetwork;
+            iDevice = aDevice;
             iRefCount = 0;
-            iSubscribeTask = new Task(() => { });
+            iSubscribeTask = null;
             iTasks = new List<Task>();
-        }
-
-        public INetwork Network
-        {
-            get
-            {
-                return (iNetwork);
-            }
         }
 
         public virtual void Dispose()
         {
+            iDisposeHandler.Dispose();
+
+            lock (iCancelSubscribe)
+            {
+                iCancelSubscribe.Cancel();
+                OnCancelSubscribe();
+            }
+
+            // wait for any inflight subscriptions to complete
+            if (iSubscribeTask != null)
+            {
+                iSubscribeTask.Wait();
+            }
+
+            iSubscribed.WaitOne();
+
+            iCancelSubscribe.Dispose();
+
             if (iRefCount > 0)
             {
                 throw new Exception("Disposing of Service with outstanding subscriptions");
             }
         }
 
-        public void Create<T>(IDevice aDevice, Action<T> aCallback) where T : IProxy
+        public INetwork Network
         {
-            if (iRefCount == 0)
+            get
             {
-                iSubscribeTask = OnSubscribe();
-            }
-            ++iRefCount;
-
-            if (iSubscribeTask != null)
-            {
-                iSubscribeTask.ContinueWith((t) =>
+                using (iDisposeHandler.Lock)
                 {
-                    iNetwork.Schedule(() =>
-                    {
-                        aCallback((T)OnCreate(aDevice));
-                    });
-                });
+                    return (iNetwork);
+                }
             }
-            else
+        }
+
+        public IDevice Device
+        {
+            get
             {
-                aCallback((T)OnCreate(aDevice));
+                using (iDisposeHandler.Lock)
+                {
+                    return iDevice;
+                }
+            }
+        }
+
+        public void Create<T>(Action<T> aCallback) where T : IProxy
+        {
+            using (iDisposeHandler.Lock)
+            {
+                if (iRefCount == 0)
+                {
+                    iSubscribeTask = OnSubscribe();
+                }
+                ++iRefCount;
+
+                if (iSubscribeTask != null)
+                {
+                    iSubscribed.Reset();
+
+                    iSubscribeTask.ContinueWith((t) =>
+                    {
+                        lock (iCancelSubscribe)
+                        {
+                            if (!iCancelSubscribe.IsCancellationRequested)
+                            {
+                                iNetwork.Schedule(() =>
+                                {
+                                    aCallback((T)OnCreate(iDevice));
+                                });
+                            }
+                            else
+                            {
+                                Unsubscribe();
+                            }
+                        }
+
+                        iSubscribed.Set();
+                    });
+                }
+                else
+                {
+                    aCallback((T)OnCreate(iDevice));
+                }
             }
         }
 
@@ -71,8 +132,14 @@ namespace OpenHome.Av
             return null;
         }
 
+        protected virtual void OnCancelSubscribe() { }
+
         public void Unsubscribe()
         {
+            if (iRefCount == 0)
+            {
+                throw new Exception("Service not subscribed");
+            }
             --iRefCount;
             if (iRefCount == 0)
             {
@@ -153,12 +220,10 @@ namespace OpenHome.Av
 
     public class Proxy<T> where T : Service
     {
-        private readonly IDevice iDevice;
         protected readonly T iService;
 
-        protected Proxy(IDevice aDevice, T aService)
+        protected Proxy(T aService)
         {
-            iDevice = aDevice;
             iService = aService;
         }
 
@@ -168,7 +233,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return (iDevice);
+                return (iService.Device);
             }
         }
 

@@ -5,15 +5,13 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public class SourceControllerPlaylist : IWatcher<string>, IWatcher<bool>, ISourceController
+    class SourceControllerPlaylist : IWatcher<string>, IWatcher<bool>, IWatcher<IInfoDetails>, IWatcher<IInfoMetadata>, ISourceController
     {
         public SourceControllerPlaylist(ITopology4Source aSource, Watchable<bool> aHasSourceControl,
             Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<bool> aHasContainer, Watchable<string> aTransportState, Watchable<bool> aCanPause,
             Watchable<bool> aCanSkip, Watchable<bool> aCanSeek, Watchable<bool> aHasPlayMode, Watchable<bool> aShuffle, Watchable<bool> aRepeat)
         {
             iDisposed = false;
-
-            iSource = aSource;
 
             iHasSourceControl = aHasSourceControl;
             iHasInfoNext = aHasInfoNext;
@@ -34,19 +32,33 @@ namespace OpenHome.Av
                     iPlaylist = playlist;
 
                     iHasContainer.Update(true);
-                    iHasInfoNext.Update(true);
                     iCanSkip.Update(true);
+                    iCanSeek.Update(false);
                     iHasPlayMode.Update(true);
 
                     iPlaylist.TransportState.AddWatcher(this);
                     iPlaylist.Shuffle.AddWatcher(this);
                     iPlaylist.Repeat.AddWatcher(this);
+                    iPlaylist.InfoNext.AddWatcher(this);
 
                     iHasSourceControl.Update(true);
                 }
                 else
                 {
                     playlist.Dispose();
+                }
+            });
+            aSource.Device.Create<IProxyInfo>((info) =>
+            {
+                if (!iDisposed)
+                {
+                    iInfo = info;
+
+                    iInfo.Details.AddWatcher(this);
+                }
+                else
+                {
+                    info.Dispose();
                 }
             });
         }
@@ -60,12 +72,7 @@ namespace OpenHome.Av
 
             if (iPlaylist != null)
             {
-                iHasSourceControl.Update(false);
-                iHasContainer.Update(false);
-                iHasInfoNext.Update(false);
-                iCanSkip.Update(false);
-                iHasPlayMode.Update(false);
-
+                iPlaylist.InfoNext.RemoveWatcher(this);
                 iPlaylist.Shuffle.RemoveWatcher(this);
                 iPlaylist.Repeat.RemoveWatcher(this);
                 iPlaylist.TransportState.RemoveWatcher(this);
@@ -73,6 +80,22 @@ namespace OpenHome.Av
                 iPlaylist.Dispose();
                 iPlaylist = null;
             }
+
+            if (iInfo != null)
+            {
+                iInfo.Details.RemoveWatcher(this);
+
+                iInfo.Dispose();
+                iInfo = null;
+            }
+
+            iHasSourceControl.Update(false);
+            iHasContainer.Update(false);
+            iHasInfoNext.Update(false);
+            iCanPause.Update(false);
+            iCanSkip.Update(false);
+            iCanSeek.Update(false);
+            iHasPlayMode.Update(false);
 
             iHasSourceControl = null;
             iHasContainer = null;
@@ -153,6 +176,7 @@ namespace OpenHome.Av
             if (aId == "Shuffle")
             {
                 iShuffle.Update(aValue);
+                iHasInfoNext.Update(!aValue);
             }
             if (aId == "Repeat")
             {
@@ -165,6 +189,7 @@ namespace OpenHome.Av
             if (aId == "Shuffle")
             {
                 iShuffle.Update(aValue);
+                iHasInfoNext.Update(!aValue);
             }
             if (aId == "Repeat")
             {
@@ -176,10 +201,44 @@ namespace OpenHome.Av
         {
         }
 
+        public void ItemOpen(string aId, IInfoDetails aValue)
+        {
+            iCanPause.Update(aValue.Duration > 0);
+            iCanSeek.Update(aValue.Duration > 0);
+        }
+
+        public void ItemUpdate(string aId, IInfoDetails aValue, IInfoDetails aPrevious)
+        {
+            iCanPause.Update(aValue.Duration > 0);
+            iCanSeek.Update(aValue.Duration > 0);
+        }
+
+        public void ItemClose(string aId, IInfoDetails aValue)
+        {
+        }
+
+        public void ItemOpen(string aId, IInfoMetadata aValue)
+        {
+            iHasInfoNext.Update(!(aValue == InfoMetadata.Empty));
+            iInfoNext.Update(aValue);
+        }
+
+        public void ItemUpdate(string aId, IInfoMetadata aValue, IInfoMetadata aPrevious)
+        {
+            iHasInfoNext.Update(!(aValue == InfoMetadata.Empty));
+            iInfoNext.Update(aValue);
+        }
+
+        public void ItemClose(string aId, IInfoMetadata aValue)
+        {
+            iHasInfoNext.Update(false);
+            iInfoNext.Update(InfoMetadata.Empty);
+        }
+
         private bool iDisposed;
 
-        private ITopology4Source iSource;
         private IProxyPlaylist iPlaylist;
+        private IProxyInfo iInfo;
 
         private Watchable<bool> iHasSourceControl;
         private Watchable<IInfoMetadata> iInfoNext;

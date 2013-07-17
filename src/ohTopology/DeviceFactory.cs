@@ -21,56 +21,56 @@ namespace OpenHome.Av
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<IProxyProduct>(new ServiceProductNetwork(aNetwork, aDevice));
+                    device.Add<IProxyProduct>(new ServiceProductNetwork(aNetwork, device, aDevice));
                 }
             }
             if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Info", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<IProxyInfo>(new ServiceInfoNetwork(aNetwork, aDevice));
+                    device.Add<IProxyInfo>(new ServiceInfoNetwork(aNetwork, device, aDevice));
                 }
             }
             if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Time", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<IProxyTime>(new ServiceTimeNetwork(aNetwork, aDevice));
+                    device.Add<IProxyTime>(new ServiceTimeNetwork(aNetwork, device, aDevice));
                 }
             }
             if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Sender", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<IProxySender>(new ServiceSenderNetwork(aNetwork, aDevice));
+                    device.Add<IProxySender>(new ServiceSenderNetwork(aNetwork, device, aDevice));
                 }
             }
             if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Volume", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<IProxyVolume>(new ServiceVolumeNetwork(aNetwork, aDevice));
+                    device.Add<IProxyVolume>(new ServiceVolumeNetwork(aNetwork, device, aDevice));
                 }
             }
             if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Playlist", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<IProxyPlaylist>(new ServicePlaylistNetwork(aNetwork, aDevice));
+                    device.Add<IProxyPlaylist>(new ServicePlaylistNetwork(aNetwork, device, aDevice));
                 }
             }
             if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Radio", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<IProxyRadio>(new ServiceRadioNetwork(aNetwork, aDevice));
+                    device.Add<IProxyRadio>(new ServiceRadioNetwork(aNetwork, device, aDevice));
                 }
             }
             if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Receiver", out value))
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<IProxyReceiver>(new ServiceReceiverNetwork(aNetwork, aDevice));
+                    device.Add<IProxyReceiver>(new ServiceReceiverNetwork(aNetwork, device, aDevice));
                 }
             }
             return device;
@@ -95,25 +95,25 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("Net Aux", "NetAux", false));
             SourceXml xml = new SourceXml(sources.ToArray());
 
-            device.Add<IProxyProduct>(new ServiceProductMock(aNetwork, aRoom, aName, 0, xml, true, aAttributes,
+            device.Add<IProxyProduct>(new ServiceProductMock(aNetwork, device, aRoom, aName, 0, xml, true, aAttributes,
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DS", "",
                 "", "Linn High Fidelity System Component", ""));
 
             // volume service
-            device.Add<IProxyVolume>(new ServiceVolumeMock(aNetwork, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
+            device.Add<IProxyVolume>(new ServiceVolumeMock(aNetwork, device, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
 
             // info service
-            device.Add<IProxyInfo>(new ServiceInfoMock(aNetwork, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(aNetwork.TagManager.FromDidlLite(string.Empty), string.Empty), new InfoMetatext(string.Empty)));
+            device.Add<IProxyInfo>(new ServiceInfoMock(aNetwork, device, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(aNetwork.TagManager.FromDidlLite(string.Empty), string.Empty), new InfoMetatext(string.Empty)));
 
             // time service
-            device.Add<IProxyTime>(new ServiceTimeMock(aNetwork, 0, 0));
+            device.Add<IProxyTime>(new ServiceTimeMock(aNetwork, device, 0, 0));
 
             // sender service
-            device.Add<IProxySender>(new ServiceSenderMock(aNetwork, aAttributes, string.Empty, false, new SenderMetadata("<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>Main Room:Mock DS</dc:title><res protocolInfo=\"ohz:*:*:u\">ohz://239.255.255.250:51972/" + aUdn + "</res><upnp:albumArtURI>http://10.2.10.27/images/Icon.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"), "Enabled"));
+            device.Add<IProxySender>(new ServiceSenderMock(aNetwork, device, aAttributes, string.Empty, false, new SenderMetadata("<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>Main Room:Mock DS</dc:title><res protocolInfo=\"ohz:*:*:u\">ohz://239.255.255.250:51972/" + aUdn + "</res><upnp:albumArtURI>http://10.2.10.27/images/Icon.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"), "Enabled"));
 
             // receiver service
-            device.Add<IProxyReceiver>(new ServiceReceiverMock(aNetwork, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
+            device.Add<IProxyReceiver>(new ServiceReceiverMock(aNetwork, device, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
 
             // radio service
             List<IMediaMetadata> presets = new List<IMediaMetadata>();
@@ -125,11 +125,11 @@ namespace OpenHome.Av
             presets.Add(aNetwork.TagManager.FromDidlLite("<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>BBC World Service (World News)</dc:title><res protocolInfo=\"*:*:*:*\" bitrate=\"4000\">http://opml.radiotime.com/Tune.ashx?id=s50646&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s50646q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"));
             presets.Add(aNetwork.TagManager.FromDidlLite("<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>Sky Radio News (World News)</dc:title><res protocolInfo=\"*:*:*:*\" bitrate=\"4000\">http://opml.radiotime.com/Tune.ashx?id=s81093&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s81093q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"));
 
-            device.Add<IProxyRadio>(new ServiceRadioMock(aNetwork, 0, presets, InfoMetadata.Empty, string.Empty, "Stopped", 100));
+            device.Add<IProxyRadio>(new ServiceRadioMock(aNetwork, device, 0, presets, InfoMetadata.Empty, string.Empty, "Stopped", 100));
 
             // playlist service
             List<IMediaMetadata> tracks = new List<IMediaMetadata>();
-            device.Add<IProxyPlaylist>(new ServicePlaylistMock(aNetwork, 0, tracks, false, false, "Stopped", string.Empty, 1000));
+            device.Add<IProxyPlaylist>(new ServicePlaylistMock(aNetwork, device, 0, tracks, false, false, "Stopped", string.Empty, 1000));
 
             return device;
         }
@@ -160,25 +160,25 @@ namespace OpenHome.Av
             sources.Add(new SourceXml.Source("TOSLINK2", "Digital", true));
             SourceXml xml = new SourceXml(sources.ToArray());
 
-            device.Add<IProxyProduct>(new ServiceProductMock(aNetwork, aRoom, aName, 0, xml, true, aAttributes,
+            device.Add<IProxyProduct>(new ServiceProductMock(aNetwork, device, aRoom, aName, 0, xml, true, aAttributes,
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DSM", "",
                 "", "Linn High Fidelity System Component", ""));
 
             // volume service
-            device.Add<IProxyVolume>(new ServiceVolumeMock(aNetwork, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
+            device.Add<IProxyVolume>(new ServiceVolumeMock(aNetwork, device, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
 
             // info service
-            device.Add<IProxyInfo>(new ServiceInfoMock(aNetwork, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(aNetwork.TagManager.FromDidlLite(string.Empty), string.Empty), new InfoMetatext(string.Empty)));
+            device.Add<IProxyInfo>(new ServiceInfoMock(aNetwork, device, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(aNetwork.TagManager.FromDidlLite(string.Empty), string.Empty), new InfoMetatext(string.Empty)));
 
             // time service
-            device.Add<IProxyTime>(new ServiceTimeMock(aNetwork, 0, 0));
+            device.Add<IProxyTime>(new ServiceTimeMock(aNetwork, device, 0, 0));
 
             // sender service
-            device.Add<IProxySender>(new ServiceSenderMock(aNetwork, aAttributes, string.Empty, false, new SenderMetadata("<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>Main Room:Mock DSM</dc:title><res protocolInfo=\"ohz:*:*:u\">ohz://239.255.255.250:51972/" + aUdn + "</res><upnp:albumArtURI>http://10.2.10.27/images/Icon.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"), "Enabled"));
+            device.Add<IProxySender>(new ServiceSenderMock(aNetwork, device, aAttributes, string.Empty, false, new SenderMetadata("<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>Main Room:Mock DSM</dc:title><res protocolInfo=\"ohz:*:*:u\">ohz://239.255.255.250:51972/" + aUdn + "</res><upnp:albumArtURI>http://10.2.10.27/images/Icon.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"), "Enabled"));
 
             // receiver service
-            device.Add<IProxyReceiver>(new ServiceReceiverMock(aNetwork, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
+            device.Add<IProxyReceiver>(new ServiceReceiverMock(aNetwork, device, string.Empty, "ohz:*:*:*,ohm:*:*:*,ohu:*.*.*", "Stopped", string.Empty));
 
             // radio service
             List<IMediaMetadata> presets = new List<IMediaMetadata>();
@@ -190,18 +190,18 @@ namespace OpenHome.Av
             presets.Add(aNetwork.TagManager.FromDidlLite("<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>BBC World Service (World News)</dc:title><res protocolInfo=\"*:*:*:*\" bitrate=\"4000\">http://opml.radiotime.com/Tune.ashx?id=s50646&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s50646q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"));
             presets.Add(aNetwork.TagManager.FromDidlLite("<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"\" parentID=\"\" restricted=\"True\"><dc:title>Sky Radio News (World News)</dc:title><res protocolInfo=\"*:*:*:*\" bitrate=\"4000\">http://opml.radiotime.com/Tune.ashx?id=s81093&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s81093q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>"));
 
-            device.Add<IProxyRadio>(new ServiceRadioMock(aNetwork, 0, presets, InfoMetadata.Empty, string.Empty, "Stopped", 100));
+            device.Add<IProxyRadio>(new ServiceRadioMock(aNetwork, device, 0, presets, InfoMetadata.Empty, string.Empty, "Stopped", 100));
 
             // playlist service
             List<IMediaMetadata> tracks = new List<IMediaMetadata>();
-            device.Add<IProxyPlaylist>(new ServicePlaylistMock(aNetwork, 0, tracks, false, false, "Stopped", string.Empty, 1000));
+            device.Add<IProxyPlaylist>(new ServicePlaylistMock(aNetwork, device, 0, tracks, false, false, "Stopped", string.Empty, 1000));
             
             return device;
         }
 
-        public static Device CreateMediaServer(INetwork aNetwork, string aUdn)
+        public static Device CreateMediaServer(INetwork aNetwork, string aUdn, string aResourceRoot)
         {
-            return (new DeviceMediaServerMock(aNetwork, aUdn, Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)));
+            return (new DeviceMediaServerMock(aNetwork, aUdn, aResourceRoot));
         }
     }
 }

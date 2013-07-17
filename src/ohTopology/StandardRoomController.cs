@@ -7,7 +7,7 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public interface IStandardRoomController : ISourceController, IVolumeController
+    public interface IStandardRoomController : IDisposable
     {
         string Name { get; }
 
@@ -29,6 +29,31 @@ namespace OpenHome.Av
 
         IWatchable<EStandby> Standby { get; }
         void SetStandby(bool aValue);
+
+        // Source Control
+        Task<IWatchableContainer<IMediaPreset>> Container { get; }
+
+        void Play();
+        void Pause();
+        void Stop();
+
+        void Previous();
+        void Next();
+
+        void Seek(uint aSeconds);
+
+        void SetRepeat(bool aValue);
+        void SetShuffle(bool aValue);
+
+        // Volume Control
+        IWatchable<bool> HasVolume { get; }
+        IWatchable<bool> Mute { get; }
+        IWatchable<uint> Volume { get; }
+        IWatchable<uint> VolumeLimit { get; }
+
+        void SetMute(bool aMute);
+        void VolumeInc();
+        void VolumeDec();
     }
 
     public class StandardRoomController : IWatcher<ITopology4Source>, IStandardRoomController, IDisposable
@@ -38,6 +63,7 @@ namespace OpenHome.Av
             iDisposed = false;
             iNetwork = aRoom.Network;
             iRoom = aRoom;
+            iSource = aRoom.Source;
 
             iLock = new object();
             iIsActive = true;
@@ -53,14 +79,13 @@ namespace OpenHome.Av
             iCanPause = new Watchable<bool>(iNetwork, "CanPause", false);
             iCanSkip = new Watchable<bool>(iNetwork, "CanSkip", false);
             iCanSeek = new Watchable<bool>(iNetwork, "CanSeek", false);
-            iTransportState = new Watchable<string>(iNetwork, "TransportState", string.Empty);
+            iTransportState = new Watchable<string>(iNetwork, "TransportState", "Stopped");
 
             iHasPlayMode = new Watchable<bool>(iNetwork, "HasPlayMode", false);
             iShuffle = new Watchable<bool>(iNetwork, "Shuffle", false);
             iRepeat = new Watchable<bool>(iNetwork, "Repeat", false);
 
-            iRoom.Source.AddWatcher(this);
-
+            iSource.AddWatcher(this);
             iRoom.Join(SetInactive);
         }
 
@@ -77,7 +102,7 @@ namespace OpenHome.Av
                 {
                     iNetwork.Execute(() =>
                     {
-                        iRoom.Source.RemoveWatcher(this);
+                        iSource.RemoveWatcher(this);
                     });
                     iRoom.UnJoin(SetInactive);
                     iIsActive = false;
@@ -138,7 +163,7 @@ namespace OpenHome.Av
 
                     iActive.Update(false);
 
-                    iRoom.Source.RemoveWatcher(this);
+                    iSource.RemoveWatcher(this);
                     iRoom.UnJoin(SetInactive);
                 }
             }
@@ -242,7 +267,7 @@ namespace OpenHome.Av
             });
         }
 
-        public void SetVolume(uint aVolume)
+        /*public void SetVolume(uint aVolume)
         {
             iNetwork.Schedule(() =>
             {
@@ -251,7 +276,7 @@ namespace OpenHome.Av
                    iVolumeController.SetVolume(aVolume);
                 }
             });
-        }
+        }*/
 
         public void VolumeInc()
         {
@@ -502,6 +527,7 @@ namespace OpenHome.Av
         private bool iDisposed;
         private INetwork iNetwork;
         private IStandardRoom iRoom;
+        private IWatchable<ITopology4Source> iSource;
 
         private object iLock;
         private bool iIsActive;

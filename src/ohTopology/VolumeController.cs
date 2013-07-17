@@ -9,13 +9,14 @@ namespace OpenHome.Av
 {
     public interface IVolumeController : IDisposable
     {
+        string Name { get; }
+
         IWatchable<bool> HasVolume { get; }
         IWatchable<bool> Mute { get; }
         IWatchable<uint> Volume { get; }
         IWatchable<uint> VolumeLimit { get; }
 
         void SetMute(bool aMute);
-        void SetVolume(uint aVolume);
         void VolumeInc();
         void VolumeDec();
     }
@@ -27,7 +28,7 @@ namespace OpenHome.Av
             return new StandardVolumeController(aRoom);
         }
 
-        public static IVolumeController Create(IZone aZone)
+        public static IVolumeController Create(IZoneSender aZone)
         {
             return new ZoneVolumeController(aZone);
         }
@@ -39,13 +40,14 @@ namespace OpenHome.Av
         {
             iDisposed = false;
             iRoom = aRoom;
+            iSource = aRoom.Source;
 
             iHasVolume = new Watchable<bool>(aRoom.Network, "HasVolume", false);
             iMute = new Watchable<bool>(aRoom.Network, "Mute", false);
             iValue = new Watchable<uint>(aRoom.Network, "Volume", 0);
             iVolumeLimit = new Watchable<uint>(aRoom.Network, "VolumeLimit", 0);
 
-            aRoom.Source.AddWatcher(this);
+            iSource.AddWatcher(this);
         }
 
         public void Dispose()
@@ -55,7 +57,7 @@ namespace OpenHome.Av
                 throw new ObjectDisposedException("VolumeController.Dispose");
             }
 
-            iRoom.Source.RemoveWatcher(this);
+            iSource.RemoveWatcher(this);
 
             DestroyProxy();
 
@@ -127,13 +129,13 @@ namespace OpenHome.Av
             }
         }
 
-        public void SetVolume(uint aValue)
+        /*public void SetVolume(uint aValue)
         {
             if (iVolume != null)
             {
                 iVolume.SetVolume(aValue);
             }
-        }
+        }*/
 
         public void VolumeInc()
         {
@@ -271,6 +273,7 @@ namespace OpenHome.Av
 
         private bool iDisposed;
         private IStandardRoom iRoom;
+        private IWatchable<ITopology4Source> iSource;
         private IProxyVolume iVolume;
 
         private IDevice iDevice;
@@ -389,11 +392,11 @@ namespace OpenHome.Av
         }
     }
 
-    class ZoneVolumeController : IVolumeController, IUnorderedWatcher<IStandardRoom>, IWatcher<bool>, IWatcher<uint>, IDisposable
+    class ZoneVolumeController : IVolumeController, IOrderedWatcher<IStandardRoom>, IWatcher<bool>, IWatcher<uint>, IDisposable
     {
         private readonly DisposeHandler iDisposeHandler;
         private readonly INetwork iNetwork;
-        private readonly IZone iZone;
+        private readonly IZoneSender iZone;
 
         private readonly Watchable<bool> iHasVolume; 
         private readonly Watchable<bool> iMute;
@@ -406,7 +409,7 @@ namespace OpenHome.Av
         private uint iTotalValue;
         private uint iMuteCount;
 
-        public ZoneVolumeController(IZone aZone)
+        public ZoneVolumeController(IZoneSender aZone)
         {
             iDisposeHandler = new DisposeHandler();
             iNetwork = aZone.Room.Network;
@@ -442,6 +445,14 @@ namespace OpenHome.Av
             iMute.Dispose();
             iValue.Dispose();
             iVolumeLimit.Dispose();
+        }
+
+        public string Name
+        {
+            get
+            {
+                return iZone.Room.Name;
+            }
         }
 
         public IWatchable<bool> HasVolume
@@ -484,13 +495,13 @@ namespace OpenHome.Av
             });
         }
 
-        public void SetVolume(uint aVolume)
+        /*public void SetVolume(uint aVolume)
         {
             iNetwork.Schedule(() =>
             {
                 iVolumeControllers.ForEach(v => v.SetVolume(aVolume));
             });
-        }
+        }*/
 
         public void VolumeInc()
         {
@@ -513,6 +524,7 @@ namespace OpenHome.Av
             iVolumeControllers.Add(aController);
             aController.Mute.AddWatcher(this);
             aWatcher.Value.AddWatcher(this);
+            iHasVolume.Update(iVolumeControllers.Count() > 0);
         }
 
         internal void RemoveVolumeController(IVolumeController aController, VolumeWatcher aWatcher)
@@ -520,6 +532,7 @@ namespace OpenHome.Av
             iVolumeControllers.Remove(aController);
             aController.Mute.RemoveWatcher(this);
             aWatcher.Value.RemoveWatcher(this);
+            iHasVolume.Update(iVolumeControllers.Count() > 0);
         }
 
         private void EvaluateMute()
@@ -537,25 +550,27 @@ namespace OpenHome.Av
             iMute.Update(mute);
         }
 
-        public void UnorderedOpen()
+        public void OrderedOpen()
         {
         }
 
-        public void UnorderedInitialised()
+        public void OrderedInitialised()
         {
         }
 
-        public void UnorderedClose()
+        public void OrderedClose()
         {
         }
 
-        public void UnorderedAdd(IStandardRoom aItem)
+        public void OrderedAdd(IStandardRoom aItem, uint aIndex)
         {
             VolumeWatcher w = new VolumeWatcher(this, aItem);
             iVolumeLookup.Add(aItem, w);
         }
 
-        public void UnorderedRemove(IStandardRoom aItem)
+        public void OrderedMove(IStandardRoom aItem, uint aFrom, uint aTo) { }
+
+        public void OrderedRemove(IStandardRoom aItem, uint aIndex)
         {
             iVolumeLookup[aItem].Dispose();
             iVolumeLookup.Remove(aItem);

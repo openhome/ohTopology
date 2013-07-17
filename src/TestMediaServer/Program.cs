@@ -6,7 +6,6 @@ using System.Text;
 using OpenHome.Os;
 using OpenHome.Os.App;
 using OpenHome.Av;
-using OpenHome.MediaServer;
 
 namespace TestMediaServer
 {
@@ -453,23 +452,13 @@ namespace TestMediaServer
 
     class Program
     {
-        class ExceptionReporter : IExceptionReporter
-        {
-            public void ReportException(Exception e)
-            {
-                Console.WriteLine(e);
-                Environment.Exit(-1);
-            }
-        }
-
         static void Main(string[] args)
         {
-            ExceptionReporter reporter = new ExceptionReporter();
-            WatchableThread watchableThread = new WatchableThread(reporter);
+            WatchableThread watchableThread = new WatchableThread(ReportException);
 
-            using (var network = new Network(watchableThread))
+            using (var network = new Network(watchableThread, 50))
             {
-                using (DeviceInjectorMock mockInjector = new DeviceInjectorMock(network))
+                using (DeviceInjectorMock mockInjector = new DeviceInjectorMock(network, System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location)))
                 {
                     network.Execute(() =>
                     {
@@ -485,6 +474,12 @@ namespace TestMediaServer
                     Console.ReadKey();
                 }
             }
+        }
+
+        static void ReportException(Exception e)
+        {
+            Console.WriteLine(e);
+            Environment.Exit(-1);
         }
     }
 }

@@ -20,35 +20,36 @@ namespace OpenHome.Av
         {
             iDisposeHandler = new DisposeHandler();
             iRoom = aRoom;
+            iSources = aRoom.Sources;
             iNetwork = aRoom.Network;
+
+            iLock = new object();
             iIsActive = true;
             iActive = new Watchable<bool>(iNetwork, "Active", true);
             iEnabled = new Watchable<bool>(iNetwork, "Enabled", false);
 
-            iRoom.Sources.AddWatcher(this);
-
+            iSources.AddWatcher(this);
             iRoom.Join(SetInactive);
         }
 
         public virtual void Dispose()
         {
-            using (iDisposeHandler.Lock)
-            {
-                lock (iActive)
-                {
-                    if (iIsActive)
-                    {
-                        iNetwork.Execute(() =>
-                        {
-                            iRoom.Sources.RemoveWatcher(this);
-                        });
-                        iRoom.UnJoin(SetInactive);
-                        iIsActive = false;
-                    }
-                }
+            iDisposeHandler.Dispose();
 
-                iEnabled.Dispose();
+            lock (iLock)
+            {
+                if (iIsActive)
+                {
+                    iNetwork.Execute(() =>
+                    {
+                        iSources.RemoveWatcher(this);
+                    });
+                    iRoom.UnJoin(SetInactive);
+                    iIsActive = false;
+                }
             }
+
+            iEnabled.Dispose();
         }
 
         public IStandardRoom Room
@@ -86,27 +87,18 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, IEnumerable<ITopology4Source> aValue)
         {
-            using (iDisposeHandler.Lock)
-            {
-                EvaluateEnabledOpen(aValue);
-            }
+            EvaluateEnabledOpen(aValue);
         }
 
         public void ItemUpdate(string aId, IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
         {
-            using (iDisposeHandler.Lock)
-            {
-                EvaluateEnabledUpdate(aValue, aPrevious);
-            }
+            EvaluateEnabledUpdate(aValue, aPrevious);
         }
 
         public void ItemClose(string aId, IEnumerable<ITopology4Source> aValue)
         {
-            using (iDisposeHandler.Lock)
-            {
-                EvaluateEnabledClose(aValue);
-                iEnabled.Update(false);
-            }
+            EvaluateEnabledClose(aValue);
+            iEnabled.Update(false);
         }
 
         protected abstract void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue);
@@ -115,27 +107,26 @@ namespace OpenHome.Av
         
         protected void SetEnabled(bool aValue)
         {
-            using (iDisposeHandler.Lock)
-            {
-                iEnabled.Update(aValue);
-            }
+            iEnabled.Update(aValue);
         }
+
+        protected virtual void OnSetInactive() { }
 
         private void SetInactive()
         {
-            using (iDisposeHandler.Lock)
+            lock (iLock)
             {
-                lock (iActive)
+                if (iIsActive)
                 {
-                    if (iIsActive)
-                    {
-                        iIsActive = false;
 
-                        iActive.Update(false);
+                    iActive.Update(false);
 
-                        iRoom.Sources.RemoveWatcher(this);
-                        iRoom.UnJoin(SetInactive);
-                    }
+                    iSources.RemoveWatcher(this);
+
+                    OnSetInactive();
+
+                    iRoom.UnJoin(SetInactive);
+                    iIsActive = false;
                 }
             }
         }
@@ -144,46 +135,45 @@ namespace OpenHome.Av
         protected readonly INetwork iNetwork;
 
         private readonly IStandardRoom iRoom;
+        private readonly IWatchable<IEnumerable<ITopology4Source>> iSources;
+
+        private readonly object iLock;
         private bool iIsActive;
         private readonly Watchable<bool> iActive;
         private readonly Watchable<bool> iEnabled;
     }
 
-    public class StandardRoomWatcherMusic : StandardRoomWatcher, IOrderedWatcher<IProxyMediaServer>
+    public class StandardRoomWatcherMusic : StandardRoomWatcher
     {
-        private IStandardHouse iHouse;
-        private uint iServerCount;
-        private bool iHasCompatibleSource;
         private IProxyPlaylist iPlaylist;
+        private IPlaylistWriter iPlaylistWriter;
 
-        public StandardRoomWatcherMusic(IStandardHouse aHouse, IStandardRoom aRoom)
+        public StandardRoomWatcherMusic(IStandardRoom aRoom)
             : base(aRoom)
         {
-            iHouse = aHouse;
-            iServerCount = 0;
-
-            iHouse.Servers.AddWatcher(this);
         }
 
         public override void Dispose()
         {
             base.Dispose();
 
-            iHouse.Servers.RemoveWatcher(this);
-
             if (iPlaylist != null)
             {
                 iPlaylist.Dispose();
+                iPlaylist = null;
+                iPlaylistWriter = null;
             }
         }
 
-        public IWatchableOrdered<IProxyMediaServer> Servers
+        protected override void OnSetInactive()
         {
-            get
+            using (iDisposeHandler.Lock)
             {
-                using (iDisposeHandler.Lock)
+                if (iPlaylist != null)
                 {
-                    return iHouse.Servers;
+                    iPlaylist.Dispose();
+                    iPlaylist = null;
+                    iPlaylistWriter = null;
                 }
             }
         }
@@ -199,13 +189,13 @@ namespace OpenHome.Av
             }
         }
 
-        public IProxyPlaylist Playlist
+        public IPlaylistWriter PlaylistWriter
         {
             get
             {
                 using (iDisposeHandler.Lock)
                 {
-                    return iPlaylist;
+                    return iPlaylistWriter;
                 }
             }
         }
@@ -223,6 +213,7 @@ namespace OpenHome.Av
             {
                 iPlaylist.Dispose();
                 iPlaylist = null;
+                iPlaylistWriter = null;
             }
 
             EvaluateEnabled(aValue);
@@ -232,7 +223,6 @@ namespace OpenHome.Av
         {
             SetEnabled(false);
 
-            iHasCompatibleSource = false;
             foreach (ITopology4Source s in aValue)
             {
                 if (s.Type == "Playlist")
@@ -240,40 +230,12 @@ namespace OpenHome.Av
                     s.Device.Create<IProxyPlaylist>((playlist) =>
                     {
                         iPlaylist = playlist;
-                        iHasCompatibleSource = true;
-                        SetEnabled(iServerCount > 0);
+                        iPlaylistWriter = new PlaylistWriter(playlist);
+                        SetEnabled(true);
                     });
                     return;
                 }
             }
-        }
-
-        public void OrderedOpen()
-        {
-        }
-
-        public void OrderedInitialised()
-        {
-        }
-
-        public void OrderedClose()
-        {
-        }
-
-        public void OrderedAdd(IProxyMediaServer aItem, uint aIndex)
-        {
-            ++iServerCount;
-            SetEnabled(iHasCompatibleSource && (iServerCount > 0));
-        }
-
-        public void OrderedMove(IProxyMediaServer aItem, uint aFrom, uint aTo)
-        {
-        }
-
-        public void OrderedRemove(IProxyMediaServer aItem, uint aIndex)
-        {
-            --iServerCount;
-            SetEnabled(iHasCompatibleSource && (iServerCount > 0));
         }
     }
 
@@ -293,6 +255,19 @@ namespace OpenHome.Av
             if (iRadio != null)
             {
                 iRadio.Dispose();
+                iRadio = null;
+            }
+        }
+
+        protected override void OnSetInactive()
+        {
+            using (iDisposeHandler.Lock)
+            {
+                if (iRadio != null)
+                {
+                    iRadio.Dispose();
+                    iRadio = null;
+                }
             }
         }
 
@@ -300,7 +275,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iRadio.Container;
+                using (iDisposeHandler.Lock)
+                {
+                    return iRadio.Container;
+                }
             }
         }
 
@@ -316,6 +294,7 @@ namespace OpenHome.Av
             if (iRadio != null)
             {
                 iRadio.Dispose();
+                iRadio = null;
             }
 
             EvaluateEnabled(aValue);
@@ -535,6 +514,10 @@ namespace OpenHome.Av
             {
                 return false;
             }
+            if (aSource.Name == "Front Aux")
+            {
+                return false;
+            }
 
             return true;
         }
@@ -542,45 +525,49 @@ namespace OpenHome.Av
 
     class ExternalContainer : IWatchableContainer<IMediaPreset>, IDisposable
     {
-        private Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
 
         public ExternalContainer(INetwork aNetwork)
         {
+            iDisposeHandler = new DisposeHandler();
             iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new ExternalSnapshot(new List<ITopology4Source>()));
         }
 
         public void Dispose()
         {
+            iDisposeHandler.Dispose();
+
             iSnapshot.Dispose();
-            iSnapshot = null;
         }
 
         public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
         {
             get
             {
-                return iSnapshot;
+                using (iDisposeHandler.Lock)
+                {
+                    return iSnapshot;
+                }
             }
         }
 
         public void UpdateSnapshot(IList<ITopology4Source> aSources)
         {
-            iSnapshot.Update(new ExternalSnapshot(aSources));
+            using (iDisposeHandler.Lock)
+            {
+                iSnapshot.Update(new ExternalSnapshot(aSources));
+            }
         }
     }
 
     class ExternalSnapshot : IWatchableSnapshot<IMediaPreset>
     {
-        private readonly IList<IMediaPreset> iSources;
+        private readonly IList<ITopology4Source> iSources;
 
         public ExternalSnapshot(IList<ITopology4Source> aSources)
         {
-            iSources = new List<IMediaPreset>();
-
-            foreach (ITopology4Source s in aSources)
-            {
-                iSources.Add(s.Preset);
-            }
+            iSources = aSources;
         }
 
         public uint Total
@@ -603,7 +590,9 @@ namespace OpenHome.Av
         {
             Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
             {
-                return new WatchableFragment<IMediaPreset>(aIndex, iSources.Skip((int)aIndex).Take((int)aCount));
+                List<IMediaPreset> presets = new List<IMediaPreset>();
+                iSources.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v => presets.Add(v.Preset));
+                return new WatchableFragment<IMediaPreset>(aIndex, presets);
             });
             return task;
         }

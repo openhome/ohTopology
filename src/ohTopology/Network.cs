@@ -11,13 +11,15 @@ namespace OpenHome.Av
 {
     public abstract class DeviceInjector : IDisposable
     {
-        private Network iNetwork;
-        private Dictionary<string, Device> iCpDeviceLookup;
+        private readonly Network iNetwork;
+        private readonly Dictionary<string, Device> iCpDeviceLookup;
 
+        protected readonly DisposeHandler iDisposeHandler;
         protected CpDeviceListUpnpServiceType iDeviceList;
 
         protected DeviceInjector(Network aNetwork)
         {
+            iDisposeHandler = new DisposeHandler();
             iNetwork = aNetwork;
 
             iCpDeviceLookup = new Dictionary<string, Device>();
@@ -46,13 +48,26 @@ namespace OpenHome.Av
 
         protected virtual Device Create(INetwork aNetwork, CpDevice aDevice)
         {
-            return (DeviceFactory.Create(aNetwork, aDevice));
+            using (iDisposeHandler.Lock)
+            {
+                return (DeviceFactory.Create(aNetwork, aDevice));
+            }
+        }
+
+        public void Refresh()
+        {
+            using (iDisposeHandler.Lock)
+            {
+                iDeviceList.Refresh();
+            }
         }
 
         // IDisposable
 
         public void Dispose()
         {
+            iDisposeHandler.Dispose();
+
             iDeviceList.Dispose();
             iDeviceList = null;
 
@@ -64,7 +79,6 @@ namespace OpenHome.Av
                 }
             });
             iCpDeviceLookup.Clear();
-            iCpDeviceLookup = null;
         }
     }
 
@@ -74,6 +88,15 @@ namespace OpenHome.Av
             : base(aNetwork)
         {
             iDeviceList = new CpDeviceListUpnpServiceType("av.openhome.org", "Product", 1, Added, Removed);
+        }
+    }
+
+    public class DeviceInjectorSender : DeviceInjector
+    {
+        public DeviceInjectorSender(Network aNetwork)
+            : base(aNetwork)
+        {
+            iDeviceList = new CpDeviceListUpnpServiceType("av.openhome.org", "Sender", 1, Added, Removed);
         }
     }
 
@@ -87,18 +110,23 @@ namespace OpenHome.Av
 
         protected override Device Create(INetwork aNetwork, CpDevice aDevice)
         {
-            return (new DeviceMediaServerUpnp(aNetwork, aDevice));
+            using (iDisposeHandler.Lock)
+            {
+                return (new DeviceMediaServerUpnp(aNetwork, aDevice));
+            }
         }
     }
 
     public class DeviceInjectorMock : IMockable, IDisposable
     {
         private Network iNetwork;
+        private string iResourceRoot;
         private Dictionary<string, Device> iMockDevices;
 
-        public DeviceInjectorMock(Network aNetwork)
+        public DeviceInjectorMock(Network aNetwork, string aResourceRoot)
         {
             iNetwork = aNetwork;
+            iResourceRoot = aResourceRoot;
             iMockDevices = new Dictionary<string, Device>();
         }
 
@@ -125,7 +153,7 @@ namespace OpenHome.Av
                 if (command == "small")
                 {
                     CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
-                    CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000"));
+                    CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000", iResourceRoot));
                     return;
                 }
                 else if (command == "medium")
@@ -134,7 +162,7 @@ namespace OpenHome.Av
                     CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
                     CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
                     CreateAndAdd(DeviceFactory.CreateDs(iNetwork, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
-                    CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000"));
+                    CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000", iResourceRoot));
                     return;
                 }
                 else if (command == "large")
@@ -236,9 +264,9 @@ namespace OpenHome.Av
 
     public interface INetwork : IMockThread, IDisposable
     {
+        IIdCache IdCache { get; }
         ITagManager TagManager { get; }
         IWatchableUnordered<IDevice> Create<T>() where T : IProxy;
-        //void Refresh();
     }
 
     public class Network : INetwork
@@ -246,25 +274,28 @@ namespace OpenHome.Av
         private readonly IMockThread iThread;
 
         private readonly DisposeHandler iDisposeHandler;
+        private readonly IdCache iCache;
         private readonly ITagManager iTagManager;
         private readonly List<Device> iDevices;
         private readonly Dictionary<Type, WatchableUnordered<IDevice>> iDeviceLists;
 
-        public Network()
+        public Network(uint aMaxCacheEntries)
         {
             iThread = new MockThread();
 
             iDisposeHandler = new DisposeHandler();
+            iCache = new IdCache(aMaxCacheEntries);
             iTagManager = new TagManager();
             iDevices = new List<Device>();
             iDeviceLists = new Dictionary<Type, WatchableUnordered<IDevice>>();
         }
 
-        public Network(IWatchableThread aWatchableThread)
+        public Network(IWatchableThread aWatchableThread, uint aMaxCacheEntries)
         {
             iThread = new MockThreadAdapter(aWatchableThread);
 
             iDisposeHandler = new DisposeHandler();
+            iCache = new IdCache(aMaxCacheEntries);
             iTagManager = new TagManager();
             iDevices = new List<Device>();
             iDeviceLists = new Dictionary<Type, WatchableUnordered<IDevice>>();
@@ -325,6 +356,17 @@ namespace OpenHome.Av
                         }
                     }
                     return list;
+                }
+            }
+        }
+
+        public IIdCache IdCache
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iCache;
                 }
             }
         }

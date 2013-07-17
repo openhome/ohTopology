@@ -4,10 +4,10 @@ mock network medium
 // test network is populated with 4 devices
 expect Room Added: Kitchen at 0
 expect Kitchen open Standby eOn
+expect Kitchen open Zone True 4c494e4e-0026-0f99-1111-ef000004013f
 expect Kitchen open Details True 0 0  0 False 0
 expect Kitchen open Metadata True  
 expect Kitchen open Metatext True 
-expect Kitchen open Zone True 4c494e4e-0026-0f99-1111-ef000004013f
 expect Kitchen open Controller Active True
 expect Kitchen open HasVolume True
 expect Kitchen open HasSourceControl True
@@ -24,6 +24,11 @@ Unconfigured source end
 expect Kitchen open 
 Configured source begin
 Configured source end
+expect Kitchen open Playing 1 False
+expect Kitchen open Playing 2 False
+expect Kitchen open Playing 5 False
+expect Kitchen open Playing 6 False
+expect Kitchen open Playing 7 False
 expect Kitchen open 
 Presets begin
 1 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -33,14 +38,14 @@ Presets begin
 7 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Sky Radio News (World News)</dc:title><res protocolInfo="*:*:*:*" bitrate="4000">http://opml.radiotime.com/Tune.ashx?id=s81093&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s81093q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
 Presets end
 expect Kitchen open Presets Enabled True
-expect Kitchen open Music Enabled False
+expect Kitchen open Music Enabled True
 
 expect Room Added: Sitting Room at 1
 expect Sitting Room open Standby eOn
+expect Sitting Room open Zone True 4c494e4e-0026-0f99-1112-ef000004013f
 expect Sitting Room open Details True 0 0  0 False 0
 expect Sitting Room open Metadata True  
 expect Sitting Room open Metatext True 
-expect Sitting Room open Zone True 4c494e4e-0026-0f99-1112-ef000004013f
 expect Sitting Room open Controller Active True
 expect Sitting Room open HasVolume True
 expect Sitting Room open HasSourceControl True
@@ -64,6 +69,11 @@ Unconfigured source end
 expect Sitting Room open 
 Configured source begin
 Configured source end
+expect Sitting Room open Playing 1 False
+expect Sitting Room open Playing 2 False
+expect Sitting Room open Playing 5 False
+expect Sitting Room open Playing 6 False
+expect Sitting Room open Playing 7 False
 expect Sitting Room open 
 Presets begin
 1 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -73,14 +83,14 @@ Presets begin
 7 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Sky Radio News (World News)</dc:title><res protocolInfo="*:*:*:*" bitrate="4000">http://opml.radiotime.com/Tune.ashx?id=s81093&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s81093q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
 Presets end
 expect Sitting Room open Presets Enabled True
-expect Sitting Room open Music Enabled False
+expect Sitting Room open Music Enabled True
 
 expect Room Added: Bedroom at 0
 expect Bedroom open Standby eOn
+expect Bedroom open Zone True 4c494e4e-0026-0f99-1113-ef000004013f
 expect Bedroom open Details True 0 0  0 False 0
 expect Bedroom open Metadata True  
 expect Bedroom open Metatext True 
-expect Bedroom open Zone True 4c494e4e-0026-0f99-1113-ef000004013f
 expect Bedroom open Controller Active True
 expect Bedroom open HasVolume True
 expect Bedroom open HasSourceControl True
@@ -104,6 +114,11 @@ Unconfigured source end
 expect Bedroom open 
 Configured source begin
 Configured source end
+expect Bedroom open Playing 1 False
+expect Bedroom open Playing 2 False
+expect Bedroom open Playing 5 False
+expect Bedroom open Playing 6 False
+expect Bedroom open Playing 7 False
 expect Bedroom open 
 Presets begin
 1 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -113,14 +128,14 @@ Presets begin
 7 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Sky Radio News (World News)</dc:title><res protocolInfo="*:*:*:*" bitrate="4000">http://opml.radiotime.com/Tune.ashx?id=s81093&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s81093q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
 Presets end
 expect Bedroom open Presets Enabled True
-expect Bedroom open Music Enabled False
+expect Bedroom open Music Enabled True
 
 expect Room Added: Dining Room at 1
 expect Dining Room open Standby eOn
+expect Dining Room open Zone True 4c494e4e-0026-0f99-1114-ef000004013f
 expect Dining Room open Details True 0 0  0 False 0
 expect Dining Room open Metadata True  
 expect Dining Room open Metatext True 
-expect Dining Room open Zone True 4c494e4e-0026-0f99-1114-ef000004013f
 expect Dining Room open Controller Active True
 expect Dining Room open HasVolume True
 expect Dining Room open HasSourceControl True
@@ -137,6 +152,11 @@ Unconfigured source end
 expect Dining Room open 
 Configured source begin
 Configured source end
+expect Dining Room open Playing 1 False
+expect Dining Room open Playing 2 False
+expect Dining Room open Playing 5 False
+expect Dining Room open Playing 6 False
+expect Dining Room open Playing 7 False
 expect Dining Room open 
 Presets begin
 1 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -146,12 +166,7 @@ Presets begin
 7 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Sky Radio News (World News)</dc:title><res protocolInfo="*:*:*:*" bitrate="4000">http://opml.radiotime.com/Tune.ashx?id=s81093&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s81093q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
 Presets end
 expect Dining Room open Presets Enabled True
-expect Dining Room open Music Enabled False
-
-expect Kitchen update Music Enabled True
-expect Sitting Room update Music Enabled True
-expect Bedroom update Music Enabled True
-expect Dining Room update Music Enabled True
+expect Dining Room open Music Enabled True
 empty
 
 // test adding a new room
@@ -159,10 +174,10 @@ mock network create ds 67
 mock network add 67
 expect Room Added: Main Room at 3
 expect Main Room open Standby eOn
+expect Main Room open Zone True 67
 expect Main Room open Details True 0 0  0 False 0
 expect Main Room open Metadata True  
 expect Main Room open Metatext True 
-expect Main Room open Zone True 67
 expect Main Room open Controller Active True
 expect Main Room open HasVolume True
 expect Main Room open HasSourceControl True
@@ -179,6 +194,11 @@ Unconfigured source end
 expect Main Room open 
 Configured source begin
 Configured source end
+expect Main Room open Playing 1 False
+expect Main Room open Playing 2 False
+expect Main Room open Playing 5 False
+expect Main Room open Playing 6 False
+expect Main Room open Playing 7 False
 expect Main Room open 
 Presets begin
 1 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -215,10 +235,10 @@ empty
 mock network add 67
 expect Room Added: Main Room at 3
 expect Main Room open Standby eOn
+expect Main Room open Zone True 67
 expect Main Room open Details True 50 100 flac 500 True 44000
 expect Main Room open Metadata True blah http://blah
 expect Main Room open Metatext True testing
-expect Main Room open Zone True 67
 expect Main Room open Controller Active True
 expect Main Room open HasVolume True
 expect Main Room open HasSourceControl True
@@ -235,6 +255,11 @@ Unconfigured source end
 expect Main Room open 
 Configured source begin
 Configured source end
+expect Main Room open Playing 1 False
+expect Main Room open Playing 2 False
+expect Main Room open Playing 5 False
+expect Main Room open Playing 6 False
+expect Main Room open Playing 7 False
 expect Main Room open 
 Presets begin
 1 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -258,6 +283,11 @@ expect Main Room update
 Configured source begin
 Configured source end
 expect Main Room update Presets Enabled False
+expect Main Room open Playing 1 False
+expect Main Room open Playing 2 False
+expect Main Room open Playing 5 False
+expect Main Room open Playing 6 False
+expect Main Room open Playing 7 False
 expect Main Room open 
 Presets begin
 1 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -288,6 +318,11 @@ expect Main Room update
 Configured source begin
 Configured source end
 expect Main Room update Presets Enabled False
+expect Main Room open Playing 1 False
+expect Main Room open Playing 2 False
+expect Main Room open Playing 5 False
+expect Main Room open Playing 6 False
+expect Main Room open Playing 7 False
 expect Main Room open 
 Presets begin
 1 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -311,6 +346,11 @@ expect Main Room update
 Configured source begin
 Configured source end
 expect Main Room update Presets Enabled False
+expect Main Room open Playing 1 False
+expect Main Room open Playing 2 False
+expect Main Room open Playing 5 False
+expect Main Room open Playing 6 False
+expect Main Room open Playing 7 False
 expect Main Room open 
 Presets begin
 1 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -322,30 +362,30 @@ Presets end
 expect Main Room update Presets Enabled True
 expect Main Room update Music Enabled False
 expect Main Room update Music Enabled True
+expect Main Room update HasSourceControl False
+expect Main Room update HasSourceControl True
+expect Main Room update HasTime False
+expect Main Room update HasTime True
 expect Main Room update Details False 0 0  0 False 0
 expect Main Room update Metadata False  
 expect Main Room update Metatext False 
 expect Main Room update Details True 1 2 mp3 3 False 4
 expect Main Room update Metadata True Ds68 http://Ds68
 expect Main Room update Metatext True Ds68
-expect Main Room update HasSourceControl False
-expect Main Room update HasSourceControl True
-expect Main Room update HasTime False
-expect Main Room update HasTime True
 empty
 
 // change to radio source to check create source controller
 mock network update 67 product sourceindex 1
+expect Main Room update HasSourceControl False
+expect Main Room update HasSourceControl True
+expect Main Room update HasTime False
+expect Main Room update HasTime True
 expect Main Room update Details False 0 0  0 False 0
 expect Main Room update Metadata False  
 expect Main Room update Metatext False 
 expect Main Room update Details True 50 100 flac 500 True 44000
 expect Main Room update Metadata True blah http://blah
 expect Main Room update Metatext True testing
-expect Main Room update HasSourceControl False
-expect Main Room update HasSourceControl True
-expect Main Room update HasTime False
-expect Main Room update HasTime True
 empty
 
 mock network update 67 radio transportstate Playing
@@ -387,6 +427,11 @@ expect Main Room update
 Configured source begin
 Configured source end
 expect Main Room update Presets Enabled False
+expect Main Room open Playing 1 False
+expect Main Room open Playing 2 False
+expect Main Room open Playing 5 False
+expect Main Room open Playing 6 False
+expect Main Room open Playing 7 False
 expect Main Room open 
 Presets begin
 1 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -411,6 +456,11 @@ expect Main Room update
 Configured source begin
 Configured source end
 expect Main Room update Presets Enabled False
+expect Main Room open Playing 1 False
+expect Main Room open Playing 2 False
+expect Main Room open Playing 5 False
+expect Main Room open Playing 6 False
+expect Main Room open Playing 7 False
 expect Main Room open 
 Presets begin
 1 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -426,10 +476,10 @@ expect Main Room update HasSourceControl False
 expect Main Room update HasSourceControl True
 expect Room Added: Test Room at 5
 expect Test Room open Standby eOn
+expect Test Room open Zone True 50
 expect Test Room open Details True 0 0  0 False 0
 expect Test Room open Metadata True  
 expect Test Room open Metatext True 
-expect Test Room open Zone True 50
 expect Test Room open Controller Active True
 expect Test Room open HasVolume True
 expect Test Room open HasSourceControl True
@@ -453,6 +503,11 @@ Unconfigured source end
 expect Test Room open 
 Configured source begin
 Configured source end
+expect Test Room open Playing 1 False
+expect Test Room open Playing 2 False
+expect Test Room open Playing 5 False
+expect Test Room open Playing 6 False
+expect Test Room open Playing 7 False
 expect Test Room open 
 Presets begin
 1 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -480,6 +535,11 @@ Configured source begin
 Wii
 Configured source end
 expect Test Room update Presets Enabled False
+expect Test Room open Playing 1 False
+expect Test Room open Playing 2 False
+expect Test Room open Playing 5 False
+expect Test Room open Playing 6 False
+expect Test Room open Playing 7 False
 expect Test Room open 
 Presets begin
 1 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -510,6 +570,11 @@ expect Test Room update
 Configured source begin
 Configured source end
 expect Test Room update Presets Enabled False
+expect Test Room open Playing 1 False
+expect Test Room open Playing 2 False
+expect Test Room open Playing 5 False
+expect Test Room open Playing 6 False
+expect Test Room open Playing 7 False
 expect Test Room open 
 Presets begin
 1 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -541,6 +606,11 @@ expect Test Room update
 Configured source begin
 Configured source end
 expect Test Room update Presets Enabled False
+expect Test Room open Playing 1 False
+expect Test Room open Playing 2 False
+expect Test Room open Playing 5 False
+expect Test Room open Playing 6 False
+expect Test Room open Playing 7 False
 expect Test Room open 
 Presets begin
 1 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="" parentID="" restricted="True"><dc:title>Linn Radio (Variety)</dc:title><res protocolInfo="*:*:*:*" bitrate="40000">http://opml.radiotime.com/Tune.ashx?id=s122119&amp;formats=mp3,wma,aac,wmvideo,ogg&amp;partnerId=ah2rjr68&amp;username=linnproducts&amp;c=ebrowse</res><upnp:albumArtURI>http://d1i6vahw24eb07.cloudfront.net/s122119q.png</upnp:albumArtURI><upnp:class>object.item.audioItem</upnp:class></item></DIDL-Lite>
@@ -555,3 +625,17 @@ expect Test Room update HasSourceControl False
 expect Test Room update HasSourceControl True
 empty
 
+mock network update 50 radio id 5
+empty
+mock network update 50 radio transportstate Playing
+expect Test Room update Playing 5 True
+empty
+
+mock network update 50 radio id 7
+expect Test Room update Playing 5 False
+expect Test Room update Playing 7 True
+empty
+
+mock network update 50 radio transportstate Stopped
+expect Test Room update Playing 7 False
+empty

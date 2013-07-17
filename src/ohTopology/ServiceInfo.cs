@@ -179,8 +179,8 @@ namespace OpenHome.Av
 
     public abstract class ServiceInfo : Service
     {
-        protected ServiceInfo(INetwork aNetwork)
-            : base(aNetwork)
+        protected ServiceInfo(INetwork aNetwork, IDevice aDevice)
+            : base(aNetwork, aDevice)
         {
             iDetails = new Watchable<IInfoDetails>(Network, "Details", new InfoDetails());
             iMetadata = new Watchable<IInfoMetadata>(Network, "Metadata", InfoMetadata.Empty);
@@ -203,7 +203,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return new ProxyInfo(aDevice, this);
+            return new ProxyInfo(this);
         }
 
         public IWatchable<IInfoDetails> Details
@@ -237,12 +237,12 @@ namespace OpenHome.Av
 
     class ServiceInfoNetwork : ServiceInfo
     {
-        public ServiceInfoNetwork(INetwork aNetwork, CpDevice aDevice)
-            : base(aNetwork)
+        public ServiceInfoNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
+            : base(aNetwork, aDevice)
         {
             iThread = aNetwork;
             iSubscribed = new ManualResetEvent(false);
-            iService = new CpProxyAvOpenhomeOrgInfo1(aDevice);
+            iService = new CpProxyAvOpenhomeOrgInfo1(aCpDevice);
 
             iService.SetPropertyBitDepthChanged(HandleDetailsChanged);
             iService.SetPropertyMetadataChanged(HandleMetadataChanged);
@@ -253,13 +253,16 @@ namespace OpenHome.Av
         
         public override void Dispose()
         {
+            // cause in flight or blocked subscription to complete
+            iSubscribed.Set();
+
+            base.Dispose();
+
             iSubscribed.Dispose();
             iSubscribed = null;
 
             iService.Dispose();
             iService = null;
-
-            base.Dispose();
         }
 
         protected override Task OnSubscribe()
@@ -270,6 +273,11 @@ namespace OpenHome.Av
                 iSubscribed.WaitOne();
             });
             return task;
+        }
+
+        protected override void OnCancelSubscribe()
+        {
+            iSubscribed.Set();
         }
 
         private void HandleInitialEvent()
@@ -326,8 +334,8 @@ namespace OpenHome.Av
 
     class ServiceInfoMock : ServiceInfo, IMockable
     {
-        public ServiceInfoMock(INetwork aNetwork, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
-            : base(aNetwork)
+        public ServiceInfoMock(INetwork aNetwork, IDevice aDevice, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
+            : base(aNetwork, aDevice)
         {
             iDetails.Update(aDetails);
             iMetadata.Update(aMetadata);
@@ -410,8 +418,8 @@ namespace OpenHome.Av
 
     public class ProxyInfo : Proxy<ServiceInfo>, IProxyInfo
     {
-        public ProxyInfo(IDevice aDevice, ServiceInfo aService)
-            : base(aDevice, aService)
+        public ProxyInfo(ServiceInfo aService)
+            : base(aService)
         {
         }
 

@@ -21,12 +21,12 @@ namespace OpenHome.Av
 
         private readonly List<MediaServerSessionUpnp> iSessions;
         
-        public ServiceMediaServerUpnp(INetwork aNetwork, IEnumerable<string> aAttributes, 
+        public ServiceMediaServerUpnp(INetwork aNetwork, IDevice aDevice, IEnumerable<string> aAttributes, 
             string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl,
             string aModelImageUri, string aModelInfo, string aModelName, string aModelUrl,
             string aProductImageUri, string aProductInfo, string aProductName, string aProductUrl,
             CpProxyUpnpOrgContentDirectory1 aUpnpProxy)
-            : base(aNetwork, aAttributes,
+            : base(aNetwork, aDevice, aAttributes,
             aManufacturerImageUri, aManufacturerInfo, aManufacturerName, aManufacturerUrl,
             aModelImageUri, aModelInfo, aModelName, aModelUrl,
             aProductImageUri, aProductInfo, aProductName, aProductUrl)
@@ -37,7 +37,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return (new ProxyMediaServer(aDevice, this));
+            return (new ProxyMediaServer(this));
         }
 
         public override Task<IMediaServerSession> CreateSession()
@@ -439,7 +439,13 @@ namespace OpenHome.Av
         private IMediaDatum ParseItem(XElement aElement)
         {
             var datum = new MediaDatum();
+
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Title);
+            Convert(aElement, "album", kNsUpnp, datum, iNetwork.TagManager.Audio.AlbumTitle);
+            Convert(aElement, "artist", kNsUpnp, datum, iNetwork.TagManager.Audio.Artist);
+            Convert(aElement, "res", kNsDidlLite, datum, iNetwork.TagManager.Audio.Uri);
+            Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
+
             return (datum);
         }
 
@@ -481,6 +487,7 @@ namespace OpenHome.Av
             var datum = new MediaDatumUpnp(aId, iNetwork.TagManager.Audio.Artist);
 
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Artist);
+            Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
 
             return (datum);
         }
@@ -492,6 +499,7 @@ namespace OpenHome.Av
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.AlbumTitle);
             Convert(aElement, "artist", kNsUpnp, datum, iNetwork.TagManager.Audio.AlbumArtist);
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
+
             return (datum);
         }
 
@@ -500,6 +508,7 @@ namespace OpenHome.Av
             var datum = new MediaDatumUpnp(aId, iNetwork.TagManager.Audio.Genre);
 
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Genre);
+            Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
 
             return (datum);
         }
@@ -509,6 +518,7 @@ namespace OpenHome.Av
             var datum = new MediaDatumUpnp(aId, iNetwork.TagManager.Container.Title);
 
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title);
+            Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Container.Artwork);
 
             return (datum);
         }

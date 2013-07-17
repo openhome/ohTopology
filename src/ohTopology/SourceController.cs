@@ -30,15 +30,15 @@ namespace OpenHome.Av
         {
             if (aSource.Type == "Playlist")
             {
-                return new SourceControllerPlaylist(aSource, aHasSourceControl, aHasInfoNext, aInfoNext, aHasContainer, aTransportState, aCanPause, aCanSeek, aCanSkip, aHasPlayMode, aShuffle, aRepeat);
+                return new SourceControllerPlaylist(aSource, aHasSourceControl, aHasInfoNext, aInfoNext, aHasContainer, aTransportState, aCanPause, aCanSkip, aCanSeek, aHasPlayMode, aShuffle, aRepeat);
             }
             else if (aSource.Type == "Radio")
             {
-                return new SourceControllerRadio(aSource, aHasSourceControl, aHasInfoNext, aInfoNext, aHasContainer, aTransportState, aCanPause, aCanSeek, aCanSkip, aHasPlayMode, aShuffle, aRepeat);
+                return new SourceControllerRadio(aSource, aHasSourceControl, aHasInfoNext, aInfoNext, aHasContainer, aTransportState, aCanPause, aCanSkip, aCanSeek, aHasPlayMode, aShuffle, aRepeat);
             }
             else if (aSource.Type == "Receiver")
             {
-                return new SourceControllerReceiver(aSource, aHasSourceControl, aHasInfoNext, aInfoNext, aHasContainer, aTransportState, aCanPause, aCanSeek, aCanSkip, aHasPlayMode, aShuffle, aRepeat);
+                return new SourceControllerReceiver(aSource, aHasSourceControl, aHasInfoNext, aInfoNext, aHasContainer, aTransportState, aCanPause, aCanSkip, aCanSeek, aHasPlayMode, aShuffle, aRepeat);
             }
             /*else if (aSource.Type == "NetAux" || aSource.Type == "UpnpAv" || aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi")
             {

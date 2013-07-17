@@ -15,10 +15,10 @@ using System.Drawing.Imaging;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
 
-using OpenHome.Os.App;
-
 using OpenHome.Http;
-using OpenHome.Http.Owin;
+
+using OpenHome.Os;
+using OpenHome.Os.App;
 
 using OpenHome.Net.ControlPoint;
 
@@ -37,12 +37,12 @@ namespace OpenHome.Av
         private readonly HttpFramework iHttpFramework;
         private readonly List<Tuple<Color, Color>> iColors;
 
-        public DeviceMediaServerMock(INetwork aNetwork, string aUdn, string aAppRoot)
+        public DeviceMediaServerMock(INetwork aNetwork, string aUdn, string aResourceRoot)
             : base(aUdn)
         {
             iNetwork = aNetwork;
-            iMetadata = ReadMetadata(aNetwork, aAppRoot);
-            iHttpFramework = new HttpFramework(10);
+            iMetadata = ReadMetadata(aNetwork, aResourceRoot);
+            iHttpFramework = new HttpFramework(HandleRequest, 10);
 
             iColors = new List<Tuple<Color, Color>>();
             Add(Color.Black, Color.White);
@@ -60,11 +60,7 @@ namespace OpenHome.Av
 
             Console.WriteLine("Port: " + iHttpFramework.Port);
 
-            iHttpFramework.AddHttpHandler("artwork", HandleRequestArtwork);
-            iHttpFramework.AddHttpHandler("audio", HandleRequestAudio);
-            iHttpFramework.Open();
-
-            Add<IProxyMediaServer>(new ServiceMediaServerMock(aNetwork, new string[] {"Browse", "Link", "Link:audio.artist", "Link:audio.album", "Link:audio.genre", "Search"},
+            Add<IProxyMediaServer>(new ServiceMediaServerMock(aNetwork, this, new string[] {"Browse", "Link", "Link:audio.artist", "Link:audio.album", "Link:audio.genre", "Search"},
                 "", "OpenHome", "OpenHome", "http://www.openhome.org",
                 "", "OpenHome", "OpenHome", "http://www.openhome.org",
                 "", "OpenHome", "OpenHome", "http://www.openhome.org",
@@ -80,13 +76,13 @@ namespace OpenHome.Av
             iColors.Add(new Tuple<Color, Color>(aForeground, aBackground));
         }
 
-        private IEnumerable<IMediaMetadata> ReadMetadata(INetwork aNetwork, string aAppRoot)
+        private IEnumerable<IMediaMetadata> ReadMetadata(INetwork aNetwork, string aResourceRoot)
         {
             ZipConstants.DefaultCodePage = Encoding.Default.CodePage; // without this linux fails to unzip due to missing codepage 850
 
-            var path = Path.Combine(aAppRoot, "MockMediaServer.zip");
+            var path = Path.Combine(aResourceRoot, "MockMediaServer.zip");
 
-            using (var file = File.Open(path, FileMode.Open))
+            using (var file = File.Open(path, FileMode.Open, FileAccess.Read))
             {
                 var zip = new ZipFile(file);
 
@@ -146,26 +142,54 @@ namespace OpenHome.Av
             return (results);
         }
 
-        private Task HandleRequestArtwork(IHttpEnvironment aEnvironment)
+        private Task HandleRequest(IDictionary<string, object> aEnvironment)
         {
-            return Task.Factory.StartNew(() => { ProcessRequestArtwork(aEnvironment); });
+            var request = new HttpRequest(aEnvironment);
+
+            var query = Lri.ParseQuery(request.Query);
+            var lri = new Lri(request.Path, query);
+
+            if (lri.Any())
+            {
+                var segment = lri.First();
+
+                switch (segment)
+                {
+                    case "artwork":
+                        return HandleRequestArtwork(request, lri.Pop());
+                    case "audio":
+                        return HandleRequestAudio(request, lri.Pop());
+                    default:
+                        break;
+                }
+            }
+
+            return (Task.Factory.StartNew(() =>
+            {
+                request.SendNotFound();
+            }));
         }
 
-        private void ProcessRequestArtwork(IHttpEnvironment aEnvironment)
+        private Task HandleRequestArtwork(IHttpRequest aRequest, ILri aLri)
         {
-            var album = aEnvironment.Pop;
+            return Task.Factory.StartNew(() => { ProcessRequestArtwork(aRequest, aLri); });
+        }
 
-            if (album == null)
+        private void ProcessRequestArtwork(IHttpRequest aRequest, ILri aLri)
+        {
+            if (!aLri.Any())
             {
-                aEnvironment.FlushSendNotFound();
+                aRequest.SendNotFound();
                 return;
             }
+
+            var album = aLri.First();
 
             var tracks = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Album].Value == album);
 
             if (!tracks.Any())
             {
-                aEnvironment.FlushSendNotFound();
+                aRequest.SendNotFound();
                 return;
             }
 
@@ -173,7 +197,7 @@ namespace OpenHome.Av
 
             if (artist == null)
             {
-                aEnvironment.FlushSendNotFound();
+                aRequest.SendNotFound();
                 return;
             }
 
@@ -181,11 +205,11 @@ namespace OpenHome.Av
 
             if (title == null)
             {
-                aEnvironment.FlushSendNotFound();
+                aRequest.SendNotFound();
                 return;
             }
 
-            aEnvironment.FlushSend(GetAlbumArtworkPng(artist.Value, title.Value), "image/png");
+            aRequest.Send(GetAlbumArtworkPng(artist.Value, title.Value), "image/png");
         }
 
         private byte[] GetAlbumArtworkPng(string aArtist, string aTitle)
@@ -225,14 +249,14 @@ namespace OpenHome.Av
             }
         }
 
-        private Task HandleRequestAudio(IHttpEnvironment aEnvironment)
+        private Task HandleRequestAudio(IHttpRequest aRequest, ILri aLri)
         {
-            return Task.Factory.StartNew(() => { ProcessRequestAudio(aEnvironment); });
+            return Task.Factory.StartNew(() => { ProcessRequestAudio(aRequest, aLri); });
         }
 
-        private void ProcessRequestAudio(IHttpEnvironment aEnvironment)
+        private void ProcessRequestAudio(IHttpRequest aRequest, ILri aLri)
         {
-            aEnvironment.FlushSendNotFound();
+            aRequest.SendNotFound();
         }
 
         // IMockMediaServerUriProvider

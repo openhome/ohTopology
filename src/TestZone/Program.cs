@@ -10,7 +10,7 @@ namespace TestZone
 {
     class Program
     {
-        class RoomControllerWatcher : IWatcher<IZone>, IDisposable
+        class RoomControllerWatcher : IWatcher<IZoneSender>, IDisposable
         {
             private ResultWatcherFactory iFactory;
             private IStandardRoom iRoom;
@@ -21,19 +21,31 @@ namespace TestZone
                 iFactory = new ResultWatcherFactory(aRunner);
                 iRoom = aRoom;
 
-                iRoom.Zone.AddWatcher(this);
+                iRoom.ZoneSender.AddWatcher(this);
             }
 
             public void Dispose()
             {
-                iRoom.Zone.RemoveWatcher(this);
+                iRoom.ZoneSender.RemoveWatcher(this);
 
                 iFactory.Dispose();
             }
 
-            private void CreateController(IZone aZone)
+            private void CreateController(IZoneSender aZone)
             {
+                iFactory.Create<bool>(iRoom.Name, aZone.HasListeners, (v) =>
+                {
+                    return "HasListeners " + v;
+                });
+
+                iFactory.Create<IStandardRoom>(iRoom.Name, aZone.Listeners, (v) =>
+                {
+                    return "Listener " + v.Name;
+                });
+
+
                 iController = VolumeController.Create(aZone);
+                iFactory.Create<bool>(iRoom.Name, iController.HasVolume, v => "Zone HasVolume " + v);
                 iFactory.Create<bool>(iRoom.Name, iController.Mute, v => "Zone Mute " + v);
                 iFactory.Create<uint>(iRoom.Name, iController.Volume, v => "Zone Volume " + v);
             }
@@ -44,29 +56,29 @@ namespace TestZone
                 iController.Dispose();
             }
 
-            public void ItemOpen(string aId, IZone aValue)
+            public void ItemOpen(string aId, IZoneSender aValue)
             {
-                if (aValue.Active)
+                if (aValue.Enabled)
                 {
                     CreateController(aValue);
                 }
             }
 
-            public void ItemUpdate(string aId, IZone aValue, IZone aPrevious)
+            public void ItemUpdate(string aId, IZoneSender aValue, IZoneSender aPrevious)
             {
-                if (aPrevious.Active)
+                if (aPrevious.Enabled)
                 {
                     DestroyController();
                 }
-                if (aValue.Active)
+                if (aValue.Enabled)
                 {
                     CreateController(aValue);
                 }
             }
 
-            public void ItemClose(string aId, IZone aValue)
+            public void ItemClose(string aId, IZoneSender aValue)
             {
-                if (aValue.Active)
+                if (aValue.Enabled)
                 {
                     DestroyController();
                 }
@@ -110,18 +122,17 @@ namespace TestZone
             {
                 iRunner.Result(string.Format("Room Added: {0} at {1}", aItem.Name, aIndex));
 
-                iFactory.Create<IZone>(aItem.Name, aItem.Zone, (v) =>
+                iFactory.Create<IZoneSender>(aItem.Name, aItem.ZoneSender, (v) =>
                 {
-                    iFactory.Create<IStandardRoom>(aItem.Name, v.Listeners, (w) =>
-                    {
-                        return "Listener " + w.Name;
-                    });
-
-                    return "Zone " + v.Active + " " + (v.Active ? v.Sender.Udn : "") + " " + v.Room.Name;
+                    return "ZoneSender " + v.Enabled + " " + (v.Enabled ? v.Sender.Udn : "") + " " + v.Room.Name;
                 });
-                iFactory.Create<RoomMetadata>(aItem.Name, aItem.Metadata, (v) =>
+                iFactory.Create<IZoneReceiver>(aItem.Name, aItem.ZoneReceiver, (v) =>
                 {
-                    return "Metadata " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metadata) + " " + v.Uri;
+                    return "ZoneReceiver " + v.Enabled + " " + (v.ZoneSender != null ? v.ZoneSender.Room.Name : "");
+                });
+                iFactory.Create<IStandardRoom>(aItem.Name, aItem.Satallites, (v) =>
+                {
+                    return "Satellite " + v.Name;
                 });
 
                 iWatcherLookup.Add(aItem, new RoomControllerWatcher(iTagManager, iRunner, aItem));
@@ -157,17 +168,11 @@ namespace TestZone
 
             Mockable mocker = new Mockable();
 
-            Network network = new Network();
-            DeviceInjectorMock mockInjector = new DeviceInjectorMock(network);
+            Network network = new Network(50);
+            DeviceInjectorMock mockInjector = new DeviceInjectorMock(network, Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
             mocker.Add("network", mockInjector);
 
-            Topology1 topology1 = new Topology1(network);
-            Topology2 topology2 = new Topology2(topology1);
-            Topologym topologym = new Topologym(topology2);
-            Topology3 topology3 = new Topology3(topologym);
-            Topology4 topology4 = new Topology4(topology3);
-
-            StandardHouse house = new StandardHouse(network, topology4);
+            StandardHouse house = new StandardHouse(network);
             mocker.Add("house", house);
 
             MockableScriptRunner runner = new MockableScriptRunner();
@@ -195,16 +200,6 @@ namespace TestZone
             });
 
             house.Dispose();
-
-            topology4.Dispose();
-
-            topology3.Dispose();
-
-            topologym.Dispose();
-
-            topology2.Dispose();
-
-            topology1.Dispose();
 
             mockInjector.Dispose();
 

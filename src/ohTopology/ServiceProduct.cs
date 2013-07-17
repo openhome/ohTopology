@@ -40,8 +40,8 @@ namespace OpenHome.Av
 
     public abstract class ServiceProduct : Service
     {
-        protected ServiceProduct(INetwork aNetwork)
-            : base(aNetwork)
+        protected ServiceProduct(INetwork aNetwork, IDevice aDevice)
+            : base(aNetwork, aDevice)
         {
             iRoom = new Watchable<string>(Network, "Room", string.Empty);
             iName = new Watchable<string>(Network, "Name", string.Empty);
@@ -72,7 +72,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return new ProxyProduct(aDevice, this);
+            return new ProxyProduct(this);
         }
 
         // IServiceProduct methods
@@ -241,11 +241,11 @@ namespace OpenHome.Av
 
     class ServiceProductNetwork : ServiceProduct
     {
-        public ServiceProductNetwork(INetwork aNetwork, CpDevice aDevice)
-            : base(aNetwork)
+        public ServiceProductNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
+            : base(aNetwork, aDevice)
         {
             iSubscribed = new ManualResetEvent(false);
-            iService = new CpProxyAvOpenhomeOrgProduct1(aDevice);
+            iService = new CpProxyAvOpenhomeOrgProduct1(aCpDevice);
 
             iService.SetPropertyProductRoomChanged(HandleRoomChanged);
             iService.SetPropertyProductNameChanged(HandleNameChanged);
@@ -258,13 +258,16 @@ namespace OpenHome.Av
 
         public override void Dispose()
         {
+            // cause in flight or blocked subscription to complete
+            iSubscribed.Set();
+
+            base.Dispose();
+
             iSubscribed.Dispose();
             iSubscribed = null;
 
             iService.Dispose();
             iService = null;
-
-            base.Dispose();
         }
 
         protected override Task OnSubscribe()
@@ -275,6 +278,11 @@ namespace OpenHome.Av
                 iSubscribed.WaitOne();
             });
             return task;
+        }
+
+        protected override void OnCancelSubscribe()
+        {
+            iSubscribed.Set();
         }
 
         private void HandleInitialEvent()
@@ -479,10 +487,10 @@ namespace OpenHome.Av
 
     class ServiceProductMock : ServiceProduct
     {
-        public ServiceProductMock(INetwork aNetwork, string aRoom, string aName, uint aSourceIndex, SourceXml aSourceXmlFactory, bool aStandby,
+        public ServiceProductMock(INetwork aNetwork, IDevice aDevice, string aRoom, string aName, uint aSourceIndex, SourceXml aSourceXmlFactory, bool aStandby,
             string aAttributes, string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl, string aModelImageUri, string aModelInfo, string aModelName,
             string aModelUrl, string aProductImageUri, string aProductInfo, string aProductUrl)
-            : base(aNetwork)
+            : base(aNetwork, aDevice)
         {
             iSourceXmlFactory = aSourceXmlFactory;
 
@@ -621,8 +629,8 @@ namespace OpenHome.Av
 
     public class ProxyProduct : Proxy<ServiceProduct>, IProxyProduct
     {
-        public ProxyProduct(IDevice aDevice, ServiceProduct aService)
-            : base(aDevice, aService)
+        public ProxyProduct(ServiceProduct aService)
+            : base(aService)
         {
         }
 

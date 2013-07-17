@@ -18,7 +18,6 @@ namespace OpenHome.Av
 
     public interface IMediaMetadata : IEnumerable<KeyValuePair<ITag, IMediaValue>>
     {
-        Uri Artwork { get; }
         IMediaValue this[ITag aTag] { get; }
     }
 
@@ -27,10 +26,12 @@ namespace OpenHome.Av
         IEnumerable<ITag> Type { get; }
     }
 
-    public interface IMediaPreset
+    public interface IMediaPreset : IDisposable
     {
         uint Index { get; }
+        uint Id { get; }
         IMediaMetadata Metadata { get; }
+        IWatchable<bool> Playing { get; }
         void Play();
     }
 
@@ -153,32 +154,11 @@ namespace OpenHome.Av
 
     public class MediaMetadata : MediaDictionary, IMediaMetadata
     {
-        private readonly Uri iArtwork;
-
         public MediaMetadata()
         {
         }
 
-        public MediaMetadata(string aArtwork)
-        {
-            try
-            {
-                iArtwork = new Uri(aArtwork);
-            }
-            catch
-            {
-            }
-        }
-
         // IEnumerable<KeyValuePair<ITag, IMediaServer>>
-
-        public Uri Artwork
-        {
-            get
-            {
-                return (iArtwork);
-            }
-        }
 
         public IEnumerator<KeyValuePair<ITag, IMediaValue>> GetEnumerator()
         {
@@ -256,13 +236,73 @@ namespace OpenHome.Av
 
     public static class MediaExtensions
     {
+        private static readonly string kNsDidl = "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/";
+        private static readonly string kNsDc = "http://purl.org/dc/elements/1.1/";
+        private static readonly string kNsUpnp = "urn:schemas-upnp-org:metadata-1-0/upnp/";
+
         public static string ToDidlLite(this ITagManager aTagManager, IMediaMetadata aMetadata)
         {
             if (aMetadata == null)
             {
                 return string.Empty;
             }
-            return aMetadata[aTagManager.System.Folder].Value;
+            if (aMetadata[aTagManager.System.Folder] != null)
+            {
+                return aMetadata[aTagManager.System.Folder].Value;
+            }
+
+            XmlDocument document = new XmlDocument();
+
+            XmlElement didl = document.CreateElement("DIDL-Lite", kNsDidl);
+
+            XmlElement container = document.CreateElement("item", kNsDidl);
+
+            XmlElement title = document.CreateElement("dc", "title", kNsDc);
+            title.AppendChild(document.CreateTextNode(aMetadata[aTagManager.Audio.Title].Value));
+
+            container.AppendChild(title);
+
+            XmlElement cls = document.CreateElement("upnp", "class", kNsUpnp);
+            cls.AppendChild(document.CreateTextNode("object.item.audioItem.musicTrack"));
+
+            container.AppendChild(cls);
+
+            foreach (var a in aMetadata[aTagManager.Audio.Artwork].Values)
+            {
+                XmlElement artwork = document.CreateElement("upnp", "albumArtURI", kNsUpnp);
+                artwork.AppendChild(document.CreateTextNode(a));
+                container.AppendChild(artwork);
+            }
+
+            if (aMetadata[aTagManager.Audio.AlbumTitle] != null)
+            {
+                XmlElement albumtitle = document.CreateElement("upnp", "album", kNsUpnp);
+                albumtitle.AppendChild(document.CreateTextNode(aMetadata[aTagManager.Audio.AlbumTitle].Value));
+                container.AppendChild(albumtitle);
+            }
+
+            foreach(var a in aMetadata[aTagManager.Audio.Artist].Values)
+            {
+                XmlElement artist = document.CreateElement("upnp", "artist", kNsUpnp);
+                artist.AppendChild(document.CreateTextNode(a));
+                container.AppendChild(artist);
+            }
+
+            if (aMetadata[aTagManager.Audio.AlbumArtist] != null)
+            {
+                XmlElement albumartist = document.CreateElement("upnp", "artist", kNsUpnp);
+                albumartist.AppendChild(document.CreateTextNode(aMetadata[aTagManager.Audio.AlbumArtist].Value));
+                XmlAttribute role = document.CreateAttribute("upnp", "role", kNsUpnp);
+                role.AppendChild(document.CreateTextNode("albumartist"));
+                albumartist.Attributes.Append(role);
+                container.AppendChild(albumartist);
+            }
+
+            didl.AppendChild(container);
+
+            document.AppendChild(didl);
+
+            return document.OuterXml;
         }
 
         public static IMediaMetadata FromDidlLite(this ITagManager aTagManager, string aMetadata)
@@ -273,9 +313,9 @@ namespace OpenHome.Av
             {
                 XmlDocument document = new XmlDocument();
                 XmlNamespaceManager nsManager = new XmlNamespaceManager(document.NameTable);
-                nsManager.AddNamespace("didl", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
-                nsManager.AddNamespace("upnp", "urn:schemas-upnp-org:metadata-1-0/upnp/");
-                nsManager.AddNamespace("dc", "http://purl.org/dc/elements/1.1/");
+                nsManager.AddNamespace("didl", kNsDidl);
+                nsManager.AddNamespace("upnp", kNsUpnp);
+                nsManager.AddNamespace("dc", kNsDc);
                 nsManager.AddNamespace("ldl", "urn:linn-co-uk/DIDL-Lite");
 
                 try
@@ -293,10 +333,34 @@ namespace OpenHome.Av
                         metadata.Add(aTagManager.Audio.Uri, uri);
                     }
 
-                    XmlNodeList albumart = document.SelectNodes("/didl:DIDL-Lite/didl:item/upnp:albumArtURI", nsManager);
+                    XmlNodeList albumart = document.SelectNodes("/didl:DIDL-Lite/*/upnp:albumArtURI", nsManager);
                     foreach (XmlNode n in albumart)
                     {
                         metadata.Add(aTagManager.Audio.Artwork, n.FirstChild.Value);
+                    }
+
+                    XmlNode album = document.SelectSingleNode("/didl:DIDL-Lite/*/upnp:album", nsManager);
+                    if (album != null)
+                    {
+                        metadata.Add(aTagManager.Audio.Album, album.FirstChild.Value);
+                    }
+
+                    XmlNode artist = document.SelectSingleNode("/didl:DIDL-Lite/*/upnp:artist", nsManager);
+                    if (artist != null)
+                    {
+                        metadata.Add(aTagManager.Audio.Artist, artist.FirstChild.Value);
+                    }
+
+                    XmlNodeList genre = document.SelectNodes("/didl:DIDL-Lite/*/upnp:genre", nsManager);
+                    foreach (XmlNode n in genre)
+                    {
+                        metadata.Add(aTagManager.Audio.Genre, n.FirstChild.Value);
+                    }
+
+                    XmlNode albumartist = document.SelectSingleNode("/didl:DIDL-Lite/*/upnp:artist[@role='AlbumArtist']", nsManager);
+                    if (albumartist != null)
+                    {
+                        metadata.Add(aTagManager.Audio.AlbumArtist, albumartist.FirstChild.Value);
                     }
                 }
                 catch (XmlException) { }

@@ -42,6 +42,8 @@ namespace OpenHome.Av
 
         public SenderMetadata(string aMetadata)
         {
+            iMetadata = aMetadata;
+
             XmlDocument doc = new XmlDocument();
             XmlNamespaceManager nsManager = new XmlNamespaceManager(doc.NameTable);
             nsManager.AddNamespace("didl", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
@@ -74,18 +76,19 @@ namespace OpenHome.Av
 
         public override string ToString()
         {
-            return base.ToString();
+            return iMetadata;
         }
 
         private string iName;
         private string iUri;
         private string iArtworkUri;
+        private string iMetadata;
     }
 
     public abstract class ServiceSender : Service
     {
-        protected ServiceSender(INetwork aNetwork)
-            : base(aNetwork)
+        protected ServiceSender(INetwork aNetwork, IDevice aDevice)
+            : base(aNetwork, aDevice)
         {
             iAudio = new Watchable<bool>(Network, "Audio", false);
             iMetadata = new Watchable<ISenderMetadata>(Network, "Metadata", SenderMetadata.Empty);
@@ -108,7 +111,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return new ProxySender(aDevice, this);
+            return new ProxySender(this);
         }
 
         public IWatchable<bool> Audio
@@ -161,11 +164,11 @@ namespace OpenHome.Av
 
     class ServiceSenderNetwork : ServiceSender
     {
-        public ServiceSenderNetwork(INetwork aNetwork, CpDevice aDevice)
-            : base(aNetwork)
+        public ServiceSenderNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
+            : base(aNetwork, aDevice)
         {
             iSubscribed = new ManualResetEvent(false);
-            iService = new CpProxyAvOpenhomeOrgSender1(aDevice);
+            iService = new CpProxyAvOpenhomeOrgSender1(aCpDevice);
 
             iService.SetPropertyAudioChanged(HandleAudioChanged);
             iService.SetPropertyMetadataChanged(HandleMetadataChanged);
@@ -176,13 +179,16 @@ namespace OpenHome.Av
 
         public override void Dispose()
         {
+            // cause in flight or blocked subscription to complete
+            iSubscribed.Set();
+
+            base.Dispose();
+
             iSubscribed.Dispose();
             iSubscribed = null;
 
             iService.Dispose();
             iService = null;
-
-            base.Dispose();
         }
 
         protected override Task OnSubscribe()
@@ -193,6 +199,11 @@ namespace OpenHome.Av
                 iSubscribed.WaitOne();
             });
             return task;
+        }
+
+        protected override void OnCancelSubscribe()
+        {
+            iSubscribed.Set();
         }
         
         private void HandleInitialEvent()
@@ -239,8 +250,8 @@ namespace OpenHome.Av
 
     class ServiceSenderMock : ServiceSender, IMockable
     {
-        public ServiceSenderMock(INetwork aNetwork, string aAttributes, string aPresentationUrl, bool aAudio, ISenderMetadata aMetadata, string aStatus)
-            : base(aNetwork)
+        public ServiceSenderMock(INetwork aNetwork, IDevice aDevice, string aAttributes, string aPresentationUrl, bool aAudio, ISenderMetadata aMetadata, string aStatus)
+            : base(aNetwork, aDevice)
         {
             iAttributes = aAttributes;
             iPresentationUrl = aPresentationUrl;
@@ -287,8 +298,8 @@ namespace OpenHome.Av
 
     public class ProxySender : Proxy<ServiceSender>, IProxySender
     {
-        public ProxySender(IDevice aDevice, ServiceSender aService)
-            : base(aDevice, aService)
+        public ProxySender(ServiceSender aService)
+            : base(aService)
         {
         }
 

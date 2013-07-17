@@ -33,8 +33,8 @@ empty
 
 // test removing Sitting Room sets Kitchen sender to false
 mock network remove 4c494e4e-0026-0f99-1112-ef000004013f
-expect 4c494e4e-0026-0f99-1112-ef000004013f Group Removed
 expect 4c494e4e-0026-0f99-1111-ef000004013f update Sender False
+expect 4c494e4e-0026-0f99-1112-ef000004013f Group Removed
 empty
 
 // test adding Sitting Room sets Kitchen sender to true
@@ -43,3 +43,15 @@ expect 4c494e4e-0026-0f99-1111-ef000004013f update Sender True 4c494e4e-0026-0f9
 expect 4c494e4e-0026-0f99-1112-ef000004013f Group Added
 expect 4c494e4e-0026-0f99-1112-ef000004013f open Sender False
 empty
+
+
+mock network create ds 67
+mock network update 67 product attributes Info Time Volume
+mock network add 67
+expect 67 Group Added
+expect 67 open Sender False
+empty
+mock network remove 67
+expect 67 Group Removed
+empty
+
