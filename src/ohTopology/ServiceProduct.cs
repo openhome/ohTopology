@@ -333,7 +333,10 @@ namespace OpenHome.Av
 
         private void HandleInitialEventConfiguration()
         {
-            ParseParameterXml(iServiceConfiguration.PropertyParameterXml());
+            Network.Schedule(() =>
+            {
+                ParseParameterXml(iServiceConfiguration.PropertyParameterXml());
+            });
 
             iSubscribedConfiguration.Set();
         }
