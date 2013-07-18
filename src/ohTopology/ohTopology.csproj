@@ -82,6 +82,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ByteArray.cs" />
+    <Compile Include="CpLinnCoUkConfiguration1.cs" />
     <Compile Include="IdCache.cs" />
     <Compile Include="Joinable.cs" />
     <Compile Include="PlaylistWriter.cs" />

@@ -321,7 +321,10 @@ namespace OpenHome.Av
     {
         string Name { get; }
         IDevice Device { get; }
+        IWatchable<string> Registration { get; }
         IWatchable<ITopologymSender> Sender { get; }
+
+        void SetRegistration(string aValue);
     }
     
     public interface ITopology4Root : ITopology4Group
@@ -408,6 +411,14 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<string> Registration
+        {
+            get
+            {
+                return iGroup.Registration;
+            }
+        }
+
         public IWatchable<ITopologymSender> Sender
         {
             get
@@ -421,6 +432,14 @@ namespace OpenHome.Av
             get
             {
                 return iWatchableSource;
+            }
+        }
+
+        public void SetRegistration(string aValue)
+        {
+            if (iGroup != null)
+            {
+                iGroup.SetRegistration(aValue);
             }
         }
 

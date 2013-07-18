@@ -19,10 +19,12 @@ namespace OpenHome.Av
         IWatchable<uint> SourceIndex { get; }
         IWatchable<string> SourceXml { get; }
         IWatchable<bool> Standby { get; }
+        IWatchable<string> Registration { get; }
 
         Task SetSourceIndex(uint aValue);
         Task SetSourceIndexByName(string aValue);
         Task SetStandby(bool aValue);
+        Task SetRegistration(string aValue);
 
         string Attributes { get; }
         string ManufacturerImageUri { get; }
@@ -48,6 +50,7 @@ namespace OpenHome.Av
             iSourceIndex = new Watchable<uint>(Network, "SourceIndex", 0);
             iSourceXml = new Watchable<string>(Network, "SourceXml", string.Empty);
             iStandby = new Watchable<bool>(Network, "Standby", false);
+            iRegistration = new Watchable<string>(Network, "Registration", string.Empty);
         }
 
         public override void Dispose()
@@ -68,6 +71,9 @@ namespace OpenHome.Av
 
             iStandby.Dispose();
             iStandby = null;
+
+            iRegistration.Dispose();
+            iRegistration = null;
         }
 
         public override IProxy OnCreate(IDevice aDevice)
@@ -117,9 +123,18 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<string> Registration
+        {
+            get
+            {
+                return iRegistration;
+            }
+        }
+
         public abstract Task SetSourceIndex(uint aValue);
         public abstract Task SetSourceIndexByName(string aValue);
         public abstract Task SetStandby(bool aValue);
+        public abstract Task SetRegistration(string aValue);
 
         // IProduct methods
 
@@ -237,6 +252,7 @@ namespace OpenHome.Av
         protected Watchable<uint> iSourceIndex;
         protected Watchable<string> iSourceXml;
         protected Watchable<bool> iStandby;
+        protected Watchable<string> iRegistration;
     }
 
     class ServiceProductNetwork : ServiceProduct
@@ -245,7 +261,9 @@ namespace OpenHome.Av
             : base(aNetwork, aDevice)
         {
             iSubscribed = new ManualResetEvent(false);
+            iSubscribedConfiguration = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgProduct1(aCpDevice);
+            iServiceConfiguration = new CpProxyLinnCoUkConfiguration1(aCpDevice);
 
             iService.SetPropertyProductRoomChanged(HandleRoomChanged);
             iService.SetPropertyProductNameChanged(HandleNameChanged);
@@ -253,13 +271,17 @@ namespace OpenHome.Av
             iService.SetPropertySourceXmlChanged(HandleSourceXmlChanged);
             iService.SetPropertyStandbyChanged(HandleStandbyChanged);
 
+            iServiceConfiguration.SetPropertyParameterXmlChanged(HandleParameterXmlChanged);
+
             iService.SetPropertyInitialEvent(HandleInitialEvent);
+            iServiceConfiguration.SetPropertyInitialEvent(HandleInitialEventConfiguration);
         }
 
         public override void Dispose()
         {
             // cause in flight or blocked subscription to complete
             iSubscribed.Set();
+            iSubscribedConfiguration.Set();
 
             base.Dispose();
 
@@ -268,6 +290,9 @@ namespace OpenHome.Av
 
             iService.Dispose();
             iService = null;
+
+            iServiceConfiguration.Dispose();
+            iServiceConfiguration = null;
         }
 
         protected override Task OnSubscribe()
@@ -275,7 +300,9 @@ namespace OpenHome.Av
             Task task = Task.Factory.StartNew(() =>
             {
                 iService.Subscribe();
+                iServiceConfiguration.Subscribe();
                 iSubscribed.WaitOne();
+                iSubscribedConfiguration.WaitOne();
             });
             return task;
         }
@@ -283,6 +310,7 @@ namespace OpenHome.Av
         protected override void OnCancelSubscribe()
         {
             iSubscribed.Set();
+            iSubscribedConfiguration.Set();
         }
 
         private void HandleInitialEvent()
@@ -303,10 +331,19 @@ namespace OpenHome.Av
             iSubscribed.Set();
         }
 
+        private void HandleInitialEventConfiguration()
+        {
+            ParseParameterXml(iServiceConfiguration.PropertyParameterXml());
+
+            iSubscribedConfiguration.Set();
+        }
+
         protected override void OnUnsubscribe()
         {
             iService.Unsubscribe();
+            iServiceConfiguration.Unsubscribe();
             iSubscribed.Reset();
+            iSubscribedConfiguration.Reset();
         }
 
         public override Task SetSourceIndex(uint aValue)
@@ -332,6 +369,15 @@ namespace OpenHome.Av
             Task task = Task.Factory.StartNew(() =>
             {
                 iService.SyncSetStandby(aValue);
+            });
+            return task;
+        }
+
+        public override Task SetRegistration(string aValue)
+        {
+            Task task = Task.Factory.StartNew(() =>
+            {
+                iServiceConfiguration.SyncSetParameter("TuneIn Radio", "Password", aValue);
             });
             return task;
         }
@@ -376,8 +422,45 @@ namespace OpenHome.Av
             });
         }
 
+        private void HandleParameterXmlChanged()
+        {
+            Network.Schedule(() =>
+            {
+                ParseParameterXml(iServiceConfiguration.PropertyParameterXml());
+            });
+        }
+
+        private void ParseParameterXml(string aParameterXml)
+        {
+            XmlDocument document = new XmlDocument();
+            document.LoadXml(aParameterXml);
+
+            //<ParameterList>
+            // ...
+            //  <Parameter>
+            //    <Target>TuneIn Radio</Target>
+            //    <Name>Password</Name>
+            //    <Type>string</Type>
+            //    <Value></Value>
+            //  </Parameter>
+            // ...
+            //</ParameterList>
+
+            System.Xml.XmlNode registration = document.SelectSingleNode("/ParameterList/Parameter[Target=\"TuneIn Radio\" and Name=\"Password\"]/Value");
+            if (registration != null && registration.FirstChild != null)
+            {
+                iRegistration.Update(registration.Value);
+            }
+            else
+            {
+                iRegistration.Update(string.Empty);
+            }
+        }
+
         private ManualResetEvent iSubscribed;
+        private ManualResetEvent iSubscribedConfiguration;
         private CpProxyAvOpenhomeOrgProduct1 iService;
+        private CpProxyLinnCoUkConfiguration1 iServiceConfiguration;
     }
 
     internal class SourceXml
@@ -562,6 +645,11 @@ namespace OpenHome.Av
                 IEnumerable<string> value = aValue.Skip(1);
                 iStandby.Update(bool.Parse(value.First()));
             }
+            else if (command == "registration")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+                iRegistration.Update(value.First());
+            }
             else if (command == "source")
             {
                 IEnumerable<string> value = aValue.Skip(1);
@@ -624,6 +712,18 @@ namespace OpenHome.Av
             return task;
         }
 
+        public override Task SetRegistration(string aValue)
+        {
+            Task task = Task.Factory.StartNew(() =>
+            {
+                Network.Schedule(() =>
+                {
+                    iRegistration.Update(aValue);
+                });
+            });
+            return task;
+        }
+
         private SourceXml iSourceXmlFactory;
     }
 
@@ -659,6 +759,11 @@ namespace OpenHome.Av
             get { return iService.Standby; }
         }
 
+        public IWatchable<string> Registration
+        {
+            get { return iService.Registration; }
+        }
+
         public Task SetSourceIndex(uint aValue)
         {
             return iService.SetSourceIndex(aValue);
@@ -672,6 +777,11 @@ namespace OpenHome.Av
         public Task SetStandby(bool aValue)
         {
             return iService.SetStandby(aValue);
+        }
+
+        public Task SetRegistration(string aValue)
+        {
+            return iService.SetRegistration(aValue);
         }
 
         public string Attributes
