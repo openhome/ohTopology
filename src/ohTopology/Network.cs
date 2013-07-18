@@ -39,10 +39,13 @@ namespace OpenHome.Av
         {
             iNetwork.Execute(() =>
             {
-                Device device = iCpDeviceLookup[aDevice.Udn()];
-                iCpDeviceLookup.Remove(device.Udn);
-                iNetwork.Remove(device);
-                device.Dispose();
+                Device device;
+                if (iCpDeviceLookup.TryGetValue(aDevice.Udn(), out device))
+                {
+                    iCpDeviceLookup.Remove(device.Udn);
+                    iNetwork.Remove(device);
+                    device.Dispose();
+                }
             });
         }
 
