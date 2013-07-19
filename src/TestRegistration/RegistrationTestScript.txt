@@ -1,0 +1,28 @@
+// setup type of network
+mock network medium
+
+expect Room Added: Kitchen at 0
+expect Kitchen open 
+Registrations begin
+4c494e4e-0026-0f99-1111-ef000004013f
+Registrations end
+
+expect Room Added: Sitting Room at 1
+expect Sitting Room open 
+Registrations begin
+4c494e4e-0026-0f99-1112-ef000004013f
+Registrations end
+
+expect Room Added: Bedroom at 0
+expect Bedroom open 
+Registrations begin
+4c494e4e-0026-0f99-1113-ef000004013f
+Registrations end
+
+expect Room Added: Dining Room at 1
+expect Dining Room open 
+Registrations begin
+4c494e4e-0026-0f99-1114-ef000004013f
+Registrations end
+
+empty

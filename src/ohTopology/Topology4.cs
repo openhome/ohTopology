@@ -317,14 +317,18 @@ namespace OpenHome.Av
         private bool iHasTime;
     }
 
+    public interface ITopology4Registration
+    {
+        string ProductId { get; }
+        IWatchable<string> Registration { get; }
+        void SetRegistration(string aValue);
+    }
+
     public interface ITopology4Group
     {
         string Name { get; }
         IDevice Device { get; }
-        IWatchable<string> Registration { get; }
         IWatchable<ITopologymSender> Sender { get; }
-
-        void SetRegistration(string aValue);
     }
     
     public interface ITopology4Root : ITopology4Group
@@ -334,7 +338,7 @@ namespace OpenHome.Av
         IWatchable<IEnumerable<ITopology4Group>> Senders { get; }
     }
 
-    class Topology4Group : ITopology4Root, IWatcher<uint>, IWatcher<string>, IDisposable
+    class Topology4Group : ITopology4Root, ITopology4Registration, IWatcher<uint>, IWatcher<string>, IDisposable
     {
         public Topology4Group(INetwork aNetwork, string aName, ITopologymGroup aGroup, IEnumerable<ITopology2Source> aSources)
         {
@@ -408,6 +412,14 @@ namespace OpenHome.Av
             get
             {
                 return iGroup.Device;
+            }
+        }
+
+        public string ProductId
+        {
+            get
+            {
+                return iGroup.ProductId;
             }
         }
 
@@ -778,6 +790,7 @@ namespace OpenHome.Av
         IWatchable<EStandby> Standby { get; }
         IWatchable<IEnumerable<ITopology4Root>> Roots { get; }
         IWatchable<IEnumerable<ITopology4Source>> Sources { get; }
+        IWatchable<IEnumerable<ITopology4Registration>> Registrations { get; }
 
         void SetStandby(bool aValue);
     }
@@ -796,6 +809,7 @@ namespace OpenHome.Av
             iWatchableStandby = new Watchable<EStandby>(iNetwork, "standby", EStandby.eOn);
             iWatchableRoots = new Watchable<IEnumerable<ITopology4Root>>(iNetwork, "roots", new List<ITopology4Root>());
             iWatchableSources = new Watchable<IEnumerable<ITopology4Source>>(iNetwork, "sources", new List<ITopology4Source>());
+            iWatchableRegistrations = new Watchable<IEnumerable<ITopology4Registration>>(iNetwork, "registration", new List<ITopology4Registration>());
 
             iGroupLookup = new Dictionary<ITopologymGroup, Topology4GroupWatcher>();
             iGroup4s = new List<Topology4Group>();
@@ -832,6 +846,9 @@ namespace OpenHome.Av
             iWatchableSources.Dispose();
             iWatchableSources = null;
 
+            iWatchableRegistrations.Dispose();
+            iWatchableRegistrations = null;
+
             iRoots = null;
         }
 
@@ -864,6 +881,14 @@ namespace OpenHome.Av
             get
             {
                 return iWatchableSources;
+            }
+        }
+
+        public IWatchable<IEnumerable<ITopology4Registration>> Registrations
+        {
+            get
+            {
+                return iWatchableRegistrations;
             }
         }
 
@@ -905,6 +930,7 @@ namespace OpenHome.Av
 
         internal void CreateTree()
         {
+            List<ITopology4Registration> registrations = new List<ITopology4Registration>();
             List<Topology4Group> oldGroups = new List<Topology4Group>(iGroup4s);
 
             iGroup4s.Clear();
@@ -912,7 +938,9 @@ namespace OpenHome.Av
 
             foreach (var kvp in iGroupLookup)
             {
-                InsertIntoTree(new Topology4Group(iNetwork, kvp.Value.Name, kvp.Key, kvp.Value.Sources));
+                Topology4Group group = new Topology4Group(iNetwork, kvp.Value.Name, kvp.Key, kvp.Value.Sources);
+                InsertIntoTree(group);
+                registrations.Add(group);
             }
 
             List<ITopology4Root> roots = new List<ITopology4Root>();
@@ -927,6 +955,7 @@ namespace OpenHome.Av
 
             iWatchableRoots.Update(roots);
             iWatchableSources.Update(sources);
+            iWatchableRegistrations.Update(registrations);
 
             foreach (Topology4Group g in oldGroups)
             {
@@ -1041,6 +1070,7 @@ namespace OpenHome.Av
         private Watchable<EStandby> iWatchableStandby;
         private Watchable<IEnumerable<ITopology4Root>> iWatchableRoots;
         private Watchable<IEnumerable<ITopology4Source>> iWatchableSources;
+        private Watchable<IEnumerable<ITopology4Registration>> iWatchableRegistrations;
 
         private Dictionary<ITopologymGroup, Topology4GroupWatcher> iGroupLookup;
         private List<Topology4Group> iGroup4s;

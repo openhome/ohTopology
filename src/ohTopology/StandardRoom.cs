@@ -397,6 +397,7 @@ namespace OpenHome.Av
         IWatchable<ITopology4Source> Source { get; }
         IWatchable<IEnumerable<ITopology4Source>> Sources { get; }
         IEnumerable<ITopology4Group> Senders { get; }
+        IWatchable<IEnumerable<ITopology4Registration>> Registrations { get; }
 
         void SetStandby(bool aValue);
         void ListenTo(IStandardRoom aRoom);
@@ -562,6 +563,14 @@ namespace OpenHome.Av
                 {
                     return iSenders;
                 }
+            }
+        }
+
+        public IWatchable<IEnumerable<ITopology4Registration>> Registrations
+        {
+            get
+            {
+                return iRoom.Registrations;
             }
         }
 
