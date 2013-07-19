@@ -7,7 +7,7 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public interface IProxyMediaEndpoint : IDisposable
+    public interface IProxyMediaEndpoint : IProxy
     {
         string Id { get; }
         string Type { get; }
@@ -45,6 +45,14 @@ namespace OpenHome.Av
         {
             iDisposeHandler.Dispose();
             iMediaServer.Dispose();
+        }
+
+        public IDevice Device
+        {
+            get
+            {
+                return iMediaServer.Device;
+            }
         }
 
         public string Id
@@ -494,6 +502,35 @@ namespace OpenHome.Av
                 iEndpointLookup.Remove(aItem);
                 endpoint.Dispose();
             }
+        }
+    }
+
+    public static class MediaEndpointExtensions
+    {
+        public static bool SupportsBrowse(this IProxyMediaEndpoint aProxy)
+        {
+            return (aProxy.Attributes.Contains("Browse"));
+        }
+
+        public static bool SupportsLink(this IProxyMediaEndpoint aProxy)
+        {
+            return (aProxy.Attributes.Contains("Link"));
+        }
+
+        public static bool SupportsLink(this IProxyMediaEndpoint aProxy, ITag aTag)
+        {
+            var value = string.Format("Link:{0}", aTag.FullName);
+            return (aProxy.Attributes.Contains(value));
+        }
+
+        public static bool SupportsSearch(this IProxyMediaEndpoint aProxy)
+        {
+            return (aProxy.Attributes.Contains("Search"));
+        }
+
+        public static bool SupportsQuery(this IProxyMediaEndpoint aProxy)
+        {
+            return (aProxy.Attributes.Contains("Query"));
         }
     }
 }

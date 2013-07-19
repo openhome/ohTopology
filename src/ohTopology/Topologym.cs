@@ -59,10 +59,12 @@ namespace OpenHome.Av
         IWatchable<bool> Standby { get; }
         IWatchable<uint> SourceIndex { get; }
         IEnumerable<IWatchable<ITopology2Source>> Sources { get; }
+        IWatchable<string> Registration { get; }
         IWatchable<ITopologymSender> Sender { get; }
 
         void SetStandby(bool aValue);
         void SetSourceIndex(uint aValue);
+        void SetRegistration(string aValue);
     }
 
     class TopologymGroup : ITopologymGroup
@@ -147,6 +149,14 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<string> Registration
+        {
+            get
+            {
+                return iGroup.Registration;
+            }
+        }
+
         public IWatchable<ITopologymSender> Sender
         {
             get
@@ -163,6 +173,11 @@ namespace OpenHome.Av
         public void SetSourceIndex(uint aValue)
         {
             iGroup.SetSourceIndex(aValue);
+        }
+
+        public void SetRegistration(string aValue)
+        {
+            iGroup.SetRegistration(aValue);
         }
 
         internal void SetSender(ITopologymSender aSender)
