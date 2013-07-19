@@ -11,6 +11,7 @@ namespace OpenHome.Av
     {
         string Id { get; }
         string Type { get; }
+        IEnumerable<string> Attributes { get; }
         string Name { get; }
         string Info { get; }
         string Url { get; }
@@ -24,7 +25,6 @@ namespace OpenHome.Av
         string ModelUrl { get; }
         string ModelArtwork { get; }
         DateTime Started { get; }
-        IEnumerable<string> Attributes { get; }
         Task<IMediaServerSession> CreateSession();
     }
 
