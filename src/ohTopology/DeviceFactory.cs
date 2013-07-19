@@ -98,7 +98,7 @@ namespace OpenHome.Av
             device.Add<IProxyProduct>(new ServiceProductMock(aNetwork, device, aRoom, aName, 0, xml, true, aAttributes,
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DS", "",
-                "", "Linn High Fidelity System Component", ""));
+                "", "Linn High Fidelity System Component", "", aUdn));
 
             // volume service
             device.Add<IProxyVolume>(new ServiceVolumeMock(aNetwork, device, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
@@ -163,7 +163,7 @@ namespace OpenHome.Av
             device.Add<IProxyProduct>(new ServiceProductMock(aNetwork, device, aRoom, aName, 0, xml, true, aAttributes,
                 "", "Linn Products Ltd", "Linn", "http://www.linn.co.uk",
                 "", "Linn High Fidelity System Component", "Mock DSM", "",
-                "", "Linn High Fidelity System Component", ""));
+                "", "Linn High Fidelity System Component", "", aUdn));
 
             // volume service
             device.Add<IProxyVolume>(new ServiceVolumeMock(aNetwork, device, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));

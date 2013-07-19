@@ -38,6 +38,7 @@ namespace OpenHome.Av
         string ProductImageUri { get; }
         string ProductInfo { get; }
         string ProductUrl { get; }
+        string ProductId { get; }
     }
 
     public abstract class ServiceProduct : Service
@@ -234,6 +235,14 @@ namespace OpenHome.Av
             }
         }
 
+        public string ProductId
+        {
+            get
+            {
+                return iProductId;
+            }
+        }
+
         protected string iAttributes;
         protected string iManufacturerImageUri;
         protected string iManufacturerInfo;
@@ -246,6 +255,7 @@ namespace OpenHome.Av
         protected string iProductImageUri;
         protected string iProductInfo;
         protected string iProductUrl;
+        protected string iProductId;
 
         protected Watchable<string> iRoom;
         protected Watchable<string> iName;
@@ -264,6 +274,7 @@ namespace OpenHome.Av
             iSubscribedConfiguration = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgProduct1(aCpDevice);
             iServiceConfiguration = new CpProxyLinnCoUkConfiguration1(aCpDevice);
+            iServiceVolkano = new CpProxyLinnCoUkVolkano1(aCpDevice);
 
             iService.SetPropertyProductRoomChanged(HandleRoomChanged);
             iService.SetPropertyProductNameChanged(HandleNameChanged);
@@ -301,6 +312,9 @@ namespace OpenHome.Av
             {
                 iService.Subscribe();
                 iServiceConfiguration.Subscribe();
+
+                iServiceVolkano.SyncProductId(out iProductId);
+                
                 iSubscribed.WaitOne();
                 iSubscribedConfiguration.WaitOne();
             });
@@ -464,6 +478,7 @@ namespace OpenHome.Av
         private ManualResetEvent iSubscribedConfiguration;
         private CpProxyAvOpenhomeOrgProduct1 iService;
         private CpProxyLinnCoUkConfiguration1 iServiceConfiguration;
+        private CpProxyLinnCoUkVolkano1 iServiceVolkano;
     }
 
     internal class SourceXml
@@ -575,7 +590,7 @@ namespace OpenHome.Av
     {
         public ServiceProductMock(INetwork aNetwork, IDevice aDevice, string aRoom, string aName, uint aSourceIndex, SourceXml aSourceXmlFactory, bool aStandby,
             string aAttributes, string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl, string aModelImageUri, string aModelInfo, string aModelName,
-            string aModelUrl, string aProductImageUri, string aProductInfo, string aProductUrl)
+            string aModelUrl, string aProductImageUri, string aProductInfo, string aProductUrl, string aProductId)
             : base(aNetwork, aDevice)
         {
             iSourceXmlFactory = aSourceXmlFactory;
@@ -592,6 +607,7 @@ namespace OpenHome.Av
             iProductImageUri = aProductImageUri;
             iProductInfo = aProductInfo;
             iProductUrl = aProductUrl;
+            iProductId = aProductId;
 
             iRoom.Update(aRoom);
             iName.Update(aName);
@@ -627,6 +643,46 @@ namespace OpenHome.Av
             {
                 IEnumerable<string> value = aValue.Skip(1);
                 iManufacturerUrl = string.Join(" ", value);
+            }
+            else if (command == "modelimageuri")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+                iModelImageUri = string.Join(" ", value);
+            }
+            else if (command == "modelinfo")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+                iModelInfo = string.Join(" ", value);
+            }
+            else if (command == "modelname")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+                iManufacturerName = string.Join(" ", value);
+            }
+            else if (command == "modelurl")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+                iModelUrl = string.Join(" ", value);
+            }
+            else if (command == "productimageuri")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+                iProductImageUri = string.Join(" ", value);
+            }
+            else if (command == "productinfo")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+                iProductInfo = string.Join(" ", value);
+            }
+            else if (command == "producturl")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+                iProductUrl = string.Join(" ", value);
+            }
+            else if (command == "productid")
+            {
+                IEnumerable<string> value = aValue.Skip(1);
+                iProductId = string.Join(" ", value);
             }
             else if (command == "room")
             {
@@ -845,6 +901,11 @@ namespace OpenHome.Av
         public string ProductUrl
         {
             get { return iService.ProductUrl; }
+        }
+
+        public string ProductId
+        {
+            get { return iService.ProductId; }
         }
     }
 }
