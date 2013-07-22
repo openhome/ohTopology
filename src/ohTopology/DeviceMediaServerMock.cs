@@ -8,10 +8,6 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
-
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
 
@@ -35,7 +31,7 @@ namespace OpenHome.Av
         private readonly INetwork iNetwork;
         private readonly IEnumerable<IMediaMetadata> iMetadata;
         private readonly HttpFramework iHttpFramework;
-        private readonly List<Tuple<Color, Color>> iColors;
+        private readonly List<Tuple<string, string>> iColors;
 
         public DeviceMediaServerMock(INetwork aNetwork, string aUdn, string aResourceRoot)
             : base(aUdn)
@@ -44,23 +40,23 @@ namespace OpenHome.Av
             iMetadata = ReadMetadata(aNetwork, aResourceRoot);
             iHttpFramework = new HttpFramework(HandleRequest, 10);
 
-            iColors = new List<Tuple<Color, Color>>();
-            Add(Color.Black, Color.White);
-            Add(Color.White, Color.Black);
-            Add(Color.Cyan, Color.DarkBlue);
-            Add(Color.DarkGoldenrod, Color.LightGray);
-            Add(Color.OrangeRed, Color.PaleGreen);
-            Add(Color.Orchid, Color.DarkGray);
-            Add(Color.DarkKhaki, Color.LightSeaGreen);
-            Add(Color.LightYellow, Color.DarkBlue);
-            Add(Color.LightSteelBlue, Color.Orange);
-            Add(Color.Olive, Color.Moccasin);
-            Add(Color.MistyRose, Color.Navy);
+            iColors = new List<Tuple<string, string>>();
+            Add("000000", "FFFFFF");
+            Add("FFFFFF", "000000");
+            Add("00FFFF", "00008B");
+            Add("B8860B", "D3D3D3");
+            Add("FF4500", "98FB98");
+            Add("DA70D6", "A9A9A9");
+            Add("BDB76B", "20B2AA");
+            Add("FFFFE0", "00008B");
+            Add("B0C4DE", "FFA500");
+            Add("808000", "FFE4B5");
+            Add("FFE4E1", "000080");
 
 
             Console.WriteLine("Port: " + iHttpFramework.Port);
 
-            Add<IProxyMediaServer>(new ServiceMediaServerMock(aNetwork, this, new string[] {"Browse", "Link", "Link:audio.artist", "Link:audio.album", "Link:audio.genre", "Search"},
+            Add<IProxyMediaServer>(new ServiceMediaServerMock(aNetwork, this, new string[] { "Browse", "Link", "Link:audio.artist", "Link:audio.album", "Link:audio.genre", "Search" },
                 "", "OpenHome", "OpenHome", "http://www.openhome.org",
                 "", "OpenHome", "OpenHome", "http://www.openhome.org",
                 "", "OpenHome", "OpenHome", "http://www.openhome.org",
@@ -71,9 +67,9 @@ namespace OpenHome.Av
             //Add<ContentDirectory>(contentDirectory);
         }
 
-        private void Add(Color aBackground, Color aForeground)
+        private void Add(string aBackground, string aForeground)
         {
-            iColors.Add(new Tuple<Color, Color>(aForeground, aBackground));
+            iColors.Add(new Tuple<string, string>(aForeground, aBackground));
         }
 
         private IEnumerable<IMediaMetadata> ReadMetadata(INetwork aNetwork, string aResourceRoot)
@@ -106,10 +102,11 @@ namespace OpenHome.Av
 
             var xml = XDocument.Load(reader);
 
-            var items = from item in xml.Descendants("item") select new
-            {
-                Metadata = item.Descendants("metadatum")
-            };
+            var items = from item in xml.Descendants("item")
+                        select new
+                            {
+                                Metadata = item.Descendants("metadatum")
+                            };
 
             var results = new List<IMediaMetadata>();
 
@@ -117,11 +114,12 @@ namespace OpenHome.Av
             {
                 var metadata = new MediaMetadata();
 
-                var xmetadata = from metadatum in item.Metadata select new
-                {
-                    Tag = metadatum.Attribute("tag"),
-                    Values = metadatum.Descendants("value")
-                };
+                var xmetadata = from metadatum in item.Metadata
+                                select new
+                                    {
+                                        Tag = metadatum.Attribute("tag"),
+                                        Values = metadatum.Descendants("value")
+                                    };
 
                 foreach (var metadatum in xmetadata)
                 {
@@ -148,7 +146,7 @@ namespace OpenHome.Av
 
             var query = Lri.ParseQuery(request.Query);
             var lri = new Lri(request.Path, query);
-
+            Console.WriteLine("HandleRequest: " + lri.FullPathAndQuery());
             if (lri.Any())
             {
                 var segment = lri.First();
@@ -177,6 +175,8 @@ namespace OpenHome.Av
 
         private void ProcessRequestArtwork(IHttpRequest aRequest, ILri aLri)
         {
+
+            Console.WriteLine("ProcessRequestArtwork: " + aLri.FullPathAndQuery());
             if (!aLri.Any())
             {
                 aRequest.SendNotFound();
@@ -209,7 +209,14 @@ namespace OpenHome.Av
                 return;
             }
 
-            aRequest.Send(GetAlbumArtworkPng(artist.Value, title.Value), "image/png");
+            try
+            {
+                aRequest.Send(GetAlbumArtworkPng(artist.Value, title.Value), "image/png");
+            }
+            catch
+            {
+                aRequest.SendNotFound();
+            }
         }
 
         private byte[] GetAlbumArtworkPng(string aArtist, string aTitle)
@@ -223,30 +230,41 @@ namespace OpenHome.Av
             var background = colors.Item1;
             var foreground = colors.Item2;
 
-            Bitmap bitmap = new Bitmap(500, 500);
 
-            Graphics graphics = Graphics.FromImage(bitmap);
+            var url = string.Format("http://dummyimage.com/500x500/{0}/{1}.png&text={2}+-+{3}", background, foreground, Encode(aArtist), Encode(aTitle));
 
-            using (var brush = new SolidBrush(background))
+            var request = System.Net.HttpWebRequest.Create(url) as System.Net.HttpWebRequest;
+            request.Timeout = 1000;
+            request.ReadWriteTimeout = 1000;
+
+            using (var response = request.GetResponse())
             {
-                graphics.FillRectangle(brush, graphics.ClipBounds);
-            }
-
-            using (var font = new Font(FontFamily.GenericSansSerif, 20))
-            {
-                using (var brush = new SolidBrush(foreground))
+                using (var s = response.GetResponseStream())
                 {
-                    graphics.DrawString(aArtist, font, brush, 10, 10);
-                    graphics.DrawString(aTitle, font, brush, 10, 50);
+                    int count = 0;
+                    byte[] buf = new byte[1024];
+                    List<byte> result = new List<byte>();
+                    do
+                    {
+                        count = s.Read(buf, 0, buf.Length);
+                        if (count != 0)
+                        {
+                            result.AddRange(buf.Take(count));
+                        }
+                    }
+                    while (count > 0);
+                    return result.ToArray();
                 }
             }
+        }
 
-            using (MemoryStream stream = new MemoryStream())
-            {
-                bitmap.Save(stream, ImageFormat.Png);
-
-                return (stream.ToArray());
-            }
+        private string Encode(string aString)
+        {
+            return aString.Replace("+", "0x2B")
+                          .Replace("#", "0x23")
+                          .Replace("%", "0x25")
+                          .Replace("&", "0x26")
+                          .Replace(" ", "+");
         }
 
         private Task HandleRequestAudio(IHttpRequest aRequest, ILri aLri)
