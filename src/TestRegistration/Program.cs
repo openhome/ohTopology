@@ -8,64 +8,6 @@ using OpenHome.Os.App;
 
 namespace TestRegistration
 {
-    class RoomWatcher : IOrderedWatcher<IStandardRoom>, IDisposable
-    {
-        public RoomWatcher(ITagManager aTagManager, MockableScriptRunner aRunner)
-        {
-            iTagManager = aTagManager;
-            iRunner = aRunner;
-            iFactory = new ResultWatcherFactory(aRunner);
-        }
-
-        public void Dispose()
-        {
-            iFactory.Dispose();
-        }
-
-        public void OrderedOpen()
-        {
-        }
-
-        public void OrderedInitialised()
-        {
-        }
-
-        public void OrderedClose()
-        {
-        }
-
-        public void OrderedAdd(IStandardRoom aItem, uint aIndex)
-        {
-            iRunner.Result(string.Format("Room Added: {0} at {1}", aItem.Name, aIndex));
-
-            iFactory.Create<IEnumerable<ITopology4Registration>>(aItem.Name, aItem.Registrations, (v) =>
-            {
-                string info = "\nRegistrations begin\n";
-                foreach (ITopology4Registration r in v)
-                {
-                    info += r.ProductId + "\n";
-                }
-                info += "Registrations end";
-                return info;
-            });
-        }
-
-        public void OrderedMove(IStandardRoom aItem, uint aFrom, uint aTo)
-        {
-            iRunner.Result(string.Format("Room Moved: {0} from {1} to {2}", aItem.Name, aFrom, aTo));
-        }
-
-        public void OrderedRemove(IStandardRoom aItem, uint aIndex)
-        {
-            iRunner.Result(string.Format("Room Removed: {0} at {1}", aItem.Name, aIndex));
-            iFactory.Destroy(aItem.Name);
-        }
-
-        private ITagManager iTagManager;
-        private MockableScriptRunner iRunner;
-        private ResultWatcherFactory iFactory;
-    }
-
     class Program
     {
         static int Main(string[] args)
@@ -87,11 +29,20 @@ namespace TestRegistration
 
             MockableScriptRunner runner = new MockableScriptRunner();
 
-            RoomWatcher watcher = new RoomWatcher(network.TagManager, runner);
+            ResultWatcherFactory factory = new ResultWatcherFactory(runner);
 
             network.Schedule(() =>
             {
-                house.Rooms.AddWatcher(watcher);
+                factory.Create<IEnumerable<ITopology4Registration>>("House", house.Registrations, (v) =>
+                {
+                    string info = "\nRegistrations begin\n";
+                    foreach (ITopology4Registration r in v)
+                    {
+                        info += r.ProductId + "\n";
+                    }
+                    info += "Registrations end";
+                    return info;
+                });
             });
 
             try
@@ -105,8 +56,7 @@ namespace TestRegistration
 
             network.Execute(() =>
             {
-                house.Rooms.RemoveWatcher(watcher);
-                watcher.Dispose();
+                factory.Dispose();
             });
 
             house.Dispose();
