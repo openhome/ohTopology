@@ -104,7 +104,7 @@ namespace OpenHome.Av
             device.Add<IProxyVolume>(new ServiceVolumeMock(aNetwork, device, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
 
             // info service
-            device.Add<IProxyInfo>(new ServiceInfoMock(aNetwork, device, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(aNetwork.TagManager.FromDidlLite(string.Empty), string.Empty), new InfoMetatext(string.Empty)));
+            device.Add<IProxyInfo>(new ServiceInfoMock(aNetwork, device, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(aNetwork.TagManager.FromDidlLite(string.Empty), string.Empty), new InfoMetatext(aNetwork.TagManager.FromDidlLite(string.Empty))));
 
             // time service
             device.Add<IProxyTime>(new ServiceTimeMock(aNetwork, device, 0, 0));
@@ -169,7 +169,7 @@ namespace OpenHome.Av
             device.Add<IProxyVolume>(new ServiceVolumeMock(aNetwork, device, aUdn, 0, 15, 0, 0, false, 50, 100, 100, 1024, 100, 80));
 
             // info service
-            device.Add<IProxyInfo>(new ServiceInfoMock(aNetwork, device, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(aNetwork.TagManager.FromDidlLite(string.Empty), string.Empty), new InfoMetatext(string.Empty)));
+            device.Add<IProxyInfo>(new ServiceInfoMock(aNetwork, device, new InfoDetails(0, 0, string.Empty, 0, false, 0), new InfoMetadata(aNetwork.TagManager.FromDidlLite(string.Empty), string.Empty), new InfoMetatext(aNetwork.TagManager.FromDidlLite(string.Empty))));
 
             // time service
             device.Add<IProxyTime>(new ServiceTimeMock(aNetwork, device, 0, 0));

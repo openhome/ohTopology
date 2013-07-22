@@ -39,7 +39,7 @@ namespace TestLinnHouse
 
                 iFactory.Create<RoomDetails>(iInfo.Name, iInfo.Details, v => "Details " + v.Enabled + " " + v.BitDepth + " " + v.BitRate + " " + v.CodecName + " " + v.Duration + " " + v.Lossless + " " + v.SampleRate);
                 iFactory.Create<RoomMetadata>(iInfo.Name, iInfo.Metadata, v => "Metadata " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metadata) + " " + v.Uri);
-                iFactory.Create<RoomMetatext>(iInfo.Name, iInfo.Metatext, v => "Metatext " + v.Enabled + " " + v.Metatext);
+                iFactory.Create<RoomMetatext>(iInfo.Name, iInfo.Metatext, v => "Metatext " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metatext));
 
                 iFactory.Create<bool>(iController.Name, iController.Active, v => "Controller Active " + v);
                 iFactory.Create<bool>(iController.Name, iController.HasVolume, v => "HasVolume " + v);

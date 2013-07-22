@@ -154,7 +154,7 @@ namespace OpenHome.Av
             }
         }
 
-        public string Metatext
+        public IMediaMetadata Metatext
         {
             get
             {
@@ -163,7 +163,7 @@ namespace OpenHome.Av
         }
 
         private bool iEnabled;
-        private string iMetatext;
+        private IMediaMetadata iMetatext;
     }
 
     public class RoomSenderMetadata : ISenderMetadata
