@@ -319,6 +319,7 @@ namespace OpenHome.Av
 
     public interface ITopology4Registration
     {
+        string ManufacturerName { get; }
         string ProductId { get; }
         IWatchable<string> Registration { get; }
         void SetRegistration(string aValue);
@@ -412,6 +413,14 @@ namespace OpenHome.Av
             get
             {
                 return iGroup.Device;
+            }
+        }
+
+        public string ManufacturerName
+        {
+            get
+            {
+                return iGroup.ManufacturerName;
             }
         }
 
@@ -940,7 +949,10 @@ namespace OpenHome.Av
             {
                 Topology4Group group = new Topology4Group(iNetwork, kvp.Value.Name, kvp.Key, kvp.Value.Sources);
                 InsertIntoTree(group);
-                registrations.Add(group);
+                if (!string.IsNullOrEmpty(group.ProductId))
+                {
+                    registrations.Add(group);
+                }
             }
 
             List<ITopology4Root> roots = new List<ITopology4Root>();
