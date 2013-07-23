@@ -38,7 +38,7 @@ namespace TestRegistration
                     string info = "\nRegistrations begin\n";
                     foreach (ITopology4Registration r in v)
                     {
-                        info += r.ProductId + "\n";
+                        info += r.ManufacturerName + " " + r.ProductId + "\n";
                     }
                     info += "Registrations end";
                     return info;
