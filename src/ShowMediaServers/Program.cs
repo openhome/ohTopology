@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using OpenHome.Os;
 using OpenHome.Os.App;
 using OpenHome.Av;
-using OpenHome.MediaServer;
 
 using OpenHome.Net;
 using OpenHome.Net.Core;
@@ -246,14 +245,6 @@ namespace ShowMediaServers
 
     class Program
     {
-        class ExceptionReporter : IExceptionReporter
-        {
-            public void ReportException(Exception e)
-            {
-                Console.WriteLine(e);
-                Environment.Exit(-1);
-            }
-        }
 
         static void MessageHandlerLog(string aMessage)
         {
@@ -265,10 +256,15 @@ namespace ShowMediaServers
             Console.WriteLine("FATAL: {0}", aMessage);
         }
 
+        static void ReportException(Exception e)
+        {
+            Console.WriteLine(e);
+            Environment.Exit(-1);
+        }
+
         static void Main(string[] args)
         {
-            ExceptionReporter reporter = new ExceptionReporter();
-            WatchableThread watchableThread = new WatchableThread(reporter);
+            WatchableThread watchableThread = new WatchableThread(ReportException);
 
             InitParams initParams = new InitParams();
             initParams.LogOutput = new MessageListener(MessageHandlerLog);
@@ -278,9 +274,9 @@ namespace ShowMediaServers
 
             library.StartCp(0x020a);
 
-            using (var network = new Network(watchableThread))
+            using (var network = new Network(watchableThread, 1000))
             {
-                using (var mock = new DeviceInjectorMock(network))
+                using (var mock = new DeviceInjectorMock(network, "."))
                 {
                     mock.Execute("medium");
 

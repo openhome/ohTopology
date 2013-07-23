@@ -76,7 +76,6 @@
       <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
