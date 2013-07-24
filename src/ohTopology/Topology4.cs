@@ -1016,8 +1016,9 @@ namespace OpenHome.Av
             if (aValue)
             {
                 ++iStandbyCount;
-                EvaluateStandby();
             }
+
+            EvaluateStandby();
         }
 
         public void ItemUpdate(string aId, bool aValue, bool aPrevious)
@@ -1039,8 +1040,9 @@ namespace OpenHome.Av
             if (aValue)
             {
                 --iStandbyCount;
-                EvaluateStandby(iGroupLookup.Count == 0);
             }
+
+            EvaluateStandby(iGroupLookup.Count == 0);
         }
 
         private void EvaluateStandby()
