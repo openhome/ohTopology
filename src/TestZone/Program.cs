@@ -130,7 +130,7 @@ namespace TestZone
                 {
                     return "ZoneReceiver " + v.Enabled + " " + (v.ZoneSender != null ? v.ZoneSender.Room.Name : "");
                 });
-                iFactory.Create<IStandardRoom>(aItem.Name, aItem.Satallites, (v) =>
+                iFactory.Create<IStandardRoom>(aItem.Name, aItem.Satellites, (v) =>
                 {
                     return "Satellite " + v.Name;
                 });
