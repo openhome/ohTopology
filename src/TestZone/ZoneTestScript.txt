@@ -185,3 +185,15 @@ empty
 mock network add 4c494e4e-0026-0f99-1112-ef000004013f
 expect Dining Room add Satellite Sitting Room
 empty
+
+mock network create ds 69
+mock network add 69
+expect Room Added: Main Room at 3
+expect Main Room open ZoneSender True 69 Main Room
+expect Main Room open ZoneReceiver True 
+expect Main Room open HasListeners False
+expect Main Room open Zone HasVolume True
+expect Main Room open Zone Mute False
+expect Main Room open Zone Volume 50
+empty
+

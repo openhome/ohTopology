@@ -107,7 +107,7 @@ namespace OpenHome.Av
 
         public void RoomAdded(StandardRoom aRoom)
         {
-            if (!string.IsNullOrEmpty(iMasterRoom))
+            if (aRoom.Name == iMasterRoom)
             {
                 if (iHouse.AddSatellite(iMasterRoom, iRoom))
                 {
