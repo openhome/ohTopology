@@ -127,7 +127,7 @@ namespace OpenHome.Av
         string Type { get; }
         bool Visible { get; }
 
-        IMediaPreset Preset { get; }
+        IMediaPreset CreatePreset();
 
         IEnumerable<ITopology4Group> Volumes { get; }
         IDevice Device { get; }
@@ -193,9 +193,9 @@ namespace OpenHome.Av
             get { throw new NotImplementedException(); }
         }
 
-        public IMediaPreset Preset
+        public IMediaPreset CreatePreset()
         {
-            get { throw new NotImplementedException(); }
+            throw new NotImplementedException();
         }
 
         public IEnumerable<ITopology4Group> Volumes
@@ -268,14 +268,11 @@ namespace OpenHome.Av
             }
         }
 
-        public IMediaPreset Preset
+        public IMediaPreset CreatePreset()
         {
-            get
-            {
-                MediaMetadata metadata = new MediaMetadata();
-                metadata.Add(iNetwork.TagManager.Audio.Title, iSource.Name);
-                return new MediaPresetExternal(iNetwork, iGroup, iSource.Index, metadata, this);
-            }
+            MediaMetadata metadata = new MediaMetadata();
+            metadata.Add(iNetwork.TagManager.Audio.Title, iSource.Name);
+            return new MediaPresetExternal(iNetwork, iGroup, iSource.Index, metadata, this);
         }
 
         public IEnumerable<ITopology4Group> Volumes

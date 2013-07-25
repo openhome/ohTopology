@@ -591,7 +591,7 @@ namespace OpenHome.Av
             Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
             {
                 List<IMediaPreset> presets = new List<IMediaPreset>();
-                iSources.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v => presets.Add(v.Preset));
+                iSources.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v => presets.Add(v.CreatePreset()));
                 return new WatchableFragment<IMediaPreset>(aIndex, presets);
             });
             return task;
