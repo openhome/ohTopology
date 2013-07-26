@@ -510,6 +510,22 @@ namespace OpenHome.Av
                     return true;
                 }
             }
+            if (aSource.Name.StartsWith("Balanced"))
+            {
+                try
+                {
+                    if (aSource.Name.Length == 8)
+                    {
+                        return false;
+                    }
+                    uint.Parse(aSource.Name.Substring(8));
+                    return false;
+                }
+                catch (FormatException)
+                {
+                    return true;
+                }
+            }
             if (aSource.Name == "Phono")
             {
                 return false;
