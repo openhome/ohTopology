@@ -135,37 +135,6 @@ namespace OpenHome.Av
         bool HasTime { get; }
     }
 
-    internal class Topology4SourceComparer
-    {
-        public static bool Equals(ITopology4Source aSource1, ITopology4Source aSource2)
-        {
-            bool volume = false;
-            if (aSource1.Volumes.Count() == aSource2.Volumes.Count())
-            {
-                volume = true;
-                int count = aSource1.Volumes.Count();
-                for (int i = 0; i < count; ++i)
-                {
-                    if (aSource1.Volumes.ElementAt(i) != aSource2.Volumes.ElementAt(i))
-                    {
-                        volume = false;
-                        break;
-                    }
-                }
-            }
-
-            return (aSource1.Index == aSource2.Index
-                 && aSource1.Name == aSource2.Name
-                 && aSource1.Group == aSource2.Group
-                 && aSource1.Type == aSource2.Type
-                 && aSource1.Visible == aSource2.Visible
-                 && volume
-                 && aSource1.Device == aSource2.Device
-                 && aSource1.HasInfo == aSource2.HasInfo
-                 && aSource1.HasTime == aSource2.HasTime);
-        }
-    }
-
     class Topology4SourceNull : ITopology4Source
     {
         public ITopology4Group Group
