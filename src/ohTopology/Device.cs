@@ -34,6 +34,12 @@ namespace OpenHome.Av
 
     public class Device : IDevice, IMockable, IDisposable
     {
+        private string iUdn;
+        private bool iDisposed;
+        private List<Action> iJoiners;
+
+        protected Dictionary<Type, Service> iServices;
+
         public Device(string aUdn)
         {
             iUdn = aUdn;
@@ -41,34 +47,6 @@ namespace OpenHome.Av
 
             iJoiners = new List<Action>();
             iServices = new Dictionary<Type, Service>();
-        }
-
-        public virtual void Dispose()
-        {
-            if (iDisposed)
-            {
-                throw new ObjectDisposedException("Device.Dispose");
-            }
-
-            List<Action> linked = new List<Action>(iJoiners);
-            foreach (Action a in linked)
-            {
-                a();
-            }
-            if (iJoiners.Count > 0)
-            {
-                throw new Exception("Device joiners > 0");
-            }
-            iJoiners = null;
-
-            foreach (IService s in iServices.Values)
-            {
-                s.Dispose();
-            }
-            iServices.Clear();
-            iServices = null;
-
-            iDisposed = true;
         }
 
         public void Join(Action aAction)
@@ -167,10 +145,34 @@ namespace OpenHome.Av
             GetService(aValue.First()).Execute(aValue.Skip(1));
         }
 
-        private string iUdn;
-        private bool iDisposed;
-        private List<Action> iJoiners;
+        // IDisposable
 
-        protected Dictionary<Type, Service> iServices;
+        public virtual void Dispose()
+        {
+            if (iDisposed)
+            {
+                throw new ObjectDisposedException("Device.Dispose");
+            }
+
+            List<Action> linked = new List<Action>(iJoiners);
+            foreach (Action a in linked)
+            {
+                a();
+            }
+            if (iJoiners.Count > 0)
+            {
+                throw new Exception("Device joiners > 0");
+            }
+            iJoiners = null;
+
+            foreach (IService s in iServices.Values)
+            {
+                s.Dispose();
+            }
+            iServices.Clear();
+            iServices = null;
+
+            iDisposed = true;
+        }
     }
 }

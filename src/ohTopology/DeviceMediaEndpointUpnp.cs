@@ -340,7 +340,7 @@ namespace OpenHome.Av
 
         // IDisposable
 
-        public void Dispsoe()
+        public override void Dispose()
         {
             iProxy.Dispose();
             iDevice.RemoveRef();
@@ -416,7 +416,7 @@ namespace OpenHome.Av
 
         // IDisposable
 
-        public void Dispsoe()
+        public override void Dispose()
         {
             base.Dispose();
         }

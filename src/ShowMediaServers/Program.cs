@@ -76,7 +76,7 @@ namespace ShowMediaServers
 
             iNetwork.Execute(() =>
             {
-                iDevices = aNetwork.Create<IProxyMediaEndpoint>();
+                iDevices = iNetwork.Create<IProxyMediaEndpoint>();
                 iDevices.AddWatcher(this);
             });
         }
