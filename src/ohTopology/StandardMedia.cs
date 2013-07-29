@@ -7,239 +7,6 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    public interface IProxyMediaEndpoint : IProxy
-    {
-        string Id { get; }
-        string Type { get; }
-        IEnumerable<string> Attributes { get; }
-        string Name { get; }
-        string Info { get; }
-        string Url { get; }
-        string Artwork { get; }
-        string ManufacturerName { get; }
-        string ManufacturerInfo { get; }
-        string ManufacturerUrl { get; }
-        string ManufacturerArtwork { get; }
-        string ModelName { get; }
-        string ModelInfo { get; }
-        string ModelUrl { get; }
-        string ModelArtwork { get; }
-        DateTime Started { get; }
-        Task<IMediaServerSession> CreateSession();
-    }
-
-    class ProxyMediaEndpoint : IProxyMediaEndpoint
-    {
-        private readonly DisposeHandler iDisposeHandler;
-        private readonly IProxyMediaServer iMediaServer;
-        private readonly DateTime iStarted;
-
-        public ProxyMediaEndpoint(IProxyMediaServer aMediaServer)
-        {
-            iDisposeHandler = new DisposeHandler();
-            iMediaServer = aMediaServer;
-            iStarted = DateTime.Now;
-        }
-
-        public void Dispose()
-        {
-            iDisposeHandler.Dispose();
-            iMediaServer.Dispose();
-        }
-
-        public IDevice Device
-        {
-            get
-            {
-                return iMediaServer.Device;
-            }
-        }
-
-        public string Id
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iMediaServer.Device.Udn;
-                }
-            }
-        }
-
-        public string Type
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return "Music";
-                }
-            }
-        }
-
-        public DateTime Started
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iStarted;
-                }
-            }
-        }
-
-        public IEnumerable<string> Attributes
-        {
-            get 
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return new List<string>(iMediaServer.Attributes.Concat(new string[] { "Local", "Upnp" }));
-                }
-            }
-        }
-
-        public string ManufacturerArtwork
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iMediaServer.ManufacturerImageUri;
-                }
-            }
-        }
-
-        public string ManufacturerInfo
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iMediaServer.ManufacturerInfo;
-                }
-            }
-        }
-
-        public string ManufacturerName
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iMediaServer.ManufacturerName;
-                }
-            }
-        }
-
-        public string ManufacturerUrl
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iMediaServer.ManufacturerUrl;
-                }
-            }
-        }
-
-        public string ModelArtwork
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iMediaServer.ModelImageUri;
-                }
-            }
-        }
-
-        public string ModelInfo
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iMediaServer.ModelInfo;
-                }
-            }
-        }
-
-        public string ModelName
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iMediaServer.ModelName;
-                }
-            }
-        }
-
-        public string ModelUrl
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iMediaServer.ModelUrl;
-                }
-            }
-        }
-
-        public string Artwork
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iMediaServer.ProductImageUri;
-                }
-            }
-        }
-
-        public string Info
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iMediaServer.ProductInfo;
-                }
-            }
-        }
-
-        public string Name
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iMediaServer.ProductName;
-                }
-            }
-        }
-
-        public string Url
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iMediaServer.ProductUrl;
-                }
-            }
-        }
-
-        public Task<IMediaServerSession> CreateSession()
-        {
-            using (iDisposeHandler.Lock)
-            {
-                return iMediaServer.CreateSession();
-            }
-        }
-    }
-
     public interface IMusicEndpoint
     {
         bool Enabled { get; }
@@ -314,7 +81,7 @@ namespace OpenHome.Av
 
             iNetwork.Schedule(() =>
             {
-                iMediaEndpoints = iNetwork.Create<IProxyMediaServer>();
+                iMediaEndpoints = iNetwork.Create<IProxyMediaEndpoint>();
                 iMediaEndpoints.AddWatcher(this);
             });
         }
@@ -391,11 +158,10 @@ namespace OpenHome.Av
 
         public void UnorderedAdd(IDevice aItem)
         {
-            aItem.Create<IProxyMediaServer>((server) =>
+            aItem.Create<IProxyMediaEndpoint>((endpoint) =>
             {
                 if (!iDisposed)
                 {
-                    ProxyMediaEndpoint endpoint = new ProxyMediaEndpoint(server);
                     if (endpoint.Type == "Music")
                     {
                         // calculate where to insert the endpoint
@@ -471,7 +237,7 @@ namespace OpenHome.Av
                 }
                 else
                 {
-                    server.Dispose();
+                    endpoint.Dispose();
                 }
             });
         }
@@ -479,6 +245,7 @@ namespace OpenHome.Av
         public void UnorderedRemove(IDevice aItem)
         {
             IProxyMediaEndpoint endpoint;
+
             if (iEndpointLookup.TryGetValue(aItem, out endpoint))
             {
                 // remove the corresponding endpoint from the watchable collections
@@ -502,35 +269,6 @@ namespace OpenHome.Av
                 iEndpointLookup.Remove(aItem);
                 endpoint.Dispose();
             }
-        }
-    }
-
-    public static class MediaEndpointExtensions
-    {
-        public static bool SupportsBrowse(this IProxyMediaEndpoint aProxy)
-        {
-            return (aProxy.Attributes.Contains("Browse"));
-        }
-
-        public static bool SupportsLink(this IProxyMediaEndpoint aProxy)
-        {
-            return (aProxy.Attributes.Contains("Link"));
-        }
-
-        public static bool SupportsLink(this IProxyMediaEndpoint aProxy, ITag aTag)
-        {
-            var value = string.Format("Link:{0}", aTag.FullName);
-            return (aProxy.Attributes.Contains(value));
-        }
-
-        public static bool SupportsSearch(this IProxyMediaEndpoint aProxy)
-        {
-            return (aProxy.Attributes.Contains("Search"));
-        }
-
-        public static bool SupportsQuery(this IProxyMediaEndpoint aProxy)
-        {
-            return (aProxy.Attributes.Contains("Query"));
         }
     }
 }

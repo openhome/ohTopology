@@ -24,20 +24,20 @@ using OpenHome.Net.ControlPoint;
 
 namespace OpenHome.Av
 {
-    public interface IDeviceMediaServerMockUriProvider
+    public interface IDeviceMediaEndpointMockUriProvider
     {
         string GetArtworkUri(IMediaMetadata aMetadata);
         string GetAudioUri(IMediaMetadata aMetadata);
     }
 
-    public class DeviceMediaServerMock : Device, IDeviceMediaServerMockUriProvider
+    public class DeviceMediaEndpointMock : Device, IDeviceMediaEndpointMockUriProvider
     {
         private readonly INetwork iNetwork;
         private readonly IEnumerable<IMediaMetadata> iMetadata;
         private readonly HttpFramework iHttpFramework;
         private readonly List<Tuple<Color, Color>> iColors;
 
-        public DeviceMediaServerMock(INetwork aNetwork, string aUdn, string aResourceRoot)
+        public DeviceMediaEndpointMock(INetwork aNetwork, string aUdn, string aResourceRoot)
             : base(aUdn)
         {
             iNetwork = aNetwork;
@@ -60,15 +60,13 @@ namespace OpenHome.Av
 
             Console.WriteLine("Port: " + iHttpFramework.Port);
 
-            Add<IProxyMediaServer>(new ServiceMediaServerMock(aNetwork, this, new string[] {"Browse", "Link", "Link:audio.artist", "Link:audio.album", "Link:audio.genre", "Search"},
-                "", "OpenHome", "OpenHome", "http://www.openhome.org",
-                "", "OpenHome", "OpenHome", "http://www.openhome.org",
-                "", "OpenHome", "OpenHome", "http://www.openhome.org",
+            Add<IProxyMediaEndpoint>(new ServiceMediaEndpointMock(aNetwork, this, "mock", "music",
+                "Mock", "Mock", "http://www.openhome.org", "",
+                "OpenHome", "OpenHome", "http://www.openhome.org", "",
+                "OpenHome", "OpenHome", "http://www.openhome.org", "",
+                DateTime.Now,
+                new string[] {"Browse", "Link", "Link:audio.artist", "Link:audio.album", "Link:audio.genre", "Search"},
                 iMetadata, this));
-
-            // content directory service
-            //MockWatchableContentDirectory contentDirectory = new MockWatchableContentDirectory(aThread, aUdn, 0, "");
-            //Add<ContentDirectory>(contentDirectory);
         }
 
         private void Add(Color aBackground, Color aForeground)

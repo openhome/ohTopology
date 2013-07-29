@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
 
+using OpenHome.Os.App;
+
 using OpenHome.Av;
 
 namespace TestIdCache

@@ -15,36 +15,33 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    public class ServiceMediaServerUpnp : ServiceMediaServer
+    public class ServiceMediaEndpointContentDirectory : ServiceMediaEndpoint
     {
         private readonly CpProxyUpnpOrgContentDirectory1 iUpnpProxy;
 
-        private readonly List<MediaServerSessionUpnp> iSessions;
+        private readonly List<MediaEndpointSessionContentDirectory> iSessions;
         
-        public ServiceMediaServerUpnp(INetwork aNetwork, IDevice aDevice, IEnumerable<string> aAttributes, 
-            string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl,
-            string aModelImageUri, string aModelInfo, string aModelName, string aModelUrl,
-            string aProductImageUri, string aProductInfo, string aProductName, string aProductUrl,
-            CpProxyUpnpOrgContentDirectory1 aUpnpProxy)
-            : base(aNetwork, aDevice, aAttributes,
-            aManufacturerImageUri, aManufacturerInfo, aManufacturerName, aManufacturerUrl,
-            aModelImageUri, aModelInfo, aModelName, aModelUrl,
-            aProductImageUri, aProductInfo, aProductName, aProductUrl)
+        public ServiceMediaEndpointContentDirectory(INetwork aNetwork, IDevice aDevice, string aId, string aType, string aName, string aInfo,
+            string aUrl, string aArtwork, string aManufacturerName, string aManufacturerInfo, string aManufacturerUrl,
+            string aManufacturerArtwork, string aModelName, string aModelInfo, string aModelUrl, string aModelArtwork,
+            DateTime aStarted, IEnumerable<string> aAttributes, CpProxyUpnpOrgContentDirectory1 aUpnpProxy)
+            : base (aNetwork, aDevice, aId, aType, aName, aInfo, aUrl, aArtwork, aManufacturerName, aManufacturerInfo,
+            aManufacturerUrl, aManufacturerArtwork, aModelName, aModelInfo, aModelUrl, aModelArtwork, aStarted, aAttributes)
         {
             iUpnpProxy = aUpnpProxy;
-            iSessions = new List<MediaServerSessionUpnp>();
+            iSessions = new List<MediaEndpointSessionContentDirectory>();
         }
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return (new ProxyMediaServer(this));
+            return (new ProxyMediaEndpoint(this));
         }
 
-        public override Task<IMediaServerSession> CreateSession()
+        public override Task<IMediaEndpointSession> CreateSession()
         {
-            return (Task.Factory.StartNew<IMediaServerSession>(() =>
+            return (Task.Factory.StartNew<IMediaEndpointSession>(() =>
             {
-                var session = new MediaServerSessionUpnp(Network, iUpnpProxy, this);
+                var session = new MediaEndpointSessionContentDirectory(Network, iUpnpProxy, this);
 
                 lock (iSessions)
                 {
@@ -66,7 +63,7 @@ namespace OpenHome.Av
             }
         }
 
-        internal void Destroy(MediaServerSessionUpnp aSession)
+        internal void Destroy(MediaEndpointSessionContentDirectory aSession)
         {
             lock (iSessions)
             {
@@ -87,19 +84,19 @@ namespace OpenHome.Av
         }
     }
 
-    internal class MediaServerSessionUpnp : IMediaServerSession
+    internal class MediaEndpointSessionContentDirectory : IMediaEndpointSession
     {
         private readonly INetwork iNetwork;
         private readonly CpProxyUpnpOrgContentDirectory1 iUpnpProxy;
-        private readonly ServiceMediaServerUpnp iService;
+        private readonly ServiceMediaEndpointContentDirectory iService;
 
         private readonly object iLock;
         
         private uint iSequence;
 
-        private MediaServerContainerUpnp iContainer;
-        
-        public MediaServerSessionUpnp(INetwork aNetwork, CpProxyUpnpOrgContentDirectory1 aUpnpProxy, ServiceMediaServerUpnp aService)
+        private MediaEndpointContainerContentDirectory iContainer;
+
+        public MediaEndpointSessionContentDirectory(INetwork aNetwork, CpProxyUpnpOrgContentDirectory1 aUpnpProxy, ServiceMediaEndpointContentDirectory aService)
         {
             iNetwork = aNetwork;
             iUpnpProxy = aUpnpProxy;
@@ -113,7 +110,7 @@ namespace OpenHome.Av
         internal void Refresh()
         {
             uint sequence;
-            MediaServerContainerUpnp container;
+            MediaEndpointContainerContentDirectory container;
 
             lock (iLock)
             {
@@ -188,7 +185,7 @@ namespace OpenHome.Av
                 {
                     if (iSequence == sequence)
                     {
-                        iContainer = new MediaServerContainerUpnp(iNetwork, iUpnpProxy, aId, updateId, totalMatches);
+                        iContainer = new MediaEndpointContainerContentDirectory(iNetwork, iUpnpProxy, aId, updateId, totalMatches);
                         return (iContainer);
                     }
 
@@ -206,11 +203,7 @@ namespace OpenHome.Av
                 return (Browse("0"));
             }
 
-            var datum = aDatum as MediaDatumUpnp;
-
-            Do.Assert(datum != null);
-
-            return (Browse(datum.Id));
+            return (Browse(aDatum.Id));
         }
 
         public Task<IWatchableContainer<IMediaDatum>> Link(ITag aTag, string aValue)
@@ -244,7 +237,7 @@ namespace OpenHome.Av
         }
     }
 
-    internal class MediaServerContainerUpnp : IWatchableContainer<IMediaDatum>, IDisposable
+    internal class MediaEndpointContainerContentDirectory : IWatchableContainer<IMediaDatum>, IDisposable
     {
         private readonly INetwork iNetwork;
         private readonly CpProxyUpnpOrgContentDirectory1 iUpnpProxy;
@@ -253,14 +246,14 @@ namespace OpenHome.Av
 
         private readonly Watchable<IWatchableSnapshot<IMediaDatum>> iWatchable;
 
-        public MediaServerContainerUpnp(INetwork aNetwork, CpProxyUpnpOrgContentDirectory1 aUpnpProxy, string aId, uint aUpdateId, uint aTotal)
+        public MediaEndpointContainerContentDirectory(INetwork aNetwork, CpProxyUpnpOrgContentDirectory1 aUpnpProxy, string aId, uint aUpdateId, uint aTotal)
         {
             iNetwork = aNetwork;
             iUpnpProxy = aUpnpProxy;
             iId = aId;
             iUpdateId = aUpdateId;
 
-            iWatchable = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork, "snapshot", new MediaServerSnapshotUpnp(iNetwork, iUpnpProxy, iId, aTotal));
+            iWatchable = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork, "snapshot", new MediaEndpointSnapshotContentDirectory(iNetwork, iUpnpProxy, iId, aTotal));
         }
 
         internal string Id
@@ -285,7 +278,7 @@ namespace OpenHome.Av
 
             iNetwork.Schedule(() =>
             {
-                iWatchable.Update(new MediaServerSnapshotUpnp(iNetwork, iUpnpProxy, iId, aTotal));
+                iWatchable.Update(new MediaEndpointSnapshotContentDirectory(iNetwork, iUpnpProxy, iId, aTotal));
             });
         }
 
@@ -306,7 +299,7 @@ namespace OpenHome.Av
     }
 
 
-    internal class MediaServerSnapshotUpnp : IWatchableSnapshot<IMediaDatum>
+    internal class MediaEndpointSnapshotContentDirectory : IWatchableSnapshot<IMediaDatum>
     {
         private readonly INetwork iNetwork;
         private readonly CpProxyUpnpOrgContentDirectory1 iUpnpProxy;
@@ -315,7 +308,7 @@ namespace OpenHome.Av
 
         private readonly IEnumerable<uint> iAlphaMap;
 
-        public MediaServerSnapshotUpnp(INetwork aNetwork, CpProxyUpnpOrgContentDirectory1 aUpnpProxy, string aId, uint aTotal)
+        public MediaEndpointSnapshotContentDirectory(INetwork aNetwork, CpProxyUpnpOrgContentDirectory1 aUpnpProxy, string aId, uint aTotal)
         {
             iNetwork = aNetwork;
             iUpnpProxy = aUpnpProxy;
@@ -359,12 +352,12 @@ namespace OpenHome.Av
                     return (null);
                 }
 
-                return (new MediaServerFragmentUpnp(iNetwork, aIndex, result));
+                return (new MediaEndpointFragmentContentDirectory(iNetwork, aIndex, result));
             }));
         }
     }
 
-    internal class MediaServerFragmentUpnp : IWatchableFragment<IMediaDatum>
+    internal class MediaEndpointFragmentContentDirectory : IWatchableFragment<IMediaDatum>
     {
         private const string kNsDidlLite = "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/";
         private const string kNsUpnp = "urn:schemas-upnp-org:metadata-1-0/upnp/";
@@ -375,7 +368,7 @@ namespace OpenHome.Av
         private readonly uint iIndex;
         private readonly IEnumerable<IMediaDatum> iData;
 
-        public MediaServerFragmentUpnp(INetwork aNetwork, uint aIndex, string aDidl)
+        public MediaEndpointFragmentContentDirectory(INetwork aNetwork, uint aIndex, string aDidl)
         {
             iNetwork = aNetwork;
             iIndex = aIndex;
@@ -438,7 +431,7 @@ namespace OpenHome.Av
 
         private IMediaDatum ParseItem(XElement aElement)
         {
-            var datum = new MediaDatum();
+            var datum = new MediaDatum(null);
 
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Title);
             Convert(aElement, "album", kNsUpnp, datum, iNetwork.TagManager.Audio.AlbumTitle);
@@ -484,7 +477,7 @@ namespace OpenHome.Av
 
         private IMediaDatum ParseContainerMusicArtist(XElement aElement, string aId)
         {
-            var datum = new MediaDatumUpnp(aId, iNetwork.TagManager.Audio.Artist);
+            var datum = new MediaDatum(aId, iNetwork.TagManager.Audio.Artist);
 
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Artist);
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
@@ -494,7 +487,7 @@ namespace OpenHome.Av
 
         private IMediaDatum ParseContainerMusicAlbum(XElement aElement, string aId)
         {
-            var datum = new MediaDatumUpnp(aId, iNetwork.TagManager.Audio.AlbumTitle);
+            var datum = new MediaDatum(aId, iNetwork.TagManager.Audio.AlbumTitle);
 
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.AlbumTitle);
             Convert(aElement, "artist", kNsUpnp, datum, iNetwork.TagManager.Audio.AlbumArtist);
@@ -505,7 +498,7 @@ namespace OpenHome.Av
 
         private IMediaDatum ParseContainerMusicGenre(XElement aElement, string aId)
         {
-            var datum = new MediaDatumUpnp(aId, iNetwork.TagManager.Audio.Genre);
+            var datum = new MediaDatum(aId, iNetwork.TagManager.Audio.Genre);
 
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Genre);
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
@@ -515,7 +508,7 @@ namespace OpenHome.Av
 
         private IMediaDatum ParseContainerDefault(XElement aElement, string aId)
         {
-            var datum = new MediaDatumUpnp(aId, iNetwork.TagManager.Container.Title);
+            var datum = new MediaDatum(aId, iNetwork.TagManager.Container.Title);
 
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title);
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Container.Artwork);
@@ -548,24 +541,4 @@ namespace OpenHome.Av
             get { return (iData); }
         }
     }
-
-    internal class MediaDatumUpnp : MediaDatum
-    {
-        private string iId;
-
-        public MediaDatumUpnp(string aId, params ITag[] aType)
-            : base(aType)
-        {
-            iId = aId;
-        }
-
-        public string Id
-        {
-            get
-            {
-                return (iId);
-            }
-        }
-    }
-
 }

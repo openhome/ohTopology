@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+using OpenHome.Os.App;
+
 namespace OpenHome.Av
 {
     public interface IPlaylistWriter

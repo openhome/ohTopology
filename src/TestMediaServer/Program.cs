@@ -15,7 +15,7 @@ namespace TestMediaServer
         
         private IWatchableUnordered<IDevice> iMediaServers;
         
-        private IProxyMediaServer iProxy;
+        private IProxyMediaEndpoint iProxy;
         private IWatchableSnapshot<IMediaDatum> iSnaphot;
 
         public Client(INetwork aNetwork)
@@ -24,7 +24,7 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                iMediaServers = aNetwork.Create<IProxyMediaServer>();
+                iMediaServers = aNetwork.Create<IProxyMediaEndpoint>();
                 iMediaServers.AddWatcher(this);
             });
 
@@ -424,7 +424,7 @@ namespace TestMediaServer
 
         public void UnorderedAdd(IDevice aDevice)
         {
-            aDevice.Create<IProxyMediaServer>((t) =>
+            aDevice.Create<IProxyMediaEndpoint>((t) =>
             {
                 iProxy = t;
             });
@@ -454,9 +454,7 @@ namespace TestMediaServer
     {
         static void Main(string[] args)
         {
-            WatchableThread watchableThread = new WatchableThread(ReportException);
-
-            using (var network = new Network(watchableThread, 50))
+            using (var network = new Network(50))
             {
                 using (DeviceInjectorMock mockInjector = new DeviceInjectorMock(network, System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location)))
                 {

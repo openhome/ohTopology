@@ -82,15 +82,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ByteArray.cs" />
+    <Compile Include="ServiceMediaEndpointOpenHome.cs" />
+    <Compile Include="DeviceMediaEndpointUpnp.cs" />
+    <Compile Include="DeviceMediaEndpointMock.cs" />
+    <Compile Include="ServiceMediaEndpointContentDirectory.cs" />
+    <Compile Include="ServiceMediaEndpointMock.cs" />
+    <Compile Include="ServiceMediaEndpoint.cs" />
     <Compile Include="CpLinnCoUkConfiguration1.cs" />
     <Compile Include="CpLinnCoUkVolkano1.cs" />
     <Compile Include="IdCache.cs" />
     <Compile Include="Joinable.cs" />
     <Compile Include="PlaylistWriter.cs" />
     <Compile Include="Service.cs" />
-    <Compile Include="ServiceMediaServerUpnp.cs" />
-    <Compile Include="ServiceMediaServerMock.cs" />
-    <Compile Include="DeviceMediaServerUpnp.cs" />
     <Compile Include="Media.cs" />
     <Compile Include="SourceController.cs" />
     <Compile Include="SourceControllerPlaylist.cs" />
@@ -104,8 +107,6 @@
     <Compile Include="StandardRoomWatchers.cs" />
     <Compile Include="Topologym.cs" />
     <Compile Include="VolumeController.cs" />
-    <Compile Include="ServiceMediaServer.cs" />
-    <Compile Include="DeviceMediaServerMock.cs" />
     <Compile Include="DeviceFactory.cs" />
     <Compile Include="StandardHouse.cs" />
     <Compile Include="Mockable.cs" />

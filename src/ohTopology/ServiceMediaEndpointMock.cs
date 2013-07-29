@@ -13,45 +13,42 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    public class ServiceMediaServerMock : ServiceMediaServer
+    public class ServiceMediaEndpointMock : ServiceMediaEndpoint
     {
         private readonly IEnumerable<IMediaMetadata> iMetadata;
-        private readonly IDeviceMediaServerMockUriProvider iUriProvider;
+        private readonly IDeviceMediaEndpointMockUriProvider iUriProvider;
 
-        private readonly List<IMediaServerSession> iSessions;
+        private readonly List<IMediaEndpointSession> iSessions;
         
-        public ServiceMediaServerMock(INetwork aNetwork, IDevice aDevice, IEnumerable<string> aAttributes, 
-            string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl,
-            string aModelImageUri, string aModelInfo, string aModelName, string aModelUrl,
-            string aProductImageUri, string aProductInfo, string aProductName, string aProductUrl,
-            IEnumerable<IMediaMetadata> aMetadata, IDeviceMediaServerMockUriProvider aUriProvider)
-            : base(aNetwork, aDevice, aAttributes,
-            aManufacturerImageUri, aManufacturerInfo, aManufacturerName, aManufacturerUrl,
-            aModelImageUri, aModelInfo, aModelName, aModelUrl,
-            aProductImageUri, aProductInfo, aProductName, aProductUrl)
+        public ServiceMediaEndpointMock(INetwork aNetwork, IDevice aDevice, string aId, string aType, string aName, string aInfo,
+            string aUrl, string aArtwork, string aManufacturerName, string aManufacturerInfo, string aManufacturerUrl,
+            string aManufacturerArtwork, string aModelName, string aModelInfo, string aModelUrl, string aModelArtwork,
+            DateTime aStarted, IEnumerable<string> aAttributes, IEnumerable<IMediaMetadata> aMetadata, IDeviceMediaEndpointMockUriProvider aUriProvider)
+            : base (aNetwork, aDevice, aId, aType, aName, aInfo, aUrl, aArtwork, aManufacturerName, aManufacturerInfo,
+            aManufacturerUrl, aManufacturerArtwork, aModelName, aModelInfo, aModelUrl, aModelArtwork, aStarted, aAttributes)
         {
             iMetadata = aMetadata;
             iUriProvider = aUriProvider;
 
-            iSessions = new List<IMediaServerSession>();
+            iSessions = new List<IMediaEndpointSession>();
         }
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return (new ProxyMediaServer(this));
+            return (new ProxyMediaEndpoint(this));
         }
 
-        public override Task<IMediaServerSession> CreateSession()
+        public override Task<IMediaEndpointSession> CreateSession()
         {
-            return (Task.Factory.StartNew<IMediaServerSession>(() =>
+            return (Task.Factory.StartNew<IMediaEndpointSession>(() =>
             {
-                var session = new MediaServerSessionMock(Network, iMetadata, this);
+                var session = new MediaEndpointSessionMock(Network, iMetadata, this);
                 iSessions.Add(session);
                 return (session);
             }));
         }
 
-        internal void Destroy(IMediaServerSession aSession)
+        internal void Destroy(IMediaEndpointSession aSession)
         {
             iSessions.Remove(aSession);
         }
@@ -65,18 +62,18 @@ namespace OpenHome.Av
         }
     }
 
-    internal class MediaServerSessionMock : IMediaServerSession
+    internal class MediaEndpointSessionMock : IMediaEndpointSession
     {
         private readonly INetwork iNetwork;
         private readonly IEnumerable<IMediaMetadata> iMetadata;
-        private readonly ServiceMediaServerMock iService;
+        private readonly ServiceMediaEndpointMock iService;
         
         private readonly IEnumerable<IMediaDatum> iArtists;
         private readonly IEnumerable<IMediaDatum> iAlbums;
         private readonly IEnumerable<IMediaDatum> iGenres;
         private readonly List<IMediaDatum> iRoot;
 
-        public MediaServerSessionMock(INetwork aNetwork, IEnumerable<IMediaMetadata> aMetadata, ServiceMediaServerMock aService)
+        public MediaEndpointSessionMock(INetwork aNetwork, IEnumerable<IMediaMetadata> aMetadata, ServiceMediaEndpointMock aService)
         {
             iNetwork = aNetwork;
             iMetadata = aMetadata;
@@ -88,7 +85,7 @@ namespace OpenHome.Av
                 .OrderBy(v => v)
                 .Select(v =>
                 {
-                    var datum = new MediaDatum(iNetwork.TagManager.Audio.Artist, iNetwork.TagManager.Audio.Album);
+                    var datum = new MediaDatum(null, iNetwork.TagManager.Audio.Artist, iNetwork.TagManager.Audio.Album);
                     datum.Add(iNetwork.TagManager.Audio.Artist, v);
                     return (datum);
                 });
@@ -96,7 +93,7 @@ namespace OpenHome.Av
             iAlbums = iMetadata.GroupBy(m => m[iNetwork.TagManager.Audio.Album].Value)
                 .Select(m =>
                 {
-                    var datum = new MediaDatum(iNetwork.TagManager.Audio.Album);
+                    var datum = new MediaDatum(null, iNetwork.TagManager.Audio.Album);
                     datum.Add(iNetwork.TagManager.Audio.Album, m.Key);
                     datum.Add(iNetwork.TagManager.Audio.AlbumTitle, m.First());
                     datum.Add(iNetwork.TagManager.Audio.AlbumArtist, m.First());
@@ -113,7 +110,7 @@ namespace OpenHome.Av
                 .OrderBy(v => v)
                 .Select(v =>
                 {
-                    var datum = new MediaDatum(iNetwork.TagManager.Audio.Genre);
+                    var datum = new MediaDatum(null, iNetwork.TagManager.Audio.Genre);
                     datum.Add(iNetwork.TagManager.Audio.Genre, v);
                     return (datum);
                 });
@@ -127,28 +124,28 @@ namespace OpenHome.Av
 
         private IMediaDatum GetRootContainerTracks()
         {
-            var datum = new MediaDatum(iNetwork.TagManager.Container.Title);
+            var datum = new MediaDatum(null, iNetwork.TagManager.Container.Title);
             datum.Add(iNetwork.TagManager.Container.Title, "Tracks");
             return (datum);
         }
 
         private IMediaDatum GetRootContainerArtists()
         {
-            var datum = new MediaDatum(iNetwork.TagManager.Container.Title, iNetwork.TagManager.Audio.Artist, iNetwork.TagManager.Audio.Album);
+            var datum = new MediaDatum(null, iNetwork.TagManager.Container.Title, iNetwork.TagManager.Audio.Artist, iNetwork.TagManager.Audio.Album);
             datum.Add(iNetwork.TagManager.Container.Title, "Artists");
             return (datum);
         }
 
         private IMediaDatum GetRootContainerAlbums()
         {
-            var datum = new MediaDatum(iNetwork.TagManager.Container.Title, iNetwork.TagManager.Audio.Album);
+            var datum = new MediaDatum(null, iNetwork.TagManager.Container.Title, iNetwork.TagManager.Audio.Album);
             datum.Add(iNetwork.TagManager.Container.Title, "Albums");
             return (datum);
         }
 
         private IMediaDatum GetRootContainerGenres()
         {
-            var datum = new MediaDatum(iNetwork.TagManager.Container.Title, iNetwork.TagManager.Audio.Genre);
+            var datum = new MediaDatum(null, iNetwork.TagManager.Container.Title, iNetwork.TagManager.Audio.Genre);
             datum.Add(iNetwork.TagManager.Container.Title, "Genres");
             return (datum);
         }
@@ -157,11 +154,11 @@ namespace OpenHome.Av
         {
             var tracks = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Title] != null)
                 .OrderBy(m => m[iNetwork.TagManager.Audio.Title].Value)
-                .Select(m => new MediaDatum(m));
+                .Select(m => new MediaDatum(m, null));
 
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
-                return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(tracks)));
+                return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(tracks)));
             }));
         }
 
@@ -169,7 +166,7 @@ namespace OpenHome.Av
         {
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
-                return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iArtists)));
+                return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(iArtists)));
             }));
         }
 
@@ -177,7 +174,7 @@ namespace OpenHome.Av
         {
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
-                return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iAlbums)));
+                return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(iAlbums)));
             }));
         }
 
@@ -185,7 +182,7 @@ namespace OpenHome.Av
         {
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
-                return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iGenres)));
+                return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(iGenres)));
             }));
         }
 
@@ -196,7 +193,7 @@ namespace OpenHome.Av
                 .GroupBy(m => m[iNetwork.TagManager.Audio.Album].Value)
                 .Select(m =>
                 {
-                    var datum = new MediaDatum(iNetwork.TagManager.Audio.Album);
+                    var datum = new MediaDatum(null, iNetwork.TagManager.Audio.Album);
                     datum.Add(iNetwork.TagManager.Audio.Album, m.Key);
                     datum.Add(iNetwork.TagManager.Audio.AlbumTitle, m.First());
                     datum.Add(iNetwork.TagManager.Audio.AlbumArtist, m.First());
@@ -209,7 +206,7 @@ namespace OpenHome.Av
 
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
-                return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(albums)));
+                return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(albums)));
             }));
         }
 
@@ -217,11 +214,11 @@ namespace OpenHome.Av
         {
             var tracks = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Album].Value == aAlbum)
                 .OrderBy(m => m[iNetwork.TagManager.Audio.Track] != null ? uint.Parse(m[iNetwork.TagManager.Audio.Track].Value) : 0)
-                .Select(m => new MediaDatum(m));
+                .Select(m => new MediaDatum(m, null));
 
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
-                return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(tracks)));
+                return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(tracks)));
             }));
         }
 
@@ -230,11 +227,11 @@ namespace OpenHome.Av
             var tracks = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Genre] != null)
                 .Where(m => m[iNetwork.TagManager.Audio.Genre].Values.Contains(aGenre))
                 .OrderBy(m => m[iNetwork.TagManager.Audio.Title] != null ? m[iNetwork.TagManager.Audio.Title].Value : "")
-                .Select(m => new MediaDatum(m));
+                .Select(m => new MediaDatum(m, null));
 
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
-                return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(tracks)));
+                return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(tracks)));
             }));
         }
 
@@ -248,7 +245,7 @@ namespace OpenHome.Av
                 {
                     if (SearchMetadata(values, metadata))
                     {
-                        yield return new MediaDatum(metadata);
+                        yield return new MediaDatum(metadata, null);
                     }
                 }
             }
@@ -337,7 +334,7 @@ namespace OpenHome.Av
             {
                 return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
                 {
-                    return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(iRoot)));
+                    return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(iRoot)));
                 }));
             }
 
@@ -424,7 +421,7 @@ namespace OpenHome.Av
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
                 var data = SearchMetadata(aValue);
-                return (new MediaServerContainerMock(iNetwork, new MediaServerSnapshotMock(data)));
+                return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(data)));
             }));
         }
 
@@ -441,11 +438,11 @@ namespace OpenHome.Av
         }
     }
 
-    internal class MediaServerContainerMock : IWatchableContainer<IMediaDatum>
+    internal class MediaEndpointContainerMock : IWatchableContainer<IMediaDatum>
     {
         private readonly Watchable<IWatchableSnapshot<IMediaDatum>> iSnapshot;
 
-        public MediaServerContainerMock(INetwork aNetwork, IWatchableSnapshot<IMediaDatum> aSnapshot)
+        public MediaEndpointContainerMock(INetwork aNetwork, IWatchableSnapshot<IMediaDatum> aSnapshot)
         {
             iSnapshot = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork, "snapshot", aSnapshot);
         }
@@ -459,12 +456,12 @@ namespace OpenHome.Av
     }
 
 
-    internal class MediaServerSnapshotMock : IWatchableSnapshot<IMediaDatum>
+    internal class MediaEndpointSnapshotMock : IWatchableSnapshot<IMediaDatum>
     {
         private readonly IEnumerable<IMediaDatum> iData;
         private readonly IEnumerable<uint> iAlphaMap;
 
-        public MediaServerSnapshotMock(IEnumerable<IMediaDatum> aData)
+        public MediaEndpointSnapshotMock(IEnumerable<IMediaDatum> aData)
         {
             iData = aData;
             iAlphaMap = null;

@@ -103,23 +103,6 @@ namespace OpenHome.Av
         }
     }
 
-    public class DeviceInjectorContentDirectory : DeviceInjector
-    {
-        public DeviceInjectorContentDirectory(Network aNetwork)
-            : base(aNetwork)
-        {
-            iDeviceList = new CpDeviceListUpnpServiceType("upnp.org", "ContentDirectory", 1, Added, Removed);
-        }
-
-        protected override Device Create(INetwork aNetwork, CpDevice aDevice)
-        {
-            using (iDisposeHandler.Lock)
-            {
-                return (new DeviceMediaServerUpnp(aNetwork, aDevice));
-            }
-        }
-    }
-
     public class DeviceInjectorMock : IMockable, IDisposable
     {
         private Network iNetwork;
