@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Xml;
 using System.Xml.Linq;
+using System.Text;
 
 using System.Net;
 
@@ -100,6 +101,8 @@ namespace OpenHome.Av
         private readonly INetwork iNetwork;
         private readonly ServiceMediaEndpointOpenHome iService;
 
+        private readonly Encoding iEncoding;
+
         private readonly object iLock;
 
         private readonly string iId;
@@ -113,24 +116,34 @@ namespace OpenHome.Av
             iNetwork = aNetwork;
             iService = aService;
 
+            iEncoding = new UTF8Encoding(false);
+
             iLock = new object();
 
-            var client = new WebClient();
+            using (var client = new WebClient())
+            {
+                var session = client.DownloadString(iService.Uri + "/create");
 
-            var session = client.DownloadString(iService.Uri + "/create");
+                var json = JsonParser.Parse(session) as JsonString;
 
-            var json = JsonParser.Parse(session) as JsonString;
+                iId = json.Value();
 
-            iId = json.Value();
+                iSequence = 0;
+            }
+        }
 
-            iSequence = 0;
+        private string Encode(string aValue)
+        {
+            var bytes = iEncoding.GetBytes(aValue);
+            var value = System.Convert.ToBase64String(bytes);
+            return (value);
         }
 
         internal void Refresh()
         {
         }
 
-        private Task<IWatchableContainer<IMediaDatum>> Browse(string aId)
+        private Task<IWatchableContainer<IMediaDatum>> Update(Func<MediaEndpointContainerOpenHome> aContainer)
         {
             uint sequence;
 
@@ -151,7 +164,7 @@ namespace OpenHome.Av
                 {
                     if (iSequence == sequence)
                     {
-                        iContainer = new MediaEndpointContainerOpenHome(iNetwork, iService, iId, aId);
+                        iContainer = aContainer();
                         return (iContainer);
                     }
 
@@ -166,25 +179,33 @@ namespace OpenHome.Av
         {
             if (aDatum == null)
             {
-                return (Browse("0"));
+                return (Update(() =>
+                {
+                    return (new MediaEndpointContainerOpenHomeBrowse(iNetwork, iService, iId, "0"));
+                }));
             }
 
-            return (Browse(aDatum.Id));
+            return (Update(() =>
+            {
+                return (new MediaEndpointContainerOpenHomeBrowse(iNetwork, iService, iId, aDatum.Id));
+            }));
         }
 
         public Task<IWatchableContainer<IMediaDatum>> Link(ITag aTag, string aValue)
         {
-            throw new NotImplementedException();
+            return (Update(() =>
+            {
+                return (new MediaEndpointContainerOpenHomeLink(iNetwork, iService, iId, aTag, Encode(aValue)));
+            }));
         }
 
         public Task<IWatchableContainer<IMediaDatum>> Search(string aValue)
         {
-            throw new NotImplementedException();
-        }
 
-        public Task<IWatchableContainer<IMediaDatum>> Query(string aValue)
-        {
-            throw new NotImplementedException();
+            return (Update(() =>
+            {
+                return (new MediaEndpointContainerOpenHomeSearch(iNetwork, iService, iId, Encode(aValue)));
+            }));
         }
 
         // Disposable
@@ -208,57 +229,67 @@ namespace OpenHome.Av
         private readonly INetwork iNetwork;
         private readonly ServiceMediaEndpointOpenHome iService;
         private readonly string iSession;
-        private readonly string iId;
-        private readonly uint iSequence;
+
+        private readonly uint iTotal;
+        private readonly IEnumerable<uint> iAlpha;
 
         private readonly Watchable<IWatchableSnapshot<IMediaDatum>> iWatchableSnapshot;
 
-        public MediaEndpointContainerOpenHome(INetwork aNetwork, ServiceMediaEndpointOpenHome aService, string aSession, string aId)
+        protected MediaEndpointContainerOpenHome(INetwork aNetwork, ServiceMediaEndpointOpenHome aService, string aSession, string aUri)
         {
             iNetwork = aNetwork;
             iService = aService;
             iSession = aSession;
-            iId = aId;
 
-            var uri = string.Format("{0}/browse/{1}/{2}", iService.Uri, iSession, aId);
+            var snapshot = GetSnapshot(aUri);
 
-            var client = new WebClient();
-
-            var session = client.DownloadString(uri);
-
-            var json = JsonParser.Parse(session) as JsonString;
-
-            iSequence = uint.Parse(json.Value());
-
-            iWatchableSnapshot = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork, "snapshot", new MediaEndpointSnapshotOpenHome(iNetwork, iService, iSession, iId, iSequence));
+            iWatchableSnapshot = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork, "snapshot", snapshot);
         }
 
-        internal string Id
+        private IWatchableSnapshot<IMediaDatum> GetSnapshot(string aUri)
         {
-            get
+            //var uri = string.Format("{0}/browse/{1}?id={2}", iService.Uri, iSession, iId);
+
+            using (var client = new WebClient())
             {
-                return (iId);
+
+                var session = client.DownloadString(aUri);
+
+                var json = JsonParser.Parse(session) as JsonObject;
+
+                var total = GetTotal(json["Total"]);
+                var alpha = GetAlpha(json["Alpha"]);
+
+                return (new MediaEndpointSnapshotOpenHome(iNetwork, iService, iSession, total, alpha));
             }
         }
 
-        internal uint Sequence
+        private uint GetTotal(JsonValue aValue)
         {
-            get
+            var value = aValue as JsonString;
+            return (uint.Parse(value.Value()));
+        }
+
+        private IEnumerable<uint> GetAlpha(JsonValue aValue)
+        {
+            var value = aValue as JsonArray;
+
+            foreach (var entry in value)
             {
-                return (iSequence);
+                yield return (GetAlphaElement(entry));
             }
+        }
+
+        private uint GetAlphaElement(JsonValue aValue)
+        {
+            var value = aValue as JsonString;
+            return (uint.Parse(value.Value()));
         }
 
         internal void Update(uint aSequence)
         {
-            /*
-            iUpdateId = aUpdateId;
-
-            iNetwork.Schedule(() =>
-            {
-                iWatchable.Update(new MediaEndpointSnapshotOpenHome(iNetwork, iId, aTotal));
-            });
-            */
+            var uri = string.Format("{0}/refresh?session={1}", iService.Uri, iSession);
+            iWatchableSnapshot.Update(GetSnapshot(uri));
         }
 
         // IMediaServerContainer
@@ -277,43 +308,48 @@ namespace OpenHome.Av
         }
     }
 
+    internal class MediaEndpointContainerOpenHomeBrowse : MediaEndpointContainerOpenHome
+    {
+        public MediaEndpointContainerOpenHomeBrowse(INetwork aNetwork, ServiceMediaEndpointOpenHome aService, string aSession, string aId)
+            : base (aNetwork, aService, aSession, string.Format("{0}/browse?session={1}&id={2}", aService.Uri, aSession, aId))
+        {
+        }
+    }
+
+    internal class MediaEndpointContainerOpenHomeLink : MediaEndpointContainerOpenHome
+    {
+        public MediaEndpointContainerOpenHomeLink(INetwork aNetwork, ServiceMediaEndpointOpenHome aService, string aSession, ITag aTag, string aValue)
+            : base(aNetwork, aService, aSession, string.Format("{0}/link?session={1}&tag={2}&val={3}", aService.Uri, aSession, aTag.Id, aValue))
+        {
+        }
+    }
+
+    internal class MediaEndpointContainerOpenHomeSearch : MediaEndpointContainerOpenHome
+    {
+        public MediaEndpointContainerOpenHomeSearch(INetwork aNetwork, ServiceMediaEndpointOpenHome aService, string aSession, string aValue)
+            : base(aNetwork, aService, aSession, string.Format("{0}/search?session={1}&val={2}", aService.Uri, aSession, aValue))
+        {
+        }
+    }
 
     internal class MediaEndpointSnapshotOpenHome : IWatchableSnapshot<IMediaDatum>
     {
         private readonly INetwork iNetwork;
         private readonly ServiceMediaEndpointOpenHome iService;
         private readonly string iSession;
-        private readonly string iContainer;
-        private readonly uint iSequence;
-
-        private readonly IEnumerable<uint> iAlphaMap;
-
         private readonly uint iTotal;
+        private readonly IEnumerable<uint> iAlpha;
 
-        public MediaEndpointSnapshotOpenHome(INetwork aNetwork, ServiceMediaEndpointOpenHome aService, string aSession, string aContainer, uint aSequence)
+        public MediaEndpointSnapshotOpenHome(INetwork aNetwork, ServiceMediaEndpointOpenHome aService, string aSession, uint aTotal, IEnumerable<uint> aAlpha)
         {
             iNetwork = aNetwork;
             iService = aService;
             iSession = aSession;
-            iContainer = aContainer;
-            iSequence = aSequence;
-
-            iAlphaMap = null;
-
-
-            var uri = string.Format("{0}/snapshot/{1}/{2}/{3}", iService.Uri, iSession, iContainer, iSequence);
-
-            var client = new WebClient();
-
-            var session = client.DownloadString(uri);
-
-            var json = JsonParser.Parse(session) as JsonString;
-
-            iTotal = uint.Parse(json.Value());
-
+            iTotal = aTotal;
+            iAlpha = aAlpha;
         }
 
-        // IMediaServerSnapshot
+        // IMediaServerSnapshot<IMediaDatum>
 
         public uint Total
         {
@@ -327,7 +363,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return (iAlphaMap);
+                return (iAlpha);
             }
         }
 
@@ -339,7 +375,7 @@ namespace OpenHome.Av
 
             return (Task.Factory.StartNew<IWatchableFragment<IMediaDatum>>(() =>
             {
-                return (new MediaEndpointFragmentOpenHome(iNetwork, iService, iSession, iContainer, iSequence, aIndex, aCount));
+                return (new MediaEndpointFragmentOpenHome(iNetwork, iService, iSession, iTotal, aIndex, aCount));
             }));
         }
     }
@@ -349,30 +385,29 @@ namespace OpenHome.Av
         private readonly INetwork iNetwork;
         private readonly ServiceMediaEndpointOpenHome iService;
         private readonly string iSession;
-        private readonly string iContainer;
-        private readonly uint iSequence;
-
+        private readonly uint iTotal;
         private readonly uint iIndex;
+
         private readonly IEnumerable<IMediaDatum> iData;
 
-        public MediaEndpointFragmentOpenHome(INetwork aNetwork, ServiceMediaEndpointOpenHome aService, string aSession, string aContainer, uint aSequence, uint aIndex, uint aCount)
+        public MediaEndpointFragmentOpenHome(INetwork aNetwork, ServiceMediaEndpointOpenHome aService, string aSession, uint aTotal, uint aIndex, uint aCount)
         {
             iNetwork = aNetwork;
             iService = aService;
             iSession = aSession;
-            iContainer = aContainer;
-            iSequence = aSequence;
+            iTotal = aTotal;
             iIndex = aIndex;
 
-            var uri = string.Format("{0}/snapshot/{1}/{2}/{3}?index={4}&count={5}", iService.Uri, iSession, iContainer, iSequence, iIndex, aCount);
+            var uri = string.Format("{0}/read?session={1}&index={2}&count={3}", iService.Uri, iSession, iIndex, aCount);
 
-            var client = new WebClient();
+            using (var client = new WebClient())
+            {
+                var session = client.DownloadString(uri);
 
-            var session = client.DownloadString(uri);
+                var json = JsonParser.Parse(session);
 
-            var json = JsonParser.Parse(session);
-
-            iData = GetData(json);
+                iData = GetData(json);
+            }
         }
 
         private IEnumerable<IMediaDatum> GetData(JsonValue aValue)
@@ -396,12 +431,28 @@ namespace OpenHome.Av
 
             foreach (var entry in value["Metadata"] as JsonArray)
             {
-                var metadatum = entry as JsonArray;
-
-                datum.Add(GetTag(metadatum.ElementAt(0)), GetValue(metadatum.ElementAt(1)));
+                var values = GetMetadatum(entry);
+                var tag = uint.Parse(values.First());
+                datum.Add(iNetwork.TagManager[tag], new MediaValue(values.Skip(1)));
             }
 
             return (datum);
+        }
+
+        private IEnumerable<string> GetMetadatum(JsonValue aValue)
+        {
+            var value = aValue as JsonArray;
+
+            foreach (var entry in value)
+            {
+                yield return (GetMetadatumValue(entry));
+            }
+        }
+
+        private string GetMetadatumValue(JsonValue aValue)
+        {
+            var value = aValue as JsonString;
+            return (value.Value);
         }
 
         private string GetValue(JsonValue aValue)
