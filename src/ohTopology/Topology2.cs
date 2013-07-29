@@ -54,6 +54,8 @@ namespace OpenHome.Av
     {
         string Id { get; }
         string Attributes { get; }
+        string ManufacturerName { get; }
+        string ProductId { get; }
         IDevice Device { get; }
 
         IWatchable<string> Room { get; }
@@ -77,8 +79,6 @@ namespace OpenHome.Av
 
             iId = aId;
             iProduct = aProduct;
-            iAttributes = aProduct.Attributes;
-            iDevice = aProduct.Device;
 
             iSources = new List<ITopology2Source>();
             iWatchableSources = new List<Watchable<ITopology2Source>>();
@@ -116,7 +116,23 @@ namespace OpenHome.Av
         {
             get
             {
-                return iAttributes;
+                return iProduct.Attributes;
+            }
+        }
+
+        public string ManufacturerName
+        {
+            get
+            {
+                return iProduct.ManufacturerName;
+            }
+        }
+
+        public string ProductId
+        {
+            get
+            {
+                return iProduct.ProductId;
             }
         }
 
@@ -124,7 +140,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return iDevice;
+                return iProduct.Device;
             }
         }
 
@@ -287,8 +303,6 @@ namespace OpenHome.Av
         private IWatchableThread iThread;
         private string iId;
         private IProxyProduct iProduct;
-        private string iAttributes;
-        private IDevice iDevice;
         private List<ITopology2Source> iSources;
         private List<Watchable<ITopology2Source>> iWatchableSources;
     }

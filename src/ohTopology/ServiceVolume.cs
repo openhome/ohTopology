@@ -342,6 +342,7 @@ namespace OpenHome.Av
         {
             Network.Schedule(() =>
             {
+                Console.WriteLine("VolumeChanged: " + Device.Udn + " " + iService.PropertyVolume());
                 iValue.Update(iService.PropertyVolume());
             });
         }

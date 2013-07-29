@@ -150,44 +150,67 @@ namespace OpenHome.Av
                     document.LoadXml(aMetadata);
 
                     //string c = document.SelectSingleNode("/didl:DIDL-Lite/*/upnp:class", nsManager).FirstChild.Value;
-                    string title = document.SelectSingleNode("/didl:DIDL-Lite/*/dc:title", nsManager).FirstChild.Value;
-                    metadata.Add(aTagManager.Audio.Title, title);
+                    XmlNode title = document.SelectSingleNode("/didl:DIDL-Lite/*/dc:title", nsManager);
+                    if(title != null)
+                    {
+                        if (title.FirstChild != null)
+                        {
+                            metadata.Add(aTagManager.Audio.Title, title.FirstChild.Value);
+                        }
+                    }
 
                     XmlNode res = document.SelectSingleNode("/didl:DIDL-Lite/*/didl:res", nsManager);
                     if (res != null)
                     {
-                        string uri = res.FirstChild.Value;
-                        metadata.Add(aTagManager.Audio.Uri, uri);
+                        if (res.FirstChild != null)
+                        {
+                            metadata.Add(aTagManager.Audio.Uri, res.FirstChild.Value);
+                        }
                     }
 
                     XmlNodeList albumart = document.SelectNodes("/didl:DIDL-Lite/*/upnp:albumArtURI", nsManager);
                     foreach (XmlNode n in albumart)
                     {
-                        metadata.Add(aTagManager.Audio.Artwork, n.FirstChild.Value);
+                        if (n.FirstChild != null)
+                        {
+                            metadata.Add(aTagManager.Audio.Artwork, n.FirstChild.Value);
+                        }
                     }
 
                     XmlNode album = document.SelectSingleNode("/didl:DIDL-Lite/*/upnp:album", nsManager);
                     if (album != null)
                     {
-                        metadata.Add(aTagManager.Audio.Album, album.FirstChild.Value);
+                        if (album.FirstChild != null)
+                        {
+                            metadata.Add(aTagManager.Audio.Album, album.FirstChild.Value);
+                        }
                     }
 
                     XmlNode artist = document.SelectSingleNode("/didl:DIDL-Lite/*/upnp:artist", nsManager);
                     if (artist != null)
                     {
-                        metadata.Add(aTagManager.Audio.Artist, artist.FirstChild.Value);
+                        if (artist.FirstChild != null)
+                        {
+                            metadata.Add(aTagManager.Audio.Artist, artist.FirstChild.Value);
+                        }
                     }
 
                     XmlNodeList genre = document.SelectNodes("/didl:DIDL-Lite/*/upnp:genre", nsManager);
                     foreach (XmlNode n in genre)
                     {
-                        metadata.Add(aTagManager.Audio.Genre, n.FirstChild.Value);
+                        if (n.FirstChild != null)
+                        {
+                            metadata.Add(aTagManager.Audio.Genre, n.FirstChild.Value);
+                        }
                     }
 
                     XmlNode albumartist = document.SelectSingleNode("/didl:DIDL-Lite/*/upnp:artist[@role='AlbumArtist']", nsManager);
                     if (albumartist != null)
                     {
-                        metadata.Add(aTagManager.Audio.AlbumArtist, albumartist.FirstChild.Value);
+                        if (albumartist.FirstChild != null)
+                        {
+                            metadata.Add(aTagManager.Audio.AlbumArtist, albumartist.FirstChild.Value);
+                        }
                     }
                 }
                 catch (XmlException) { }

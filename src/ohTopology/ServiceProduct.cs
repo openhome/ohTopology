@@ -274,7 +274,15 @@ namespace OpenHome.Av
             iSubscribedConfiguration = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgProduct1(aCpDevice);
             iServiceConfiguration = new CpProxyLinnCoUkConfiguration1(aCpDevice);
-            iServiceVolkano = new CpProxyLinnCoUkVolkano1(aCpDevice);
+
+            string value;
+            if (aCpDevice.GetAttribute("Upnp.Service.linn-co-uk.Volkano", out value))
+            {
+                if (uint.Parse(value) == 1)
+                {
+                    iServiceVolkano = new CpProxyLinnCoUkVolkano1(aCpDevice);
+                }
+            }
 
             iService.SetPropertyProductRoomChanged(HandleRoomChanged);
             iService.SetPropertyProductNameChanged(HandleNameChanged);
@@ -304,6 +312,12 @@ namespace OpenHome.Av
 
             iServiceConfiguration.Dispose();
             iServiceConfiguration = null;
+
+            if (iServiceVolkano != null)
+            {
+                iServiceVolkano.Dispose();
+                iServiceVolkano = null;
+            }
         }
 
         protected override Task OnSubscribe()
@@ -313,7 +327,10 @@ namespace OpenHome.Av
                 iService.Subscribe();
                 iServiceConfiguration.Subscribe();
 
-                iServiceVolkano.SyncProductId(out iProductId);
+                if (iServiceVolkano != null)
+                {
+                    iServiceVolkano.SyncProductId(out iProductId);
+                }
                 
                 iSubscribed.WaitOne();
                 iSubscribedConfiguration.WaitOne();

@@ -593,3 +593,24 @@ Sender Mock DS
 Sender Test
 Senders end
 empty
+
+// test that standby is correctly set off when DS is added with standby off
+mock network create ds 69
+mock network update 69 product room tester
+mock network update 69 product standby False
+mock network add 69
+expect Room Added tester
+expect tester open Standby eOff
+expect tester open 
+Sources begin
+Source 0 Mock DS Playlist Playlist True True True 69 Volume 69
+Source 1 Mock DS Radio Radio True True True 69 Volume 69
+Source 3 Mock DS Songcast Receiver True True True 69 Volume 69
+Sources end
+expect Mock DS open Source 0 Mock DS Playlist Playlist True True True 69 Volume 69
+expect Mock DS open 
+Senders begin
+Sender Mock DS
+Senders end
+empty
+

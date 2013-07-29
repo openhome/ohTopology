@@ -8,10 +8,6 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
-
 using System.Net;
 
 using ICSharpCode.SharpZipLib.Core;

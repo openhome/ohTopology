@@ -203,6 +203,7 @@ def test(context):
     run_test('Topology4')
     run_test('StandardHouse')
     run_test('Zone')
+    run_test('Registration')
 
 
 @build_step("publish", optional=True, default=False)

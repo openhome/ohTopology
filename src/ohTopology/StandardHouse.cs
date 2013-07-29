@@ -107,7 +107,7 @@ namespace OpenHome.Av
 
         public void RoomAdded(StandardRoom aRoom)
         {
-            if (!string.IsNullOrEmpty(iMasterRoom))
+            if (aRoom.Name == iMasterRoom)
             {
                 if (iHouse.AddSatellite(iMasterRoom, iRoom))
                 {
@@ -376,10 +376,11 @@ namespace OpenHome.Av
     {
         IWatchableOrdered<IStandardRoom> Rooms { get; }
         IWatchableOrdered<IProxySender> Senders { get; }
+        IWatchable<IEnumerable<ITopology4Registration>> Registrations { get; }
         INetwork Network { get; }
     }
 
-    public class StandardHouse : IUnorderedWatcher<ITopology4Room>, IStandardHouse, IMockable, IDisposable
+    public class StandardHouse : IUnorderedWatcher<ITopology4Room>, IWatcher<IEnumerable<ITopology4Registration>>, IStandardHouse, IMockable, IDisposable
     {
         public StandardHouse(INetwork aNetwork)
         {
@@ -395,6 +396,7 @@ namespace OpenHome.Av
             iWatchableRooms = new WatchableOrdered<IStandardRoom>(iNetwork);
             iRoomLookup = new Dictionary<ITopology4Room, StandardRoom>();
             iRoomWatchers = new Dictionary<ITopology4Room, RoomWatcher>();
+            iRegistrations = new Watchable<IEnumerable<ITopology4Registration>>(iNetwork, "Registrations", new List<ITopology4Registration>());
             iSatelliteWatchers = new Dictionary<ITopology4Room, SatelliteWatcher>();
 
             iSendersWatcher = new SendersWatcher(aNetwork);
@@ -418,6 +420,7 @@ namespace OpenHome.Av
                 // remove listeners from zones before disposing of zones
                 foreach (var kvp in iRoomWatchers)
                 {
+                    kvp.Key.Registrations.RemoveWatcher(this);
                     kvp.Value.Dispose();
                 }
 
@@ -435,6 +438,7 @@ namespace OpenHome.Av
             iRoomLookup.Clear();
             iRoomWatchers.Clear();
             iSatelliteWatchers.Clear();
+            iRegistrations.Dispose();
 
             iTopology4.Dispose();
             iTopology3.Dispose();
@@ -465,6 +469,14 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<IEnumerable<ITopology4Registration>> Registrations
+        {
+            get
+            {
+                return iRegistrations;
+            }
+        }
+
         public INetwork Network
         {
             get
@@ -492,6 +504,8 @@ namespace OpenHome.Av
 
         public void UnorderedAdd(ITopology4Room aRoom)
         {
+            aRoom.Registrations.AddWatcher(this);
+
             StandardRoom room = new StandardRoom(iNetwork, aRoom);
 
             iRoomLookup.Add(aRoom, room);
@@ -514,6 +528,8 @@ namespace OpenHome.Av
 
         public void UnorderedRemove(ITopology4Room aRoom)
         {
+            aRoom.Registrations.RemoveWatcher(this);
+
             // remove the corresponding Room from the watchable collection
             StandardRoom room = iRoomLookup[aRoom];
 
@@ -536,6 +552,34 @@ namespace OpenHome.Av
             iRoomLookup.Remove(aRoom);
 
             room.Dispose();
+        }
+
+        public void ItemOpen(string aId, IEnumerable<ITopology4Registration> aValue)
+        {
+            List<ITopology4Registration> list = iRegistrations.Value.ToList();
+            list.AddRange(aValue);
+            iRegistrations.Update(list);
+        }
+
+        public void ItemUpdate(string aId, IEnumerable<ITopology4Registration> aValue, IEnumerable<ITopology4Registration> aPrevious)
+        {
+            List<ITopology4Registration> list = iRegistrations.Value.ToList();
+            foreach (var r in aPrevious)
+            {
+                list.Remove(r);
+            }
+            list.AddRange(aValue);
+            iRegistrations.Update(list);
+        }
+
+        public void ItemClose(string aId, IEnumerable<ITopology4Registration> aValue)
+        {
+            List<ITopology4Registration> list = iRegistrations.Value.ToList();
+            foreach (var r in aValue)
+            {
+                list.Remove(r);
+            }
+            iRegistrations.Update(list);
         }
 
         public void Execute(IEnumerable<string> aValue)
@@ -666,6 +710,7 @@ namespace OpenHome.Av
         private readonly Dictionary<ITopology4Room, StandardRoom> iRoomLookup;
 
         private readonly SendersWatcher iSendersWatcher;
+        private readonly Watchable<IEnumerable<ITopology4Registration>> iRegistrations;
 
         private readonly Dictionary<ITopology4Room, RoomWatcher> iRoomWatchers;
         private readonly Dictionary<ITopology4Room, SatelliteWatcher> iSatelliteWatchers;

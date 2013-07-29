@@ -30,7 +30,7 @@ namespace OpenHome.Av
 
     public interface IInfoMetatext
     {
-        string Metatext { get; }
+        IMediaMetadata Metatext { get; }
     }
 
     public interface IProxyInfo : IProxy
@@ -158,15 +158,15 @@ namespace OpenHome.Av
     {
         internal InfoMetatext()
         {
-            iMetatext = string.Empty;
+            iMetatext = null;
         }
 
-        public InfoMetatext(string aMetatext)
+        public InfoMetatext(IMediaMetadata aMetatext)
         {
             iMetatext = aMetatext;
         }
 
-        public string Metatext
+        public IMediaMetadata Metatext
         {
             get
             {
@@ -174,7 +174,7 @@ namespace OpenHome.Av
             }
         }
 
-        private string iMetatext;
+        private IMediaMetadata iMetatext;
     }
 
     public abstract class ServiceInfo : Service
@@ -323,7 +323,7 @@ namespace OpenHome.Av
         {
             iThread.Schedule(() =>
             {
-                iMetatext.Update(new InfoMetatext(iService.PropertyMetatext()));
+                iMetatext.Update(new InfoMetatext(Network.TagManager.FromDidlLite(iService.PropertyMetatext())));
             });
         }
 
@@ -406,7 +406,7 @@ namespace OpenHome.Av
                 {
                     throw new NotSupportedException();
                 }
-                IInfoMetatext metatext = new InfoMetatext(value.ElementAt(0));
+                IInfoMetatext metatext = new InfoMetatext(Network.TagManager.FromDidlLite(value.ElementAt(0)));
                 iMetatext.Update(metatext);
             }
             else

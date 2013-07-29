@@ -289,32 +289,26 @@ namespace OpenHome.Av
 
         public void Add(Device aDevice)
         {
-            using (iDisposeHandler.Lock)
-            {
-                iDevices.Add(aDevice);
+            iDevices.Add(aDevice);
 
-                foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> kvp in iDeviceLists)
+            foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> kvp in iDeviceLists)
+            {
+                if (aDevice.HasService(kvp.Key))
                 {
-                    if (aDevice.HasService(kvp.Key))
-                    {
-                        kvp.Value.Add(aDevice);
-                    }
+                    kvp.Value.Add(aDevice);
                 }
             }
         }
 
         public void Remove(Device aDevice)
         {
-            using (iDisposeHandler.Lock)
-            {
-                iDevices.Remove(aDevice);
+            iDevices.Remove(aDevice);
 
-                foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> l in iDeviceLists)
+            foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> l in iDeviceLists)
+            {
+                if (aDevice.HasService(l.Key))
                 {
-                    if (aDevice.HasService(l.Key))
-                    {
-                        l.Value.Remove(aDevice);
-                    }
+                    l.Value.Remove(aDevice);
                 }
             }
         }
