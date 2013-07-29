@@ -17,18 +17,18 @@ namespace OpenHome.Av
 {
     public class ServiceMediaEndpointContentDirectory : ServiceMediaEndpoint
     {
-        private readonly CpProxyUpnpOrgContentDirectory1 iUpnpProxy;
+        private readonly CpProxyUpnpOrgContentDirectory1 iProxy;
 
         private readonly List<MediaEndpointSessionContentDirectory> iSessions;
         
         public ServiceMediaEndpointContentDirectory(INetwork aNetwork, IDevice aDevice, string aId, string aType, string aName, string aInfo,
             string aUrl, string aArtwork, string aManufacturerName, string aManufacturerInfo, string aManufacturerUrl,
             string aManufacturerArtwork, string aModelName, string aModelInfo, string aModelUrl, string aModelArtwork,
-            DateTime aStarted, IEnumerable<string> aAttributes, CpProxyUpnpOrgContentDirectory1 aUpnpProxy)
+            DateTime aStarted, IEnumerable<string> aAttributes, CpProxyUpnpOrgContentDirectory1 aProxy)
             : base (aNetwork, aDevice, aId, aType, aName, aInfo, aUrl, aArtwork, aManufacturerName, aManufacturerInfo,
             aManufacturerUrl, aManufacturerArtwork, aModelName, aModelInfo, aModelUrl, aModelArtwork, aStarted, aAttributes)
         {
-            iUpnpProxy = aUpnpProxy;
+            iProxy = aProxy;
             iSessions = new List<MediaEndpointSessionContentDirectory>();
         }
 
@@ -41,7 +41,7 @@ namespace OpenHome.Av
         {
             return (Task.Factory.StartNew<IMediaEndpointSession>(() =>
             {
-                var session = new MediaEndpointSessionContentDirectory(Network, iUpnpProxy, this);
+                var session = new MediaEndpointSessionContentDirectory(Network, iProxy, this);
 
                 lock (iSessions)
                 {
@@ -87,7 +87,7 @@ namespace OpenHome.Av
     internal class MediaEndpointSessionContentDirectory : IMediaEndpointSession
     {
         private readonly INetwork iNetwork;
-        private readonly CpProxyUpnpOrgContentDirectory1 iUpnpProxy;
+        private readonly CpProxyUpnpOrgContentDirectory1 iProxy;
         private readonly ServiceMediaEndpointContentDirectory iService;
 
         private readonly object iLock;
@@ -96,10 +96,10 @@ namespace OpenHome.Av
 
         private MediaEndpointContainerContentDirectory iContainer;
 
-        public MediaEndpointSessionContentDirectory(INetwork aNetwork, CpProxyUpnpOrgContentDirectory1 aUpnpProxy, ServiceMediaEndpointContentDirectory aService)
+        public MediaEndpointSessionContentDirectory(INetwork aNetwork, CpProxyUpnpOrgContentDirectory1 aProxy, ServiceMediaEndpointContentDirectory aService)
         {
             iNetwork = aNetwork;
-            iUpnpProxy = aUpnpProxy;
+            iProxy = aProxy;
             iService = aService;
 
             iLock = new object();
@@ -110,6 +110,7 @@ namespace OpenHome.Av
         internal void Refresh()
         {
             uint sequence;
+
             MediaEndpointContainerContentDirectory container;
 
             lock (iLock)
@@ -129,7 +130,7 @@ namespace OpenHome.Av
 
                     try
                     {
-                        iUpnpProxy.SyncBrowse(container.Id, "BrowseDirectChildren", "", 0, 1, "", out result, out numberReturned, out totalMatches, out updateId);
+                        iProxy.SyncBrowse(container.Id, "BrowseDirectChildren", "", 0, 1, "", out result, out numberReturned, out totalMatches, out updateId);
                     }
                     catch
                     {
@@ -174,7 +175,7 @@ namespace OpenHome.Av
 
                 try
                 {
-                    iUpnpProxy.SyncBrowse(aId, "BrowseDirectChildren", "", 0, 1, "", out result, out numberReturned, out totalMatches, out updateId);
+                    iProxy.SyncBrowse(aId, "BrowseDirectChildren", "", 0, 1, "", out result, out numberReturned, out totalMatches, out updateId);
                 }
                 catch
                 {
@@ -185,7 +186,7 @@ namespace OpenHome.Av
                 {
                     if (iSequence == sequence)
                     {
-                        iContainer = new MediaEndpointContainerContentDirectory(iNetwork, iUpnpProxy, aId, updateId, totalMatches);
+                        iContainer = new MediaEndpointContainerContentDirectory(iNetwork, iProxy, aId, updateId, totalMatches);
                         return (iContainer);
                     }
 

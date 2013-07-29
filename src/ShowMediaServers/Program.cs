@@ -14,17 +14,126 @@ using OpenHome.Net.ControlPoint;
 
 namespace ShowMediaServers
 {
-    public class TestMediaServer : IDisposable
+    public class TestMediaEndpointSession : IDisposable
     {
         private readonly INetwork iNetwork;
         private readonly IProxyMediaEndpoint iProxy;
 
-        public TestMediaServer(INetwork aNetwork, IProxyMediaEndpoint aProxy)
+        private List<Task> iTasks;
+
+        private IMediaEndpointSession iSession;
+
+        private IDisposable iWatcher;
+
+        public TestMediaEndpointSession(INetwork aNetwork, IProxyMediaEndpoint aProxy)
+        {
+            iNetwork = aNetwork;
+            iProxy = aProxy;
+
+            iTasks = new List<Task>();
+
+            iTasks.Add(iProxy.CreateSession().ContinueWith(SessionCreated));
+        }
+
+        private void SessionCreated(Task<IMediaEndpointSession> aTask)
+        {
+            iSession = aTask.Result;
+
+            if (iSession != null)
+            {
+                iSession.Browse(null).ContinueWith(ContainerCreated);
+            }
+        }
+
+        private void ContainerCreated(Task<IWatchableContainer<IMediaDatum>> aTask)
+        {
+            var container = aTask.Result;
+
+            if (container != null)
+            {
+                iWatcher = container.Snapshot.CreateWatcher((snapshot) =>
+                {
+                    lock (iTasks)
+                    {
+                        iTasks.Add(snapshot.Read(0, snapshot.Total).ContinueWith(FragmentCreated));
+                    }
+                });
+            }
+        }
+
+        private void FragmentCreated(Task<IWatchableFragment<IMediaDatum>> aTask)
+        {
+            var fragment = aTask.Result;
+
+            if (fragment != null)
+            {
+                foreach (var entry in fragment.Data.ToArray())
+                {
+                    ReportDatum(entry);
+                }
+            }
+        }
+
+        private void ReportDatum(IMediaDatum aDatum)
+        {
+            if (aDatum.Type.Any())
+            {
+                ReportContainer(aDatum.Type);
+            }
+            else
+            {
+                Console.WriteLine("***** ITEM");
+            }
+
+            foreach (var entry in aDatum)
+            {
+                ReportMetadatum(entry);
+            }
+        }
+
+        private void ReportContainer(IEnumerable<ITag> aValue)
+        {
+            Console.WriteLine("***** CONTAINER: {0}", string.Join(", ", aValue.Select(t => t.FullName)));
+        }
+
+        private void ReportMetadatum(KeyValuePair<ITag, IMediaValue> aMetadatum)
+        {
+            Console.WriteLine("***** {0}: {1}", aMetadatum.Key.FullName, string.Join(", ", aMetadatum.Value.Values));
+        }
+
+        // IDisposable
+
+        public void Dispose()
+        {
+            lock (iTasks)
+            {
+                Task.WaitAll(iTasks.ToArray());
+            }
+
+            if (iWatcher != null)
+            {
+                iWatcher.Dispose();
+            }
+
+            iSession.Dispose();
+        }
+    }
+
+    public class TestMediaEndpoint : IDisposable
+    {
+        private readonly INetwork iNetwork;
+        private readonly IProxyMediaEndpoint iProxy;
+
+        private readonly TestMediaEndpointSession iSession;
+        
+        public TestMediaEndpoint(INetwork aNetwork, IProxyMediaEndpoint aProxy)
         {
             iNetwork = aNetwork;
             iProxy = aProxy;
 
             PrintDetails();
+
+            iSession = new TestMediaEndpointSession(iNetwork, iProxy);
         }
 
         private void PrintDetails()
@@ -54,6 +163,7 @@ namespace ShowMediaServers
 
         public void Dispose()
         {
+            iSession.Dispose();
             iProxy.Dispose();
 
             Console.WriteLine("Removed                  : {0}", iProxy.Device.Udn);
@@ -64,7 +174,7 @@ namespace ShowMediaServers
     {
         private readonly INetwork iNetwork;
 
-        private readonly Dictionary<IDevice, TestMediaServer> iMediaServers;
+        private readonly Dictionary<IDevice, TestMediaEndpoint> iMediaServers;
 
         private IWatchableUnordered<IDevice> iDevices;
 
@@ -72,7 +182,7 @@ namespace ShowMediaServers
         {
             iNetwork = aNetwork;
 
-            iMediaServers = new Dictionary<IDevice, TestMediaServer>();
+            iMediaServers = new Dictionary<IDevice, TestMediaEndpoint>();
 
             iNetwork.Execute(() =>
             {
@@ -99,7 +209,7 @@ namespace ShowMediaServers
         {
             aDevice.Create<IProxyMediaEndpoint>((p) =>
             {
-                iMediaServers.Add(aDevice, new TestMediaServer(iNetwork, p));
+                iMediaServers.Add(aDevice, new TestMediaEndpoint(iNetwork, p));
             });
         }
 
