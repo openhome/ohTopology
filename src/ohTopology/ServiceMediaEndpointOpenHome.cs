@@ -101,6 +101,8 @@ namespace OpenHome.Av
         private readonly INetwork iNetwork;
         private readonly ServiceMediaEndpointOpenHome iService;
 
+        private readonly DisposeHandler iDisposeHandler;
+
         private readonly Encoding iEncoding;
 
         private readonly object iLock;
@@ -109,12 +111,16 @@ namespace OpenHome.Av
         
         private uint iSequence;
 
+        private Task<IWatchableContainer<IMediaDatum>> iTask;
+
         private MediaEndpointContainerOpenHome iContainer;
 
         public MediaEndpointSessionOpenHome(INetwork aNetwork, ServiceMediaEndpointOpenHome aService)
         {
             iNetwork = aNetwork;
             iService = aService;
+
+            iDisposeHandler = new DisposeHandler();
 
             iEncoding = new UTF8Encoding(false);
 
@@ -130,6 +136,11 @@ namespace OpenHome.Av
 
                 iSequence = 0;
             }
+
+            iTask = Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
+            {
+                return (null);
+            });
         }
 
         private string Encode(string aValue)
@@ -143,19 +154,16 @@ namespace OpenHome.Av
         {
         }
 
-        private Task<IWatchableContainer<IMediaDatum>> Update(Func<MediaEndpointContainerOpenHome> aContainer)
+        private Task<IWatchableContainer<IMediaDatum>> UpdateLocked(Func<MediaEndpointContainerOpenHome> aContainer)
         {
             uint sequence;
 
-            lock (iLock)
-            {
-                sequence = ++iSequence;
+            sequence = ++iSequence;
 
-                if (iContainer != null)
-                {
-                    iContainer.Dispose();
-                    iContainer = null;
-                }
+            if (iContainer != null)
+            {
+                iContainer.Dispose();
+                iContainer = null;
             }
 
             return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
@@ -177,46 +185,88 @@ namespace OpenHome.Av
 
         public Task<IWatchableContainer<IMediaDatum>> Browse(IMediaDatum aDatum)
         {
-            if (aDatum == null)
+            using (iDisposeHandler.Lock)
             {
-                return (Update(() =>
+                lock (iLock)
                 {
-                    return (new MediaEndpointContainerOpenHomeBrowse(iNetwork, iService, iId, "0"));
-                }));
-            }
+                    if (aDatum == null)
+                    {
+                        iTask = UpdateLocked(() =>
+                        {
+                            return (new MediaEndpointContainerOpenHomeBrowse(iNetwork, iService, iId, "0"));
+                        });
+                    }
+                    else
+                    {
+                        iTask = UpdateLocked(() =>
+                        {
+                            return (new MediaEndpointContainerOpenHomeBrowse(iNetwork, iService, iId, aDatum.Id));
+                        });
+                    }
 
-            return (Update(() =>
-            {
-                return (new MediaEndpointContainerOpenHomeBrowse(iNetwork, iService, iId, aDatum.Id));
-            }));
+                    return (iTask);
+                }
+            }
         }
 
         public Task<IWatchableContainer<IMediaDatum>> Link(ITag aTag, string aValue)
         {
-            return (Update(() =>
+            using (iDisposeHandler.Lock)
             {
-                return (new MediaEndpointContainerOpenHomeLink(iNetwork, iService, iId, aTag, Encode(aValue)));
-            }));
+                lock (iLock)
+                {
+                    iTask = UpdateLocked(() =>
+                    {
+                        return (new MediaEndpointContainerOpenHomeLink(iNetwork, iService, iId, aTag, Encode(aValue)));
+                    });
+
+                    return (iTask);
+                }
+            }
         }
 
         public Task<IWatchableContainer<IMediaDatum>> Search(string aValue)
         {
-
-            return (Update(() =>
+            using (iDisposeHandler.Lock)
             {
-                return (new MediaEndpointContainerOpenHomeSearch(iNetwork, iService, iId, Encode(aValue)));
-            }));
+                lock (iLock)
+                {
+                    iTask = UpdateLocked(() =>
+                    {
+                        return (new MediaEndpointContainerOpenHomeSearch(iNetwork, iService, iId, Encode(aValue)));
+                    });
+
+                    return (iTask);
+                }
+            }
         }
 
         // Disposable
 
         public void Dispose()
         {
-            lock (iLock)
+            iDisposeHandler.Dispose();
+
+            iTask.Wait();
+
+            if (iContainer != null)
             {
-                if (iContainer != null)
+                iContainer.Dispose();
+            }
+
+            var uri = string.Format("{0}/destroy?session={1}", iService.Uri, iId);
+
+            using (var client = new WebClient())
+            {
+                try
                 {
-                    iContainer.Dispose();
+                    client.DownloadString(uri);
+                }
+                catch
+                {
+                    // common if disposing session because the endpoint has disappeared
+                    // could try and distinguish between disposing when the endpoint has disappeared
+                    // and disposing because the client is no longer interested in the session
                 }
             }
 
@@ -248,8 +298,6 @@ namespace OpenHome.Av
 
         private IWatchableSnapshot<IMediaDatum> GetSnapshot(string aUri)
         {
-            //var uri = string.Format("{0}/browse/{1}?id={2}", iService.Uri, iSession, iId);
-
             using (var client = new WebClient())
             {
 
