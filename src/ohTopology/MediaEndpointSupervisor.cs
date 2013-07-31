@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
 using System.Xml;
@@ -18,81 +19,193 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    public class ServiceMediaEndpointOpenHome : ServiceMediaEndpoint
+    public interface IMediaEndpointSnapshot
     {
-        private readonly string iUri;
+        uint Total { get; }
+        IEnumerable<uint> AlphaMap { get; } // null if no alpha map
+        Task<IWatchableFragment<IMediaDatum>> Read(uint aIndex, uint aCount);
+    }
 
-        private readonly List<MediaEndpointSessionOpenHome> iSessions;
-        
-        public ServiceMediaEndpointOpenHome(INetwork aNetwork, IDevice aDevice, string aId, string aType, string aName, string aInfo,
-            string aUrl, string aArtwork, string aManufacturerName, string aManufacturerInfo, string aManufacturerUrl,
-            string aManufacturerArtwork, string aModelName, string aModelInfo, string aModelUrl, string aModelArtwork,
-            DateTime aStarted, IEnumerable<string> aAttributes, string aUri)
-            : base (aNetwork, aDevice, aId, aType, aName, aInfo, aUrl, aArtwork, aManufacturerName, aManufacturerInfo,
-            aManufacturerUrl, aManufacturerArtwork, aModelName, aModelInfo, aModelUrl, aModelArtwork, aStarted, aAttributes)
+    public interface IMediaEndpointClient
+    {
+        string CreateSession(CancellationToken aCancellationToken);
+        void DestroySession(CancellationToken aCancellationToken, string aId);
+        IMediaEndpointSnapshot Browse(CancellationToken aCancellationToken, IMediaDatum aDatum);
+        IMediaEndpointSnapshot Link(CancellationToken aCancellationToken, ITag aTag, string aValue);
+        IMediaEndpointSnapshot Search(CancellationToken aCancellationToken, string aValue);
+    }
+
+    internal class MediaEndpointSupervisorSession : IMediaEndpointSession
+    {
+        private readonly IMediaEndpointClient iClient;
+        private readonly string iId;
+        private readonly Action<string> iDispose;
+
+        private readonly DisposeHandler iDisposeHandler;
+
+        public MediaEndpointSupervisorSession(IMediaEndpointClient aClient, string aId, Action<string> aDispose)
         {
-            iUri = aUri;
+            iClient = aClient;
+            iId = aId;
+            iDispose = aDispose;
 
-            iSessions = new List<MediaEndpointSessionOpenHome>();
+            iDisposeHandler = new DisposeHandler();
         }
 
-        public override IProxy OnCreate(IDevice aDevice)
-        {
-            return (new ProxyMediaEndpoint(this));
-        }
+        // IMediaEndpointSession
 
-        public override Task<IMediaEndpointSession> CreateSession()
+        public Task<IWatchableContainer<IMediaDatum>> Browse(IMediaDatum aDatum)
         {
-            return (Task.Factory.StartNew<IMediaEndpointSession>(() =>
+            using (iDisposeHandler.Lock)
             {
-                var session = new MediaEndpointSessionOpenHome(Network, this);
-
-                lock (iSessions)
-                {
-                    iSessions.Add(session);
-                }
-
-                return (session);
-            }));
-        }
-
-        internal string CreateUri(string aFormat, params object[] aArguments)
-        {
-            var relative = string.Format(aFormat, aArguments);
-            return (string.Format("{0}/{1}", iUri, relative));
-        }
-
-        internal string ResolveUri(string aValue)
-        {
-            var baseuri = new Uri(iUri);
-            var uri = new Uri(baseuri, aValue);
-            return (uri.ToString());
-        }
-
-        internal void Refresh()
-        {
-            lock (iSessions)
-            {
-                foreach (var session in iSessions)
-                {
-                    session.Refresh();
-                }
+                throw new NotImplementedException();
             }
         }
 
-        internal void Destroy(MediaEndpointSessionOpenHome aSession)
+        public Task<IWatchableContainer<IMediaDatum>> Link(ITag aTag, string aValue)
+        {
+            using (iDisposeHandler.Lock)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public Task<IWatchableContainer<IMediaDatum>> Search(string aValue)
+        {
+            using (iDisposeHandler.Lock)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        // IDisposable Members
+
+        public void Dispose()
+        {
+            iDisposeHandler.Dispose();
+
+            iDispose(iId);
+        }
+    }
+
+    public class MediaEndpointSupervisor
+    {
+        private readonly IMediaEndpointClient iClient;
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly CancellationTokenSource iCancellationSource;
+        private readonly List<Task> iTasks;
+        private readonly Dictionary<string, MediaEndpointSupervisorSession> iSessions;
+        
+        public MediaEndpointSupervisor(IMediaEndpointClient aClient)
+        {
+            iClient = aClient;
+            iDisposeHandler = new DisposeHandler();
+            iCancellationSource = new CancellationTokenSource();
+            iTasks = new List<Task>();
+            iSessions = new Dictionary<string, MediaEndpointSupervisorSession>();
+        }
+
+        private CancellationToken CancellationToken
+        {
+            get
+            {
+                var token = iCancellationSource.Token;
+                token.ThrowIfCancellationRequested();
+                return (token);
+            }
+        }
+
+        public void Cancel()
+        {
+            iCancellationSource.Cancel();
+        }
+
+        public Task<IMediaEndpointSession> CreateSession()
+        {
+            using (iDisposeHandler.Lock)
+            {
+                var task = Task.Factory.StartNew<IMediaEndpointSession>(() =>
+                {
+                    var id = iClient.CreateSession(CancellationToken);
+
+                    var session = new MediaEndpointSupervisorSession(iClient, id, DestroySession);
+
+                    lock (iSessions)
+                    {
+                        iSessions.Add(id, session);
+                    }
+
+                    return (session);
+                });
+
+                lock (iTasks)
+                {
+                    Task completion = null;
+                    
+                    completion = task.ContinueWith((t) =>
+                    {
+                        lock (iTasks)
+                        {
+                            iTasks.Remove(completion);
+                        }
+                    });
+
+                    iTasks.Add(completion);
+                }
+
+                return (task);
+            }
+        }
+
+        private void DestroySession(string aId)
         {
             lock (iSessions)
             {
-                iSessions.Remove(aSession);
+                iSessions.Remove(aId);
+            }
+
+            var task = Task.Factory.StartNew(() =>
+            {
+                iClient.DestroySession(CancellationToken, aId);
+            });
+
+            lock (iTasks)
+            {
+                Task completion = null;
+
+                completion = task.ContinueWith((t) =>
+                {
+                    lock (iTasks)
+                    {
+                        iTasks.Remove(completion);
+                    }
+                });
+
+                iTasks.Add(completion);
             }
         }
 
         // IDispose
 
-        public override void Dispose()
+        public void Dispose()
         {
-            base.Dispose();
+            Cancel();
+
+            iDisposeHandler.Dispose();
+
+            Task[] tasks;
+
+            lock (iTasks)
+            {
+                tasks = iTasks.ToArray();
+            }
+
+            Task.WaitAll(tasks);
+
+            lock (iTasks)
+            {
+                Do.Assert(iTasks.Count == 0);
+            }
 
             lock (iSessions)
             {
@@ -101,6 +214,7 @@ namespace OpenHome.Av
         }
     }
 
+    /*
     internal class MediaEndpointSessionOpenHome : IMediaEndpointSession
     {
         private readonly INetwork iNetwork;
@@ -303,6 +417,8 @@ namespace OpenHome.Av
         private readonly INetwork iNetwork;
         private readonly ServiceMediaEndpointOpenHome iService;
         private readonly string iSession;
+
+        private readonly Uri iUriRefresh;
 
         private readonly Watchable<IWatchableSnapshot<IMediaDatum>> iWatchableSnapshot;
 
@@ -608,4 +724,5 @@ namespace OpenHome.Av
             get { return (iData); }
         }
     }
+    */
 }

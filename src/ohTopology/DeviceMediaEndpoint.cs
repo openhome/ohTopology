@@ -69,20 +69,34 @@ namespace OpenHome.Av
         // Add and remove devices from the network as necessary. Schedule this
         // every time the list of endpoints changes.
 
-        private void PopulateEndpoints(string aUdn, string aUri)
+        private IDictionary<string, Device> GetEndpoints(string aUri)
         {
-            var client = new WebClient();
-
-            var me = client.DownloadString(aUri + "/me");
-
-            var json = JsonParser.Parse(me) as JsonObject;
-
             var endpoints = new Dictionary<string, Device>();
 
-            foreach (var entry in json)
+            using (var client = new WebClient())
             {
-                endpoints.Add(entry.Key, new DeviceMediaEndpointOpenHome(iNetwork, aUri, entry.Key, entry.Value));
+                try
+                {
+                    var me = client.DownloadString(aUri + "/me");
+
+                    var json = JsonParser.Parse(me) as JsonObject;
+
+                    foreach (var entry in json)
+                    {
+                        endpoints.Add(entry.Key, new DeviceMediaEndpointOpenHome(iNetwork, aUri, entry.Key, entry.Value));
+                    }
+                }
+                catch
+                {
+                }
             }
+
+            return (endpoints);
+        }
+
+        private void PopulateEndpoints(string aUdn, string aUri)
+        {
+            var endpoints = GetEndpoints(aUri);
 
             lock (iDeviceLookup)
             {
