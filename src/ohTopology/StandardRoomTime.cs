@@ -106,7 +106,7 @@ namespace OpenHome.Av
         }
     }
 
-    public class StandardRoomTime : IWatcher<ITopology4Source>, IStandardRoomTime
+    class StandardRoomTime : IWatcher<ITopology4Source>, IStandardRoomTime
     {
         public StandardRoomTime(IStandardRoom aRoom)
         {

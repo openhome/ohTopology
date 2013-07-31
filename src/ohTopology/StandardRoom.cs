@@ -214,6 +214,8 @@ namespace OpenHome.Av
         IDevice Sender { get; }
         IWatchable<bool> HasListeners { get; }
         IWatchableOrdered<IStandardRoom> Listeners { get; }
+
+        IVolumeController CreateVolumeController();
     }
 
     class ZoneSender : IZoneSender, IDisposable
@@ -309,6 +311,14 @@ namespace OpenHome.Av
             }
         }
 
+        public IVolumeController CreateVolumeController()
+        {
+            using (iDisposeHandler.Lock)
+            {
+                return new ZoneVolumeController(this);
+            }
+        }
+
         internal void AddToZone(StandardRoom aRoom)
         {
             iListeners.Add(aRoom);
@@ -401,6 +411,11 @@ namespace OpenHome.Av
         void SetStandby(bool aValue);
         void ListenTo(IStandardRoom aRoom);
         void Play(string aUri, IMediaMetadata aMetadata);
+
+        IStandardRoomInfo CreateInfoController();
+        IStandardRoomTime CreateTimeController();
+        IStandardRoomController CreateController();
+        IVolumeController CreateVolumeController();
     }
 
     class StandardRoom : IStandardRoom, IWatcher<IEnumerable<ITopology4Root>>, IWatcher<IEnumerable<ITopology4Group>>, IWatcher<ITopology4Source>, IMockable, IDisposable
@@ -624,6 +639,38 @@ namespace OpenHome.Av
                 {
                     return iNetwork;
                 }
+            }
+        }
+
+        public IStandardRoomInfo CreateInfoController()
+        {
+            using (iDisposeHandler.Lock)
+            {
+                return new StandardRoomInfo(this);
+            }
+        }
+
+        public IStandardRoomTime CreateTimeController()
+        {
+            using (iDisposeHandler.Lock)
+            {
+                return new StandardRoomTime(this);
+            }
+        }
+
+        public IStandardRoomController CreateController()
+        {
+            using (iDisposeHandler.Lock)
+            {
+                return new StandardRoomController(this);
+            }
+        }
+
+        public IVolumeController CreateVolumeController()
+        {
+            using (iDisposeHandler.Lock)
+            {
+                return new StandardVolumeController(this);
             }
         }
 

@@ -114,7 +114,7 @@ namespace OpenHome.Av
         private readonly Watchable<RoomMetatext> iMetatext;
     }
 
-    public class StandardRoomInfo : IWatcher<ITopology4Source>, IStandardRoomInfo
+    class StandardRoomInfo : IWatcher<ITopology4Source>, IStandardRoomInfo
     {
         private readonly DisposeHandler iDisposeHandler;
         private readonly INetwork iNetwork;

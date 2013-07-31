@@ -56,7 +56,7 @@ namespace OpenHome.Av
         void VolumeDec();
     }
 
-    public class StandardRoomController : IWatcher<ITopology4Source>, IStandardRoomController, IDisposable
+    class StandardRoomController : IWatcher<ITopology4Source>, IStandardRoomController, IDisposable
     {
         public StandardRoomController(IStandardRoom aRoom)
         {
@@ -69,7 +69,7 @@ namespace OpenHome.Av
             iIsActive = true;
             iActive = new Watchable<bool>(iNetwork, "Active", true);
 
-            iVolumeController = VolumeController.Create(aRoom);
+            iVolumeController = aRoom.CreateVolumeController();
 
             iHasSourceControl = new Watchable<bool>(iNetwork, "HasSourceControl", false);
             iHasInfoNext = new Watchable<bool>(iNetwork, "HasInfoNext", false);
