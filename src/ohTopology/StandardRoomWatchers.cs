@@ -19,6 +19,7 @@ namespace OpenHome.Av
         protected StandardRoomWatcher(IStandardRoom aRoom)
         {
             iDisposeHandler = new DisposeHandler();
+
             iRoom = aRoom;
             iSources = aRoom.Sources;
             iNetwork = aRoom.Network;
@@ -28,7 +29,10 @@ namespace OpenHome.Av
             iActive = new Watchable<bool>(iNetwork, "Active", true);
             iEnabled = new Watchable<bool>(iNetwork, "Enabled", false);
 
-            iSources.AddWatcher(this);
+            //iNetwork.Schedule(() =>
+            //{
+                iSources.AddWatcher(this);
+            //});
             iRoom.Join(SetInactive);
         }
 
@@ -131,7 +135,7 @@ namespace OpenHome.Av
             }
         }
 
-        protected DisposeHandler iDisposeHandler;
+        protected readonly DisposeHandler iDisposeHandler;
         protected readonly INetwork iNetwork;
 
         private readonly IStandardRoom iRoom;
@@ -317,21 +321,169 @@ namespace OpenHome.Av
         }
     }
 
-    public class StandardRoomWatcherReceiver : StandardRoomWatcher
+    public class StandardRoomWatcherSenders : IStandardRoomWatcher, IWatcher<IEnumerable<ITopology4Source>>
     {
-        public StandardRoomWatcherReceiver(IStandardRoom aRoom)
-            : base(aRoom)
+        protected readonly DisposeHandler iDisposeHandler;
+        protected readonly INetwork iNetwork;
+
+        private readonly IStandardRoom iRoom;
+        private readonly IWatchable<IEnumerable<ITopology4Source>> iSources;
+
+        private readonly object iLock;
+        private bool iIsActive;
+        private readonly Watchable<bool> iActive;
+        private readonly Watchable<bool> iEnabled;
+
+        private IProxyReceiver iReceiver;
+        private SendersContainer iContainer;
+        private IWatchableOrdered<IProxySender> iSenders;
+
+        public StandardRoomWatcherSenders(IStandardHouse aHouse, IStandardRoom aRoom)
         {
+            iDisposeHandler = new DisposeHandler();
+
+            iRoom = aRoom;
+            iSources = aRoom.Sources;
+            iNetwork = aRoom.Network;
+            iSenders = aHouse.Senders;
+
+            iLock = new object();
+            iIsActive = true;
+            iActive = new Watchable<bool>(iNetwork, "Active", true);
+            iEnabled = new Watchable<bool>(iNetwork, "Enabled", false);
+
+            iRoom.Join(SetInactive);
+
+            //iNetwork.Schedule(() =>
+            //{
+            iSources.AddWatcher(this);
+            //});
+
         }
 
-        protected override void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue)
+        public void Dispose()
+        {
+            iDisposeHandler.Dispose();
+
+            lock (iLock)
+            {
+                if (iIsActive)
+                {
+                    iNetwork.Execute(() =>
+                    {
+                        iSources.RemoveWatcher(this);
+                    });
+                    iRoom.UnJoin(SetInactive);
+                    iIsActive = false;
+                }
+            }
+
+            iEnabled.Dispose();
+
+            if (iReceiver != null)
+            {
+                iContainer.Dispose();
+                iContainer = null;
+                iReceiver.Dispose();
+                iReceiver = null;
+            }
+        }
+
+        private void SetInactive()
+        {
+            lock (iLock)
+            {
+                if (iIsActive)
+                {
+
+                    iActive.Update(false);
+
+                    iSources.RemoveWatcher(this);
+
+                    if (iReceiver != null)
+                    {
+                        iContainer.Dispose();
+                        iContainer = null;
+                        iReceiver.Dispose();
+                        iReceiver = null;
+                    }
+
+                    iRoom.UnJoin(SetInactive);
+                    iIsActive = false;
+                }
+            }
+        }
+
+        public IStandardRoom Room
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iRoom;
+                }
+            }
+        }
+
+        public IWatchable<bool> Active
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iActive;
+                }
+            }
+        }
+
+        public IWatchable<bool> Enabled
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iEnabled;
+                }
+            }
+        }
+
+        public Task<IWatchableContainer<IMediaPreset>> Container
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return Task<IWatchableContainer<IMediaPreset>>.Factory.StartNew(() =>
+                    {
+                        return iContainer;
+                    });
+                }
+            }
+        }
+
+        public void ItemOpen(string aId, IEnumerable<ITopology4Source> aValue)
         {
             EvaluateEnabled(aValue);
         }
 
-        protected override void EvaluateEnabledUpdate(IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
+        public void ItemUpdate(string aId, IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
         {
+            SetEnabled(false);
+
+            if (iReceiver != null)
+            {
+                iContainer.Dispose();
+                iContainer = null;
+                iReceiver.Dispose();
+                iReceiver = null;
+            }
+
             EvaluateEnabled(aValue);
+        }
+
+        public void ItemClose(string aId, IEnumerable<ITopology4Source> aValue)
+        {
+            iEnabled.Update(false);
         }
 
         private void EvaluateEnabled(IEnumerable<ITopology4Source> aValue)
@@ -340,12 +492,297 @@ namespace OpenHome.Av
             {
                 if (s.Type == "Receiver")
                 {
-                    SetEnabled(true);
+                    s.Device.Create<IProxyReceiver>((receiver) =>
+                    {
+                        Do.Assert(iContainer == null);
+                        iContainer = new SendersContainer(iNetwork, receiver, iSenders);
+                        iReceiver = receiver;
+                        SetEnabled(true);
+                    });
                     return;
                 }
             }
 
             SetEnabled(false);
+        }
+
+        private void SetEnabled(bool aValue)
+        {
+            iEnabled.Update(aValue);
+        }
+    }
+
+    class MediaPresetSender : IMediaPreset, IWatcher<string>, IWatcher<IInfoMetadata>
+    {
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly INetwork iNetwork;
+        private readonly uint iIndex;
+        private readonly uint iId;
+        private readonly IMediaMetadata iMetadata;
+        private readonly ISenderMetadata iSenderMetadata;
+        private readonly IProxyReceiver iReceiver;
+        private readonly Watchable<bool> iPlaying;
+        private IInfoMetadata iCurrentMetadata;
+        private string iCurrentTransportState;
+        private bool iDisposed;
+
+        public MediaPresetSender(INetwork aNetwork, uint aIndex, uint aId, IMediaMetadata aMetadata, ISenderMetadata aSenderMetadata, IProxyReceiver aReceiver)
+        {
+            iDisposed = false;
+            iDisposeHandler = new DisposeHandler();
+
+            iNetwork = aNetwork;
+            iIndex = aIndex;
+            iId = aId;
+            iMetadata = aMetadata;
+            iSenderMetadata = aSenderMetadata;
+            iReceiver = aReceiver;
+
+            iPlaying = new Watchable<bool>(iNetwork, "Playing", false);
+            iNetwork.Schedule(() =>
+            {
+                if (!iDisposed)
+                {
+                    iReceiver.Metadata.AddWatcher(this);
+                    iReceiver.TransportState.AddWatcher(this);
+                }
+            });
+        }
+
+        public void Dispose()
+        {
+            iDisposeHandler.Dispose();
+            iNetwork.Execute(() =>
+            {
+                iReceiver.Metadata.RemoveWatcher(this);
+                iReceiver.TransportState.RemoveWatcher(this);
+                iDisposed = true;
+            });
+            iPlaying.Dispose();
+        }
+
+        public uint Index
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iIndex;
+                }
+            }
+        }
+
+        public uint Id
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iId;
+                }
+            }
+        }
+
+        public IMediaMetadata Metadata
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iMetadata;
+                }
+            }
+        }
+
+        public IWatchable<bool> Playing
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iPlaying;
+                }
+            }
+        }
+
+        public void Play()
+        {
+            using (iDisposeHandler.Lock)
+            {
+                iReceiver.SetSender(iSenderMetadata);
+            }
+        }
+
+        private void EvaluatePlaying()
+        {
+            iPlaying.Update(iCurrentMetadata.Uri == iSenderMetadata.Uri && iCurrentTransportState == "Playing");
+        }
+
+        public void ItemOpen(string aId, string aValue)
+        {
+            iCurrentTransportState = aValue;
+            EvaluatePlaying();
+        }
+
+        public void ItemUpdate(string aId, string aValue, string aPrevious)
+        {
+            iCurrentTransportState = aValue;
+            EvaluatePlaying();
+        }
+
+        public void ItemClose(string aId, string aValue)
+        {
+            iPlaying.Update(false);
+        }
+
+        public void ItemOpen(string aId, IInfoMetadata aValue)
+        {
+            iCurrentMetadata = aValue;
+            EvaluatePlaying();
+        }
+
+        public void ItemUpdate(string aId, IInfoMetadata aValue, IInfoMetadata aPrevious)
+        {
+            iCurrentMetadata = aValue;
+            EvaluatePlaying();
+        }
+
+        public void ItemClose(string aId, IInfoMetadata aValue)
+        {
+            iPlaying.Update(false);
+        }
+    }
+
+    class SendersContainer : IWatchableContainer<IMediaPreset>, IDisposable, IOrderedWatcher<IProxySender>
+    {
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly INetwork iNetwork;
+        private IProxyReceiver iReceiver;
+        private readonly IWatchableOrdered<IProxySender> iSenders;
+        private readonly Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
+        private bool iSendersInitialised;
+
+        public SendersContainer(INetwork aNetwork, IProxyReceiver aReceiver, IWatchableOrdered<IProxySender> aSenders)
+        {
+            iDisposeHandler = new DisposeHandler();
+            iNetwork = aNetwork;
+            iReceiver = aReceiver;
+            iSenders = aSenders;
+            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new SendersSnapshot(iNetwork, iReceiver, new List<IProxySender>()));
+            iSendersInitialised = false;
+            aNetwork.Schedule(() =>
+            {
+                iSenders.AddWatcher(this);
+            });
+        }
+
+        public void Dispose()
+        {
+            iDisposeHandler.Dispose();
+            iNetwork.Execute(() =>
+            {
+                iSenders.RemoveWatcher(this);
+            });
+            iSnapshot.Dispose();
+        }
+
+        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iSnapshot;
+                }
+            }
+        }
+
+        public void OrderedOpen()
+        {
+        }
+
+        public void OrderedInitialised()
+        {
+            UpdateSnapshot(iSenders.Values);
+            iSendersInitialised = true;
+        }
+
+        public void OrderedClose()
+        {
+        }
+
+        public void OrderedAdd(IProxySender aItem, uint aIndex)
+        {
+            if (iSendersInitialised)
+            {
+                UpdateSnapshot(iSenders.Values);
+            }
+        }
+
+        public void OrderedMove(IProxySender aItem, uint aFrom, uint aTo)
+        {
+        }
+
+        public void OrderedRemove(IProxySender aItem, uint aIndex)
+        {
+        }
+
+        private void UpdateSnapshot(IEnumerable<IProxySender> aSenders)
+        {
+            using (iDisposeHandler.Lock)
+            {
+                iSnapshot.Update(new SendersSnapshot(iNetwork, iReceiver, aSenders));
+            }
+        }
+    }
+
+    class SendersSnapshot : IWatchableSnapshot<IMediaPreset>
+    {
+        private readonly IEnumerable<IProxySender> iSenders;
+        private readonly IProxyReceiver iReceiver;
+        private readonly INetwork iNetwork;
+
+        public SendersSnapshot(INetwork aNetwork, IProxyReceiver aReceiver, IEnumerable<IProxySender> aSenders)
+        {
+            iNetwork = aNetwork;
+            iReceiver = aReceiver;
+            iSenders = aSenders;
+        }
+
+        public uint Total
+        {
+            get
+            {
+                return ((uint)iSenders.Count());
+            }
+        }
+
+        public IEnumerable<uint> AlphaMap
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        public Task<IWatchableFragment<IMediaPreset>> Read(uint aIndex, uint aCount)
+        {
+            Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
+            {
+                uint index = aIndex;
+                List<IMediaPreset> presets = new List<IMediaPreset>();
+                iSenders.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v =>
+                {
+                    MediaMetadata metadata = new MediaMetadata();
+                    metadata.Add(iNetwork.TagManager.Audio.Title, v.Metadata.Value.Name);
+                    metadata.Add(iNetwork.TagManager.Audio.Artwork, v.Metadata.Value.ArtworkUri);
+                    metadata.Add(iNetwork.TagManager.Audio.Uri, v.Metadata.Value.Uri);
+                    presets.Add(new MediaPresetSender(iNetwork, index, index, metadata, v.Metadata.Value, iReceiver));
+                    ++index;
+                });
+                return new WatchableFragment<IMediaPreset>(aIndex, presets);
+            });
+            return task;
         }
     }
 
@@ -364,7 +801,6 @@ namespace OpenHome.Av
             base.Dispose();
 
             iConfigured.Dispose();
-
             iUnconfigured.Dispose();
         }
 
