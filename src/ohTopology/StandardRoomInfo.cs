@@ -14,7 +14,7 @@ namespace OpenHome.Av
         IWatchable<RoomMetatext> Metatext { get; }
     }
 
-    class InfoWatcher : IWatcher<IInfoDetails>, IWatcher<IInfoMetadata>, IWatcher<IInfoMetatext>, IDisposable
+    internal class InfoWatcher : IWatcher<IInfoDetails>, IWatcher<IInfoMetadata>, IWatcher<IInfoMetatext>, IDisposable
     {
         public InfoWatcher(INetwork aNetwork, IDevice aDevice, Watchable<RoomDetails> aDetails, Watchable<RoomMetadata> aMetadata, Watchable<RoomMetatext> aMetatext)
         {
@@ -114,7 +114,7 @@ namespace OpenHome.Av
         private readonly Watchable<RoomMetatext> iMetatext;
     }
 
-    class StandardRoomInfo : IWatcher<ITopology4Source>, IStandardRoomInfo
+    internal class StandardRoomInfo : IWatcher<ITopology4Source>, IStandardRoomInfo
     {
         private readonly DisposeHandler iDisposeHandler;
         private readonly INetwork iNetwork;

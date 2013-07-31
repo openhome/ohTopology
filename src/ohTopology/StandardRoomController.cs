@@ -56,7 +56,7 @@ namespace OpenHome.Av
         void VolumeDec();
     }
 
-    class StandardRoomController : IWatcher<ITopology4Source>, IStandardRoomController, IDisposable
+    internal class StandardRoomController : IWatcher<ITopology4Source>, IStandardRoomController, IDisposable
     {
         public StandardRoomController(IStandardRoom aRoom)
         {

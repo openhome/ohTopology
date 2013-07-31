@@ -14,7 +14,7 @@ namespace OpenHome.Av
         IWatchable<uint> Seconds { get; }
     }
 
-    class TimeWatcher : IWatcher<uint>, IDisposable
+    internal class TimeWatcher : IWatcher<uint>, IDisposable
     {
         private readonly DisposeHandler iDisposeHandler;
         private readonly IDevice iDevice;
@@ -106,7 +106,7 @@ namespace OpenHome.Av
         }
     }
 
-    class StandardRoomTime : IWatcher<ITopology4Source>, IStandardRoomTime
+    internal class StandardRoomTime : IWatcher<ITopology4Source>, IStandardRoomTime
     {
         public StandardRoomTime(IStandardRoom aRoom)
         {
