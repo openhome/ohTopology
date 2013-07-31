@@ -16,26 +16,33 @@ namespace TestLinnHouse
             private ResultWatcherFactory iFactory;
             private ResultWatcherFactory iFactoryRadioPresets;
             private ResultWatcherFactory iFactoryRadioPresetsPlaying;
+            private ResultWatcherFactory iFactorySendersPresets;
+            private ResultWatcherFactory iFactorySendersPresetsPlaying;
             private IStandardRoomController iController;
             private IStandardRoomTime iTime;
             private IStandardRoomInfo iInfo;
             private StandardRoomWatcherExternal iWatcherExternal;
             private StandardRoomWatcherRadio iWatcherRadio;
             private StandardRoomWatcherMusic iWatcherMusic;
+            private StandardRoomWatcherSenders iWatcherSenders;
             private IWatchableFragment<IMediaPreset> iRadioPresets;
+            private IWatchableFragment<IMediaPreset> iSendersPresets;
 
-            public RoomControllerWatcher(ITagManager aTagManager, MockableScriptRunner aRunner, IStandardRoom aRoom)
+            public RoomControllerWatcher(ITagManager aTagManager, MockableScriptRunner aRunner, IStandardHouse aHouse, IStandardRoom aRoom)
             {
                 iTagManager = aTagManager;
                 iFactory = new ResultWatcherFactory(aRunner);
                 iFactoryRadioPresets = new ResultWatcherFactory(aRunner);
                 iFactoryRadioPresetsPlaying = new ResultWatcherFactory(aRunner);
+                iFactorySendersPresets = new ResultWatcherFactory(aRunner);
+                iFactorySendersPresetsPlaying = new ResultWatcherFactory(aRunner);
                 iController = new StandardRoomController(aRoom);
                 iTime = new StandardRoomTime(aRoom);
                 iInfo = new StandardRoomInfo(aRoom);
                 iWatcherExternal = new StandardRoomWatcherExternal(aRoom);
                 iWatcherRadio = new StandardRoomWatcherRadio(aRoom);
                 iWatcherMusic = new StandardRoomWatcherMusic(aRoom);
+                iWatcherSenders = new StandardRoomWatcherSenders(aHouse, aRoom);
 
                 iFactory.Create<RoomDetails>(iInfo.Name, iInfo.Details, v => "Details " + v.Enabled + " " + v.BitDepth + " " + v.BitRate + " " + v.CodecName + " " + v.Duration + " " + v.Lossless + " " + v.SampleRate);
                 iFactory.Create<RoomMetadata>(iInfo.Name, iInfo.Metadata, v => "Metadata " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metadata) + " " + v.Uri);
@@ -53,29 +60,36 @@ namespace TestLinnHouse
                 iFactory.Create<uint>(iTime.Name, iTime.Duration, v => "Duration " + v);
                 iFactory.Create<uint>(iTime.Name, iTime.Seconds, v => "Seconds " + v);
 
-                iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Unconfigured.Snapshot, v =>
+                iFactory.Create<bool>(iWatcherExternal.Room.Name, iWatcherExternal.Enabled, w =>
                 {
-                    string info = "\nUnconfigured source begin\n";
-                    IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
-                    foreach (IMediaPreset p in fragment.Data)
+                    if (w)
                     {
-                        info += p.Metadata[iTagManager.Audio.Title].Value + "\n";
-                        p.Dispose();
+                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Unconfigured.Snapshot, v =>
+                        {
+                            string info = "\nUnconfigured source begin\n";
+                            IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
+                            foreach (IMediaPreset p in fragment.Data)
+                            {
+                                info += p.Metadata[iTagManager.Audio.Title].Value + "\n";
+                                p.Dispose();
+                            }
+                            info += "Unconfigured source end";
+                            return info;
+                        });
+                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Configured.Snapshot, v =>
+                        {
+                            string info = "\nConfigured source begin\n";
+                            IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
+                            foreach (IMediaPreset p in fragment.Data)
+                            {
+                                info += p.Metadata[iTagManager.Audio.Title].Value + "\n";
+                                p.Dispose();
+                            }
+                            info += "Configured source end";
+                            return info;
+                        });
                     }
-                    info += "Unconfigured source end";
-                    return info;
-                });
-                iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Configured.Snapshot, v =>
-                {
-                    string info = "\nConfigured source begin\n";
-                    IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
-                    foreach (IMediaPreset p in fragment.Data)
-                    {
-                        info += p.Metadata[iTagManager.Audio.Title].Value + "\n";
-                        p.Dispose();
-                    }
-                    info += "Configured source end";
-                    return info;
+                    return "External Enabled " + w;
                 });
 
                 iFactory.Create<bool>(iWatcherRadio.Room.Name, iWatcherRadio.Enabled, v =>
@@ -100,7 +114,7 @@ namespace TestLinnHouse
                             iRadioPresets = fragment;
                             foreach (IMediaPreset p in fragment.Data)
                             {
-                                CreateResultWatcherPreset(p);
+                                CreateResultWatcherPreset(iFactoryRadioPresetsPlaying, p);
                                 
                                 info += p.Index + " ";
                                 string didl = iTagManager.ToDidlLite(p.Metadata);
@@ -121,8 +135,8 @@ namespace TestLinnHouse
                                 p.Dispose();
                             }
                             iRadioPresets = null;
+                            iFactoryRadioPresets.Destroy(iWatcherRadio.Room.Name);
                         }
-                        iFactoryRadioPresets.Destroy(iWatcherRadio.Room.Name);
                     }
 
                     return "Presets Enabled " + v;
@@ -132,11 +146,60 @@ namespace TestLinnHouse
                 {
                     return "Music Enabled " + v;
                 });
+
+                iFactory.Create<bool>(iWatcherSenders.Room.Name, iWatcherSenders.Enabled, v =>
+                {
+                    /*if (v)
+                    {
+                        IWatchableContainer<IMediaPreset> container = iWatcherSenders.Container.Result;
+                        iFactorySendersPresets.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherSenders.Room.Name, container.Snapshot, w =>
+                        {
+                            if (iSendersPresets != null)
+                            {
+                                iFactorySendersPresetsPlaying.Destroy(iWatcherSenders.Room.Name);
+                                foreach (IMediaPreset p in iSendersPresets.Data)
+                                {
+                                    p.Dispose();
+                                }
+                                iSendersPresets = null;
+                            }
+
+                            string info = "\nSenders begin\n";
+                            IWatchableFragment<IMediaPreset> fragment = w.Read(0, w.Total).Result;
+                            iSendersPresets = fragment;
+                            foreach (IMediaPreset p in fragment.Data)
+                            {
+                                CreateResultWatcherPreset(iFactorySendersPresetsPlaying, p);
+
+                                info += p.Index + " ";
+                                string didl = iTagManager.ToDidlLite(p.Metadata);
+                                info += didl;
+                                info += "\n";
+                            }
+                            info += "Senders end";
+                            return info;
+                        });
+                    }
+                    else
+                    {
+                        if (iSendersPresets != null)
+                        {
+                            iFactorySendersPresetsPlaying.Destroy(iWatcherSenders.Room.Name);
+                            foreach (IMediaPreset p in iSendersPresets.Data)
+                            {
+                                p.Dispose();
+                            }
+                            iSendersPresets = null;
+                            iFactorySendersPresets.Destroy(iWatcherSenders.Room.Name);
+                        }
+                    }*/
+                    return "Senders Enabled " + v;
+                });
             }
 
-            private void CreateResultWatcherPreset(IMediaPreset aPreset)
+            private void CreateResultWatcherPreset(ResultWatcherFactory aFactory, IMediaPreset aPreset)
             {
-                iFactoryRadioPresetsPlaying.Create<bool>(iWatcherRadio.Room.Name, aPreset.Playing, x =>
+                aFactory.Create<bool>(iWatcherRadio.Room.Name, aPreset.Playing, x =>
                 {
                     return "Playing " + aPreset.Index + " " + x;
                 });
@@ -155,20 +218,32 @@ namespace TestLinnHouse
                     }
                     iRadioPresets = null;
                 }
+                iFactorySendersPresets.Dispose();
+                iFactorySendersPresetsPlaying.Dispose();
+                if (iSendersPresets != null)
+                {
+                    foreach (IMediaPreset p in iSendersPresets.Data)
+                    {
+                        p.Dispose();
+                    }
+                    iSendersPresets = null;
+                }
                 iController.Dispose();
                 iTime.Dispose();
                 iWatcherExternal.Dispose();
                 iWatcherRadio.Dispose();
                 iWatcherMusic.Dispose();
+                iWatcherSenders.Dispose();
             }
         }
 
         class RoomWatcher : IOrderedWatcher<IStandardRoom>, IDisposable
         {
-            public RoomWatcher(ITagManager aTagManager, MockableScriptRunner aRunner)
+            public RoomWatcher(ITagManager aTagManager, MockableScriptRunner aRunner, IStandardHouse aHouse)
             {
                 iTagManager = aTagManager;
                 iRunner = aRunner;
+                iHouse = aHouse;
                 iFactory = new ResultWatcherFactory(aRunner);
 
                 iWatcherLookup = new Dictionary<IStandardRoom, RoomControllerWatcher>();
@@ -202,7 +277,7 @@ namespace TestLinnHouse
                 iFactory.Create<EStandby>(aItem.Name, aItem.Standby, v => "Standby " + v);
                 iFactory.Create<IZoneSender>(aItem.Name, aItem.ZoneSender, v => "Zone " + v.Enabled + " " + ((v.Sender == null) ? "" : v.Sender.Udn));
 
-                iWatcherLookup.Add(aItem, new RoomControllerWatcher(iTagManager, iRunner, aItem));
+                iWatcherLookup.Add(aItem, new RoomControllerWatcher(iTagManager, iRunner, iHouse, aItem));
             }
 
             public void OrderedMove(IStandardRoom aItem, uint aFrom, uint aTo)
@@ -221,6 +296,7 @@ namespace TestLinnHouse
 
             private ITagManager iTagManager;
             private MockableScriptRunner iRunner;
+            private IStandardHouse iHouse;
             private ResultWatcherFactory iFactory;
             private Dictionary<IStandardRoom, RoomControllerWatcher> iWatcherLookup;
         }
@@ -243,7 +319,7 @@ namespace TestLinnHouse
 
             MockableScriptRunner runner = new MockableScriptRunner();
 
-            RoomWatcher watcher = new RoomWatcher(network.TagManager, runner);
+            RoomWatcher watcher = new RoomWatcher(network.TagManager, runner, house);
 
             network.Schedule(() =>
             {

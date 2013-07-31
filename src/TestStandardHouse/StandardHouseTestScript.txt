@@ -18,12 +18,7 @@ expect Kitchen open Time Active True
 expect Kitchen open HasTime True
 expect Kitchen open Duration 0
 expect Kitchen open Seconds 0
-expect Kitchen open 
-Unconfigured source begin
-Unconfigured source end
-expect Kitchen open 
-Configured source begin
-Configured source end
+expect Kitchen open External Enabled False
 expect Kitchen open Playing 1 False
 expect Kitchen open Playing 2 False
 expect Kitchen open Playing 5 False
@@ -39,6 +34,7 @@ Presets begin
 Presets end
 expect Kitchen open Presets Enabled True
 expect Kitchen open Music Enabled True
+expect Kitchen open Senders Enabled True
 
 expect Room Added: Sitting Room at 1
 expect Sitting Room open Standby eOn
@@ -69,6 +65,7 @@ Unconfigured source end
 expect Sitting Room open 
 Configured source begin
 Configured source end
+expect Sitting Room open External Enabled True
 expect Sitting Room open Playing 1 False
 expect Sitting Room open Playing 2 False
 expect Sitting Room open Playing 5 False
@@ -84,6 +81,7 @@ Presets begin
 Presets end
 expect Sitting Room open Presets Enabled True
 expect Sitting Room open Music Enabled True
+expect Sitting Room open Senders Enabled True
 
 expect Room Added: Bedroom at 0
 expect Bedroom open Standby eOn
@@ -114,6 +112,7 @@ Unconfigured source end
 expect Bedroom open 
 Configured source begin
 Configured source end
+expect Bedroom open External Enabled True
 expect Bedroom open Playing 1 False
 expect Bedroom open Playing 2 False
 expect Bedroom open Playing 5 False
@@ -129,6 +128,7 @@ Presets begin
 Presets end
 expect Bedroom open Presets Enabled True
 expect Bedroom open Music Enabled True
+expect Bedroom open Senders Enabled True
 
 expect Room Added: Dining Room at 1
 expect Dining Room open Standby eOn
@@ -146,12 +146,7 @@ expect Dining Room open Time Active True
 expect Dining Room open HasTime True
 expect Dining Room open Duration 0
 expect Dining Room open Seconds 0
-expect Dining Room open 
-Unconfigured source begin
-Unconfigured source end
-expect Dining Room open 
-Configured source begin
-Configured source end
+expect Dining Room open External Enabled False
 expect Dining Room open Playing 1 False
 expect Dining Room open Playing 2 False
 expect Dining Room open Playing 5 False
@@ -167,6 +162,7 @@ Presets begin
 Presets end
 expect Dining Room open Presets Enabled True
 expect Dining Room open Music Enabled True
+expect Dining Room open Senders Enabled True
 empty
 
 // test adding a new room
@@ -188,12 +184,7 @@ expect Main Room open Time Active True
 expect Main Room open HasTime True
 expect Main Room open Duration 0
 expect Main Room open Seconds 0
-expect Main Room open 
-Unconfigured source begin
-Unconfigured source end
-expect Main Room open 
-Configured source begin
-Configured source end
+expect Main Room open External Enabled False
 expect Main Room open Playing 1 False
 expect Main Room open Playing 2 False
 expect Main Room open Playing 5 False
@@ -209,6 +200,7 @@ Presets begin
 Presets end
 expect Main Room open Presets Enabled True
 expect Main Room open Music Enabled True
+expect Main Room open Senders Enabled True
 empty
 
 // test changing details
@@ -249,12 +241,7 @@ expect Main Room open Time Active True
 expect Main Room open HasTime True
 expect Main Room open Duration 0
 expect Main Room open Seconds 0
-expect Main Room open 
-Unconfigured source begin
-Unconfigured source end
-expect Main Room open 
-Configured source begin
-Configured source end
+expect Main Room open External Enabled False
 expect Main Room open Playing 1 False
 expect Main Room open Playing 2 False
 expect Main Room open Playing 5 False
@@ -270,18 +257,13 @@ Presets begin
 Presets end
 expect Main Room open Presets Enabled True
 expect Main Room open Music Enabled True
+expect Main Room open Senders Enabled True
 empty
 
 // add another ds to Main Room
 mock network create ds 68
 mock network add 68
 expect Main Room update Zone False 
-expect Main Room update 
-Unconfigured source begin
-Unconfigured source end
-expect Main Room update 
-Configured source begin
-Configured source end
 expect Main Room update Presets Enabled False
 expect Main Room open Playing 1 False
 expect Main Room open Playing 2 False
@@ -299,6 +281,8 @@ Presets end
 expect Main Room update Presets Enabled True
 expect Main Room update Music Enabled False
 expect Main Room update Music Enabled True
+expect Main Room update Senders Enabled False
+expect Main Room update Senders Enabled True
 expect Main Room update HasSourceControl False
 expect Main Room update HasSourceControl True
 empty
@@ -311,12 +295,6 @@ empty
 
 // join ds and ensure info changes from DS 67 info to DS 68 info
 mock network update 67 product source 0 name Test
-expect Main Room update 
-Unconfigured source begin
-Unconfigured source end
-expect Main Room update 
-Configured source begin
-Configured source end
 expect Main Room update Presets Enabled False
 expect Main Room open Playing 1 False
 expect Main Room open Playing 2 False
@@ -334,17 +312,13 @@ Presets end
 expect Main Room update Presets Enabled True
 expect Main Room update Music Enabled False
 expect Main Room update Music Enabled True
+expect Main Room update Senders Enabled False
+expect Main Room update Senders Enabled True
 expect Main Room update HasSourceControl False
 expect Main Room update HasSourceControl True
 empty
 mock network update 68 product name Test
 expect Main Room update Zone True 67
-expect Main Room update 
-Unconfigured source begin
-Unconfigured source end
-expect Main Room update 
-Configured source begin
-Configured source end
 expect Main Room update Presets Enabled False
 expect Main Room open Playing 1 False
 expect Main Room open Playing 2 False
@@ -362,6 +336,8 @@ Presets end
 expect Main Room update Presets Enabled True
 expect Main Room update Music Enabled False
 expect Main Room update Music Enabled True
+expect Main Room update Senders Enabled False
+expect Main Room update Senders Enabled True
 expect Main Room update HasSourceControl False
 expect Main Room update HasSourceControl True
 expect Main Room update HasTime False
@@ -413,7 +389,7 @@ empty
 mock network create dsm 50
 mock network add 50
 expect Main Room update Zone False 
-expect Main Room update 
+expect Main Room open 
 Unconfigured source begin
 Analog1
 Analog2
@@ -423,9 +399,10 @@ SPDIF2
 TOSLINK1
 TOSLINK2
 Unconfigured source end
-expect Main Room update 
+expect Main Room open 
 Configured source begin
 Configured source end
+expect Main Room update External Enabled True
 expect Main Room update Presets Enabled False
 expect Main Room open Playing 1 False
 expect Main Room open Playing 2 False
@@ -443,6 +420,8 @@ Presets end
 expect Main Room update Presets Enabled True
 expect Main Room update Music Enabled False
 expect Main Room update Music Enabled True
+expect Main Room update Senders Enabled False
+expect Main Room update Senders Enabled True
 expect Main Room update HasSourceControl False
 expect Main Room update HasSourceControl True
 empty
@@ -455,6 +434,7 @@ Unconfigured source end
 expect Main Room update 
 Configured source begin
 Configured source end
+expect Main Room update External Enabled False
 expect Main Room update Presets Enabled False
 expect Main Room open Playing 1 False
 expect Main Room open Playing 2 False
@@ -472,6 +452,8 @@ Presets end
 expect Main Room update Presets Enabled True
 expect Main Room update Music Enabled False
 expect Main Room update Music Enabled True
+expect Main Room update Senders Enabled False
+expect Main Room update Senders Enabled True
 expect Main Room update HasSourceControl False
 expect Main Room update HasSourceControl True
 expect Room Added: Test Room at 5
@@ -503,6 +485,7 @@ Unconfigured source end
 expect Test Room open 
 Configured source begin
 Configured source end
+expect Test Room open External Enabled True
 expect Test Room open Playing 1 False
 expect Test Room open Playing 2 False
 expect Test Room open Playing 5 False
@@ -518,6 +501,7 @@ Presets begin
 Presets end
 expect Test Room open Presets Enabled True
 expect Test Room open Music Enabled True
+expect Test Room open Senders Enabled True
 empty
 
 mock network update 50 product source 5 name Wii
@@ -551,6 +535,8 @@ Presets end
 expect Test Room update Presets Enabled True
 expect Test Room update Music Enabled False
 expect Test Room update Music Enabled True
+expect Test Room update Senders Enabled False
+expect Test Room update Senders Enabled True
 expect Test Room update HasSourceControl False
 expect Test Room update HasSourceControl True
 empty
@@ -586,6 +572,8 @@ Presets end
 expect Test Room update Presets Enabled True
 expect Test Room update Music Enabled False
 expect Test Room update Music Enabled True
+expect Test Room update Senders Enabled False
+expect Test Room update Senders Enabled True
 expect Test Room update HasSourceControl False
 expect Test Room update HasSourceControl True
 empty
@@ -621,6 +609,8 @@ Presets begin
 Presets end
 expect Test Room update Presets Enabled True
 expect Test Room update Music Enabled False
+expect Test Room update Senders Enabled False
+expect Test Room update Senders Enabled True
 expect Test Room update HasSourceControl False
 expect Test Room update HasSourceControl True
 empty
