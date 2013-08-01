@@ -165,7 +165,6 @@ namespace OpenHome.Av
         Task Previous();
         Task Next();
         Task SeekId(uint aValue);
-        Task SeekIndex(uint aValue);
         Task SeekSecondAbsolute(uint aValue);
         Task SeekSecondRelative(int aValue);
 
@@ -282,7 +281,6 @@ namespace OpenHome.Av
         public abstract Task Previous();
         public abstract Task Next();
         public abstract Task SeekId(uint aValue);
-        public abstract Task SeekIndex(uint aValue);
         public abstract Task SeekSecondAbsolute(uint aValue);
         public abstract Task SeekSecondRelative(int aValue);
         public abstract Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata);
@@ -427,15 +425,6 @@ namespace OpenHome.Av
             Task task = Task.Factory.StartNew(() =>
             {
                 iService.SyncSeekId(aValue);
-            });
-            return task;
-        }
-
-        public override Task SeekIndex(uint aValue)
-        {
-            Task task = Task.Factory.StartNew(() =>
-            {
-                iService.SyncSeekIndex(aValue);
             });
             return task;
         }
@@ -931,18 +920,6 @@ namespace OpenHome.Av
             return task;
         }
 
-        public override Task SeekIndex(uint aValue)
-        {
-            Task task = Task.Factory.StartNew(() =>
-            {
-                Network.Schedule(() =>
-                {
-                    iId.Update(iIdArray.ElementAt(aValue));
-                });
-            });
-            return task;
-        }
-
         public override Task SeekSecondAbsolute(uint aValue)
         {
             Task task = Task.Factory.StartNew(() =>
@@ -1298,11 +1275,6 @@ namespace OpenHome.Av
         public Task SeekId(uint aValue)
         {
             return iService.SeekId(aValue);
-        }
-
-        public Task SeekIndex(uint aValue)
-        {
-            return iService.SeekIndex(aValue);
         }
 
         public Task SeekSecondAbsolute(uint aValue)
