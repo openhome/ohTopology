@@ -278,18 +278,26 @@ namespace OpenHome.Av
 
         public static bool SupportsLink(this IProxyMediaEndpoint aProxy, ITag aTag)
         {
-            var value = string.Format("Link:{0}", aTag.FullName);
-            return (aProxy.Attributes.Contains(value));
+            if (aProxy.Attributes.Contains("Link"))
+            {
+                switch (aTag.FullName)
+                {
+                    case "audio.artist":
+                    case "audio.album":
+                    case "audio.genre":
+                    case "audio.year":
+                        return (true);
+                    default:
+                        break;
+                }
+            }
+
+            return (false);
         }
 
         public static bool SupportsSearch(this IProxyMediaEndpoint aProxy)
         {
             return (aProxy.Attributes.Contains("Search"));
-        }
-
-        public static bool SupportsQuery(this IProxyMediaEndpoint aProxy)
-        {
-            return (aProxy.Attributes.Contains("Query"));
         }
     }
 }

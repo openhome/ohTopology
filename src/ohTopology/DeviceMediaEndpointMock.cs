@@ -63,7 +63,7 @@ namespace OpenHome.Av
                 "OpenHome", "OpenHome", "http://www.openhome.org", "",
                 "OpenHome", "OpenHome", "http://www.openhome.org", "",
                 DateTime.Now,
-                new string[] { "Browse", "Link", "Link:audio.artist", "Link:audio.album", "Link:audio.genre", "Search" },
+                new string[] { "Browse", "Link", "Search" },
                 iMetadata, this));
         }
 
