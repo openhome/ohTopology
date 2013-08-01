@@ -21,19 +21,6 @@ namespace OpenHome.Av
         void VolumeDec();
     }
 
-    public class VolumeController
-    {
-        public static IVolumeController Create(IStandardRoom aRoom)
-        {
-            return new StandardVolumeController(aRoom);
-        }
-
-        public static IVolumeController Create(IZoneSender aZone)
-        {
-            return new ZoneVolumeController(aZone);
-        }
-    }
-
     class StandardVolumeController : IVolumeController, IWatcher<ITopology4Source>, IWatcher<bool>, IWatcher<uint>
     {
         public StandardVolumeController(IStandardRoom aRoom)
@@ -297,7 +284,7 @@ namespace OpenHome.Av
 
             iWatchableValue = new Watchable<uint>(aRoom.Network, "Value", iValue);
 
-            iVolume = VolumeController.Create(aRoom);
+            iVolume = aRoom.CreateVolumeController();
             iVolume.Volume.AddWatcher(this);
             iVolume.VolumeLimit.AddWatcher(this);
             iVolume.HasVolume.AddWatcher(this);

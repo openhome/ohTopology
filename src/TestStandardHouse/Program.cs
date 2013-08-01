@@ -36,9 +36,9 @@ namespace TestLinnHouse
                 iFactoryRadioPresetsPlaying = new ResultWatcherFactory(aRunner);
                 iFactorySendersPresets = new ResultWatcherFactory(aRunner);
                 iFactorySendersPresetsPlaying = new ResultWatcherFactory(aRunner);
-                iController = new StandardRoomController(aRoom);
-                iTime = new StandardRoomTime(aRoom);
-                iInfo = new StandardRoomInfo(aRoom);
+                iController = aRoom.CreateController();
+                iTime = aRoom.CreateTimeController();
+                iInfo = aRoom.CreateInfoController();
                 iWatcherExternal = new StandardRoomWatcherExternal(aRoom);
                 iWatcherRadio = new StandardRoomWatcherRadio(aRoom);
                 iWatcherMusic = new StandardRoomWatcherMusic(aRoom);
