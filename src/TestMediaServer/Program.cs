@@ -592,8 +592,7 @@ namespace TestMediaServer
                         client.Run();
                     }
 
-                    Console.WriteLine("Test completed successfully ... Press key to continue");
-                    Console.ReadKey();
+                    Console.WriteLine("Test completed successfully");
                 }
             }
         }
