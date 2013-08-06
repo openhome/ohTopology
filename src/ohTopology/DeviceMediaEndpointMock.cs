@@ -56,8 +56,6 @@ namespace OpenHome.Av
 
             Console.WriteLine("Port: " + iHttpFramework.Port);
 
-            Console.WriteLine("Port: " + iHttpFramework.Port);
-
             Add<IProxyMediaEndpoint>(new ServiceMediaEndpointMock(aNetwork, this, "mock", "Music",
                 "Mock", "Mock", "http://www.openhome.org", "",
                 "OpenHome", "OpenHome", "http://www.openhome.org", "",
