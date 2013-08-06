@@ -19,131 +19,140 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    public interface IMediaEndpointSnapshot
+    public interface IMediaEndpointClientSnapshot
     {
         uint Total { get; }
-        IEnumerable<uint> AlphaMap { get; } // null if no alpha map
-        Task<IWatchableFragment<IMediaDatum>> Read(uint aIndex, uint aCount);
+        IEnumerable<uint> Alpha { get; } // null if no alpha map
     }
 
-    public interface IMediaEndpointClient
+    public interface IMediaEndpointClient : IWatchableThread
     {
         string CreateSession(CancellationToken aCancellationToken);
         void DestroySession(CancellationToken aCancellationToken, string aId);
-        IMediaEndpointSnapshot Browse(CancellationToken aCancellationToken, IMediaDatum aDatum);
-        IMediaEndpointSnapshot Link(CancellationToken aCancellationToken, ITag aTag, string aValue);
-        IMediaEndpointSnapshot Search(CancellationToken aCancellationToken, string aValue);
+        IMediaEndpointClientSnapshot Browse(CancellationToken aCancellationToken, string aSession, IMediaDatum aDatum);
+        IMediaEndpointClientSnapshot Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue);
+        IMediaEndpointClientSnapshot Search(CancellationToken aCancellationToken, string aSession, string aValue);
+        IEnumerable<IMediaDatum> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount);
     }
 
-    internal class MediaEndpointSupervisorSession : IMediaEndpointSession
+    public class MediaEndpointClientSnapshot : IMediaEndpointClientSnapshot
     {
-        private readonly IMediaEndpointClient iClient;
-        private readonly string iId;
-        private readonly Action<string> iDispose;
+        private readonly string iContainer;
+        private readonly uint iTotal;
+        private readonly IEnumerable<uint> iAlpha;
 
-        private readonly DisposeHandler iDisposeHandler;
-
-        public MediaEndpointSupervisorSession(IMediaEndpointClient aClient, string aId, Action<string> aDispose)
+        public MediaEndpointClientSnapshot(string aContainer, uint aTotal, IEnumerable<uint> aAlphaMap)
         {
-            iClient = aClient;
-            iId = aId;
-            iDispose = aDispose;
-
-            iDisposeHandler = new DisposeHandler();
+            iContainer = aContainer;
+            iTotal = aTotal;
+            iAlpha = aAlphaMap;
         }
 
-        // IMediaEndpointSession
+        // IMediaEndpointSnapshot Members
 
-        public Task<IWatchableContainer<IMediaDatum>> Browse(IMediaDatum aDatum)
-        {
-            using (iDisposeHandler.Lock)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public Task<IWatchableContainer<IMediaDatum>> Link(ITag aTag, string aValue)
-        {
-            using (iDisposeHandler.Lock)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public Task<IWatchableContainer<IMediaDatum>> Search(string aValue)
-        {
-            using (iDisposeHandler.Lock)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        // IDisposable Members
-
-        public void Dispose()
-        {
-            iDisposeHandler.Dispose();
-
-            iDispose(iId);
-        }
-    }
-
-    public class MediaEndpointSupervisor
-    {
-        private readonly IMediaEndpointClient iClient;
-        private readonly DisposeHandler iDisposeHandler;
-        private readonly CancellationTokenSource iCancellationSource;
-        private readonly List<Task> iTasks;
-        private readonly Dictionary<string, MediaEndpointSupervisorSession> iSessions;
-        
-        public MediaEndpointSupervisor(IMediaEndpointClient aClient)
-        {
-            iClient = aClient;
-            iDisposeHandler = new DisposeHandler();
-            iCancellationSource = new CancellationTokenSource();
-            iTasks = new List<Task>();
-            iSessions = new Dictionary<string, MediaEndpointSupervisorSession>();
-        }
-
-        private CancellationToken CancellationToken
+        public string Container
         {
             get
             {
-                var token = iCancellationSource.Token;
-                token.ThrowIfCancellationRequested();
-                return (token);
+                return (iContainer);
             }
         }
 
-        public void Cancel()
+        public uint Total
         {
-            iCancellationSource.Cancel();
+            get
+            {
+                return (iTotal);
+            }
         }
 
-        public Task<IMediaEndpointSession> CreateSession()
+        public IEnumerable<uint> Alpha
         {
+            get
+            {
+                return (iAlpha);
+            }
+        }
+    }
+
+    internal class MediaEndpointSupervisorSnapshot : IWatchableSnapshot<IMediaDatum>, IDisposable
+    {
+        private readonly IMediaEndpointClient iClient;
+        private readonly MediaEndpointSupervisorSession iSession;
+        private readonly CancellationToken iCancellationToken;
+        private readonly IMediaEndpointClientSnapshot iSnapshot;
+
+        private readonly DisposeHandler iDisposeHandler;
+
+        private readonly List<Task> iTasks;
+
+        public MediaEndpointSupervisorSnapshot(IMediaEndpointClient aClient, MediaEndpointSupervisorSession aSession, CancellationToken aCancellationToken, IMediaEndpointClientSnapshot aSnapshot)
+        {
+            iClient = aClient;
+            iSession = aSession;
+            iCancellationToken = aCancellationToken;
+            iSnapshot = aSnapshot;
+
+            iDisposeHandler = new DisposeHandler();
+
+            iTasks = new List<Task>();
+        }
+
+        // IWatchableSnapshot<IMediaDatum>
+
+        public uint Total
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return (iSnapshot.Total);
+                }
+            }
+        }
+
+        public IEnumerable<uint> Alpha
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return (iSnapshot.Alpha);
+                }
+            }
+        }
+
+        public Task<IWatchableFragment<IMediaDatum>> Read(uint aIndex, uint aCount)
+        {
+            iClient.Assert(); // Must be called on the watchable thread;
+
+            Do.Assert(aIndex + aCount <= iSnapshot.Total);
+
             using (iDisposeHandler.Lock)
             {
-                var task = Task.Factory.StartNew<IMediaEndpointSession>(() =>
+                var task = Task.Factory.StartNew<IWatchableFragment<IMediaDatum>>(() =>
                 {
-                    var id = iClient.CreateSession(CancellationToken);
+                    iCancellationToken.ThrowIfCancellationRequested();
 
-                    var session = new MediaEndpointSupervisorSession(iClient, id, DestroySession);
+                    var data = iClient.Read(iCancellationToken, iSession.Id, iSnapshot, aIndex, aCount);
 
-                    lock (iSessions)
-                    {
-                        iSessions.Add(id, session);
-                    }
-
-                    return (session);
+                    return (new WatchableFragment<IMediaDatum>(aIndex, data));
                 });
 
                 lock (iTasks)
                 {
                     Task completion = null;
-                    
+
                     completion = task.ContinueWith((t) =>
                     {
+                        try
+                        {
+                            t.Wait();
+                        }
+                        catch
+                        {
+                        }
+
                         lock (iTasks)
                         {
                             iTasks.Remove(completion);
@@ -157,40 +166,10 @@ namespace OpenHome.Av
             }
         }
 
-        private void DestroySession(string aId)
-        {
-            lock (iSessions)
-            {
-                iSessions.Remove(aId);
-            }
-
-            var task = Task.Factory.StartNew(() =>
-            {
-                iClient.DestroySession(CancellationToken, aId);
-            });
-
-            lock (iTasks)
-            {
-                Task completion = null;
-
-                completion = task.ContinueWith((t) =>
-                {
-                    lock (iTasks)
-                    {
-                        iTasks.Remove(completion);
-                    }
-                });
-
-                iTasks.Add(completion);
-            }
-        }
-
-        // IDispose
+        // IDisposable
 
         public void Dispose()
         {
-            Cancel();
-
             iDisposeHandler.Dispose();
 
             Task[] tasks;
@@ -206,523 +185,370 @@ namespace OpenHome.Av
             {
                 Do.Assert(iTasks.Count == 0);
             }
-
-            lock (iSessions)
-            {
-                Do.Assert(iSessions.Count == 0);
-            }
         }
     }
 
-    /*
-    internal class MediaEndpointSessionOpenHome : IMediaEndpointSession
+    internal class MediaEndpointSupervisorContainer : IWatchableContainer<IMediaDatum>, IDisposable
     {
-        private readonly INetwork iNetwork;
-        private readonly ServiceMediaEndpointOpenHome iService;
+        private readonly IMediaEndpointClient iClient;
+        private readonly MediaEndpointSupervisorSession iSession;
 
         private readonly DisposeHandler iDisposeHandler;
-
-        private readonly Encoding iEncoding;
-
-        private readonly object iLock;
-
-        private readonly string iId;
-        
-        private uint iSequence;
-
-        private Task<IWatchableContainer<IMediaDatum>> iTask;
-
-        private MediaEndpointContainerOpenHome iContainer;
-
-        public MediaEndpointSessionOpenHome(INetwork aNetwork, ServiceMediaEndpointOpenHome aService)
-        {
-            iNetwork = aNetwork;
-            iService = aService;
-
-            iDisposeHandler = new DisposeHandler();
-
-            iEncoding = new UTF8Encoding(false);
-
-            iLock = new object();
-
-            using (var client = new WebClient())
-            {
-                try
-                {
-                    var create = iService.CreateUri("create");
-
-                    var session = client.DownloadString(create);
-
-                    var json = JsonParser.Parse(session) as JsonString;
-
-                    iId = json.Value();
-                }
-                catch
-                {
-                }
-
-                iSequence = 0;
-            }
-
-            iTask = Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
-            {
-                return (null);
-            });
-        }
-
-        private string Encode(string aValue)
-        {
-            var bytes = iEncoding.GetBytes(aValue);
-            var value = System.Convert.ToBase64String(bytes);
-            return (value);
-        }
-
-        internal void Refresh()
-        {
-        }
-
-        private Task<IWatchableContainer<IMediaDatum>> UpdateLocked(Func<MediaEndpointContainerOpenHome> aContainer)
-        {
-            if (iId == null)
-            {
-                return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
-                {
-                    return (null);
-                }));
-            }
-
-            uint sequence;
-
-            sequence = ++iSequence;
-
-            if (iContainer != null)
-            {
-                iContainer.Dispose();
-                iContainer = null;
-            }
-
-            return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
-            {
-                lock (iLock)
-                {
-                    if (iSequence == sequence)
-                    {
-                        iContainer = aContainer();
-                        return (iContainer);
-                    }
-
-                    return (null);
-                }
-            }));
-        }
-
-        // IMediaEndpointSession
-
-        public Task<IWatchableContainer<IMediaDatum>> Browse(IMediaDatum aDatum)
-        {
-            using (iDisposeHandler.Lock)
-            {
-                lock (iLock)
-                {
-                    if (aDatum == null)
-                    {
-                        iTask = UpdateLocked(() =>
-                        {
-                            return (new MediaEndpointContainerOpenHomeBrowse(iNetwork, iService, iId, "0"));
-                        });
-                    }
-                    else
-                    {
-                        iTask = UpdateLocked(() =>
-                        {
-                            return (new MediaEndpointContainerOpenHomeBrowse(iNetwork, iService, iId, aDatum.Id));
-                        });
-                    }
-
-                    return (iTask);
-                }
-            }
-        }
-
-        public Task<IWatchableContainer<IMediaDatum>> Link(ITag aTag, string aValue)
-        {
-            using (iDisposeHandler.Lock)
-            {
-                lock (iLock)
-                {
-                    iTask = UpdateLocked(() =>
-                    {
-                        return (new MediaEndpointContainerOpenHomeLink(iNetwork, iService, iId, aTag, Encode(aValue)));
-                    });
-
-                    return (iTask);
-                }
-            }
-        }
-
-        public Task<IWatchableContainer<IMediaDatum>> Search(string aValue)
-        {
-            using (iDisposeHandler.Lock)
-            {
-                lock (iLock)
-                {
-                    iTask = UpdateLocked(() =>
-                    {
-                        return (new MediaEndpointContainerOpenHomeSearch(iNetwork, iService, iId, Encode(aValue)));
-                    });
-
-                    return (iTask);
-                }
-            }
-        }
-
-        // Disposable
-
-        public void Dispose()
-        {
-            iDisposeHandler.Dispose();
-
-            iTask.Wait();
-
-            if (iContainer != null)
-            {
-                iContainer.Dispose();
-            }
-
-            if (iId != null)
-            {
-                using (var client = new WebClient())
-                {
-                    var destroy = iService.CreateUri("destroy?session={0}", iId);
-
-                    try
-                    {
-                        client.DownloadString(destroy);
-                    }
-                    catch
-                    {
-                        // common if disposing session because the endpoint has disappeared
-                        // could try and distinguish between disposing when the endpoint has disappeared
-                        // and disposing because the client is no longer interested in the session
-                    }
-                }
-            }
-
-            iService.Destroy(this);
-        }
-    }
-
-    internal class MediaEndpointContainerOpenHome : IWatchableContainer<IMediaDatum>, IDisposable
-    {
-        private readonly INetwork iNetwork;
-        private readonly ServiceMediaEndpointOpenHome iService;
-        private readonly string iSession;
-
-        private readonly Uri iUriRefresh;
-
+        private readonly CancellationTokenSource iCancellationSource;
+        private MediaEndpointSupervisorSnapshot iSnapshot;
         private readonly Watchable<IWatchableSnapshot<IMediaDatum>> iWatchableSnapshot;
 
-        protected MediaEndpointContainerOpenHome(INetwork aNetwork, ServiceMediaEndpointOpenHome aService, string aSession, string aFormat, params object[] aArguments)
+        public MediaEndpointSupervisorContainer(IMediaEndpointClient aClient, MediaEndpointSupervisorSession aSession, IMediaEndpointClientSnapshot aSnapshot)
         {
-            iNetwork = aNetwork;
-            iService = aService;
+            iClient = aClient;
             iSession = aSession;
 
-            var snapshot = GetSnapshot(aFormat, aArguments);
-
-            iWatchableSnapshot = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork, "snapshot", snapshot);
+            iDisposeHandler = new DisposeHandler();
+            iCancellationSource = new CancellationTokenSource();
+            iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, iSession, iCancellationSource.Token, aSnapshot);
+            iWatchableSnapshot = new Watchable<IWatchableSnapshot<IMediaDatum>>(iClient, "Snapshot", iSnapshot);
         }
 
-        private IWatchableSnapshot<IMediaDatum> GetSnapshot(string aFormat, params object[] aArguments)
-        {
-            var uri = iService.CreateUri(aFormat, aArguments);
-
-            using (var client = new WebClient())
-            {
-                try
-                {
-                    var session = client.DownloadString(uri);
-
-                    var json = JsonParser.Parse(session) as JsonObject;
-
-                    var total = GetTotal(json["Total"]);
-                    var alpha = GetAlpha(json["Alpha"]);
-
-                    return (new MediaEndpointSnapshotOpenHome(iNetwork, iService, iSession, total, alpha));
-                }
-                catch
-                {
-                    return (null);
-                }
-            }
-        }
-
-        private uint GetTotal(JsonValue aValue)
-        {
-            var value = aValue as JsonString;
-            return (uint.Parse(value.Value()));
-        }
-
-        private IEnumerable<uint> GetAlpha(JsonValue aValue)
-        {
-            var value = aValue as JsonArray;
-
-            foreach (var entry in value)
-            {
-                yield return (GetAlphaElement(entry));
-            }
-        }
-
-        private uint GetAlphaElement(JsonValue aValue)
-        {
-            var value = aValue as JsonString;
-            return (uint.Parse(value.Value()));
-        }
-
-        internal void Update(uint aSequence)
-        {
-            iWatchableSnapshot.Update(GetSnapshot("refresh?session=" + iSession));
-        }
-
-        // IMediaServerContainer
+        // IWatchableContainer<IMediaDatum>
 
         public IWatchable<IWatchableSnapshot<IMediaDatum>> Snapshot
         {
-            get { return (iWatchableSnapshot); }
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return (iWatchableSnapshot);
+                }
+            }
         }
 
         // IDisposable
 
         public void Dispose()
         {
-            iNetwork.Execute();
+            // called on the watchable thread
+
+            iCancellationSource.Cancel();
+            iDisposeHandler.Dispose();
             iWatchableSnapshot.Dispose();
+            iSnapshot.Dispose();
         }
     }
 
-    internal class MediaEndpointContainerOpenHomeBrowse : MediaEndpointContainerOpenHome
+    internal class MediaEndpointSupervisorSession : IMediaEndpointSession
     {
-        public MediaEndpointContainerOpenHomeBrowse(INetwork aNetwork, ServiceMediaEndpointOpenHome aService, string aSession, string aId)
-            : base (aNetwork, aService, aSession, "browse?session={0}&id={1}", aSession, aId)
-        {
-        }
-    }
+        private readonly IMediaEndpointClient iClient;
+        private readonly CancellationToken iCancellationToken;
+        private readonly string iId;
+        private readonly Action<string> iDispose;
 
-    internal class MediaEndpointContainerOpenHomeLink : MediaEndpointContainerOpenHome
-    {
-        public MediaEndpointContainerOpenHomeLink(INetwork aNetwork, ServiceMediaEndpointOpenHome aService, string aSession, ITag aTag, string aValue)
-            : base(aNetwork, aService, aSession, "link?session={0}&tag={1}&val={2}", aSession, aTag.Id, aValue)
-        {
-        }
-    }
+        private readonly DisposeHandler iDisposeHandler;
 
-    internal class MediaEndpointContainerOpenHomeSearch : MediaEndpointContainerOpenHome
-    {
-        public MediaEndpointContainerOpenHomeSearch(INetwork aNetwork, ServiceMediaEndpointOpenHome aService, string aSession, string aValue)
-            : base(aNetwork, aService, aSession, "search?session={0}&val={1}", aSession, aValue)
-        {
-        }
-    }
+        private readonly List<Task> iTasks;
 
-    internal class MediaEndpointSnapshotOpenHome : IWatchableSnapshot<IMediaDatum>
-    {
-        private readonly INetwork iNetwork;
-        private readonly ServiceMediaEndpointOpenHome iService;
-        private readonly string iSession;
-        private readonly uint iTotal;
-        private readonly IEnumerable<uint> iAlpha;
+        private readonly object iLock;
 
-        public MediaEndpointSnapshotOpenHome(INetwork aNetwork, ServiceMediaEndpointOpenHome aService, string aSession, uint aTotal, IEnumerable<uint> aAlpha)
+        private uint iSequence;
+
+        private MediaEndpointSupervisorContainer iContainer;
+
+        public MediaEndpointSupervisorSession(IMediaEndpointClient aClient, CancellationToken aCancellationToken, string aId, Action<string> aDispose)
         {
-            iNetwork = aNetwork;
-            iService = aService;
-            iSession = aSession;
-            iTotal = aTotal;
-            iAlpha = aAlpha;
+            iClient = aClient;
+            iCancellationToken = aCancellationToken;
+            iId = aId;
+            iDispose = aDispose;
+
+            iDisposeHandler = new DisposeHandler();
+
+            iTasks = new List<Task>();
+
+            iLock = new object();
+
+            iSequence = 0;
         }
 
-        // IMediaServerSnapshot<IMediaDatum>
-
-        public uint Total
+        internal string Id
         {
             get
             {
-                return (iTotal);
+                return (iId);
             }
         }
 
-        public IEnumerable<uint> AlphaMap
+        private Task<IWatchableContainer<IMediaDatum>> UpdateContainer(Func<IMediaEndpointClientSnapshot> aFunction)
+        {
+            // called on the watchable thread
+
+            uint sequence;
+
+            lock (iLock)
+            {
+                if (iContainer != null)
+                {
+                    iContainer.Dispose();
+                    iContainer = null;
+                }
+
+                sequence = ++iSequence;
+            }
+
+            var task = Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
+            {
+                iCancellationToken.ThrowIfCancellationRequested();
+
+                lock (iLock)
+                {
+                    if (iSequence == sequence)
+                    {
+                        iContainer = new MediaEndpointSupervisorContainer(iClient, this, aFunction());
+
+                        return (iContainer);
+                    }
+
+                    throw (new OperationCanceledException());
+                }
+            });
+
+            lock (iTasks)
+            {
+                Task completion = null;
+
+                completion = task.ContinueWith((t) =>
+                {
+                    try
+                    {
+                        t.Wait();
+                    }
+                    catch
+                    {
+                    }
+
+                    lock (iTasks)
+                    {
+                        iTasks.Remove(completion);
+                    }
+                });
+
+                iTasks.Add(completion);
+            }
+
+            return (task);
+        }
+
+        // IMediaEndpointSession
+
+        public Task<IWatchableContainer<IMediaDatum>> Browse(IMediaDatum aDatum)
+        {
+            iClient.Assert(); // must be called on the watchable thread
+
+            using (iDisposeHandler.Lock)
+            {
+                return (UpdateContainer(() => iClient.Browse(iCancellationToken, iId, aDatum)));
+            }
+        }
+
+        public Task<IWatchableContainer<IMediaDatum>> Link(ITag aTag, string aValue)
+        {
+            iClient.Assert(); // must be called on the watchable thread
+
+            using (iDisposeHandler.Lock)
+            {
+                return (UpdateContainer(() => iClient.Link(iCancellationToken, iId, aTag, aValue)));
+            }
+        }
+
+        public Task<IWatchableContainer<IMediaDatum>> Search(string aValue)
+        {
+            iClient.Assert(); // must be called on the watchable thread
+
+            using (iDisposeHandler.Lock)
+            {
+                return (UpdateContainer(() => iClient.Search(iCancellationToken, iId, aValue)));
+            }
+        }
+
+        // IDisposable Members
+
+        public void Dispose()
+        {
+            iClient.Assert(); // must be called on the watchable thread
+
+            iDisposeHandler.Dispose();
+
+            lock (iLock)
+            {
+                if (iContainer != null)
+                {
+                    iContainer.Dispose();
+                }
+            }
+
+            iDispose(iId);
+        }
+    }
+
+    public class MediaEndpointSupervisor
+    {
+        private readonly IMediaEndpointClient iClient;
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly CancellationTokenSource iCancellationSource;
+        private readonly List<Task> iCreateTasks;
+        private readonly List<Task> iDestroyTasks;
+        private readonly Dictionary<string, MediaEndpointSupervisorSession> iSessions;
+        
+        public MediaEndpointSupervisor(IMediaEndpointClient aClient)
+        {
+            iClient = aClient;
+            iDisposeHandler = new DisposeHandler();
+            iCancellationSource = new CancellationTokenSource();
+            iCreateTasks = new List<Task>();
+            iDestroyTasks = new List<Task>();
+            iSessions = new Dictionary<string, MediaEndpointSupervisorSession>();
+        }
+
+        private CancellationToken CancellationToken
         {
             get
             {
-                return (iAlpha);
+                var token = iCancellationSource.Token;
+                token.ThrowIfCancellationRequested();
+                return (token);
             }
         }
 
-        public Task<IWatchableFragment<IMediaDatum>> Read(uint aIndex, uint aCount)
+        public void Close()
         {
-            iNetwork.Assert();
+            iCancellationSource.Cancel();
+        }
 
-            Do.Assert(aIndex + aCount <= iTotal);
+        public Task<IMediaEndpointSession> CreateSession()
+        {
+            iClient.Assert(); // must be called on the watchable thread
 
-            return (Task.Factory.StartNew<IWatchableFragment<IMediaDatum>>(() =>
+            using (iDisposeHandler.Lock)
             {
-                return (new MediaEndpointFragmentOpenHome(iNetwork, iService, iSession, iTotal, aIndex, aCount));
-            }));
+                var task = Task.Factory.StartNew<IMediaEndpointSession>(() =>
+                {
+                    var token = CancellationToken;
+
+                    var id = iClient.CreateSession(token);
+
+                    var session = new MediaEndpointSupervisorSession(iClient, token, id, DestroySession);
+
+                    lock (iSessions)
+                    {
+                        iSessions.Add(id, session);
+                    }
+
+                    return (session);
+                });
+
+                Task completion = null;
+
+                lock (iCreateTasks)
+                {
+                    completion = task.ContinueWith((t) =>
+                    {
+                        try
+                        {
+                            t.Wait();
+                        }
+                        catch
+                        {
+                        }
+
+                        lock (iCreateTasks)
+                        {
+                            iCreateTasks.Remove(completion);
+                        }
+                    });
+
+                    iCreateTasks.Add(completion);
+                }
+
+                return (task);
+            }
+        }
+
+        private void DestroySession(string aId)
+        {
+            // called on the watchable thread
+
+            lock (iSessions)
+            {
+                iSessions.Remove(aId);
+            }
+
+            var task = Task.Factory.StartNew(() =>
+            {
+                iClient.DestroySession(CancellationToken, aId);
+            });
+
+            Task completion = null;
+
+            lock (iDestroyTasks)
+            {
+                completion = task.ContinueWith((t) =>
+                {
+                    try
+                    {
+                        t.Wait();
+                    }
+                    catch
+                    {
+                    }
+
+                    lock (iDestroyTasks)
+                    {
+                        iDestroyTasks.Remove(completion);
+                    }
+                });
+
+                iDestroyTasks.Add(completion);
+            }
+        }
+
+        // IDispose
+
+        public void Dispose()
+        {
+            // users of the supervisor must close it, then indicate that their endpoint has disappeared, then dispose their supervisor
+            // this gives clients the opportunity to dispose all their sessions in advance of the supervisor itself being disposed
+
+            Do.Assert(iCancellationSource.IsCancellationRequested);
+
+            iDisposeHandler.Dispose();
+
+            // now guaranteed that no more sessions are being created
+
+            Task[] tasks;
+
+            lock (iCreateTasks)
+            {
+                tasks = iCreateTasks.ToArray();
+            }
+
+            Task.WaitAll(tasks);
+
+            lock (iCreateTasks)
+            {
+                Do.Assert(iCreateTasks.Count == 0);
+            }
+
+            Do.Assert(iSessions.Count == 0);
+
+            lock (iDestroyTasks)
+            {
+                tasks = iDestroyTasks.ToArray();
+            }
+
+            Task.WaitAll(tasks);
+
+            lock (iDestroyTasks)
+            {
+                Do.Assert(iDestroyTasks.Count == 0);
+            }
         }
     }
-
-    internal class MediaEndpointFragmentOpenHome : IWatchableFragment<IMediaDatum>
-    {
-        private readonly INetwork iNetwork;
-        private readonly ServiceMediaEndpointOpenHome iService;
-        private readonly string iSession;
-        private readonly uint iTotal;
-        private readonly uint iIndex;
-
-        private readonly IEnumerable<IMediaDatum> iData;
-
-        public MediaEndpointFragmentOpenHome(INetwork aNetwork, ServiceMediaEndpointOpenHome aService, string aSession, uint aTotal, uint aIndex, uint aCount)
-        {
-            iNetwork = aNetwork;
-            iService = aService;
-            iSession = aSession;
-            iTotal = aTotal;
-            iIndex = aIndex;
-
-            var uri = iService.CreateUri("/read?session={0}&index={1}&count={2}", iSession, iIndex, aCount);
-
-            using (var client = new WebClient())
-            {
-                try
-                {
-                    var session = client.DownloadString(uri);
-
-                    var json = JsonParser.Parse(session);
-
-                    iData = GetData(json);
-                }
-                catch
-                {
-                    iData = new List<IMediaDatum>();
-                }
-            }
-        }
-
-        private IEnumerable<IMediaDatum> GetData(JsonValue aValue)
-        {
-            var value = aValue as JsonArray;
-
-            foreach (var entry in value)
-            {
-                yield return (GetDatum(entry));
-            }
-        }
-
-        private IMediaDatum GetDatum(JsonValue aValue)
-        {
-            var value = aValue as JsonObject;
-
-            var id = GetValue(value["Id"]);
-            var type = GetType(value["Type"]);
-
-            var datum = new MediaDatum(id, type.ToArray());
-
-            foreach (var entry in value["Metadata"] as JsonArray)
-            {
-                var values = GetMetadatumValues(entry);
-                var tagid = uint.Parse(values.First());
-                var tag = iNetwork.TagManager[tagid];
-                var resolced = Resolve(tag, values.Skip(1));
-                datum.Add(tag, new MediaValue(values.Skip(1)));
-            }
-
-            return (datum);
-        }
-
-        private IEnumerable<string> Resolve(ITag aTag, IEnumerable<string> aValues)
-        {
-            if (aTag == iNetwork.TagManager.Audio.Artwork || aTag == iNetwork.TagManager.Container.Artwork)
-            {
-                return (ResolveUri(aValues));
-            }
-
-            return (aValues);
-        }
-
-        private IEnumerable<string> ResolveUri(IEnumerable<string> aValues)
-        {
-            foreach (var value in aValues)
-            {
-                yield return (ResolveUri(value));
-            }
-        }
-
-        private string ResolveUri(string aValue)
-        {
-            try
-            {
-                var uri = new Uri(aValue);
-                return (aValue);
-            }
-            catch
-            {
-                return (iService.ResolveUri(aValue));
-            }
-        }
-
-        private IEnumerable<string> GetMetadatumValues(JsonValue aValue)
-        {
-            var value = aValue as JsonArray;
-
-            foreach (var entry in value)
-            {
-                yield return (GetMetadatumValue(entry));
-            }
-        }
-
-        private string GetMetadatumValue(JsonValue aValue)
-        {
-            var value = aValue as JsonString;
-            return (value.Value);
-        }
-
-        private string GetValue(JsonValue aValue)
-        {
-            var value = aValue as JsonString;
-            return (value.Value);
-        }
-
-        private IEnumerable<ITag> GetType(JsonValue aValue)
-        {
-            var value = aValue as JsonArray;
-
-            foreach (var entry in value)
-            {
-                yield return (GetTag(entry));
-            }
-        }
-
-        private ITag GetTag(JsonValue aValue)
-        {
-            var value = aValue as JsonString;
-
-            var id = uint.Parse(value.Value);
-
-            return (iNetwork.TagManager[id]);
-        }
-
-        // IWatchableFragment<IMediaDatum>
-
-        public uint Index
-        {
-            get { return (iIndex); }
-        }
-
-        public IEnumerable<IMediaDatum> Data
-        {
-            get { return (iData); }
-        }
-    }
-    */
 }

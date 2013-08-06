@@ -326,7 +326,7 @@ namespace OpenHome.Av
             get { return (iTotal); }
         }
 
-        public IEnumerable<uint> AlphaMap
+        public IEnumerable<uint> Alpha
         {
             get { return (iAlphaMap); }
         }

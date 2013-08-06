@@ -557,7 +557,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IEnumerable<uint> AlphaMap
+        public IEnumerable<uint> Alpha
         {
             get
             {

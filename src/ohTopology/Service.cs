@@ -12,11 +12,12 @@ namespace OpenHome.Av
         void Create<T>(Action<T> aCallback) where T : IProxy;
     }
 
-    public abstract class Service : IService
+    public abstract class Service : IService, IWatchableThread
     {
-        private readonly DisposeHandler iDisposeHandler;
-        private readonly INetwork iNetwork;
+        protected readonly INetwork iNetwork;
         private readonly IDevice iDevice;
+
+        private readonly DisposeHandler iDisposeHandler;
         private readonly CancellationTokenSource iCancelSubscribe;
         private readonly ManualResetEvent iSubscribed;
         private readonly List<Task> iTasks;
@@ -26,11 +27,12 @@ namespace OpenHome.Av
 
         protected Service(INetwork aNetwork, IDevice aDevice)
         {
+            iNetwork = aNetwork;
+            iDevice = aDevice;
+
             iDisposeHandler = new DisposeHandler();
             iCancelSubscribe = new CancellationTokenSource();
             iSubscribed = new ManualResetEvent(true);
-            iNetwork = aNetwork;
-            iDevice = aDevice;
             iRefCount = 0;
             iSubscribeTask = null;
             iTasks = new List<Task>();
@@ -204,6 +206,23 @@ namespace OpenHome.Av
             Task.WaitAll(tasks);
 
             return complete;
+        }
+
+        // IWatchableThread
+
+        public void Assert()
+        {
+            iNetwork.Assert();
+        }
+
+        public void Schedule(Action aAction)
+        {
+            iNetwork.Schedule(aAction);
+        }
+
+        public void Execute(Action aAction)
+        {
+            iNetwork.Execute(aAction);
         }
 
         // IMockable

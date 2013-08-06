@@ -49,7 +49,7 @@ namespace TestMediaServer
                 root.Snapshot.AddWatcher(this);
             });
 
-            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Alpha == null);
             Do.Assert(iSnaphot.Total == 4);
 
             var rootFragment = iSnaphot.Read(0, 4).Result;
@@ -89,7 +89,7 @@ namespace TestMediaServer
                 tracks.Snapshot.RemoveWatcher(this);
             });
 
-            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Alpha == null);
             Do.Assert(iSnaphot.Total == 12521);
 
             var artists = session.Browse(rootFragment.Data.ElementAt(1)).Result;
@@ -105,7 +105,7 @@ namespace TestMediaServer
             });
 
 
-            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Alpha == null);
             Do.Assert(iSnaphot.Total == 882);
 
             var fragment = iSnaphot.Read(100, 1).Result;
@@ -130,7 +130,7 @@ namespace TestMediaServer
                 artistAlbums.Snapshot.RemoveWatcher(this);
             });
 
-            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Alpha == null);
             Do.Assert(iSnaphot.Total == 2);
 
             fragment = iSnaphot.Read(0, 1).Result;
@@ -154,7 +154,7 @@ namespace TestMediaServer
                 artistAlbumTracks.Snapshot.RemoveWatcher(this);
             });
 
-            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Alpha == null);
             Do.Assert(iSnaphot.Total == 15);
 
             fragment = iSnaphot.Read(0, 1).Result;
@@ -180,7 +180,7 @@ namespace TestMediaServer
                 albums.Snapshot.RemoveWatcher(this);
             });
 
-            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Alpha == null);
             Do.Assert(iSnaphot.Total == 1000);
 
             fragment = iSnaphot.Read(100, 1).Result;
@@ -204,7 +204,7 @@ namespace TestMediaServer
                 albumTracks.Snapshot.RemoveWatcher(this);
             });
 
-            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Alpha == null);
             Do.Assert(iSnaphot.Total == 18);
 
             fragment = iSnaphot.Read(0, 1).Result;
@@ -231,7 +231,7 @@ namespace TestMediaServer
                 genres.Snapshot.RemoveWatcher(this);
             });
 
-            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Alpha == null);
             Do.Assert(iSnaphot.Total == 124);
 
             fragment = iSnaphot.Read(100, 1).Result;
@@ -255,7 +255,7 @@ namespace TestMediaServer
                 genreTracks.Snapshot.RemoveWatcher(this);
             });
 
-            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Alpha == null);
             Do.Assert(iSnaphot.Total == 16);
 
             fragment = iSnaphot.Read(0, 1).Result;
@@ -283,7 +283,7 @@ namespace TestMediaServer
                 linkArtistAlbums.Snapshot.RemoveWatcher(this);
             });
 
-            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Alpha == null);
             Do.Assert(iSnaphot.Total == 2);
 
             fragment = iSnaphot.Read(0, 1).Result;
@@ -307,7 +307,7 @@ namespace TestMediaServer
                 linkArtistAlbumTracks.Snapshot.RemoveWatcher(this);
             });
 
-            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Alpha == null);
             Do.Assert(iSnaphot.Total == 15);
 
             fragment = iSnaphot.Read(0, 1).Result;
@@ -335,7 +335,7 @@ namespace TestMediaServer
                 linkAlbumTracks.Snapshot.RemoveWatcher(this);
             });
 
-            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Alpha == null);
             Do.Assert(iSnaphot.Total == 18);
 
             fragment = iSnaphot.Read(0, 1).Result;
@@ -363,7 +363,7 @@ namespace TestMediaServer
                 linkGenreTracks.Snapshot.RemoveWatcher(this);
             });
 
-            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Alpha == null);
             Do.Assert(iSnaphot.Total == 16);
 
             fragment = iSnaphot.Read(0, 1).Result;
@@ -391,7 +391,7 @@ namespace TestMediaServer
                 search.Snapshot.RemoveWatcher(this);
             });
 
-            Do.Assert(iSnaphot.AlphaMap == null);
+            Do.Assert(iSnaphot.Alpha == null);
             Do.Assert(iSnaphot.Total == 556);
 
             session.Dispose();

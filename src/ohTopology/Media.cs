@@ -28,7 +28,7 @@ namespace OpenHome.Av
     public interface IWatchableSnapshot<T>
     {
         uint Total { get; }
-        IEnumerable<uint> AlphaMap { get; } // null if no alpha map
+        IEnumerable<uint> Alpha { get; } // null if no alpha map
         Task<IWatchableFragment<T>> Read(uint aIndex, uint aCount);
     }
 

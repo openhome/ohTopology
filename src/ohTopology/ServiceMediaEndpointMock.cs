@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
 
@@ -13,13 +14,17 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    public class ServiceMediaEndpointMock : ServiceMediaEndpoint
+    public class ServiceMediaEndpointMock : ServiceMediaEndpoint, IMediaEndpointClient
     {
         private readonly IEnumerable<IMediaMetadata> iMetadata;
         private readonly IDeviceMediaEndpointMockUriProvider iUriProvider;
+        private readonly MediaEndpointSupervisor iSupervisor;
 
-        private readonly List<IMediaEndpointSession> iSessions;
-        
+        private readonly IEnumerable<IMediaDatum> iArtists;
+        private readonly IEnumerable<IMediaDatum> iAlbums;
+        private readonly IEnumerable<IMediaDatum> iGenres;
+        private readonly List<IMediaDatum> iRoot;
+
         public ServiceMediaEndpointMock(INetwork aNetwork, IDevice aDevice, string aId, string aType, string aName, string aInfo,
             string aUrl, string aArtwork, string aManufacturerName, string aManufacturerInfo, string aManufacturerUrl,
             string aManufacturerArtwork, string aModelName, string aModelInfo, string aModelUrl, string aModelArtwork,
@@ -29,55 +34,7 @@ namespace OpenHome.Av
         {
             iMetadata = aMetadata;
             iUriProvider = aUriProvider;
-
-            iSessions = new List<IMediaEndpointSession>();
-        }
-
-        public override IProxy OnCreate(IDevice aDevice)
-        {
-            return (new ProxyMediaEndpoint(this));
-        }
-
-        public override Task<IMediaEndpointSession> CreateSession()
-        {
-            return (Task.Factory.StartNew<IMediaEndpointSession>(() =>
-            {
-                var session = new MediaEndpointSessionMock(Network, iMetadata, this);
-                iSessions.Add(session);
-                return (session);
-            }));
-        }
-
-        internal void Destroy(IMediaEndpointSession aSession)
-        {
-            iSessions.Remove(aSession);
-        }
-
-        // IDispose
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            Do.Assert(iSessions.Count == 0);
-        }
-    }
-
-    internal class MediaEndpointSessionMock : IMediaEndpointSession
-    {
-        private readonly INetwork iNetwork;
-        private readonly IEnumerable<IMediaMetadata> iMetadata;
-        private readonly ServiceMediaEndpointMock iService;
-        
-        private readonly IEnumerable<IMediaDatum> iArtists;
-        private readonly IEnumerable<IMediaDatum> iAlbums;
-        private readonly IEnumerable<IMediaDatum> iGenres;
-        private readonly List<IMediaDatum> iRoot;
-
-        public MediaEndpointSessionMock(INetwork aNetwork, IEnumerable<IMediaMetadata> aMetadata, ServiceMediaEndpointMock aService)
-        {
-            iNetwork = aNetwork;
-            iMetadata = aMetadata;
-            iService = aService;
+            iSupervisor = new MediaEndpointSupervisor(this);
 
             iArtists = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Artist] != null)
                 .SelectMany(m => m[iNetwork.TagManager.Audio.Artist].Values)
@@ -122,6 +79,16 @@ namespace OpenHome.Av
             iRoot.Add(GetRootContainerGenres());
         }
 
+        public override IProxy OnCreate(IDevice aDevice)
+        {
+            return (new ProxyMediaEndpoint(this));
+        }
+
+        public override Task<IMediaEndpointSession> CreateSession()
+        {
+            return (iSupervisor.CreateSession());
+        }
+
         private IMediaDatum GetRootContainerTracks()
         {
             var datum = new MediaDatum(null, iNetwork.TagManager.Container.Title);
@@ -150,43 +117,31 @@ namespace OpenHome.Av
             return (datum);
         }
 
-        private Task<IWatchableContainer<IMediaDatum>> BrowseRootTracks()
+        private IMediaEndpointClientSnapshot BrowseRootTracks()
         {
             var tracks = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Title] != null)
                 .OrderBy(m => m[iNetwork.TagManager.Audio.Title].Value)
                 .Select(m => new MediaDatum(m, null));
 
-            return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
-            {
-                return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(tracks)));
-            }));
+            return (new MediaEndpointSnapshotMock(tracks));
         }
 
-        private Task<IWatchableContainer<IMediaDatum>> BrowseRootArtists()
+        private IMediaEndpointClientSnapshot BrowseRootArtists()
         {
-            return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
-            {
-                return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(iArtists)));
-            }));
+            return (new MediaEndpointSnapshotMock(iArtists));
         }
 
-        private Task<IWatchableContainer<IMediaDatum>> BrowseRootAlbums()
+        private IMediaEndpointClientSnapshot BrowseRootAlbums()
         {
-            return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
-            {
-                return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(iAlbums)));
-            }));
+            return (new MediaEndpointSnapshotMock(iAlbums));
         }
 
-        private Task<IWatchableContainer<IMediaDatum>> BrowseRootGenres()
+        private IMediaEndpointClientSnapshot BrowseRootGenres()
         {
-            return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
-            {
-                return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(iGenres)));
-            }));
+            return (new MediaEndpointSnapshotMock(iGenres));
         }
 
-        private Task<IWatchableContainer<IMediaDatum>> BrowseArtistAlbums(string aArtist)
+        private IMediaEndpointClientSnapshot BrowseArtistAlbums(string aArtist)
         {
             var albums = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Artist] != null)
                 .Where(m => m[iNetwork.TagManager.Audio.Artist].Values.Contains(aArtist))
@@ -204,35 +159,26 @@ namespace OpenHome.Av
                     return (datum);
                 });
 
-            return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
-            {
-                return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(albums)));
-            }));
+            return (new MediaEndpointSnapshotMock(albums));
         }
 
-        private Task<IWatchableContainer<IMediaDatum>> BrowseAlbumTracks(string aAlbum)
+        private IMediaEndpointClientSnapshot BrowseAlbumTracks(string aAlbum)
         {
             var tracks = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Album].Value == aAlbum)
                 .OrderBy(m => m[iNetwork.TagManager.Audio.Track] != null ? uint.Parse(m[iNetwork.TagManager.Audio.Track].Value) : 0)
                 .Select(m => new MediaDatum(m, null));
 
-            return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
-            {
-                return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(tracks)));
-            }));
+            return (new MediaEndpointSnapshotMock(tracks));
         }
 
-        private Task<IWatchableContainer<IMediaDatum>> BrowseGenreTracks(string aGenre)
+        private IMediaEndpointClientSnapshot BrowseGenreTracks(string aGenre)
         {
             var tracks = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Genre] != null)
                 .Where(m => m[iNetwork.TagManager.Audio.Genre].Values.Contains(aGenre))
                 .OrderBy(m => m[iNetwork.TagManager.Audio.Title] != null ? m[iNetwork.TagManager.Audio.Title].Value : "")
                 .Select(m => new MediaDatum(m, null));
 
-            return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
-            {
-                return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(tracks)));
-            }));
+            return (new MediaEndpointSnapshotMock(tracks));
         }
 
         private IEnumerable<IMediaDatum> SearchMetadata(string aValue)
@@ -322,81 +268,83 @@ namespace OpenHome.Av
             return (false);
         }
 
-        internal void Destroy(IWatchableContainer<IMediaDatum> aContainer)
+        // IMediaEndpointClient
+
+        public string CreateSession(CancellationToken aCancellationToken)
+        {
+            return (Guid.NewGuid().ToString());
+        }
+
+        public void DestroySession(CancellationToken aCancellationToken, string aId)
         {
         }
 
-        // IMediaServerSession
-
-        public Task<IWatchableContainer<IMediaDatum>> Browse(IMediaDatum aDatum)
+        public IMediaEndpointClientSnapshot Browse(CancellationToken aCancellationToken, string aSession, IMediaDatum aDatum)
         {
-            if (aDatum == null)
-            {
-                return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
-                {
-                    return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(iRoot)));
-                }));
-            }
+             if (aDatum == null)
+             {
+                 return (new MediaEndpointSnapshotMock(iRoot));
+             }
 
-            Do.Assert(aDatum.Type.Any());
+             Do.Assert(aDatum.Type.Any());
 
-            if (aDatum.Type.First() == iNetwork.TagManager.Container.Title)
-            {
-                // Top Level Container
+             if (aDatum.Type.First() == iNetwork.TagManager.Container.Title)
+             {
+                 // Top Level Container
 
-                if (aDatum.Type.Skip(1).Any())
-                {
-                    ITag tag = aDatum.Type.Skip(1).First();
+                 if (aDatum.Type.Skip(1).Any())
+                 {
+                     ITag tag = aDatum.Type.Skip(1).First();
 
-                    if (tag == iNetwork.TagManager.Audio.Artist)
-                    {
-                        return (BrowseRootArtists());
-                    }
+                     if (tag == iNetwork.TagManager.Audio.Artist)
+                     {
+                         return (BrowseRootArtists());
+                     }
 
-                    if (tag == iNetwork.TagManager.Audio.Album)
-                    {
-                        return (BrowseRootAlbums());
-                    }
+                     if (tag == iNetwork.TagManager.Audio.Album)
+                     {
+                         return (BrowseRootAlbums());
+                     }
 
-                    if (tag == iNetwork.TagManager.Audio.Genre)
-                    {
-                        return (BrowseRootGenres());
-                    }
+                     if (tag == iNetwork.TagManager.Audio.Genre)
+                     {
+                         return (BrowseRootGenres());
+                     }
 
-                    Do.Assert(false);
-                }
+                     Do.Assert(false);
+                 }
 
-                return (BrowseRootTracks());
-            }
+                 return (BrowseRootTracks());
+             }
 
-            if (aDatum.Type.First() == iNetwork.TagManager.Audio.Artist)
-            {
-                // Artist/Album
+             if (aDatum.Type.First() == iNetwork.TagManager.Audio.Artist)
+             {
+                 // Artist/Album
 
-                var artist = aDatum[iNetwork.TagManager.Audio.Artist].Value;
+                 var artist = aDatum[iNetwork.TagManager.Audio.Artist].Value;
 
-                return (BrowseArtistAlbums(artist));
-            }
+                 return (BrowseArtistAlbums(artist));
+             }
 
-            if (aDatum.Type.First() == iNetwork.TagManager.Audio.Album)
-            {
-                // Artist/Album
+             if (aDatum.Type.First() == iNetwork.TagManager.Audio.Album)
+             {
+                 // Artist/Album
 
-                var album = aDatum[iNetwork.TagManager.Audio.Album].Value;
+                 var album = aDatum[iNetwork.TagManager.Audio.Album].Value;
 
-                return (BrowseAlbumTracks(album));
-            }
+                 return (BrowseAlbumTracks(album));
+             }
 
-            Do.Assert(aDatum.Type.First() == iNetwork.TagManager.Audio.Genre);
+             Do.Assert(aDatum.Type.First() == iNetwork.TagManager.Audio.Genre);
 
-            // Genre/Tracks
+             // Genre/Tracks
 
-            var genre = aDatum[iNetwork.TagManager.Audio.Genre].Value;
+             var genre = aDatum[iNetwork.TagManager.Audio.Genre].Value;
 
-            return (BrowseGenreTracks(genre));
+             return (BrowseGenreTracks(genre));
         }
 
-        public Task<IWatchableContainer<IMediaDatum>> Link(ITag aTag, string aValue)
+        public IMediaEndpointClientSnapshot Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
         {
             if (aTag == iNetwork.TagManager.Audio.Artist)
             {
@@ -413,50 +361,34 @@ namespace OpenHome.Av
                 return (BrowseGenreTracks(aValue));
             }
 
-            return (null);
+            throw new OperationCanceledException();
         }
 
-        public Task<IWatchableContainer<IMediaDatum>> Search(string aValue)
+        public IMediaEndpointClientSnapshot Search(CancellationToken aCancellationToken, string aSession, string aValue)
         {
-            return (Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
-            {
-                var data = SearchMetadata(aValue);
-                return (new MediaEndpointContainerMock(iNetwork, new MediaEndpointSnapshotMock(data)));
-            }));
+                return (new MediaEndpointSnapshotMock(SearchMetadata(aValue)));
         }
 
-        public Task<IWatchableContainer<IMediaDatum>> Query(string aValue)
+        public IEnumerable<IMediaDatum> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
         {
-            throw new NotImplementedException();
+            var snapshot = aSnapshot as MediaEndpointSnapshotMock;
+
+            return snapshot.Read(aIndex, aCount);
         }
 
-        // Disposable
+        // IDispose
 
-        public void Dispose()
+        public override void Dispose()
         {
-            iService.Destroy(this);
+            iSupervisor.Close();
+
+            base.Dispose();
+            
+            iSupervisor.Dispose();
         }
     }
 
-    internal class MediaEndpointContainerMock : IWatchableContainer<IMediaDatum>
-    {
-        private readonly Watchable<IWatchableSnapshot<IMediaDatum>> iSnapshot;
-
-        public MediaEndpointContainerMock(INetwork aNetwork, IWatchableSnapshot<IMediaDatum> aSnapshot)
-        {
-            iSnapshot = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork, "snapshot", aSnapshot);
-        }
-
-        // IMediaServerContainer
-
-        public IWatchable<IWatchableSnapshot<IMediaDatum>> Snapshot
-        {
-            get { return (iSnapshot); }
-        }
-    }
-
-
-    internal class MediaEndpointSnapshotMock : IWatchableSnapshot<IMediaDatum>
+    internal class MediaEndpointSnapshotMock : IMediaEndpointClientSnapshot
     {
         private readonly IEnumerable<IMediaDatum> iData;
         private readonly IEnumerable<uint> iAlphaMap;
@@ -467,31 +399,21 @@ namespace OpenHome.Av
             iAlphaMap = null;
         }
 
-        // IMediaServerSnapshot
+        public IEnumerable<IMediaDatum> Read(uint aIndex, uint aCount)
+        {
+            return (iData.Skip((int)aIndex).Take((int)aCount));
+        }
+
+        // IMediaEndpointClientSnapshot
 
         public uint Total
         {
             get { return ((uint)iData.Count()); }
         }
 
-        public uint Sequence
-        {
-            get { return (0); }
-        }
-
-        public IEnumerable<uint> AlphaMap
+        public IEnumerable<uint> Alpha
         {
             get { return (iAlphaMap); }
-        }
-
-        public Task<IWatchableFragment<IMediaDatum>> Read(uint aIndex, uint aCount)
-        {
-            Do.Assert(aIndex + aCount <= Total);
-
-            return (Task.Factory.StartNew<IWatchableFragment<IMediaDatum>>(() =>
-            {
-                return (new WatchableFragment<IMediaDatum>(aIndex, iData.Skip((int)aIndex).Take((int)aCount)));
-            }));
         }
     }
 }
