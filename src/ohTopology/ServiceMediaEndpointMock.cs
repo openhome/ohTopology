@@ -270,12 +270,12 @@ namespace OpenHome.Av
 
         // IMediaEndpointClient
 
-        public string CreateSession(CancellationToken aCancellationToken)
+        public string Create(CancellationToken aCancellationToken)
         {
             return (Guid.NewGuid().ToString());
         }
 
-        public void DestroySession(CancellationToken aCancellationToken, string aId)
+        public void Destroy(CancellationToken aCancellationToken, string aId)
         {
         }
 

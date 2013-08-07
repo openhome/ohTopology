@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
 using System.Xml;
@@ -15,12 +16,17 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    public class ServiceMediaEndpointContentDirectory : ServiceMediaEndpoint
+    public class ServiceMediaEndpointContentDirectory : ServiceMediaEndpoint, IMediaEndpointClient
     {
+        private const string kNsDidlLite = "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/";
+        private const string kNsUpnp = "urn:schemas-upnp-org:metadata-1-0/upnp/";
+        private const string kNsDc = "http://purl.org/dc/elements/1.1/";
+        private const string kNsLinn = "urn:linn-co-uk/DIDL-Lite";
+
         private readonly CpProxyUpnpOrgContentDirectory1 iProxy;
 
-        private readonly List<MediaEndpointSessionContentDirectory> iSessions;
-        
+        private readonly MediaEndpointSupervisor iSupervisor;
+
         public ServiceMediaEndpointContentDirectory(INetwork aNetwork, IDevice aDevice, string aId, string aType, string aName, string aInfo,
             string aUrl, string aArtwork, string aManufacturerName, string aManufacturerInfo, string aManufacturerUrl,
             string aManufacturerArtwork, string aModelName, string aModelInfo, string aModelUrl, string aModelArtwork,
@@ -29,7 +35,8 @@ namespace OpenHome.Av
             aManufacturerUrl, aManufacturerArtwork, aModelName, aModelInfo, aModelUrl, aModelArtwork, aStarted, aAttributes)
         {
             iProxy = aProxy;
-            iSessions = new List<MediaEndpointSessionContentDirectory>();
+
+            iSupervisor = new MediaEndpointSupervisor(this);
         }
 
         public override IProxy OnCreate(IDevice aDevice)
@@ -39,357 +46,12 @@ namespace OpenHome.Av
 
         public override Task<IMediaEndpointSession> CreateSession()
         {
-            return (Task.Factory.StartNew<IMediaEndpointSession>(() =>
-            {
-                var session = new MediaEndpointSessionContentDirectory(Network, iProxy, this);
-
-                lock (iSessions)
-                {
-                    iSessions.Add(session);
-                }
-
-                return (session);
-            }));
+            return (iSupervisor.CreateSession());
         }
 
         internal void Refresh()
         {
-            lock (iSessions)
-            {
-                foreach (var session in iSessions)
-                {
-                    session.Refresh();
-                }
-            }
         }
-
-        internal void Destroy(MediaEndpointSessionContentDirectory aSession)
-        {
-            lock (iSessions)
-            {
-                iSessions.Remove(aSession);
-            }
-        }
-
-        // IDispose
-
-        public override void Dispose()
-        {
-            base.Dispose();
-
-            lock (iSessions)
-            {
-                Do.Assert(iSessions.Count == 0);
-            }
-        }
-    }
-
-    internal class MediaEndpointSessionContentDirectory : IMediaEndpointSession
-    {
-        private readonly INetwork iNetwork;
-        private readonly CpProxyUpnpOrgContentDirectory1 iProxy;
-        private readonly ServiceMediaEndpointContentDirectory iService;
-
-        private readonly object iLock;
-        
-        private uint iSequence;
-
-        private MediaEndpointContainerContentDirectory iContainer;
-
-        public MediaEndpointSessionContentDirectory(INetwork aNetwork, CpProxyUpnpOrgContentDirectory1 aProxy, ServiceMediaEndpointContentDirectory aService)
-        {
-            iNetwork = aNetwork;
-            iProxy = aProxy;
-            iService = aService;
-
-            iLock = new object();
-
-            iSequence = 0;
-        }
-
-        internal void Refresh()
-        {
-            uint sequence;
-
-            MediaEndpointContainerContentDirectory container;
-
-            lock (iLock)
-            {
-                sequence = iSequence;
-                container = iContainer;
-            }
-
-            if (container != null)
-            {
-                Task.Factory.StartNew(() =>
-                {
-                    string result;
-                    uint numberReturned;
-                    uint totalMatches;
-                    uint updateId;
-
-                    try
-                    {
-                        iProxy.SyncBrowse(container.Id, "BrowseDirectChildren", "", 0, 1, "", out result, out numberReturned, out totalMatches, out updateId);
-                    }
-                    catch
-                    {
-                        return;
-                    }
-
-                    lock (iLock)
-                    {
-                        if (iSequence == sequence)
-                        {
-                            if (container.UpdateId != updateId)
-                            {
-                                iContainer.Update(updateId, totalMatches);
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        private Task<IWatchableContainer<IMediaDatum>> Browse(string aId)
-        {
-            uint sequence;
-
-            lock (iLock)
-            {
-                sequence = ++iSequence;
-
-                if (iContainer != null)
-                {
-                    iContainer.Dispose();
-                    iContainer = null;
-                }
-            }
-
-            return Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
-            {
-                string result;
-                uint numberReturned;
-                uint totalMatches;
-                uint updateId;
-
-                try
-                {
-                    iProxy.SyncBrowse(aId, "BrowseDirectChildren", "", 0, 1, "", out result, out numberReturned, out totalMatches, out updateId);
-                }
-                catch
-                {
-                    return (null);
-                }
-
-                lock (iLock)
-                {
-                    if (iSequence == sequence)
-                    {
-                        iContainer = new MediaEndpointContainerContentDirectory(iNetwork, iProxy, aId, updateId, totalMatches);
-                        return (iContainer);
-                    }
-
-                    return (null);
-                }
-            });
-        }
-
-        // IMediaServerSession
-
-        public Task<IWatchableContainer<IMediaDatum>> Browse(IMediaDatum aDatum)
-        {
-            if (aDatum == null)
-            {
-                return (Browse("0"));
-            }
-
-            return (Browse(aDatum.Id));
-        }
-
-        public Task<IWatchableContainer<IMediaDatum>> Link(ITag aTag, string aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<IWatchableContainer<IMediaDatum>> Search(string aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<IWatchableContainer<IMediaDatum>> Query(string aValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        // Disposable
-
-        public void Dispose()
-        {
-            lock (iLock)
-            {
-                if (iContainer != null)
-                {
-                    iContainer.Dispose();
-                }
-            }
-
-            iService.Destroy(this);
-        }
-    }
-
-    internal class MediaEndpointContainerContentDirectory : IWatchableContainer<IMediaDatum>, IDisposable
-    {
-        private readonly INetwork iNetwork;
-        private readonly CpProxyUpnpOrgContentDirectory1 iUpnpProxy;
-        private readonly string iId;
-        private uint iUpdateId;
-
-        private readonly Watchable<IWatchableSnapshot<IMediaDatum>> iWatchable;
-
-        public MediaEndpointContainerContentDirectory(INetwork aNetwork, CpProxyUpnpOrgContentDirectory1 aUpnpProxy, string aId, uint aUpdateId, uint aTotal)
-        {
-            iNetwork = aNetwork;
-            iUpnpProxy = aUpnpProxy;
-            iId = aId;
-            iUpdateId = aUpdateId;
-
-            iWatchable = new Watchable<IWatchableSnapshot<IMediaDatum>>(aNetwork, "snapshot", new MediaEndpointSnapshotContentDirectory(iNetwork, iUpnpProxy, iId, aTotal));
-        }
-
-        internal string Id
-        {
-            get
-            {
-                return (iId);
-            }
-        }
-
-        internal uint UpdateId
-        {
-            get
-            {
-                return (iUpdateId);
-            }
-        }
-
-        internal void Update(uint aUpdateId, uint aTotal)
-        {
-            iUpdateId = aUpdateId;
-
-            iNetwork.Schedule(() =>
-            {
-                iWatchable.Update(new MediaEndpointSnapshotContentDirectory(iNetwork, iUpnpProxy, iId, aTotal));
-            });
-        }
-
-        // IMediaServerContainer
-
-        public IWatchable<IWatchableSnapshot<IMediaDatum>> Snapshot
-        {
-            get { return (iWatchable); }
-        }
-
-        // IDisposable
-
-        public void Dispose()
-        {
-            iNetwork.Execute();
-            iWatchable.Dispose();
-        }
-    }
-
-
-    internal class MediaEndpointSnapshotContentDirectory : IWatchableSnapshot<IMediaDatum>
-    {
-        private readonly INetwork iNetwork;
-        private readonly CpProxyUpnpOrgContentDirectory1 iUpnpProxy;
-        private readonly string iId;
-        private readonly uint iTotal;
-
-        private readonly IEnumerable<uint> iAlphaMap;
-
-        public MediaEndpointSnapshotContentDirectory(INetwork aNetwork, CpProxyUpnpOrgContentDirectory1 aUpnpProxy, string aId, uint aTotal)
-        {
-            iNetwork = aNetwork;
-            iUpnpProxy = aUpnpProxy;
-            iId = aId;
-            iTotal = aTotal;
-
-            iAlphaMap = null;
-        }
-
-        // IMediaServerSnapshot
-
-        public uint Total
-        {
-            get { return (iTotal); }
-        }
-
-        public IEnumerable<uint> Alpha
-        {
-            get { return (iAlphaMap); }
-        }
-
-        public Task<IWatchableFragment<IMediaDatum>> Read(uint aIndex, uint aCount)
-        {
-            iNetwork.Assert();
-
-            Do.Assert(aIndex + aCount <= iTotal);
-
-            return (Task.Factory.StartNew<IWatchableFragment<IMediaDatum>>(() =>
-            {
-                string result;
-                uint numberReturned;
-                uint totalMatches;
-                uint updateID;
-
-                try
-                {
-                    iUpnpProxy.SyncBrowse(iId, "BrowseDirectChildren", "", aIndex, aCount, "", out result, out numberReturned, out totalMatches, out updateID);
-                }
-                catch
-                {
-                    return (null);
-                }
-
-                return (new MediaEndpointFragmentContentDirectory(iNetwork, aIndex, result));
-            }));
-        }
-    }
-
-    internal class MediaEndpointFragmentContentDirectory : IWatchableFragment<IMediaDatum>
-    {
-        private const string kNsDidlLite = "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/";
-        private const string kNsUpnp = "urn:schemas-upnp-org:metadata-1-0/upnp/";
-        private const string kNsDc = "http://purl.org/dc/elements/1.1/";
-        private const string kNsLinn = "urn:linn-co-uk/DIDL-Lite";
-
-        private readonly INetwork iNetwork;
-        private readonly uint iIndex;
-        private readonly IEnumerable<IMediaDatum> iData;
-
-        public MediaEndpointFragmentContentDirectory(INetwork aNetwork, uint aIndex, string aDidl)
-        {
-            iNetwork = aNetwork;
-            iIndex = aIndex;
-            iData = Parse(aDidl);
-        }
-
-        /*
-                <DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/">
-         *          <container id="co1" parentID="0" restricted="0"><dc:title>Artist / Album</dc:title><upnp:class>object.container</upnp:class></container>
-         *          <container id="co2" parentID="0" restricted="0"><dc:title>Album</dc:title><upnp:class>object.container</upnp:class></container>
-         *          <container id="co3" parentID="0" restricted="0"><dc:title>Title</dc:title><upnp:class>object.container</upnp:class></container>
-         *          <container id="co4" parentID="0" restricted="0"><dc:title>Composer</dc:title><upnp:class>object.container</upnp:class></container>
-         *          <container id="co5" parentID="0" restricted="0"><dc:title>Genre</dc:title><upnp:class>object.container.genre</upnp:class></container>
-         *          <container id="co6" parentID="0" restricted="0"><dc:title>Style</dc:title><upnp:class>object.container</upnp:class></container>
-         *          <container id="co7" parentID="0" restricted="0"><dc:title>Dynamic Browsing</dc:title><upnp:class>object.container</upnp:class></container>
-         *          <container id="co8" parentID="0" restricted="0"><dc:title>Internet Radio [TuneIn Radio]</dc:title><upnp:class>object.container</upnp:class></container>
-         *          <container id="co9" parentID="0" restricted="0"><dc:title>Playlists  </dc:title><upnp:class>object.container</upnp:class></container>
-         *          <container id="co10" parentID="0" restricted="0"><dc:title>Advanced Search</dc:title><upnp:class>object.container</upnp:class></container>
-         *      </DIDL-Lite>
-        */
 
         private IEnumerable<IMediaDatum> Parse(string aDidl)
         {
@@ -530,16 +192,111 @@ namespace OpenHome.Av
             }
         }
 
-        // IWatchableFragment<IMediaDatum>
 
-        public uint Index
+        // IMediaEndpointClient
+
+        public string Create(CancellationToken aCancellationToken)
         {
-            get { return (iIndex); }
+            return (Guid.NewGuid().ToString());
         }
 
-        public IEnumerable<IMediaDatum> Data
+        public void Destroy(CancellationToken aCancellationToken, string aId)
         {
-            get { return (iData); }
+        }
+
+        public IMediaEndpointClientSnapshot Browse(CancellationToken aCancellationToken, string aSession, IMediaDatum aDatum)
+        {
+            string id = "0";
+
+            if (aDatum != null)
+            {
+                id = aDatum.Id;
+            }
+
+            string result;
+            uint returned;
+            uint total;
+            uint updateId;
+
+            iProxy.SyncBrowse(id, "BrowseDirectChildren", "", 0, 1, "", out result, out returned, out total, out updateId);
+
+            return (new MediaEndpointSnapshotContentDirectory(id, total));
+        }
+
+        public IMediaEndpointClientSnapshot Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IMediaEndpointClientSnapshot Search(CancellationToken aCancellationToken, string aSession, string aValue)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<IMediaDatum> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
+        {
+            var snapshot = aSnapshot as MediaEndpointSnapshotContentDirectory;
+
+            string result;
+            uint numberReturned;
+            uint totalMatches;
+            uint updateID;
+
+            iProxy.SyncBrowse(snapshot.Id, "BrowseDirectChildren", "", aIndex, aCount, "", out result, out numberReturned, out totalMatches, out updateID);
+
+            return (Parse(result));
+        }
+
+        // IDispose
+
+        public override void Dispose()
+        {
+            iSupervisor.Close();
+
+            base.Dispose();
+
+            iSupervisor.Dispose();
+        }
+    }
+
+
+    internal class MediaEndpointSnapshotContentDirectory : IMediaEndpointClientSnapshot
+    {
+        private readonly string iId;
+        private readonly uint iTotal;
+        private readonly IEnumerable<uint> iAlphaMap;
+
+        public MediaEndpointSnapshotContentDirectory(string aId, uint aTotal)
+        {
+            iId = aId;
+            iTotal = aTotal;
+            iAlphaMap = null;
+        }
+
+        internal string Id
+        {
+            get
+            {
+                return (iId);
+            }
+        }
+
+        // IMediaEndpointClientSnapshot
+
+        public uint Total
+        {
+            get
+            {
+                return (iTotal);
+            }
+        }
+
+        public IEnumerable<uint> Alpha
+        {
+            get
+            {
+                return (iAlphaMap); 
+            }
         }
     }
 }

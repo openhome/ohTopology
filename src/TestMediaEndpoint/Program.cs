@@ -33,14 +33,14 @@ namespace TestMediaEndpoint
 
         // IMediaEndpointClient
 
-        public string CreateSession(CancellationToken aCancellationToken)
+        public string Create(CancellationToken aCancellationToken)
         {
             var id = Guid.NewGuid().ToString();
             Console.WriteLine("Create     : {0}", id);
             return (id);
         }
 
-        public void DestroySession(CancellationToken aCancellationToken, string aId)
+        public void Destroy(CancellationToken aCancellationToken, string aId)
         {
             Console.WriteLine("Destroy    : {0}", aId);
         }
