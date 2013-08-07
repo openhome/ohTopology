@@ -147,6 +147,14 @@ namespace OpenHome.Av
             iNetwork.Schedule(() =>
             {
                 iId = aId;
+
+                foreach (var e in iMusicEndpoints.Values)
+                {
+                    if (iId == e.Id)
+                    {
+                        iMusicEndpoint.Update(new MusicEndpoint(e));
+                    }
+                }
             });
         }
 
