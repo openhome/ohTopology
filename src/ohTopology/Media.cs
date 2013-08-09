@@ -94,11 +94,14 @@ namespace OpenHome.Av
 
             container.AppendChild(cls);
 
-            foreach (var a in aMetadata[aTagManager.Audio.Artwork].Values)
+            if (aMetadata[aTagManager.Audio.Artwork] != null)
             {
-                XmlElement artwork = document.CreateElement("upnp", "albumArtURI", kNsUpnp);
-                artwork.AppendChild(document.CreateTextNode(a));
-                container.AppendChild(artwork);
+                foreach (var a in aMetadata[aTagManager.Audio.Artwork].Values)
+                {
+                    XmlElement artwork = document.CreateElement("upnp", "albumArtURI", kNsUpnp);
+                    artwork.AppendChild(document.CreateTextNode(a));
+                    container.AppendChild(artwork);
+                }
             }
 
             if (aMetadata[aTagManager.Audio.AlbumTitle] != null)
@@ -108,11 +111,14 @@ namespace OpenHome.Av
                 container.AppendChild(albumtitle);
             }
 
-            foreach(var a in aMetadata[aTagManager.Audio.Artist].Values)
+            if (aMetadata[aTagManager.Audio.Artist] != null)
             {
-                XmlElement artist = document.CreateElement("upnp", "artist", kNsUpnp);
-                artist.AppendChild(document.CreateTextNode(a));
-                container.AppendChild(artist);
+                foreach (var a in aMetadata[aTagManager.Audio.Artist].Values)
+                {
+                    XmlElement artist = document.CreateElement("upnp", "artist", kNsUpnp);
+                    artist.AppendChild(document.CreateTextNode(a));
+                    container.AppendChild(artist);
+                }
             }
 
             if (aMetadata[aTagManager.Audio.AlbumArtist] != null)
