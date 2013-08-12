@@ -239,6 +239,8 @@ namespace OpenHome.Av
 
         private uint iSequence;
 
+        private object iLock;
+
         private MediaEndpointSupervisorContainer iContainer;
 
         public MediaEndpointSupervisorSession(IMediaEndpointClient aClient, CancellationToken aCancellationToken, string aId, Action<string> aDispose)
@@ -253,6 +255,8 @@ namespace OpenHome.Av
             iTasks = new List<Task>();
 
             iSequence = 0;
+
+            iLock = new object();
         }
 
         internal string Id
@@ -267,9 +271,12 @@ namespace OpenHome.Av
         {
             // called on the watchable thread
 
-            if (iContainer != null)
+            lock (iLock)
             {
-                iContainer.Refresh();
+                if (iContainer != null)
+                {
+                    iContainer.Refresh();
+                }
             }
         }
 
@@ -277,13 +284,21 @@ namespace OpenHome.Av
         {
             // called on the watchable thread
 
-            if (iContainer != null)
+            lock (iLock)
             {
-                iContainer.Dispose();
-                iContainer = null;
+                if (iContainer != null)
+                {
+                    iContainer.Dispose();
+                    iContainer = null;
+                }
             }
 
-            var sequence = ++iSequence;
+            uint sequence;
+            
+            lock (iLock)
+            {
+                sequence = ++iSequence;
+            }
 
             var task = Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
@@ -300,23 +315,14 @@ namespace OpenHome.Av
                     throw (new OperationCanceledException());
                 }
 
-                bool invalid = false;
-
-                iClient.Execute(() =>
+                lock (iLock)
                 {
-                    if (iSequence == sequence)
+                    if (iSequence != sequence)
                     {
-                        iContainer = container;
+                        throw (new OperationCanceledException());
                     }
-                    else
-                    {
-                        invalid = true;
-                    }
-                });
 
-                if (invalid)
-                {
-                    throw (new OperationCanceledException());
+                    iContainer = container;
                 }
 
                 return (container);
@@ -388,9 +394,13 @@ namespace OpenHome.Av
 
             iDisposeHandler.Dispose();
 
-            if (iContainer != null)
+            lock (iLock)
             {
-                iContainer.Dispose();
+                if (iContainer != null)
+                {
+                    iContainer.Dispose();
+                    iContainer = null;
+                }
             }
 
             iDispose(iId);
@@ -564,7 +574,6 @@ namespace OpenHome.Av
                     }
                     catch
                     {
-                        Console.WriteLine("Destroy cancelled");
                     }
 
                     lock (iDestroyTasks)
