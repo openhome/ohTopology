@@ -51,6 +51,10 @@ namespace OpenHome.Av
 
         internal void Refresh()
         {
+            Schedule(() =>
+            {
+                iSupervisor.Refresh();
+            });
         }
 
         private IEnumerable<IMediaDatum> Parse(string aDidl)

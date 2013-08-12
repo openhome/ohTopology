@@ -138,22 +138,22 @@ namespace OpenHome.Av
 
     public abstract class ServiceMediaEndpoint : Service
     {
-        private readonly string iId;
-        private readonly string iType;
-        private readonly string iName;
-        private readonly string iInfo;
-        private readonly string iUrl;
-        private readonly string iArtwork;
-        private readonly string iManufacturerName;
-        private readonly string iManufacturerInfo;
-        private readonly string iManufacturerUrl;
-        private readonly string iManufacturerArtwork;
-        private readonly string iModelName;
-        private readonly string iModelInfo;
-        private readonly string iModelUrl;
-        private readonly string iModelArtwork;
-        private readonly DateTime iStarted;
-        private readonly IEnumerable<string> iAttributes;
+        protected readonly string iId;
+        protected readonly string iType;
+        protected readonly string iName;
+        protected readonly string iInfo;
+        protected readonly string iUrl;
+        protected readonly string iArtwork;
+        protected readonly string iManufacturerName;
+        protected readonly string iManufacturerInfo;
+        protected readonly string iManufacturerUrl;
+        protected readonly string iManufacturerArtwork;
+        protected readonly string iModelName;
+        protected readonly string iModelInfo;
+        protected readonly string iModelUrl;
+        protected readonly string iModelArtwork;
+        protected readonly DateTime iStarted;
+        protected readonly IEnumerable<string> iAttributes;
 
         protected ServiceMediaEndpoint(INetwork aNetwork, IDevice aDevice, string aId, string aType, string aName, string aInfo,
             string aUrl, string aArtwork, string aManufacturerName, string aManufacturerInfo, string aManufacturerUrl,

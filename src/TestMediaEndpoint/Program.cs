@@ -56,19 +56,19 @@ namespace TestMediaEndpoint
 
             Console.WriteLine("Browse     : {0} {1}", aSession, id);
 
-            return (new MediaEndpointClientSnapshot("0", 100, null));
+            return (new TestMediaEndpointClientSnapshot("0", 100, null));
         }
 
         public IMediaEndpointClientSnapshot Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
         {
             Console.WriteLine("Link       : {0} {1} {2}", aSession, aTag.FullName, aValue);
-            return (new MediaEndpointClientSnapshot("0", 100, null));
+            return (new TestMediaEndpointClientSnapshot("0", 100, null));
         }
 
         public IMediaEndpointClientSnapshot Search(CancellationToken aCancellationToken, string aSession, string aValue)
         {
             Console.WriteLine("Search     : {0} {1}", aSession, aValue);
-            return (new MediaEndpointClientSnapshot("0", 100, null));
+            return (new TestMediaEndpointClientSnapshot("0", 100, null));
         }
 
         public IEnumerable<IMediaDatum> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
@@ -92,6 +92,46 @@ namespace TestMediaEndpoint
         public void Schedule(Action aAction)
         {
             iWatchableThread.Schedule(aAction);
+        }
+    }
+
+    public class TestMediaEndpointClientSnapshot : IMediaEndpointClientSnapshot
+    {
+        private readonly string iContainer;
+        private readonly uint iTotal;
+        private readonly IEnumerable<uint> iAlpha;
+
+        public TestMediaEndpointClientSnapshot(string aContainer, uint aTotal, IEnumerable<uint> aAlphaMap)
+        {
+            iContainer = aContainer;
+            iTotal = aTotal;
+            iAlpha = aAlphaMap;
+        }
+
+        // IMediaEndpointSnapshot Members
+
+        public string Container
+        {
+            get
+            {
+                return (iContainer);
+            }
+        }
+
+        public uint Total
+        {
+            get
+            {
+                return (iTotal);
+            }
+        }
+
+        public IEnumerable<uint> Alpha
+        {
+            get
+            {
+                return (iAlpha);
+            }
         }
     }
 

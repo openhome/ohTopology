@@ -22,21 +22,25 @@ namespace OpenHome.Av
     public class ServiceMediaEndpointOpenHome : ServiceMediaEndpoint, IMediaEndpointClient
     {
         private readonly string iUri;
+        private readonly Func<string, Action<string, uint>, IDisposable> iSessionHandler;
 
         private readonly Encoding iEncoding;
         private readonly MediaEndpointSupervisor iSupervisor;
+        private readonly Dictionary<string, IDisposable> iRefreshHandlers;
 
         public ServiceMediaEndpointOpenHome(INetwork aNetwork, IDevice aDevice, string aId, string aType, string aName, string aInfo,
             string aUrl, string aArtwork, string aManufacturerName, string aManufacturerInfo, string aManufacturerUrl,
             string aManufacturerArtwork, string aModelName, string aModelInfo, string aModelUrl, string aModelArtwork,
-            DateTime aStarted, IEnumerable<string> aAttributes, string aUri)
+            DateTime aStarted, IEnumerable<string> aAttributes, string aUri, Func<string, Action<string, uint>, IDisposable> aSessionHandler)
             : base (aNetwork, aDevice, aId, aType, aName, aInfo, aUrl, aArtwork, aManufacturerName, aManufacturerInfo,
             aManufacturerUrl, aManufacturerArtwork, aModelName, aModelInfo, aModelUrl, aModelArtwork, aStarted, aAttributes)
         {
             iUri = aUri;
+            iSessionHandler = aSessionHandler;
 
             iEncoding = new UTF8Encoding(false);
             iSupervisor = new MediaEndpointSupervisor(this);
+            iRefreshHandlers = new Dictionary<string, IDisposable>();
         }
 
         public override IProxy OnCreate(IDevice aDevice)
@@ -61,11 +65,6 @@ namespace OpenHome.Av
             var uri = new Uri(baseuri, aValue);
             return (uri.ToString());
         }
-
-        internal void Refresh()
-        {
-        }
-
 
         private IMediaEndpointClientSnapshot GetSnapshot(string aFormat, params object[] aArguments)
         {
@@ -225,11 +224,20 @@ namespace OpenHome.Av
             {
                 var uri = CreateUri("create");
 
-                var session = client.DownloadString(uri);
+                var jsession = client.DownloadString(uri);
 
-                var json = JsonParser.Parse(session) as JsonString;
+                var json = JsonParser.Parse(jsession) as JsonString;
 
-                return (json.Value());
+                var session = json.Value();
+
+                var refresh = iSessionHandler("ps.me." + iId + "." + session, (id, seq) =>
+                {
+                    iSupervisor.Refresh(session);
+                });
+
+                iRefreshHandlers.Add(session, refresh);
+
+                return (session);
             }
         }
 
@@ -237,6 +245,14 @@ namespace OpenHome.Av
         {
             using (var client = new WebClient())
             {
+                IDisposable refresh;
+
+                if (iRefreshHandlers.TryGetValue(aId, out refresh))
+                {
+                    iRefreshHandlers.Remove(aId);
+                    refresh.Dispose();
+                }
+
                 var uri = CreateUri("destroy?session={0}", aId);
 
                 try
@@ -292,6 +308,11 @@ namespace OpenHome.Av
             base.Dispose();
 
             iSupervisor.Dispose();
+
+            foreach (var entry in iRefreshHandlers)
+            {
+                entry.Value.Dispose();
+            }
         }
     }
 

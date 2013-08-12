@@ -35,46 +35,6 @@ namespace OpenHome.Av
         IEnumerable<IMediaDatum> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount);
     }
 
-    public class MediaEndpointClientSnapshot : IMediaEndpointClientSnapshot
-    {
-        private readonly string iContainer;
-        private readonly uint iTotal;
-        private readonly IEnumerable<uint> iAlpha;
-
-        public MediaEndpointClientSnapshot(string aContainer, uint aTotal, IEnumerable<uint> aAlphaMap)
-        {
-            iContainer = aContainer;
-            iTotal = aTotal;
-            iAlpha = aAlphaMap;
-        }
-
-        // IMediaEndpointSnapshot Members
-
-        public string Container
-        {
-            get
-            {
-                return (iContainer);
-            }
-        }
-
-        public uint Total
-        {
-            get
-            {
-                return (iTotal);
-            }
-        }
-
-        public IEnumerable<uint> Alpha
-        {
-            get
-            {
-                return (iAlpha);
-            }
-        }
-    }
-
     internal class MediaEndpointSupervisorSnapshot : IWatchableSnapshot<IMediaDatum>, IDisposable
     {
         private readonly IMediaEndpointClient iClient;
@@ -200,21 +160,43 @@ namespace OpenHome.Av
     {
         private readonly IMediaEndpointClient iClient;
         private readonly MediaEndpointSupervisorSession iSession;
-
+        private readonly Func<IMediaEndpointClientSnapshot> iSnapshotFunction;
         private readonly DisposeHandler iDisposeHandler;
         private readonly CancellationTokenSource iCancellationSource;
         private MediaEndpointSupervisorSnapshot iSnapshot;
         private readonly Watchable<IWatchableSnapshot<IMediaDatum>> iWatchableSnapshot;
 
-        public MediaEndpointSupervisorContainer(IMediaEndpointClient aClient, MediaEndpointSupervisorSession aSession, IMediaEndpointClientSnapshot aSnapshot)
+        public MediaEndpointSupervisorContainer(IMediaEndpointClient aClient, MediaEndpointSupervisorSession aSession, Func<IMediaEndpointClientSnapshot> aSnapshotFunction)
         {
             iClient = aClient;
             iSession = aSession;
+            iSnapshotFunction = aSnapshotFunction;
 
             iDisposeHandler = new DisposeHandler();
             iCancellationSource = new CancellationTokenSource();
-            iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, iSession, iCancellationSource.Token, aSnapshot);
+            iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, iSession, iCancellationSource.Token, iSnapshotFunction());
             iWatchableSnapshot = new Watchable<IWatchableSnapshot<IMediaDatum>>(iClient, "Snapshot", iSnapshot);
+        }
+
+        internal void Update()
+        {
+            Task.Factory.StartNew(() =>
+            {
+                try
+                {
+                    var snapshot = new MediaEndpointSupervisorSnapshot(iClient, iSession, iCancellationSource.Token, iSnapshotFunction());
+
+                    iClient.Schedule(() =>
+                    {
+                        iCancellationSource.Token.ThrowIfCancellationRequested();
+
+                        iWatchableSnapshot.Update(snapshot);
+                    });
+                }
+                catch
+                {
+                }
+            });
         }
 
         // IWatchableContainer<IMediaDatum>
@@ -240,6 +222,7 @@ namespace OpenHome.Av
             iDisposeHandler.Dispose();
             iWatchableSnapshot.Dispose();
             iSnapshot.Dispose();
+            iCancellationSource.Dispose();
         }
     }
 
@@ -253,8 +236,6 @@ namespace OpenHome.Av
         private readonly DisposeHandler iDisposeHandler;
 
         private readonly List<Task> iTasks;
-
-        private readonly object iLock;
 
         private uint iSequence;
 
@@ -271,8 +252,6 @@ namespace OpenHome.Av
 
             iTasks = new List<Task>();
 
-            iLock = new object();
-
             iSequence = 0;
         }
 
@@ -284,44 +263,63 @@ namespace OpenHome.Av
             }
         }
 
-        private Task<IWatchableContainer<IMediaDatum>> UpdateContainer(Func<IMediaEndpointClientSnapshot> aFunction)
+        internal void Refresh()
         {
             // called on the watchable thread
 
-            uint sequence;
-
-            lock (iLock)
+            if (iContainer != null)
             {
-                if (iContainer != null)
-                {
-                    iContainer.Dispose();
-                    iContainer = null;
-                }
-
-                sequence = ++iSequence;
+                iContainer.Update();
             }
+        }
+
+        private Task<IWatchableContainer<IMediaDatum>> UpdateContainer(Func<IMediaEndpointClientSnapshot> aSnapshotFunction)
+        {
+            // called on the watchable thread
+
+            if (iContainer != null)
+            {
+                iContainer.Dispose();
+                iContainer = null;
+            }
+
+            var sequence = ++iSequence;
 
             var task = Task.Factory.StartNew<IWatchableContainer<IMediaDatum>>(() =>
             {
                 iCancellationToken.ThrowIfCancellationRequested();
 
-                lock (iLock)
+                MediaEndpointSupervisorContainer container;
+
+                try
+                {
+                    container = new MediaEndpointSupervisorContainer(iClient, this, aSnapshotFunction);
+                }
+                catch
+                {
+                    throw (new OperationCanceledException());
+                }
+
+                bool invalid = false;
+
+                iClient.Execute(() =>
                 {
                     if (iSequence == sequence)
                     {
-                        try
-                        {
-                            iContainer = new MediaEndpointSupervisorContainer(iClient, this, aFunction());
-
-                            return (iContainer);
-                        }
-                        catch
-                        {
-                        }
+                        iContainer = container;
                     }
+                    else
+                    {
+                        invalid = true;
+                    }
+                });
 
+                if (invalid)
+                {
                     throw (new OperationCanceledException());
                 }
+
+                return (container);
             });
 
             lock (iTasks)
@@ -390,17 +388,18 @@ namespace OpenHome.Av
 
             iDisposeHandler.Dispose();
 
-            lock (iLock)
+            if (iContainer != null)
             {
-                if (iContainer != null)
-                {
-                    iContainer.Dispose();
-                }
+                iContainer.Dispose();
             }
 
             iDispose(iId);
         }
     }
+
+    // MediaEndpointSupervisor provides all the complicated Task and session handling required by a concrete MediaEndpoint client
+    // Instead of writing all this again, construc a MediaEndpointSupervisor with an IMediaEndpointClient that expresses you specific implementation
+    // Use Refresh(), or preferably Refresh(string aSession), when the MediaEndpoint for which you are a client has changed its contents.
 
     public class MediaEndpointSupervisor
     {
@@ -421,13 +420,37 @@ namespace OpenHome.Av
             iSessions = new Dictionary<string, MediaEndpointSupervisorSession>();
         }
 
-        private CancellationToken CancellationToken
+        public void Refresh()
         {
-            get
+            iClient.Assert(); // must be called on the watchable thread
+
+            using (iDisposeHandler.Lock)
             {
-                var token = iCancellationSource.Token;
-                token.ThrowIfCancellationRequested();
-                return (token);
+                lock (iSessions)
+                {
+                    foreach (var session in iSessions)
+                    {
+                        session.Value.Refresh();
+                    }
+                }
+            }
+        }
+
+        public void Refresh(string aSession)
+        {
+            iClient.Assert(); // must be called on the watchable thread
+
+            using (iDisposeHandler.Lock)
+            {
+                lock (iSessions)
+                {
+                    MediaEndpointSupervisorSession session;
+
+                    if (iSessions.TryGetValue(aSession, out session))
+                    {
+                        session.Refresh();
+                    }
+                }
             }
         }
 
@@ -444,26 +467,33 @@ namespace OpenHome.Av
             {
                 var task = Task.Factory.StartNew<IMediaEndpointSession>(() =>
                 {
-                    var token = CancellationToken;
+                    var token = iCancellationSource.Token;
+
+                    string id;
 
                     try
                     {
-                        var id = iClient.Create(token);
-
-                        var session = new MediaEndpointSupervisorSession(iClient, token, id, DestroySession);
-
-                        lock (iSessions)
-                        {
-                            iSessions.Add(id, session);
-                        }
-
-                        return (session);
+                        id = iClient.Create(token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
                     }
                     catch
                     {
+                        throw (new OperationCanceledException());
                     }
 
-                    throw (new OperationCanceledException());
+                    var session = new MediaEndpointSupervisorSession(iClient, token, id, DestroySession);
+
+                    lock (iSessions)
+                    {
+                        token.ThrowIfCancellationRequested();
+
+                        iSessions.Add(id, session);
+                    }
+
+                    return (session);
                 });
 
                 Task completion = null;
@@ -504,15 +534,22 @@ namespace OpenHome.Av
 
             var task = Task.Factory.StartNew(() =>
             {
+                var token = iCancellationSource.Token;
+
+                token.ThrowIfCancellationRequested();
+
                 try
                 {
-                    iClient.Destroy(CancellationToken, aId);
+                    iClient.Destroy(token, aId);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
                 }
                 catch
                 {
+                    throw (new OperationCanceledException());
                 }
-
-                throw (new OperationCanceledException());
             });
 
             Task completion = null;
@@ -527,6 +564,7 @@ namespace OpenHome.Av
                     }
                     catch
                     {
+                        Console.WriteLine("Destroy cancelled");
                     }
 
                     lock (iDestroyTasks)
@@ -566,7 +604,10 @@ namespace OpenHome.Av
                 Do.Assert(iCreateTasks.Count == 0);
             }
 
-            Do.Assert(iSessions.Count == 0);
+            lock (iSessions)
+            {
+                Do.Assert(iSessions.Count == 0);
+            }
 
             lock (iDestroyTasks)
             {
@@ -579,6 +620,8 @@ namespace OpenHome.Av
             {
                 Do.Assert(iDestroyTasks.Count == 0);
             }
+
+            iCancellationSource.Dispose();
         }
     }
 }
