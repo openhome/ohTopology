@@ -178,7 +178,7 @@ namespace OpenHome.Av
             iWatchableSnapshot = new Watchable<IWatchableSnapshot<IMediaDatum>>(iClient, "Snapshot", iSnapshot);
         }
 
-        internal void Update()
+        internal void Refresh()
         {
             Task.Factory.StartNew(() =>
             {
@@ -269,7 +269,7 @@ namespace OpenHome.Av
 
             if (iContainer != null)
             {
-                iContainer.Update();
+                iContainer.Refresh();
             }
         }
 

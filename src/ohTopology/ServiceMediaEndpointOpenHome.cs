@@ -230,7 +230,7 @@ namespace OpenHome.Av
 
                 var session = json.Value();
 
-                var refresh = iSessionHandler("ps.me." + iId + "." + session, (id, seq) =>
+                var refresh = iSessionHandler("me." + iId + "." + session, (id, seq) =>
                 {
                     iSupervisor.Refresh(session);
                 });
