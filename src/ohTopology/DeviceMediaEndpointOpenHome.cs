@@ -28,7 +28,7 @@ namespace OpenHome.Av
     {
         private readonly ServiceMediaEndpointOpenHome iService;
 
-        public DeviceMediaEndpointOpenHome(INetwork aNetwork, string aBaseUri, string aId, JsonValue aJson)
+        public DeviceMediaEndpointOpenHome(INetwork aNetwork, Uri aUri, string aId, JsonValue aJson, Func<string, Action<string, uint>, IDisposable> aSessionHandler)
             : base(aId)
         {
             var json = aJson as JsonObject;
@@ -49,14 +49,14 @@ namespace OpenHome.Av
             var started = DateTime.Parse(json["Started"].Value());
             var path = json["Path"].Value();
 
-            url = ResolveUri(aBaseUri, url);
-            artwork = ResolveUri(aBaseUri, artwork);
-            manufacturerUrl = ResolveUri(aBaseUri, manufacturerUrl);
-            manufacturerArtwork = ResolveUri(aBaseUri, manufacturerArtwork);
-            modelUrl = ResolveUri(aBaseUri, modelUrl);
-            modelArtwork = ResolveUri(aBaseUri, modelArtwork);
+            url = ResolveUri(aUri, url);
+            artwork = ResolveUri(aUri, artwork);
+            manufacturerUrl = ResolveUri(aUri, manufacturerUrl);
+            manufacturerArtwork = ResolveUri(aUri, manufacturerArtwork);
+            modelUrl = ResolveUri(aUri, modelUrl);
+            modelArtwork = ResolveUri(aUri, modelArtwork);
             
-            var uri = ResolveUri(aBaseUri, path);
+            var uri = ResolveUri(aUri, path);
 
             var attributes = new List<string>();
 
@@ -70,22 +70,27 @@ namespace OpenHome.Av
                             manufacturerName, manufacturerInfo, manufacturerUrl, manufacturerArtwork,
                             modelName, modelInfo, modelUrl, modelArtwork,
                             started,
-                            attributes, uri);
+                            attributes,
+                            uri,
+                            aSessionHandler);
 
             Add<IProxyMediaEndpoint>(iService);
         }
 
-        private string ResolveUri(string aBaseUri, string aUri)
+        private string ResolveUri(Uri aBaseUri, string aUri)
         {
             try
             {
                 var uri = new Uri(aUri);
+                if (uri.IsFile)
+                {
+                    throw new UriFormatException();
+                }
                 return (aUri);
             }
             catch
             {
-                var baseUri = new Uri(aBaseUri);
-                var uri = new Uri(baseUri, aUri);
+                var uri = new Uri(aBaseUri, aUri);
                 return (uri.ToString());
             }
         }

@@ -30,8 +30,8 @@ namespace OpenHome.Av
         private readonly CpProxyUpnpOrgContentDirectory1 iProxy;
         private readonly ServiceMediaEndpointContentDirectory iService;
 
-        public DeviceMediaEndpointContentDirectory(INetwork aNetwork, CpDevice aDevice, XDocument aXml)
-            : base(aDevice.Udn())
+        public DeviceMediaEndpointContentDirectory(INetwork aNetwork, string aUdn, CpDevice aDevice, XDocument aXml)
+            : base(aUdn)
         {
             iDevice = aDevice;
 
