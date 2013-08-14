@@ -28,12 +28,13 @@ namespace OpenHome.Av
             iDisposeHandler = new DisposeHandler();
             iDisposed = false;
             iRoom = aRoom;
+            iNetwork = aRoom.Network;
             iSource = aRoom.Source;
 
-            iHasVolume = new Watchable<bool>(aRoom.Network, "HasVolume", false);
-            iMute = new Watchable<bool>(aRoom.Network, "Mute", false);
-            iValue = new Watchable<uint>(aRoom.Network, "Volume", 0);
-            iVolumeLimit = new Watchable<uint>(aRoom.Network, "VolumeLimit", 0);
+            iHasVolume = new Watchable<bool>(iNetwork, "HasVolume", false);
+            iMute = new Watchable<bool>(iNetwork, "Mute", false);
+            iValue = new Watchable<uint>(iNetwork, "Volume", 0);
+            iVolumeLimit = new Watchable<uint>(iNetwork, "VolumeLimit", 0);
 
             iSource.AddWatcher(this);
         }
@@ -42,7 +43,7 @@ namespace OpenHome.Av
         {
             iDisposeHandler.Dispose();
 
-            iRoom.Network.Execute(() =>
+            iNetwork.Execute(() =>
             {
                 iSource.RemoveWatcher(this);
             });
@@ -285,6 +286,7 @@ namespace OpenHome.Av
         private readonly DisposeHandler iDisposeHandler;
         private readonly IStandardRoom iRoom;
         private readonly IWatchable<ITopology4Source> iSource;
+        private readonly INetwork iNetwork;
         
         private bool iDisposed;
         private IProxyVolume iVolume;
