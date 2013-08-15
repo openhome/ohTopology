@@ -25,37 +25,35 @@ namespace OpenHome.Av
     {
         public StandardVolumeController(IStandardRoom aRoom)
         {
+            iDisposeHandler = new DisposeHandler();
             iDisposed = false;
             iRoom = aRoom;
+            iNetwork = aRoom.Network;
             iSource = aRoom.Source;
 
-            iHasVolume = new Watchable<bool>(aRoom.Network, "HasVolume", false);
-            iMute = new Watchable<bool>(aRoom.Network, "Mute", false);
-            iValue = new Watchable<uint>(aRoom.Network, "Volume", 0);
-            iVolumeLimit = new Watchable<uint>(aRoom.Network, "VolumeLimit", 0);
+            iHasVolume = new Watchable<bool>(iNetwork, "HasVolume", false);
+            iMute = new Watchable<bool>(iNetwork, "Mute", false);
+            iValue = new Watchable<uint>(iNetwork, "Volume", 0);
+            iVolumeLimit = new Watchable<uint>(iNetwork, "VolumeLimit", 0);
 
             iSource.AddWatcher(this);
         }
 
         public void Dispose()
         {
-            if (iDisposed)
-            {
-                throw new ObjectDisposedException("VolumeController.Dispose");
-            }
+            iDisposeHandler.Dispose();
 
-            iSource.RemoveWatcher(this);
+            iNetwork.Execute(() =>
+            {
+                iSource.RemoveWatcher(this);
+            });
 
             DestroyProxy();
 
             iMute.Dispose();
-            iMute = null;
-
             iValue.Dispose();
-            iValue = null;
-
             iVolumeLimit.Dispose();
-            iVolumeLimit = null;
+            iHasVolume.Dispose();
 
             iDisposed = true;
         }
@@ -64,7 +62,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iRoom.Name;
+                using (iDisposeHandler.Lock)
+                {
+                    return iRoom.Name;
+                }
             }
         }
 
@@ -72,7 +73,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iDevice;
+                using (iDisposeHandler.Lock)
+                {
+                    return iDevice;
+                }
             }
         }
 
@@ -80,7 +84,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iHasVolume;
+                using (iDisposeHandler.Lock)
+                {
+                    return iHasVolume;
+                }
             }
         }
 
@@ -88,7 +95,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iMute;
+                using (iDisposeHandler.Lock)
+                {
+                    return iMute;
+                }
             }
         }
 
@@ -96,7 +106,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iValue;
+                using (iDisposeHandler.Lock)
+                {
+                    return iValue;
+                }
             }
         }
 
@@ -104,15 +117,21 @@ namespace OpenHome.Av
         {
             get
             {
-                return iVolumeLimit;
+                using (iDisposeHandler.Lock)
+                {
+                    return iVolumeLimit;
+                }
             }
         }
 
         public void SetMute(bool aValue)
         {
-            if (iVolume != null)
+            using (iDisposeHandler.Lock)
             {
-                iVolume.SetMute(aValue);
+                if (iVolume != null)
+                {
+                    iVolume.SetMute(aValue);
+                }
             }
         }
 
@@ -126,17 +145,23 @@ namespace OpenHome.Av
 
         public void VolumeInc()
         {
-            if (iVolume != null)
+            using (iDisposeHandler.Lock)
             {
-                iVolume.VolumeInc();
+                if (iVolume != null)
+                {
+                    iVolume.VolumeInc();
+                }
             }
         }
 
         public void VolumeDec()
         {
-            if (iVolume != null)
+            using (iDisposeHandler.Lock)
             {
-                iVolume.VolumeDec();
+                if (iVolume != null)
+                {
+                    iVolume.VolumeDec();
+                }
             }
         }
 
@@ -258,16 +283,19 @@ namespace OpenHome.Av
         {
         }
 
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly IStandardRoom iRoom;
+        private readonly IWatchable<ITopology4Source> iSource;
+        private readonly INetwork iNetwork;
+        
         private bool iDisposed;
-        private IStandardRoom iRoom;
-        private IWatchable<ITopology4Source> iSource;
         private IProxyVolume iVolume;
-
         private IDevice iDevice;
-        private Watchable<bool> iHasVolume;
-        private Watchable<bool> iMute;
-        private Watchable<uint> iValue;
-        private Watchable<uint> iVolumeLimit;
+
+        private readonly Watchable<bool> iHasVolume;
+        private readonly Watchable<bool> iMute;
+        private readonly Watchable<uint> iValue;
+        private readonly Watchable<uint> iVolumeLimit;
     }
 
     class VolumeWatcher : IWatcher<bool>, IWatcher<uint>, IDisposable
@@ -421,12 +449,16 @@ namespace OpenHome.Av
         {
             iDisposeHandler.Dispose();
 
-            iZone.Listeners.RemoveWatcher(this);
-
-            foreach (var kvp in iVolumeLookup)
+            iNetwork.Execute(() =>
             {
-                kvp.Value.Dispose();
-            }
+                iZone.Listeners.RemoveWatcher(this);
+
+                foreach (var kvp in iVolumeLookup)
+                {
+                    kvp.Value.Dispose();
+                }
+            });
+            iVolumeLookup.Clear();
 
             iHasVolume.Dispose();
             iMute.Dispose();
@@ -559,8 +591,12 @@ namespace OpenHome.Av
 
         public void OrderedRemove(IStandardRoom aItem, uint aIndex)
         {
-            iVolumeLookup[aItem].Dispose();
-            iVolumeLookup.Remove(aItem);
+            VolumeWatcher watcher;
+            if (iVolumeLookup.TryGetValue(aItem, out watcher))
+            {
+                watcher.Dispose();
+                iVolumeLookup.Remove(aItem);
+            }
         }
 
         public void ItemOpen(string aId, bool aValue)
