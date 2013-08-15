@@ -127,7 +127,7 @@ namespace OpenHome.Av
 
         private void EvaluatePlaying()
         {
-            iBuffering.Update(iCurrentTransportState == "Buffering");
+            iBuffering.Update(iCurrentId == iId && iCurrentTransportState == "Buffering");
             iPlaying.Update(iCurrentId == iId && iCurrentTransportState == "Playing");
         }
 

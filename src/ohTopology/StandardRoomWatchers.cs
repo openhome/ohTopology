@@ -629,7 +629,7 @@ namespace OpenHome.Av
 
         private void EvaluatePlaying()
         {
-            iBuffering.Update(iCurrentTransportState == "Buffering");
+            iBuffering.Update(iCurrentMetadata.Uri == iSenderMetadata.Uri && iCurrentTransportState == "Buffering");
             iPlaying.Update(iCurrentMetadata.Uri == iSenderMetadata.Uri && iCurrentTransportState == "Playing");
         }
 
