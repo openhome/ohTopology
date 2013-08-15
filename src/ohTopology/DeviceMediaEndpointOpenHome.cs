@@ -82,10 +82,12 @@ namespace OpenHome.Av
             try
             {
                 var uri = new Uri(aUri);
+
                 if (uri.IsFile)
                 {
                     throw new UriFormatException();
                 }
+                
                 return (aUri);
             }
             catch
