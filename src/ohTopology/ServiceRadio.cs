@@ -20,6 +20,7 @@ namespace OpenHome.Av
         private readonly IMediaMetadata iMetadata;
         private readonly string iUri;
         private readonly ServiceRadio iRadio;
+        private readonly Watchable<bool> iBuffering;
         private readonly Watchable<bool> iPlaying;
         private uint iCurrentId;
         private string iCurrentTransportState;
@@ -37,6 +38,7 @@ namespace OpenHome.Av
             iUri = aUri;
             iRadio = aRadio;
 
+            iBuffering = new Watchable<bool>(iNetwork, "Buffering", false);
             iPlaying = new Watchable<bool>(iNetwork, "Playing", false);
             iNetwork.Schedule(() =>
             {
@@ -57,6 +59,7 @@ namespace OpenHome.Av
                 iRadio.TransportState.RemoveWatcher(this);
                 iDisposed = true;
             });
+            iBuffering.Dispose();
             iPlaying.Dispose();
         }
 
@@ -93,6 +96,17 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<bool> Buffering
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iBuffering;
+                }
+            }
+        }
+
         public IWatchable<bool> Playing
         {
             get
@@ -120,6 +134,7 @@ namespace OpenHome.Av
 
         private void EvaluatePlaying()
         {
+            iBuffering.Update(iCurrentTransportState == "Buffering");
             iPlaying.Update(iCurrentId == iId && iCurrentTransportState == "Playing");
         }
 
@@ -131,6 +146,7 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, uint aValue, uint aPrevious)
         {
+            iCurrentTransportState = string.Empty;
             iCurrentId = aValue;
             EvaluatePlaying();
         }

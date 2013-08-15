@@ -623,6 +623,9 @@ empty
 
 mock network update 50 radio id 7
 expect Test Room update Playing 5 False
+empty
+mock network update 50 radio transportstate Stopped
+mock network update 50 radio transportstate Playing
 expect Test Room update Playing 7 True
 empty
 

@@ -15,6 +15,7 @@ namespace OpenHome.Av
         private readonly IMediaMetadata iMetadata;
         private readonly Topology4Source iSource;
         private readonly Topology4Group iGroup;
+        private readonly Watchable<bool> iBuffering;
         private readonly Watchable<bool> iPlaying;
         private bool iDisposed;
 
@@ -29,6 +30,7 @@ namespace OpenHome.Av
             iSource = aSource;
             iGroup = aGroup;
 
+            iBuffering = new Watchable<bool>(aNetwork, "Buffering", false);
             iPlaying = new Watchable<bool>(aNetwork, "Playing", false);
             aNetwork.Schedule(() =>
             {
@@ -47,6 +49,7 @@ namespace OpenHome.Av
                 iGroup.Source.RemoveWatcher(this);
                 iDisposed = true;
             });
+            iBuffering.Dispose();
             iPlaying.Dispose();
         }
 
@@ -79,6 +82,17 @@ namespace OpenHome.Av
                 using (iDisposeHandler.Lock)
                 {
                     return iMetadata;
+                }
+            }
+        }
+
+        public IWatchable<bool> Buffering
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iBuffering;
                 }
             }
         }

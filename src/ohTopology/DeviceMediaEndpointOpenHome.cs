@@ -46,7 +46,7 @@ namespace OpenHome.Av
             var modelInfo = json["ModelInfo"].Value();
             var modelUrl = json["ModelUrl"].Value();
             var modelArtwork = json["ModelArtwork"].Value();
-            var started = DateTime.Parse(json["Started"].Value());
+            var started = DateTime.Parse(json["Started"].Value(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal);
             var path = json["Path"].Value();
 
             url = ResolveUri(aUri, url);
@@ -82,10 +82,12 @@ namespace OpenHome.Av
             try
             {
                 var uri = new Uri(aUri);
+
                 if (uri.IsFile)
                 {
                     throw new UriFormatException();
                 }
+                
                 return (aUri);
             }
             catch
