@@ -71,7 +71,7 @@ namespace OpenHome.Av
                 if (!string.IsNullOrEmpty(oldMaster))
                 {
                     isSatellite = iHouse.RemoveSatellite(oldMaster, iRoom);
-                    if (!isSatellite)
+                    if (!isSatellite && string.IsNullOrEmpty(iMasterRoom))
                     {
                         iHouse.RemoveRoom(iRoom);
                     }
@@ -79,7 +79,7 @@ namespace OpenHome.Av
                 if (!string.IsNullOrEmpty(iMasterRoom))
                 {
                     isSatellite = iHouse.AddSatellite(iMasterRoom, iRoom);
-                    if (!isSatellite)
+                    if (!isSatellite && string.IsNullOrEmpty(oldMaster))
                     {
                         iHouse.AddRoom(iRoom);
                     }
