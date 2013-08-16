@@ -43,6 +43,7 @@ namespace OpenHome.Av
                 .Select(v =>
                 {
                     var datum = new MediaDatum(null, iNetwork.TagManager.Audio.Artist, iNetwork.TagManager.Audio.Album);
+                    datum.Add(iNetwork.TagManager.Container.Title, v);
                     datum.Add(iNetwork.TagManager.Audio.Artist, v);
                     return (datum);
                 });
@@ -51,6 +52,14 @@ namespace OpenHome.Av
                 .Select(m =>
                 {
                     var datum = new MediaDatum(null, iNetwork.TagManager.Audio.Album);
+                    
+                    var title = m.First()[iNetwork.TagManager.Audio.AlbumTitle];
+
+                    if (title != null)
+                    {
+                        datum.Add(iNetwork.TagManager.Container.Title, title);
+                    }
+
                     datum.Add(iNetwork.TagManager.Audio.Album, m.Key);
                     datum.Add(iNetwork.TagManager.Audio.AlbumTitle, m.First());
                     datum.Add(iNetwork.TagManager.Audio.AlbumArtist, m.First());
@@ -68,6 +77,7 @@ namespace OpenHome.Av
                 .Select(v =>
                 {
                     var datum = new MediaDatum(null, iNetwork.TagManager.Audio.Genre);
+                    datum.Add(iNetwork.TagManager.Container.Title, v);
                     datum.Add(iNetwork.TagManager.Audio.Genre, v);
                     return (datum);
                 });
@@ -149,8 +159,17 @@ namespace OpenHome.Av
                 .Select(m =>
                 {
                     var datum = new MediaDatum(null, iNetwork.TagManager.Audio.Album);
+
                     datum.Add(iNetwork.TagManager.Audio.Album, m.Key);
-                    datum.Add(iNetwork.TagManager.Audio.AlbumTitle, m.First());
+
+                    var title = m.First()[iNetwork.TagManager.Audio.AlbumTitle];
+
+                    if (title != null)
+                    {
+                        datum.Add(iNetwork.TagManager.Container.Title, title);
+                        datum.Add(iNetwork.TagManager.Audio.AlbumTitle, title);
+                    }
+
                     datum.Add(iNetwork.TagManager.Audio.AlbumArtist, m.First());
                     datum.Add(iNetwork.TagManager.Audio.AlbumArtworkCodec, m.First());
                     datum.Add(iNetwork.TagManager.Audio.AlbumArtworkFilename, m.First());
@@ -414,6 +433,19 @@ namespace OpenHome.Av
         public IEnumerable<uint> Alpha
         {
             get { return (iAlphaMap); }
+        }
+    }
+
+    internal static class ServiceMediaEndpointMockExtensions
+    {
+        public static void Add(this MediaDatum aDatum, ITag aTag, IMediaMetadata aMetadata)
+        {
+            var value = aMetadata[aTag];
+
+            if (value != null)
+            {
+                aDatum.Add(aTag, value);
+            }
         }
     }
 }
