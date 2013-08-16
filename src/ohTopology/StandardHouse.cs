@@ -68,18 +68,32 @@ namespace OpenHome.Av
             }
             if (oldMaster != iMasterRoom)
             {
+                bool remove = false;
+                bool add = false;
                 if (!string.IsNullOrEmpty(oldMaster))
                 {
                     isSatellite = iHouse.RemoveSatellite(oldMaster, iRoom);
                     if (!isSatellite)
                     {
-                        iHouse.RemoveRoom(iRoom);
+                        remove = true;
                     }
                 }
                 if (!string.IsNullOrEmpty(iMasterRoom))
                 {
                     isSatellite = iHouse.AddSatellite(iMasterRoom, iRoom);
                     if (!isSatellite)
+                    {
+                        add = true;
+                    }
+                }
+
+                if (remove != add)
+                {
+                    if (remove)
+                    {
+                        iHouse.RemoveRoom(iRoom);
+                    }
+                    if (add)
                     {
                         iHouse.AddRoom(iRoom);
                     }

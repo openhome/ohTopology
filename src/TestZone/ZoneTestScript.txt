@@ -174,8 +174,8 @@ empty
 
 // test adding and removing of satellite rooms
 mock network update 4c494e4e-0026-0f99-1112-ef000004013f product source 3 name Dining Room
-expect Room Removed: Sitting Room at 3
 expect Dining Room add Satellite Sitting Room
+expect Room Removed: Sitting Room at 3
 empty
 
 mock network remove 4c494e4e-0026-0f99-1112-ef000004013f

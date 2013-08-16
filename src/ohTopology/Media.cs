@@ -15,6 +15,7 @@ namespace OpenHome.Av
         uint Index { get; }
         uint Id { get; }
         IMediaMetadata Metadata { get; }
+        IWatchable<bool> Buffering { get; }
         IWatchable<bool> Playing { get; }
         void Play();
     }

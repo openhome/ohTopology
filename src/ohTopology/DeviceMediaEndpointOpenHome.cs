@@ -46,7 +46,7 @@ namespace OpenHome.Av
             var modelInfo = json["ModelInfo"].Value();
             var modelUrl = json["ModelUrl"].Value();
             var modelArtwork = json["ModelArtwork"].Value();
-            var started = DateTime.Parse(json["Started"].Value());
+            var started = DateTime.ParseExact(json["Started"].Value(), "r", System.Globalization.CultureInfo.InvariantCulture);
             var path = json["Path"].Value();
 
             url = ResolveUri(aUri, url);
