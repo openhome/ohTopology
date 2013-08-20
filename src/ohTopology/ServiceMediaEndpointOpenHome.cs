@@ -291,7 +291,7 @@ namespace OpenHome.Av
 
         public IEnumerable<IMediaDatum> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
         {
-            var uri = CreateUri("/read?session={0}&index={1}&count={2}", aSession, aIndex, aCount);
+            var uri = CreateUri("read?session={0}&index={1}&count={2}", aSession, aIndex, aCount);
 
             using (var client = new WebClient())
             {
