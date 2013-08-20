@@ -61,9 +61,7 @@ namespace OpenHome.Av
 
         internal string ResolveUri(string aValue)
         {
-            var baseuri = new Uri(iUri);
-            var uri = new Uri(baseuri, aValue);
-            return (uri.ToString());
+            return (iUri + "/res/" + aValue);
         }
 
         private IMediaEndpointClientSnapshot GetSnapshot(string aFormat, params object[] aArguments)
@@ -129,8 +127,8 @@ namespace OpenHome.Av
                 var values = GetMetadatumValues(entry);
                 var tagid = uint.Parse(values.First());
                 var tag = iNetwork.TagManager[tagid];
-                var resolced = Resolve(tag, values.Skip(1));
-                datum.Add(tag, new MediaValue(values.Skip(1)));
+                var resolved = Resolve(tag, values.Skip(1));
+                datum.Add(tag, new MediaValue(resolved));
             }
 
             return (datum);
@@ -138,7 +136,7 @@ namespace OpenHome.Av
 
         private IEnumerable<string> Resolve(ITag aTag, IEnumerable<string> aValues)
         {
-            if (aTag == iNetwork.TagManager.Audio.Artwork || aTag == iNetwork.TagManager.Container.Artwork)
+            if (aTag == iNetwork.TagManager.Audio.Artwork || aTag == iNetwork.TagManager.Container.Artwork || aTag == iNetwork.TagManager.Audio.Uri)
             {
                 return (Resolve(aValues));
             }
@@ -159,6 +157,12 @@ namespace OpenHome.Av
             try
             {
                 var uri = new Uri(aValue);
+
+                if (uri.IsFile)
+                {
+                    throw (new UriFormatException());
+                }
+
                 return (aValue);
             }
             catch
@@ -287,7 +291,7 @@ namespace OpenHome.Av
 
         public IEnumerable<IMediaDatum> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
         {
-            var uri = CreateUri("/read?session={0}&index={1}&count={2}", aSession, aIndex, aCount);
+            var uri = CreateUri("read?session={0}&index={1}&count={2}", aSession, aIndex, aCount);
 
             using (var client = new WebClient())
             {
