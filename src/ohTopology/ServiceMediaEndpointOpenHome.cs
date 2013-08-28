@@ -295,6 +295,7 @@ namespace OpenHome.Av
 
             using (var client = new WebClient())
             {
+                client.Encoding = Encoding.UTF8;
                 var session = client.DownloadString(uri);
 
                 var json = JsonParser.Parse(session);
