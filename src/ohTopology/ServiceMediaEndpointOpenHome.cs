@@ -279,6 +279,11 @@ namespace OpenHome.Av
             return (GetSnapshot("browse?session={0}&id={1}", aSession, aDatum.Id));
         }
 
+        public IMediaEndpointClientSnapshot List(CancellationToken aCancellationToken, string aSession, ITag aTag)
+        {
+            return (GetSnapshot("link?session={0}&tag={1}&val={2}", aSession, aTag.Id));
+        }
+
         public IMediaEndpointClientSnapshot Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
         {
             return (GetSnapshot("link?session={0}&tag={1}&val={2}", aSession, aTag.Id, Encode(aValue)));

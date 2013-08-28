@@ -59,6 +59,12 @@ namespace TestMediaEndpoint
             return (new TestMediaEndpointClientSnapshot("0", 100, null));
         }
 
+        public IMediaEndpointClientSnapshot List(CancellationToken aCancellationToken, string aSession, ITag aTag)
+        {
+            Console.WriteLine("List       : {0} {1}", aSession, aTag.FullName);
+            return (new TestMediaEndpointClientSnapshot("0", 100, null));
+        }
+
         public IMediaEndpointClientSnapshot Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
         {
             Console.WriteLine("Link       : {0} {1} {2}", aSession, aTag.FullName, aValue);

@@ -16,6 +16,7 @@ namespace OpenHome.Av
     public interface IMediaEndpointSession : IDisposable
     {
         Task<IWatchableContainer<IMediaDatum>> Browse(IMediaDatum aDatum); // null = home
+        Task<IWatchableContainer<IMediaDatum>> List(ITag aTag);
         Task<IWatchableContainer<IMediaDatum>> Link(ITag aTag, string aValue);
         Task<IWatchableContainer<IMediaDatum>> Search(string aValue);
     }
@@ -269,6 +270,11 @@ namespace OpenHome.Av
         public static bool SupportsBrowse(this IProxyMediaEndpoint aProxy)
         {
             return (aProxy.Attributes.Contains("Browse"));
+        }
+
+        public static bool SupportsList(this IProxyMediaEndpoint aProxy)
+        {
+            return (aProxy.Attributes.Contains("List"));
         }
 
         public static bool SupportsLink(this IProxyMediaEndpoint aProxy)

@@ -363,6 +363,11 @@ namespace OpenHome.Av
              return (BrowseGenreTracks(genre));
         }
 
+        public IMediaEndpointClientSnapshot List(CancellationToken aCancellationToken, string aSession, ITag aTag)
+        {
+            throw new OperationCanceledException();
+        }
+
         public IMediaEndpointClientSnapshot Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
         {
             if (aTag == iNetwork.TagManager.Audio.Artist)
