@@ -61,7 +61,7 @@ namespace OpenHome.Av
 
         internal string ResolveUri(string aValue)
         {
-            return (iUri + "/res/" + aValue);
+            return (iUri + "/res" + aValue);
         }
 
         private IMediaEndpointClientSnapshot GetSnapshot(string aFormat, params object[] aArguments)
