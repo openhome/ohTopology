@@ -146,6 +146,8 @@ namespace OpenHome.Av
         {
             var datum = new MediaDatum(aId, iNetwork.TagManager.Audio.Artist);
 
+            Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title);
+            Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Container.Artwork);
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Artist);
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
 
@@ -156,6 +158,8 @@ namespace OpenHome.Av
         {
             var datum = new MediaDatum(aId, iNetwork.TagManager.Audio.AlbumTitle);
 
+            Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title);
+            Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Container.Artwork);
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.AlbumTitle);
             Convert(aElement, "artist", kNsUpnp, datum, iNetwork.TagManager.Audio.AlbumArtist);
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
@@ -167,6 +171,8 @@ namespace OpenHome.Av
         {
             var datum = new MediaDatum(aId, iNetwork.TagManager.Audio.Genre);
 
+            Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title);
+            Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Container.Artwork);
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Genre);
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
 
@@ -225,6 +231,11 @@ namespace OpenHome.Av
             iProxy.SyncBrowse(id, "BrowseDirectChildren", "", 0, 1, "", out result, out returned, out total, out updateId);
 
             return (new MediaEndpointSnapshotContentDirectory(id, total));
+        }
+
+        public IMediaEndpointClientSnapshot List(CancellationToken aCancellationToken, string aSession, ITag aTag)
+        {
+            throw new NotImplementedException();
         }
 
         public IMediaEndpointClientSnapshot Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
