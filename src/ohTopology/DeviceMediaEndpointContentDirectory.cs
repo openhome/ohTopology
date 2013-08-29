@@ -66,7 +66,6 @@ namespace OpenHome.Av
 
             iProxy = new CpProxyUpnpOrgContentDirectory1(iDevice);
             iProxy.SetPropertySystemUpdateIDChanged(OnSystemUpdateIdChanged);
-            iProxy.Subscribe();
 
             iService = new ServiceMediaEndpointContentDirectory(aNetwork, this, iDevice.Udn(), "Music",
                             name, info, url, artwork,
@@ -75,6 +74,8 @@ namespace OpenHome.Av
                             DateTime.Now,
                             new string[] { "Browse" },
                             iProxy);
+
+            iProxy.Subscribe();
 
             Add<IProxyMediaEndpoint>(iService);
         }
