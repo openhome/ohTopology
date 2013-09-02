@@ -869,8 +869,6 @@ namespace OpenHome.Av
             {
                 if (IsExternal(s))
                 {
-                    hasExternal = true;
-
                     if (IsConfigured(s))
                     {
                         configured.Add(s);
@@ -878,6 +876,7 @@ namespace OpenHome.Av
                     }
                     else
                     {
+                        hasExternal = true;
                         unconfigured.Add(s);
                         uIndex++;
                     }
