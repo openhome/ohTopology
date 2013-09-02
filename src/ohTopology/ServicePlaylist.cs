@@ -847,10 +847,16 @@ namespace OpenHome.Av
 
         protected override void OnUnsubscribe()
         {
-            iCacheSession.Dispose();
-            iCacheSession = null;
-            iContainer.Dispose();
-            iContainer = null;
+            if (iCacheSession != null)
+            {
+                iCacheSession.Dispose();
+                iCacheSession = null;
+            }
+            if (iContainer != null)
+            {
+                iContainer.Dispose();
+                iContainer = null;
+            }
 
             base.OnUnsubscribe();
         }
