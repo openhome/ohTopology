@@ -42,19 +42,24 @@ namespace OpenHome.Av
         {
             iDisposeHandler.Dispose();
 
-            lock (iCancelSubscribe)
+            iNetwork.Execute(() =>
             {
-                iCancelSubscribe.Cancel();
-                OnCancelSubscribe();
-            }
+                lock (iCancelSubscribe)
+                {
+                    iCancelSubscribe.Cancel();
+                    OnCancelSubscribe();
+                }
 
-            // wait for any inflight subscriptions to complete
-            if (iSubscribeTask != null)
-            {
-                iSubscribeTask.Wait();
-            }
+                // wait for any inflight subscriptions to complete
+                if (iSubscribeTask != null)
+                {
+                    iSubscribeTask.Wait();
+                }
 
-            iSubscribed.WaitOne();
+                iSubscribed.WaitOne();
+
+                OnUnsubscribe();
+            });
 
             iCancelSubscribe.Dispose();
 
