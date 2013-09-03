@@ -155,7 +155,14 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, string aValue, string aPrevious)
         {
-            ProcessSourceXml(aValue, false);
+            try
+            {
+                ProcessSourceXml(aValue, false);
+            }
+            catch (XmlException)
+            {
+                // TO DO: find some way to write XML to log file
+            }
         }
 
         public IWatchable<string> Room
@@ -384,9 +391,16 @@ namespace OpenHome.Av
 
         public void UnorderedAdd(IProxyProduct aItem)
         {
-            Topology2Group group = new Topology2Group(iNetwork, aItem.Device.Udn, aItem);
-            iGroupLookup.Add(aItem, group);
-            iGroups.Add(group);
+            try
+            {
+                Topology2Group group = new Topology2Group(iNetwork, aItem.Device.Udn, aItem);
+                iGroupLookup.Add(aItem, group);
+                iGroups.Add(group);
+            }
+            catch (XmlException)
+            {
+                // TO DO: find some way to write XML to log file
+            }
         }
 
         public void UnorderedRemove(IProxyProduct aItem)
