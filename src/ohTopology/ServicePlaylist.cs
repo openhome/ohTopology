@@ -349,8 +349,11 @@ namespace OpenHome.Av
             Do.Assert(iContainer == null);
             Do.Assert(iCacheSession == null);
 
-            iService.Dispose();
-            iService = null;
+            iNetwork.Schedule(() =>
+            {
+                iService.Dispose();
+                iService = null;
+            });
         }
 
         protected override Task OnSubscribe()

@@ -307,17 +307,20 @@ namespace OpenHome.Av
             iSubscribed.Dispose();
             iSubscribed = null;
 
-            iService.Dispose();
-            iService = null;
-
-            iServiceConfiguration.Dispose();
-            iServiceConfiguration = null;
-
-            if (iServiceVolkano != null)
+            iNetwork.Schedule(() =>
             {
-                iServiceVolkano.Dispose();
-                iServiceVolkano = null;
-            }
+                iService.Dispose();
+                iService = null;
+
+                iServiceConfiguration.Dispose();
+                iServiceConfiguration = null;
+
+                if (iServiceVolkano != null)
+                {
+                    iServiceVolkano.Dispose();
+                    iServiceVolkano = null;
+                }
+            });
         }
 
         protected override Task OnSubscribe()

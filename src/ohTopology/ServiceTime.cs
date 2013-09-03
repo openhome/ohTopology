@@ -86,8 +86,11 @@ namespace OpenHome.Av
             iSubscribed.Dispose();
             iSubscribed = null;
 
-            iService.Dispose();
-            iService = null;
+            iNetwork.Schedule(() =>
+            {
+                iService.Dispose();
+                iService = null;
+            });
         }
 
         protected override Task OnSubscribe()
