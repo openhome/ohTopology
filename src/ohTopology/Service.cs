@@ -107,19 +107,22 @@ namespace OpenHome.Av
 
                     iSubscribeTask.ContinueWith((t) =>
                     {
+                        bool cancel = false;
                         lock (iCancelSubscribe)
                         {
-                            if (!iCancelSubscribe.IsCancellationRequested)
+                            cancel = iCancelSubscribe.IsCancellationRequested;
+                        }
+
+                        if (!cancel)
+                        {
+                            iNetwork.Schedule(() =>
                             {
-                                iNetwork.Schedule(() =>
-                                {
-                                    aCallback((T)OnCreate(iDevice));
-                                });
-                            }
-                            else
-                            {
-                                Unsubscribe();
-                            }
+                                aCallback((T)OnCreate(iDevice));
+                            });
+                        }
+                        else
+                        {
+                            Unsubscribe();
                         }
 
                         iSubscribed.Set();
