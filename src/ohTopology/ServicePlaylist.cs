@@ -384,12 +384,19 @@ namespace OpenHome.Av
 
         protected override void OnUnsubscribe()
         {
-            iContainer.Dispose();
-            iContainer = null;
-            iCacheSession.Dispose();
-            iCacheSession = null;
-
             iService.Unsubscribe();
+
+            if (iContainer != null)
+            {
+                iContainer.Dispose();
+                iContainer = null;
+            }
+            if (iCacheSession != null)
+            {
+                iCacheSession.Dispose();
+                iCacheSession = null;
+            }
+
             iSubscribed.Reset();
         }
 

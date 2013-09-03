@@ -348,10 +348,16 @@ namespace OpenHome.Av
         {
             iService.Unsubscribe();
 
-            iContainer.Dispose();
-            iContainer = null;
-            iCacheSession.Dispose();
-            iCacheSession = null;
+            if (iContainer != null)
+            {
+                iContainer.Dispose();
+                iContainer = null;
+            }
+            if (iCacheSession != null)
+            {
+                iCacheSession.Dispose();
+                iCacheSession = null;
+            }
 
             iSubscribed.Reset();
         }
