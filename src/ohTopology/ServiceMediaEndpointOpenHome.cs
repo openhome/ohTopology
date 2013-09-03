@@ -154,21 +154,15 @@ namespace OpenHome.Av
 
         private string Resolve(string aValue)
         {
-            try
+            Uri absoluteUri;
+            if (Uri.TryCreate(aValue, UriKind.Absolute, out absoluteUri))
             {
-                var uri = new Uri(aValue);
-
-                if (uri.IsFile)
+                if (!absoluteUri.IsFile)
                 {
-                    throw (new UriFormatException());
+                    return aValue;
                 }
-
-                return (aValue);
             }
-            catch
-            {
-                return (ResolveUri(aValue));
-            }
+            return ResolveUri(aValue);
         }
 
         private IEnumerable<string> GetMetadatumValues(JsonValue aValue)

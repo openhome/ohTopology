@@ -79,22 +79,16 @@ namespace OpenHome.Av
 
         private string ResolveUri(Uri aBaseUri, string aUri)
         {
-            try
+            Uri absoluteUri;
+            if (Uri.TryCreate(aUri, UriKind.Absolute, out absoluteUri))
             {
-                var uri = new Uri(aUri);
-
-                if (uri.IsFile)
+                if (!absoluteUri.IsFile)
                 {
-                    throw new UriFormatException();
+                    return aUri;
                 }
-                
-                return (aUri);
             }
-            catch
-            {
-                var uri = new Uri(aBaseUri, aUri);
-                return (uri.ToString());
-            }
+            absoluteUri = new Uri(aBaseUri, aUri);
+            return absoluteUri.ToString();
         }
 
         // IDisposable
