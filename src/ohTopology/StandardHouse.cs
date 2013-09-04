@@ -78,6 +78,10 @@ namespace OpenHome.Av
                         remove = true;
                     }
                 }
+                else
+                {
+                    remove = true;
+                }
                 if (!string.IsNullOrEmpty(iMasterRoom))
                 {
                     isSatellite = iHouse.AddSatellite(iMasterRoom, iRoom);
