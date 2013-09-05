@@ -300,9 +300,6 @@ namespace OpenHome.Av
 
         public override void Dispose()
         {
-            // cause in flight or blocked subscription to complete
-            iSubscribed.Set();
-
             base.Dispose();
 
             iSubscribed.Dispose();
@@ -311,11 +308,8 @@ namespace OpenHome.Av
             Do.Assert(iContainer == null);
             Do.Assert(iCacheSession == null);
 
-            iNetwork.Schedule(() =>
-            {
-                iService.Dispose();
-                iService = null;
-            });
+            iService.Dispose();
+            iService = null;
         }
 
         protected override Task OnSubscribe()

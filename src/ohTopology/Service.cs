@@ -113,7 +113,7 @@ namespace OpenHome.Av
                             cancel = iCancelSubscribe.IsCancellationRequested;
                         }
 
-                        if (!cancel)
+                        if (!cancel && !t.IsFaulted)
                         {
                             iNetwork.Schedule(() =>
                             {
