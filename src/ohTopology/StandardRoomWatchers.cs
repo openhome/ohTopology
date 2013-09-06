@@ -91,18 +91,27 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, IEnumerable<ITopology4Source> aValue)
         {
-            EvaluateEnabledOpen(aValue);
+            iDisposeHandler.WhenNotDisposed(() =>
+            {
+                EvaluateEnabledOpen(aValue);
+            });
         }
 
         public void ItemUpdate(string aId, IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
         {
-            EvaluateEnabledUpdate(aValue, aPrevious);
+            iDisposeHandler.WhenNotDisposed(() =>
+            {
+                EvaluateEnabledUpdate(aValue, aPrevious);
+            });
         }
 
         public void ItemClose(string aId, IEnumerable<ITopology4Source> aValue)
         {
-            EvaluateEnabledClose(aValue);
-            iEnabled.Update(false);
+            iDisposeHandler.WhenNotDisposed(() =>
+            {
+                EvaluateEnabledClose(aValue);
+                iEnabled.Update(false);
+            });
         }
 
         protected abstract void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue);
@@ -925,6 +934,10 @@ namespace OpenHome.Av
                 }
                 catch (FormatException)
                 {
+                    if (aSource.Name == "Analog Knekt")
+                    {
+                        return false;
+                    }
                     return true;
                 }
             }

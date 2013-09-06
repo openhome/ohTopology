@@ -107,61 +107,67 @@ namespace OpenHome.Av
 
         private void Added(CpDeviceList aList, CpDevice aDevice)
         {
-            var udn = aDevice.Udn();
-
-            string deviceXml;
-
-            aDevice.GetAttribute("Upnp.DeviceXml", out deviceXml);
-
-            var reader = XmlReader.Create(new StringReader(deviceXml));
-
-            var xml = XDocument.Load(reader);
-
-            var elements = xml.Descendants(XName.Get("device", "urn:schemas-upnp-org:device-1-0"));
-
-            var path = GetOpenHomeElementValue(elements, "X_PATH");
-
-            if (path != null)
+            iNetwork.Execute(() =>
             {
-                var presentation = GetDeviceElementValue(elements, "presentationURL");
+                var udn = aDevice.Udn();
 
-                if (presentation != null)
+                string deviceXml;
+
+                aDevice.GetAttribute("Upnp.DeviceXml", out deviceXml);
+
+                var reader = XmlReader.Create(new StringReader(deviceXml));
+
+                var xml = XDocument.Load(reader);
+
+                var elements = xml.Descendants(XName.Get("device", "urn:schemas-upnp-org:device-1-0"));
+
+                var path = GetOpenHomeElementValue(elements, "X_PATH");
+
+                if (path != null)
                 {
-                    var presentationUri = new Uri(presentation);
+                    var presentation = GetDeviceElementValue(elements, "presentationURL");
 
-                    // get the uri to the openhome node's property server
-
-                    var uri = new Uri(presentationUri, path);
-
-                    lock (iDevices)
+                    if (presentation != null)
                     {
-                        iDevices.Add(udn, new DeviceInjectorDeviceOpenHome(this, udn, uri));
+                        var presentationUri = new Uri(presentation);
+
+                        // get the uri to the openhome node's property server
+
+                        var uri = new Uri(presentationUri, path);
+
+                        lock (iDevices)
+                        {
+                            iDevices.Add(udn, new DeviceInjectorDeviceOpenHome(this, udn, uri));
+                        }
                     }
                 }
-            }
-            else
-            {
-                lock (iDevices)
+                else
                 {
-                    iDevices.Add(udn, new DeviceInjectorDeviceContentDirectory(this, udn, aDevice, xml));
+                    lock (iDevices)
+                    {
+                        iDevices.Add(udn, new DeviceInjectorDeviceContentDirectory(this, udn, aDevice, xml));
+                    }
                 }
-            }
+            });
         }
 
         private void Removed(CpDeviceList aList, CpDevice aDevice)
         {
-            var udn = aDevice.Udn();
-
-            IDisposable device;
-
-            lock (iDevices)
+            iNetwork.Execute(() =>
             {
-                if (iDevices.TryGetValue(udn, out device))
+                var udn = aDevice.Udn();
+
+                IDisposable device;
+
+                lock (iDevices)
                 {
-                    iDevices.Remove(udn);
-                    device.Dispose();
+                    if (iDevices.TryGetValue(udn, out device))
+                    {
+                        iDevices.Remove(udn);
+                        device.Dispose();
+                    }
                 }
-            }
+            });
         }
 
         public void Refresh()
