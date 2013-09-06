@@ -109,21 +109,21 @@ namespace OpenHome.Av
         private IMediaDatum GetRootContainerArtists()
         {
             var datum = new MediaDatum(null, iNetwork.TagManager.Container.Title, iNetwork.TagManager.Audio.Artist, iNetwork.TagManager.Audio.Album);
-            datum.Add(iNetwork.TagManager.Container.Title, "Artists");
+            datum.Add(iNetwork.TagManager.Container.Title, "Artist");
             return (datum);
         }
 
         private IMediaDatum GetRootContainerAlbums()
         {
             var datum = new MediaDatum(null, iNetwork.TagManager.Container.Title, iNetwork.TagManager.Audio.Album);
-            datum.Add(iNetwork.TagManager.Container.Title, "Albums");
+            datum.Add(iNetwork.TagManager.Container.Title, "Album");
             return (datum);
         }
 
         private IMediaDatum GetRootContainerGenres()
         {
             var datum = new MediaDatum(null, iNetwork.TagManager.Container.Title, iNetwork.TagManager.Audio.Genre);
-            datum.Add(iNetwork.TagManager.Container.Title, "Genres");
+            datum.Add(iNetwork.TagManager.Container.Title, "Genre");
             return (datum);
         }
 
