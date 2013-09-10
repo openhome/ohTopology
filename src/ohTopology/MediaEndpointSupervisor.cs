@@ -285,6 +285,8 @@ namespace OpenHome.Av
         {
             // called on the watchable thread
 
+            Task.WaitAll(iTasks.ToArray());
+
             lock (iLock)
             {
                 if (iContainer != null)
@@ -402,6 +404,8 @@ namespace OpenHome.Av
         public void Dispose()
         {
             iClient.Assert(); // must be called on the watchable thread
+
+            Task.WaitAll(iTasks.ToArray());
 
             iDisposeHandler.Dispose();
 
