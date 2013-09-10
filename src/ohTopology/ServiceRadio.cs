@@ -544,7 +544,7 @@ namespace OpenHome.Av
             }
         }
 
-        public void UpdateSnapshot(IList<uint> aIdArray)
+        internal void UpdateSnapshot(IList<uint> aIdArray)
         {
             using (iDisposeHandler.Lock)
             {
