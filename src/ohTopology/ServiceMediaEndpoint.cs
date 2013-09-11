@@ -13,12 +13,12 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    public interface IMediaEndpointSession : IDisposable
+    public interface IMediaEndpointSession : IWatchableContainer<IMediaDatum>, IDisposable
     {
-        Task<IWatchableContainer<IMediaDatum>> Browse(IMediaDatum aDatum); // null = home
-        Task<IWatchableContainer<IMediaDatum>> List(ITag aTag);
-        Task<IWatchableContainer<IMediaDatum>> Link(ITag aTag, string aValue);
-        Task<IWatchableContainer<IMediaDatum>> Search(string aValue);
+        void Browse(IMediaDatum aDatum); // null = home
+        void List(ITag aTag);
+        void Link(ITag aTag, string aValue);
+        void Search(string aValue);
     }
 
     public interface IProxyMediaEndpoint : IProxy
