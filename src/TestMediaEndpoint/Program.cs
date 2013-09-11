@@ -296,6 +296,8 @@ namespace TestMediaEndpoint
                             });
                         }));
                     });
+
+                    Thread.Sleep(aMilliseconds);
                 }
 
                 client.Wait();
