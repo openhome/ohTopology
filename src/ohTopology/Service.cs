@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Threading;
 
 using OpenHome.Os.App;
+using OpenHome.Net.ControlPoint;
 
 namespace OpenHome.Av
 {
@@ -40,6 +41,8 @@ namespace OpenHome.Av
 
         public virtual void Dispose()
         {
+            iNetwork.Assert();
+
             iDisposeHandler.Dispose();
 
             iNetwork.Execute(() =>
@@ -53,7 +56,22 @@ namespace OpenHome.Av
                 // wait for any inflight subscriptions to complete
                 if (iSubscribeTask != null)
                 {
-                    iSubscribeTask.Wait();
+                    try
+                    {
+                        iSubscribeTask.Wait();
+                    }
+                    catch(AggregateException e)
+                    {
+                        e.Handle((x) =>
+                        {
+                            if (x is ProxyError)
+                            {
+                                return true;
+                            }
+
+                            return false;
+                        });
+                    }
                 }
 
                 iSubscribed.WaitOne();
