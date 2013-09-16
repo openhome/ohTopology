@@ -299,6 +299,8 @@ namespace OpenHome.Av
 
     public interface ITopology4Registration
     {
+        string Room { get; }
+        string ModelName { get; }
         string ManufacturerName { get; }
         string ProductId { get; }
         IWatchable<string> Registration { get; }
@@ -393,6 +395,22 @@ namespace OpenHome.Av
             get
             {
                 return iGroup.Device;
+            }
+        }
+
+        public string Room
+        {
+            get
+            {
+                return iRoom;
+            }
+        }
+
+        public string ModelName
+        {
+            get
+            {
+                return iGroup.ModelName;
             }
         }
 
@@ -669,6 +687,7 @@ namespace OpenHome.Av
         private INetwork iNetwork;
         private ITopologymGroup iGroup;
 
+        private string iRoom;
         private string iName;
 
         private uint iParentSourceIndex;
