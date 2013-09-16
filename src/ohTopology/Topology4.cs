@@ -718,6 +718,7 @@ namespace OpenHome.Av
         {
             iRoom = aRoom;
             iGroup = aGroup;
+            iRoomName = iRoom.Name;
 
             iSources = new List<ITopology2Source>();
 
