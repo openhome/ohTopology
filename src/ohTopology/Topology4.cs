@@ -323,12 +323,13 @@ namespace OpenHome.Av
 
     class Topology4Group : ITopology4Root, ITopology4Registration, IWatcher<uint>, IWatcher<string>, IDisposable
     {
-        public Topology4Group(INetwork aNetwork, string aName, ITopologymGroup aGroup, IEnumerable<ITopology2Source> aSources)
+        public Topology4Group(INetwork aNetwork, string aRoom, string aName, ITopologymGroup aGroup, IEnumerable<ITopology2Source> aSources)
         {
             iDisposed = false;
 
             iNetwork = aNetwork;
             iName = aName;
+            iRoom = aRoom;
             iGroup = aGroup;
 
             iChildren = new List<Topology4Group>();
@@ -709,6 +710,7 @@ namespace OpenHome.Av
     {
         private Topology4Room iRoom;
         private ITopologymGroup iGroup;
+        private string iRoomName;
         private string iName;
         private List<ITopology2Source> iSources;
 
@@ -735,6 +737,14 @@ namespace OpenHome.Av
             }
             iGroup = null;
             iRoom = null;
+        }
+
+        public string Room
+        {
+            get
+            {
+                return iRoomName;
+            }
         }
 
         public string Name
@@ -946,7 +956,7 @@ namespace OpenHome.Av
 
             foreach (var kvp in iGroupLookup)
             {
-                Topology4Group group = new Topology4Group(iNetwork, kvp.Value.Name, kvp.Key, kvp.Value.Sources);
+                Topology4Group group = new Topology4Group(iNetwork, kvp.Value.Room, kvp.Value.Name, kvp.Key, kvp.Value.Sources);
                 InsertIntoTree(group);
                 if (!string.IsNullOrEmpty(group.ProductId))
                 {
