@@ -242,8 +242,6 @@ namespace TestMediaEndpoint
 
                 var session = sessionTask.Result;
 
-                IWatchableContainer<IMediaDatum> container = null;
-
                 IDisposable watcher = null;
 
                 var tasks = new List<Task>();
@@ -258,44 +256,36 @@ namespace TestMediaEndpoint
 
                         tasks.Add(task.ContinueWith((t) =>
                         {
+                            var container = t.Result;
+
                             client.Schedule(() =>
                             {
-                                try
+                                if (watcher != null)
                                 {
-                                    container = t.Result;
+                                    watcher.Dispose();
+                                }
 
-                                    client.Execute(() =>
+                                watcher = container.Snapshot.CreateWatcher((s) =>
+                                {
+                                    for (int j = 0; j < 20; j++)
                                     {
-                                        if (watcher != null)
+                                        s.Read(0, 100).ContinueWith((t2) =>
                                         {
-                                            watcher.Dispose();
-                                            watcher = null;
-                                        }
-
-                                        watcher = container.Snapshot.CreateWatcher((s) =>
-                                        {
-                                            for (int j = 0; j < 20; j++)
+                                            try
                                             {
-                                                s.Read(0, 100).ContinueWith((t2) =>
-                                                {
-                                                    try
-                                                    {
-                                                        t2.Wait();
-                                                    }
-                                                    catch
-                                                    {
-                                                    }
-                                                });
+                                                t2.Wait();
+                                            }
+                                            catch
+                                            {
                                             }
                                         });
-                                    });
-                                }
-                                catch
-                                {
-                                }
+                                    }
+                                });
                             });
                         }));
                     });
+
+                    Thread.Sleep(aMilliseconds);
                 }
 
                 client.Wait();
@@ -304,9 +294,9 @@ namespace TestMediaEndpoint
                 
                 client.Wait();
                 
-                Do.Assert(container != null);
-
                 supervisor.Close();
+
+                client.Wait();
 
                 if (watcher != null)
                 {
