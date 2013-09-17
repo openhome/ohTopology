@@ -36,40 +36,6 @@ namespace OpenHome.Av
         IEnumerable<IMediaDatum> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount);
     }
 
-    internal class MediaEndpointClientSnapshotNull : IMediaEndpointClientSnapshot
-    {
-        private readonly List<uint> iAlpha;
-
-        public MediaEndpointClientSnapshotNull()
-        {
-            iAlpha = new List<uint>();
-
-            for (uint i = 0; i < 28; i++)
-            {
-                iAlpha.Add(0);
-            }
-        }
-
-        // IMediaEndpointClientSnapshot
-
-        public uint Total
-        {
-            get
-            {
-                return (0);
-            }
-        }
-
-        public IEnumerable<uint> Alpha
-        {
-            get
-            {
-                return (iAlpha);
-            }
-        }
-    }
-
-
     internal class MediaEndpointSupervisorSnapshot : IWatchableSnapshot<IMediaDatum>, IDisposable
     {
         private readonly IMediaEndpointClient iClient;
@@ -234,7 +200,12 @@ namespace OpenHome.Av
 
             iSnapshotFunction = (c) =>
             {
-                return (new MediaEndpointClientSnapshotNull());
+                return (null);
+            };
+
+            iAction = (s) =>
+            {
+                Do.Assert(false);
             };
 
             iCancellationSource = new CancellationTokenSource();
@@ -295,24 +266,27 @@ namespace OpenHome.Av
                     throw new OperationCanceledException();
                 }
 
-                iClient.Schedule(() =>
+                if (snapshot != null)
                 {
-                    if (!token.IsCancellationRequested)
+                    iClient.Schedule(() =>
                     {
-                        if (iSequence != sequence)
+                        if (!token.IsCancellationRequested)
                         {
-                            return;
+                            if (iSequence != sequence)
+                            {
+                                return;
+                            }
+
+                            var previous = iSnapshot;
+
+                            iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, token, snapshot);
+
+                            iAction(iSnapshot);
+
+                            previous.Dispose();
                         }
-
-                        var previous = iSnapshot;
-
-                        iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, token, snapshot);
-
-                        iAction(iSnapshot);
-
-                        previous.Dispose();
-                    }
-                });
+                    });
+                }
             }, token);
         }
 

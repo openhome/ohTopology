@@ -58,7 +58,7 @@ namespace OpenHome.Av
 
         internal void AddDevice(Device aDevice)
         {
-            Console.WriteLine("Add    : {0}", aDevice.Udn);
+            // Console.WriteLine("Add    : {0}", aDevice.Udn);
 
             iNetwork.Execute(() =>
             {
