@@ -214,14 +214,13 @@ namespace OpenHome.Av
         private readonly DisposeHandler iDisposeHandler;
 
         private Func<CancellationToken, IMediaEndpointClientSnapshot> iSnapshotFunction;
+        private Action<IWatchableSnapshot<IMediaDatum>> iAction;
 
         private CancellationTokenSource iCancellationSource;
 
         private Task iTask;
 
         private MediaEndpointSupervisorSnapshot iSnapshot;
-
-        private readonly Watchable<IWatchableSnapshot<IMediaDatum>> iWatchableSnapshot;
 
         private uint iSequence;
 
@@ -246,8 +245,6 @@ namespace OpenHome.Av
 
             iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, iCancellationSource.Token, iSnapshotFunction(token));
 
-            iWatchableSnapshot = new Watchable<IWatchableSnapshot<IMediaDatum>>(iClient, "Snapshot", iSnapshot);
-
             iSequence = 0;
         }
 
@@ -260,13 +257,6 @@ namespace OpenHome.Av
         }
 
         internal void Refresh()
-        {
-            // called on the watchable thread
-
-            UpdateSnapshot(iSnapshotFunction);
-        }
-
-        private void UpdateSnapshot(Func<CancellationToken, IMediaEndpointClientSnapshot> aSnapshotFunction)
         {
             // called on the watchable thread
 
@@ -286,8 +276,6 @@ namespace OpenHome.Av
 
             sequence = ++iSequence;
 
-            iSnapshotFunction = aSnapshotFunction;
-
             iCancellationSource = new CancellationTokenSource();
 
             var token = iCancellationSource.Token;
@@ -300,7 +288,7 @@ namespace OpenHome.Av
 
                 try
                 {
-                    snapshot = aSnapshotFunction(token);
+                    snapshot = iSnapshotFunction(token);
                 }
                 catch
                 {
@@ -316,65 +304,66 @@ namespace OpenHome.Av
                             return;
                         }
 
-                        iSnapshot.Dispose();
+                        var previous = iSnapshot;
 
                         iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, token, snapshot);
 
-                        iWatchableSnapshot.Update(iSnapshot);
+                        iAction(iSnapshot);
+
+                        previous.Dispose();
                     }
                 });
             }, token);
         }
 
-        // IWatchableContainer<IMediaDatum>
-
-        public IWatchable<IWatchableSnapshot<IMediaDatum>> Snapshot
+        private void UpdateSnapshot(Func<CancellationToken, IMediaEndpointClientSnapshot> aSnapshotFunction, Action<IWatchableSnapshot<IMediaDatum>> aAction)
         {
-            get
-            {
-                return (iWatchableSnapshot);
-            }
+            // called on the watchable thread
+
+            iSnapshotFunction = aSnapshotFunction;
+            iAction = aAction;
+            Refresh();
         }
 
         // IMediaEndpointSession
 
-        public void Browse(IMediaDatum aDatum)
+        public void Browse(IMediaDatum aDatum, Action<IWatchableSnapshot<IMediaDatum>> aAction)
         {
             iClient.Assert(); // must be called on the watchable thread
 
             using (iDisposeHandler.Lock)
             {
-                UpdateSnapshot((c) => iClient.Browse(c, iId, aDatum));
+                UpdateSnapshot((c) => iClient.Browse(c, iId, aDatum), aAction);
             }
         }
 
-        public void List(ITag aTag)
+        public void List(ITag aTag, Action<IWatchableSnapshot<IMediaDatum>> aAction)
         {
             iClient.Assert(); // must be called on the watchable thread
 
             using (iDisposeHandler.Lock)
             {
-                UpdateSnapshot((c) => iClient.List(c, iId, aTag));
+                UpdateSnapshot((c) => iClient.List(c, iId, aTag), aAction);
             }
         }
 
-        public void Link(ITag aTag, string aValue)
+        public void Link(ITag aTag, string aValue, Action<IWatchableSnapshot<IMediaDatum>> aAction)
         {
             iClient.Assert(); // must be called on the watchable thread
 
             using (iDisposeHandler.Lock)
             {
-                UpdateSnapshot((c) => iClient.Link(c, iId, aTag, aValue));
+                UpdateSnapshot((c) => iClient.Link(c, iId, aTag, aValue), aAction);
             }
         }
 
-        public void Search(string aValue)
+        public void Search(string aValue, Action<IWatchableSnapshot<IMediaDatum>> aAction)
         {
             iClient.Assert(); // must be called on the watchable thread
 
             using (iDisposeHandler.Lock)
             {
-                UpdateSnapshot((c) => iClient.Search(c, iId, aValue));
+                UpdateSnapshot((c) => iClient.Search(c, iId, aValue), aAction);
             }
         }
 

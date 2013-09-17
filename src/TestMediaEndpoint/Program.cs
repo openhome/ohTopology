@@ -242,32 +242,29 @@ namespace TestMediaEndpoint
 
                 var session = sessionTask.Result;
 
-                IDisposable watcher = session.Snapshot.CreateWatcher((s) =>
-                {
-                    if (s.Total >= 100)
-                    {
-                        for (int j = 0; j < 20; j++)
-                        {
-                            s.Read(0, 100).ContinueWith((t) =>
-                            {
-                                try
-                                {
-                                    t.Wait();
-                                }
-                                catch
-                                {
-                                }
-                            });
-                        }
-                    }
-                });
-
-
                 for (int i = 0; i < 10; i++)
                 {
                     client.Schedule(() =>
                     {
-                        session.Browse(null);
+                        session.Browse(null, (s) =>
+                        {
+                            if (s.Total >= 100)
+                            {
+                                for (int j = 0; j < 20; j++)
+                                {
+                                    s.Read(0, 100).ContinueWith((t) =>
+                                    {
+                                        try
+                                        {
+                                            t.Wait();
+                                        }
+                                        catch
+                                        {
+                                        }
+                                    });
+                                }
+                            }
+                        });
                     });
 
                     Thread.Sleep(aMilliseconds);
@@ -276,8 +273,6 @@ namespace TestMediaEndpoint
                 client.Wait();
 
                 supervisor.Close();
-
-                watcher.Dispose();
 
                 client.Execute(() =>
                 {

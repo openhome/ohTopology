@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 using OpenHome.Os;
 using OpenHome.Os.App;
@@ -9,7 +10,7 @@ using OpenHome.Av;
 
 namespace TestMediaServer
 {
-    public class Client : IUnorderedWatcher<IDevice>, IWatcher<IWatchableSnapshot<IMediaDatum>>, IDisposable
+    public class Client : IUnorderedWatcher<IDevice>, IDisposable
     {
         private readonly INetwork iNetwork;
         
@@ -17,6 +18,8 @@ namespace TestMediaServer
         
         private IProxyMediaEndpoint iProxy;
         private IWatchableSnapshot<IMediaDatum> iSnapshot;
+
+        private AutoResetEvent iReady;
 
         public Client(INetwork aNetwork)
         {
@@ -29,6 +32,8 @@ namespace TestMediaServer
             });
 
             iNetwork.Wait();
+
+            iReady = new AutoResetEvent(false);
         }
 
         public void Run()
@@ -49,15 +54,10 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                session.Snapshot.AddWatcher(this);
+                session.Browse(null, UpdateSnapshot);
             });
 
-            iNetwork.Execute(() =>
-            {
-                session.Browse(null);
-            });
-
-            iNetwork.Execute();
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 4);
@@ -94,20 +94,20 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                session.Browse(rootFragment.Data.ElementAt(0));
+                session.Browse(rootFragment.Data.ElementAt(0), UpdateSnapshot);
             });
 
-            iNetwork.Execute();
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 12521);
 
             iNetwork.Execute(() =>
             {
-                session.Browse(rootFragment.Data.ElementAt(1));
+                session.Browse(rootFragment.Data.ElementAt(1), UpdateSnapshot);
             });
 
-            iNetwork.Execute();
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 882);
@@ -129,10 +129,10 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                session.Browse(fragment.Data.ElementAt(0));
+                session.Browse(fragment.Data.ElementAt(0), UpdateSnapshot);
             });
 
-            iNetwork.Execute();
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 2);
@@ -151,10 +151,10 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                session.Browse(fragment.Data.ElementAt(0));
+                session.Browse(fragment.Data.ElementAt(0), UpdateSnapshot);
             });
 
-            iNetwork.Execute();
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 15);
@@ -175,10 +175,10 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                session.Browse(rootFragment.Data.ElementAt(2));
+                session.Browse(rootFragment.Data.ElementAt(2), UpdateSnapshot);
             });
 
-            iNetwork.Execute();
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 1000);
@@ -197,10 +197,10 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                session.Browse(fragment.Data.ElementAt(0));
+                session.Browse(fragment.Data.ElementAt(0), UpdateSnapshot);
             });
 
-            iNetwork.Execute();
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 18);
@@ -221,10 +221,10 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                session.Browse(rootFragment.Data.ElementAt(3));
+                session.Browse(rootFragment.Data.ElementAt(3), UpdateSnapshot);
             });
 
-            iNetwork.Execute();
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 124);
@@ -243,10 +243,10 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                session.Browse(fragment.Data.ElementAt(0));
+                session.Browse(fragment.Data.ElementAt(0), UpdateSnapshot);
             });
 
-            iNetwork.Execute();
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 16);
@@ -269,10 +269,10 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                session.Link(iNetwork.TagManager.Audio.Artist, "Bon Jovi");
+                session.Link(iNetwork.TagManager.Audio.Artist, "Bon Jovi", UpdateSnapshot);
             });
 
-            iNetwork.Execute();
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 2);
@@ -291,10 +291,10 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                session.Browse(fragment.Data.ElementAt(0));
+                session.Browse(fragment.Data.ElementAt(0), UpdateSnapshot);
             });
 
-            iNetwork.Execute();
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 15);
@@ -317,10 +317,10 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                session.Link(iNetwork.TagManager.Audio.Album, "4207");
+                session.Link(iNetwork.TagManager.Audio.Album, "4207", UpdateSnapshot);
             });
 
-            iNetwork.Execute();
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 18);
@@ -343,10 +343,10 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                session.Link(iNetwork.TagManager.Audio.Genre, "Rap/R & B");
+                session.Link(iNetwork.TagManager.Audio.Genre, "Rap/R & B", UpdateSnapshot);
             });
 
-            iNetwork.Execute();
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 16);
@@ -369,10 +369,10 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                session.Search("Love");
+                session.Search("Love", UpdateSnapshot);
             });
 
-            iNetwork.Execute();
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 556);
@@ -383,19 +383,10 @@ namespace TestMediaServer
             });
         }
 
-        // IWatcher<IWatchableSnapshot<IMediaDatum>>
-
-        public void ItemOpen(string aId, IWatchableSnapshot<IMediaDatum> aValue)
+        private void UpdateSnapshot(IWatchableSnapshot<IMediaDatum> aValue)
         {
             iSnapshot = aValue;
-        }
-
-        public void ItemUpdate(string aId, IWatchableSnapshot<IMediaDatum> aValue, IWatchableSnapshot<IMediaDatum> aPrevious)
-        {
-        }
-
-        public void ItemClose(string aId, IWatchableSnapshot<IMediaDatum> aValue)
-        {
+            iReady.Set();
         }
 
         // IUnorderedWatcher<IWatchableDevice>
