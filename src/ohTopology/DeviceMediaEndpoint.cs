@@ -73,6 +73,7 @@ namespace OpenHome.Av
             iNetwork.Execute(() =>
             {
                 iNetwork.Remove(aDevice);
+                aDevice.Dispose();
             });
         }
 
@@ -214,7 +215,6 @@ namespace OpenHome.Av
         public void Dispose()
         {
             iInjector.RemoveDevice(iDevice);
-            iDevice.Dispose();
         }
     }
 
@@ -397,7 +397,6 @@ namespace OpenHome.Av
                 else
                 {
                     iInjector.RemoveDevice(entry.Value);
-                    entry.Value.Dispose();
                 }
             }
 
@@ -433,7 +432,6 @@ namespace OpenHome.Av
                 foreach (var entry in iEndpoints)
                 {
                     iInjector.RemoveDevice(entry.Value);
-                    entry.Value.Dispose();
                 }
 
                 if (iEventSession != null)
