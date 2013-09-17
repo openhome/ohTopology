@@ -52,6 +52,7 @@ namespace OpenHome.Av
     {
         string Id { get; }
         string Attributes { get; }
+        string ModelName { get; }
         string ManufacturerName { get; }
         string ProductId { get; }
         IDevice Device { get; }
@@ -100,6 +101,14 @@ namespace OpenHome.Av
             get
             {
                 return iGroup.Attributes;
+            }
+        }
+
+        public string ModelName
+        {
+            get
+            {
+                return iGroup.ModelName;
             }
         }
 

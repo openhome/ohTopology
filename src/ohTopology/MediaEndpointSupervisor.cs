@@ -296,9 +296,10 @@ namespace OpenHome.Av
                         {
                             iDisposeHandler.WhenNotDisposed(() =>
                             {
-                                iSnapshot.Dispose();
+                                var old = iSnapshot;
                                 iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, iSession, iCancellationSource.Token, snapshot);
                                 iWatchableSnapshot.Update(iSnapshot);
+                                old.Dispose();
                             });
                         });
                     });
