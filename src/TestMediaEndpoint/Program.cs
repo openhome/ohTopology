@@ -242,47 +242,29 @@ namespace TestMediaEndpoint
 
                 var session = sessionTask.Result;
 
-                IDisposable watcher = null;
-
-                var tasks = new List<Task>();
-
                 for (int i = 0; i < 10; i++)
                 {
-                    Task<IWatchableContainer<IMediaDatum>> task = null;
-
                     client.Schedule(() =>
                     {
-                        task = session.Browse(null);
-
-                        tasks.Add(task.ContinueWith((t) =>
+                        session.Browse(null, (s) =>
                         {
-                            var container = t.Result;
-
-                            client.Schedule(() =>
+                            if (s.Total >= 100)
                             {
-                                if (watcher != null)
+                                for (int j = 0; j < 20; j++)
                                 {
-                                    watcher.Dispose();
-                                }
-
-                                watcher = container.Snapshot.CreateWatcher((s) =>
-                                {
-                                    for (int j = 0; j < 20; j++)
+                                    s.Read(0, 100).ContinueWith((t) =>
                                     {
-                                        s.Read(0, 100).ContinueWith((t2) =>
+                                        try
                                         {
-                                            try
-                                            {
-                                                t2.Wait();
-                                            }
-                                            catch
-                                            {
-                                            }
-                                        });
-                                    }
-                                });
-                            });
-                        }));
+                                            t.Wait();
+                                        }
+                                        catch
+                                        {
+                                        }
+                                    });
+                                }
+                            }
+                        });
                     });
 
                     Thread.Sleep(aMilliseconds);
@@ -290,18 +272,7 @@ namespace TestMediaEndpoint
 
                 client.Wait();
 
-                Task.WaitAll(tasks.ToArray());
-                
-                client.Wait();
-                
                 supervisor.Close();
-
-                client.Wait();
-
-                if (watcher != null)
-                {
-                    watcher.Dispose();
-                }
 
                 client.Execute(() =>
                 {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 using OpenHome.Os;
 using OpenHome.Os.App;
@@ -9,7 +10,7 @@ using OpenHome.Av;
 
 namespace TestMediaServer
 {
-    public class Client : IUnorderedWatcher<IDevice>, IWatcher<IWatchableSnapshot<IMediaDatum>>, IDisposable
+    public class Client : IUnorderedWatcher<IDevice>, IDisposable
     {
         private readonly INetwork iNetwork;
         
@@ -17,6 +18,8 @@ namespace TestMediaServer
         
         private IProxyMediaEndpoint iProxy;
         private IWatchableSnapshot<IMediaDatum> iSnapshot;
+
+        private AutoResetEvent iReady;
 
         public Client(INetwork aNetwork)
         {
@@ -29,6 +32,8 @@ namespace TestMediaServer
             });
 
             iNetwork.Wait();
+
+            iReady = new AutoResetEvent(false);
         }
 
         public void Run()
@@ -47,23 +52,12 @@ namespace TestMediaServer
                 session = iProxy.CreateSession().Result;
             });
 
-            IWatchableContainer<IMediaDatum> root = null;
-
             iNetwork.Execute(() =>
             {
-                root = session.Browse(null).Result;
+                session.Browse(null, UpdateSnapshot);
             });
 
-            iNetwork.Execute(() =>
-            {
-                root.Snapshot.AddWatcher(this);
-            });
-
-            iNetwork.Execute(() =>
-            {
-                root.Snapshot.RemoveWatcher(this);
-            });
-
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 4);
@@ -98,43 +92,22 @@ namespace TestMediaServer
             Do.Assert(rootFragment.Data.ElementAt(3).Type.ElementAt(1) == iNetwork.TagManager.Audio.Genre);
             Do.Assert(rootFragment.Data.ElementAt(3)[iNetwork.TagManager.Container.Title].Value == "Genre");
 
-            IWatchableContainer<IMediaDatum> tracks = null;
-
             iNetwork.Execute(() =>
             {
-                tracks = session.Browse(rootFragment.Data.ElementAt(0)).Result;
+                session.Browse(rootFragment.Data.ElementAt(0), UpdateSnapshot);
             });
 
-            iNetwork.Execute(() =>
-            {
-                tracks.Snapshot.AddWatcher(this);
-            });
-
-            iNetwork.Execute(() =>
-            {
-                tracks.Snapshot.RemoveWatcher(this);
-            });
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 12521);
 
-            IWatchableContainer<IMediaDatum> artists = null;
-
             iNetwork.Execute(() =>
             {
-                artists = session.Browse(rootFragment.Data.ElementAt(1)).Result;
+                session.Browse(rootFragment.Data.ElementAt(1), UpdateSnapshot);
             });
 
-            iNetwork.Execute(() =>
-            {
-                artists.Snapshot.AddWatcher(this);
-            });
-
-            iNetwork.Execute(() =>
-            {
-                artists.Snapshot.RemoveWatcher(this);
-            });
-
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 882);
@@ -154,22 +127,12 @@ namespace TestMediaServer
             Do.Assert(fragment.Data.ElementAt(0).Type.ElementAt(1) == iNetwork.TagManager.Audio.Album);
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Artist].Value == "Bon Jovi");
 
-            IWatchableContainer<IMediaDatum> artistAlbums = null;
-            
             iNetwork.Execute(() =>
             {
-                artistAlbums = session.Browse(fragment.Data.ElementAt(0)).Result;
+                session.Browse(fragment.Data.ElementAt(0), UpdateSnapshot);
             });
 
-            iNetwork.Execute(() =>
-            {
-                artistAlbums.Snapshot.AddWatcher(this);
-            });
-
-            iNetwork.Execute(() =>
-            {
-                artistAlbums.Snapshot.RemoveWatcher(this);
-            });
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 2);
@@ -186,22 +149,12 @@ namespace TestMediaServer
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumArtist].Value == "Bon Jovi");
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumDiscs].Value == "1");
 
-            IWatchableContainer<IMediaDatum> artistAlbumTracks = null;
-
             iNetwork.Execute(() =>
             {
-                artistAlbumTracks = session.Browse(fragment.Data.ElementAt(0)).Result;
+                session.Browse(fragment.Data.ElementAt(0), UpdateSnapshot);
             });
 
-            iNetwork.Execute(() =>
-            {
-                artistAlbumTracks.Snapshot.AddWatcher(this);
-            });
-
-            iNetwork.Execute(() =>
-            {
-                artistAlbumTracks.Snapshot.RemoveWatcher(this);
-            });
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 15);
@@ -220,22 +173,12 @@ namespace TestMediaServer
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Title].Value == "Livin' on a prayer");
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Duration].Value == "251");
 
-            IWatchableContainer<IMediaDatum> albums = null;
-
             iNetwork.Execute(() =>
             {
-                albums = session.Browse(rootFragment.Data.ElementAt(2)).Result;
+                session.Browse(rootFragment.Data.ElementAt(2), UpdateSnapshot);
             });
 
-            iNetwork.Execute(() =>
-            {
-                albums.Snapshot.AddWatcher(this);
-            });
-
-            iNetwork.Execute(() =>
-            {
-                albums.Snapshot.RemoveWatcher(this);
-            });
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 1000);
@@ -252,22 +195,12 @@ namespace TestMediaServer
             Do.Assert(fragment.Data.ElementAt(0).Type.ElementAt(0) == iNetwork.TagManager.Audio.Album);
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumArtist].Value == "Blur");
 
-            IWatchableContainer<IMediaDatum> albumTracks = null;
-
             iNetwork.Execute(() =>
             {
-                albumTracks = session.Browse(fragment.Data.ElementAt(0)).Result;
+                session.Browse(fragment.Data.ElementAt(0), UpdateSnapshot);
             });
 
-            iNetwork.Execute(() =>
-            {
-                albumTracks.Snapshot.AddWatcher(this);
-            });
-
-            iNetwork.Execute(() =>
-            {
-                albumTracks.Snapshot.RemoveWatcher(this);
-            });
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 18);
@@ -286,23 +219,12 @@ namespace TestMediaServer
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Title].Value == "Beetlebum");
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Duration].Value == "305");
 
-
-            IWatchableContainer<IMediaDatum> genres = null;
-
             iNetwork.Execute(() =>
             {
-                genres = session.Browse(rootFragment.Data.ElementAt(3)).Result;
+                session.Browse(rootFragment.Data.ElementAt(3), UpdateSnapshot);
             });
 
-            iNetwork.Execute(() =>
-            {
-                genres.Snapshot.AddWatcher(this);
-            });
-
-            iNetwork.Execute(() =>
-            {
-                genres.Snapshot.RemoveWatcher(this);
-            });
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 124);
@@ -319,22 +241,12 @@ namespace TestMediaServer
             Do.Assert(fragment.Data.ElementAt(0).Type.ElementAt(0) == iNetwork.TagManager.Audio.Genre);
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Genre].Value == "Rap/R & B");
 
-            IWatchableContainer<IMediaDatum> genreTracks = null;
-
             iNetwork.Execute(() =>
             {
-                genreTracks = session.Browse(fragment.Data.ElementAt(0)).Result;
+                session.Browse(fragment.Data.ElementAt(0), UpdateSnapshot);
             });
 
-            iNetwork.Execute(() =>
-            {
-                genreTracks.Snapshot.AddWatcher(this);
-            });
-
-            iNetwork.Execute(() =>
-            {
-                genreTracks.Snapshot.RemoveWatcher(this);
-            });
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 16);
@@ -355,22 +267,12 @@ namespace TestMediaServer
 
             // check artist link
 
-            IWatchableContainer<IMediaDatum> linkArtistAlbums = null;
-
             iNetwork.Execute(() =>
             {
-                linkArtistAlbums = session.Link(iNetwork.TagManager.Audio.Artist, "Bon Jovi").Result;
+                session.Link(iNetwork.TagManager.Audio.Artist, "Bon Jovi", UpdateSnapshot);
             });
 
-            iNetwork.Execute(() =>
-            {
-                linkArtistAlbums.Snapshot.AddWatcher(this);
-            });
-
-            iNetwork.Execute(() =>
-            {
-                linkArtistAlbums.Snapshot.RemoveWatcher(this);
-            });
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 2);
@@ -387,22 +289,12 @@ namespace TestMediaServer
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumArtist].Value == "Bon Jovi");
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumDiscs].Value == "1");
 
-            IWatchableContainer<IMediaDatum> linkArtistAlbumTracks = null;
-
             iNetwork.Execute(() =>
             {
-                linkArtistAlbumTracks = session.Browse(fragment.Data.ElementAt(0)).Result;
+                session.Browse(fragment.Data.ElementAt(0), UpdateSnapshot);
             });
 
-            iNetwork.Execute(() =>
-            {
-                linkArtistAlbumTracks.Snapshot.AddWatcher(this);
-            });
-
-            iNetwork.Execute(() =>
-            {
-                linkArtistAlbumTracks.Snapshot.RemoveWatcher(this);
-            });
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 15);
@@ -423,22 +315,12 @@ namespace TestMediaServer
 
             // check album link
 
-            IWatchableContainer<IMediaDatum> linkAlbumTracks = null;
-
             iNetwork.Execute(() =>
             {
-                linkAlbumTracks = session.Link(iNetwork.TagManager.Audio.Album, "4207").Result;
+                session.Link(iNetwork.TagManager.Audio.Album, "4207", UpdateSnapshot);
             });
 
-            iNetwork.Execute(() =>
-            {
-                linkAlbumTracks.Snapshot.AddWatcher(this);
-            });
-
-            iNetwork.Execute(() =>
-            {
-                linkAlbumTracks.Snapshot.RemoveWatcher(this);
-            });
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 18);
@@ -459,22 +341,12 @@ namespace TestMediaServer
 
             // check genre link
 
-            IWatchableContainer<IMediaDatum> linkGenreTracks = null;
-
             iNetwork.Execute(() =>
             {
-                linkGenreTracks = session.Link(iNetwork.TagManager.Audio.Genre, "Rap/R & B").Result;
+                session.Link(iNetwork.TagManager.Audio.Genre, "Rap/R & B", UpdateSnapshot);
             });
 
-            iNetwork.Execute(() =>
-            {
-                linkGenreTracks.Snapshot.AddWatcher(this);
-            });
-
-            iNetwork.Execute(() =>
-            {
-                linkGenreTracks.Snapshot.RemoveWatcher(this);
-            });
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 16);
@@ -495,22 +367,12 @@ namespace TestMediaServer
 
             // check search
 
-            IWatchableContainer<IMediaDatum> search = null;
-
             iNetwork.Execute(() =>
             {
-                search = session.Search("Love").Result;
+                session.Search("Love", UpdateSnapshot);
             });
 
-            iNetwork.Execute(() =>
-            {
-                search.Snapshot.AddWatcher(this);
-            });
-
-            iNetwork.Execute(() =>
-            {
-                search.Snapshot.RemoveWatcher(this);
-            });
+            iReady.WaitOne();
 
             Do.Assert(iSnapshot.Alpha == null);
             Do.Assert(iSnapshot.Total == 556);
@@ -521,19 +383,10 @@ namespace TestMediaServer
             });
         }
 
-        // IWatcher<IWatchableSnapshot<IMediaDatum>>
-
-        public void ItemOpen(string aId, IWatchableSnapshot<IMediaDatum> aValue)
+        private void UpdateSnapshot(IWatchableSnapshot<IMediaDatum> aValue)
         {
             iSnapshot = aValue;
-        }
-
-        public void ItemUpdate(string aId, IWatchableSnapshot<IMediaDatum> aValue, IWatchableSnapshot<IMediaDatum> aPrevious)
-        {
-        }
-
-        public void ItemClose(string aId, IWatchableSnapshot<IMediaDatum> aValue)
-        {
+            iReady.Set();
         }
 
         // IUnorderedWatcher<IWatchableDevice>

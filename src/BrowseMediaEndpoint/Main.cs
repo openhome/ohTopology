@@ -48,8 +48,6 @@ namespace BrowseMediaEndpoint
 
         public void Run()
         {
-            List();
-
             while (true)
             {
                 var command = Console.ReadLine();
@@ -73,15 +71,17 @@ namespace BrowseMediaEndpoint
                         case "l":
                             iWatchableThread.Schedule(List);
                             break;
-                        case "=":
-                            Select(tokens.Skip(1));
-                            break;
                         case "s":
                             Search(tokens.Skip(1));
                             break;
                         default:
+                            Select(tokens);
                             break;
                     }
+                }
+                else
+                {
+                    iWatchableThread.Schedule(List);
                 }
             }
         }
@@ -105,10 +105,15 @@ namespace BrowseMediaEndpoint
             try
             {
                 var sw = new Stopwatch();
+
                 sw.Start();
-                var container = iMediaEndpointSession.Search(aValue).Result;
-                sw.Stop();
-                Console.WriteLine("{0} items in {1}ms", container.Snapshot.Value.Total, sw.Milliseconds);
+
+                iMediaEndpointSession.Search(aValue, (s) =>
+                {
+                    sw.Stop();
+
+                    Console.WriteLine("{0} items in {1}ms", s.Total, sw.Milliseconds);
+                });
             }
             catch
             {
