@@ -320,6 +320,8 @@ namespace OpenHome.Av
 
                     iSources.RemoveWatcher(this);
 
+                    SetEnabled(false);
+
                     OnSetInactive();
 
                     iRoom.UnJoin(SetInactive);
