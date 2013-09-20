@@ -317,7 +317,7 @@ namespace OpenHome.Av
             Task task = Task.Factory.StartNew(() =>
             {
                 iCacheSession = Network.IdCache.CreateSession(string.Format("Radio({0})", Device.Udn), ReadList);
-                iContainer = new RadioContainer(Network, iCacheSession, this);
+                iContainer = new RadioContainer(iNetwork, iCacheSession, this);
 
                 iService.Subscribe();
                 iSubscribed.WaitOne();
@@ -667,7 +667,7 @@ namespace OpenHome.Av
         {
             iCacheSession = Network.IdCache.CreateSession(string.Format("Radio({0})", Device.Udn), ReadList);
             iCacheSession.SetValid(iIdArray.Where(v => v != 0).ToList());
-            iContainer = new RadioContainer(Network, iCacheSession, this);
+            iContainer = new RadioContainer(iNetwork, iCacheSession, this);
             iContainer.UpdateSnapshot(iIdArray);
 
             return base.OnSubscribe();

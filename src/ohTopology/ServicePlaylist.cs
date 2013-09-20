@@ -355,7 +355,7 @@ namespace OpenHome.Av
             Task task = Task.Factory.StartNew(() =>
             {
                 iCacheSession = Network.IdCache.CreateSession(string.Format("Playlist({0})", Device.Udn), ReadList);
-                iContainer = new PlaylistContainer(Network, iCacheSession, this);
+                iContainer = new PlaylistContainer(iNetwork, iCacheSession, this);
 
                 iService.Subscribe();
                 iSubscribed.WaitOne();
