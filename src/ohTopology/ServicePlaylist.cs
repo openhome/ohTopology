@@ -378,7 +378,10 @@ namespace OpenHome.Av
 
         protected override void OnUnsubscribe()
         {
-            iService.Unsubscribe();
+            if (iService != null)
+            {
+                iService.Unsubscribe();
+            }
 
             if (iContainer != null)
             {
