@@ -64,7 +64,7 @@ namespace TestStandardHouse
                 {
                     if (w)
                     {
-                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Unconfigured.Snapshot, v =>
+                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Unconfigured, v =>
                         {
                             string info = "\nUnconfigured source begin\n";
                             IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
@@ -76,7 +76,7 @@ namespace TestStandardHouse
                             info += "Unconfigured source end";
                             return info;
                         });
-                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Configured.Snapshot, v =>
+                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Configured, v =>
                         {
                             string info = "\nConfigured source begin\n";
                             IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
