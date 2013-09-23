@@ -362,7 +362,7 @@ namespace OpenHome.Av
             {
                 iCacheSession = Network.IdCache.CreateSession(string.Format("Playlist({0})", Device.Udn), ReadList);
 
-                iMediaSupervisor = new MediaSupervisor<IMediaPreset>(Network, new PlaylistSnapshot(Network, iCacheSession, new List<uint>(), this));
+                iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new PlaylistSnapshot(iNetwork, iCacheSession, new List<uint>(), this));
 
                 iService.Subscribe();
                 iSubscribed.WaitOne();
@@ -385,7 +385,10 @@ namespace OpenHome.Av
 
         protected override void OnUnsubscribe()
         {
-            iService.Unsubscribe();
+            if (iService != null)
+            {
+                iService.Unsubscribe();
+            }
 
             if (iMediaSupervisor != null)
             {
@@ -791,7 +794,7 @@ namespace OpenHome.Av
             iCacheSession = Network.IdCache.CreateSession(string.Format("Playlist({0})", Device.Udn), ReadList);
             iCacheSession.SetValid(iIdArray);
 
-            iMediaSupervisor = new MediaSupervisor<IMediaPreset>(Network, new PlaylistSnapshot(Network, iCacheSession, iIdArray, this));
+            iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new PlaylistSnapshot(iNetwork, iCacheSession, iIdArray, this));
 
             return base.OnSubscribe();
         }

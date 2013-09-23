@@ -325,7 +325,7 @@ namespace OpenHome.Av
             {
                 iCacheSession = Network.IdCache.CreateSession(string.Format("Radio({0})", Device.Udn), ReadList);
 
-                iMediaSupervisor = new MediaSupervisor<IMediaPreset>(Network, new RadioSnapshot(Network, iCacheSession, new List<uint>(), this));
+                iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new RadioSnapshot(iNetwork, iCacheSession, new List<uint>(), this));
 
                 iService.Subscribe();
                 iSubscribed.WaitOne();
@@ -348,7 +348,10 @@ namespace OpenHome.Av
 
         protected override void OnUnsubscribe()
         {
-            iService.Unsubscribe();
+            if (iService != null)
+            {
+                iService.Unsubscribe();
+            }
 
             if (iMediaSupervisor != null)
             {
@@ -615,7 +618,8 @@ namespace OpenHome.Av
         {
             iCacheSession = Network.IdCache.CreateSession(string.Format("Radio({0})", Device.Udn), ReadList);
             iCacheSession.SetValid(iIdArray.Where(v => v != 0).ToList());
-            iMediaSupervisor = new MediaSupervisor<IMediaPreset>(Network, new RadioSnapshot(Network, iCacheSession, iIdArray, this));
+
+            iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new RadioSnapshot(iNetwork, iCacheSession, iIdArray, this));
 
             return base.OnSubscribe();
         }
