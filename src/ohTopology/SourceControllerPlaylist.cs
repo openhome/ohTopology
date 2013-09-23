@@ -109,11 +109,11 @@ namespace OpenHome.Av
             iDisposed = true;
         }
 
-        public Task<IWatchableContainer<IMediaPreset>> Container
+        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
         {
             get
             {
-                return iPlaylist.Container;
+                return iPlaylist.Snapshot;
             }
         }
 

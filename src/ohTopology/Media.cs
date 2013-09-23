@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
 using System.Xml;
+using System.Threading;
 
 using OpenHome.Os.App;
 
@@ -36,6 +37,195 @@ namespace OpenHome.Av
     public interface IWatchableContainer<T>
     {
         IWatchable<IWatchableSnapshot<T>> Snapshot { get; }
+    }
+
+    public class MediaSupervisor<T> : IDisposable
+    {
+        private readonly DisposeHandler iDisposeHandler;
+        private CancellationTokenSource iCancellationToken;
+        private Watchable<IWatchableSnapshot<T>> iSnapshot;
+
+        public MediaSupervisor(IWatchableThread aThread, IMediaClientSnapshot<T> aClientSnapshot)
+        {
+            iDisposeHandler = new DisposeHandler();
+            iCancellationToken = new CancellationTokenSource();
+            iSnapshot = new Watchable<IWatchableSnapshot<T>>(aThread, "Snapshot", new MediaSnapshot<T>(iCancellationToken.Token, aClientSnapshot));
+        }
+
+        public void Dispose()
+        {
+            iDisposeHandler.Dispose();
+
+            iCancellationToken.Cancel();
+
+            MediaSnapshot<T> snapshot = iSnapshot.Value as MediaSnapshot<T>;
+
+            iSnapshot.Dispose();
+
+            snapshot.Dispose();
+        }
+
+        public IWatchable<IWatchableSnapshot<T>> Snapshot
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iSnapshot;
+                }
+            }
+        }
+
+        public void Update(IMediaClientSnapshot<T> aClientSnapshot)
+        {
+            using (iDisposeHandler.Lock)
+            {
+                iCancellationToken.Cancel();
+
+                MediaSnapshot<T> snapshot = iSnapshot.Value as MediaSnapshot<T>;
+
+                iCancellationToken = new CancellationTokenSource();
+                iSnapshot.Update(new MediaSnapshot<T>(iCancellationToken.Token, aClientSnapshot));
+
+                snapshot.Dispose();
+            }
+        }
+    }
+
+    public interface IMediaClientSnapshot<T>
+    {
+        uint Total { get; }
+        IEnumerable<uint> Alpha { get; } // null if no alpha map
+        IEnumerable<T> Read(CancellationToken aToken, uint aIndex, uint aCount);
+    }
+
+    internal class MediaSnapshot<T> : IWatchableSnapshot<T>, IDisposable
+    {
+        private readonly CancellationToken iCancellationToken;
+        private readonly IMediaClientSnapshot<T> iSnapshot;
+
+        private readonly DisposeHandler iDisposeHandler;
+
+        private readonly List<Task> iTasks;
+
+        public MediaSnapshot(CancellationToken aCancellationToken, IMediaClientSnapshot<T> aSnapshot)
+        {
+            iCancellationToken = aCancellationToken;
+            iSnapshot = aSnapshot;
+
+            iDisposeHandler = new DisposeHandler();
+
+            iTasks = new List<Task>();
+        }
+
+        // IWatchableSnapshot<IMediaPreset>
+
+        public uint Total
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return (iSnapshot.Total);
+                }
+            }
+        }
+
+        public IEnumerable<uint> Alpha
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return (iSnapshot.Alpha);
+                }
+            }
+        }
+
+        public Task<IWatchableFragment<T>> Read(uint aIndex, uint aCount)
+        {
+            Do.Assert(aIndex + aCount <= iSnapshot.Total);
+
+            using (iDisposeHandler.Lock)
+            {
+                var task = Task.Factory.StartNew<IWatchableFragment<T>>(() =>
+                {
+                    iCancellationToken.ThrowIfCancellationRequested();
+
+                    if (aCount == 0)
+                    {
+                        return (new WatchableFragment<T>(aIndex, Enumerable.Empty<T>()));
+                    }
+
+                    IEnumerable<T> data;
+
+                    try
+                    {
+                        data = iSnapshot.Read(iCancellationToken, aIndex, aCount);
+                    }
+                    catch
+                    {
+                        throw new OperationCanceledException();
+                    }
+
+                    iCancellationToken.ThrowIfCancellationRequested();
+
+                    return (new WatchableFragment<T>(aIndex, data));
+                });
+
+                lock (iTasks)
+                {
+                    Task completion = null;
+
+                    completion = task.ContinueWith((t) =>
+                    {
+                        try
+                        {
+                            t.Wait();
+                        }
+                        catch
+                        {
+                        }
+
+                        lock (iTasks)
+                        {
+                            iTasks.Remove(completion);
+                        }
+                    });
+
+                    iTasks.Add(completion);
+                }
+
+                return (task);
+            }
+        }
+
+        // IDisposable
+
+        public void Dispose()
+        {
+            iDisposeHandler.Dispose();
+
+            Task[] tasks;
+
+            lock (iTasks)
+            {
+                tasks = iTasks.ToArray();
+            }
+
+            try
+            {
+                Task.WaitAll(tasks);
+            }
+            catch
+            {
+            }
+
+            lock (iTasks)
+            {
+                Do.Assert(iTasks.Count == 0);
+            }
+        }
     }
 
     public class WatchableFragment<T> : IWatchableFragment<T>

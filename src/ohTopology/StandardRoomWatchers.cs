@@ -92,59 +92,6 @@ namespace OpenHome.Av
         }
     }
 
-    class StandardRoomWatcherContainer : IWatchableContainer<IMediaPreset>, IWatcher<IWatchableSnapshot<IMediaPreset>>, IDisposable
-    {
-        private readonly DisposeHandler iDisposeHandler;
-        private readonly INetwork iNetwork;
-        private readonly ITopology4Source iSource;
-        private readonly IWatchableContainer<IMediaPreset> iContainer;
-        private Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
-
-        public StandardRoomWatcherContainer(INetwork aNetwork, ITopology4Source aSource, IWatchableContainer<IMediaPreset> aContainer)
-        {
-            iDisposeHandler = new DisposeHandler();
-
-            iNetwork = aNetwork;
-            iSource = aSource;
-            iContainer = aContainer;
-
-            iContainer.Snapshot.AddWatcher(this);
-        }
-
-        public void Dispose()
-        {
-            iDisposeHandler.Dispose();
-
-            iContainer.Snapshot.RemoveWatcher(this);
-        }
-
-        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iSnapshot;
-                }
-            }
-        }
-
-        public void ItemOpen(string aId, IWatchableSnapshot<IMediaPreset> aValue)
-        {
-            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(iNetwork, "Snapshot", new StandardRoomWatcherSnapshot(iSource, aValue));
-        }
-
-        public void ItemUpdate(string aId, IWatchableSnapshot<IMediaPreset> aValue, IWatchableSnapshot<IMediaPreset> aPrevious)
-        {
-            iSnapshot.Update(new StandardRoomWatcherSnapshot(iSource, aValue));
-        }
-
-        public void ItemClose(string aId, IWatchableSnapshot<IMediaPreset> aValue)
-        {
-            iSnapshot.Dispose();
-        }
-    }
-
     class StandardRoomWatcherSnapshot : IWatchableSnapshot<IMediaPreset>
     {
         private readonly ITopology4Source iSource;
@@ -346,7 +293,6 @@ namespace OpenHome.Av
     {
         private IProxyPlaylist iPlaylist;
         private IPlaylistWriter iPlaylistWriter;
-        private StandardRoomWatcherContainer iContainer;
 
         public StandardRoomWatcherMusic(IStandardRoom aRoom)
             : base(aRoom)
@@ -357,11 +303,6 @@ namespace OpenHome.Av
         {
             base.Dispose();
 
-            if (iContainer != null)
-            {
-                iContainer.Dispose();
-                iContainer = null;
-            }
             if (iPlaylist != null)
             {
                 iPlaylist.Dispose();
@@ -374,11 +315,6 @@ namespace OpenHome.Av
         {
             using (iDisposeHandler.Lock)
             {
-                if (iContainer != null)
-                {
-                    iContainer.Dispose();
-                    iContainer = null;
-                }
                 if (iPlaylist != null)
                 {
                     iPlaylist.Dispose();
@@ -388,17 +324,13 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<IWatchableContainer<IMediaPreset>> Container
+        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
         {
             get
             {
                 using (iDisposeHandler.Lock)
                 {
-                    Task<IWatchableContainer<IMediaPreset>> task = Task<IWatchableContainer<IMediaPreset>>.Factory.StartNew(() =>
-                    {
-                        return iContainer;
-                    });
-                    return task;
+                    return iPlaylist.Snapshot;
                 }
             }
         }
@@ -423,11 +355,6 @@ namespace OpenHome.Av
         {
             SetEnabled(false);
 
-            if (iContainer != null)
-            {
-                iContainer.Dispose();
-                iContainer = null;
-            }
             if (iPlaylist != null)
             {
                 iPlaylist.Dispose();
@@ -450,7 +377,6 @@ namespace OpenHome.Av
                     {
                         iPlaylist = playlist;
                         iPlaylistWriter = new PlaylistWriter(playlist);
-                        iContainer = new StandardRoomWatcherContainer(iNetwork, s, playlist.Container.Result);
                         SetEnabled(true);
                     });
                     return;
@@ -462,7 +388,6 @@ namespace OpenHome.Av
     public class StandardRoomWatcherRadio : StandardRoomWatcher
     {
         private IProxyRadio iRadio;
-        private StandardRoomWatcherContainer iContainer;
 
         public StandardRoomWatcherRadio(IStandardRoom aRoom)
             : base(aRoom)
@@ -473,11 +398,6 @@ namespace OpenHome.Av
         {
             base.Dispose();
 
-            if (iContainer != null)
-            {
-                iContainer.Dispose();
-                iContainer = null;
-            }
             if (iRadio != null)
             {
                 iRadio.Dispose();
@@ -489,11 +409,6 @@ namespace OpenHome.Av
         {
             using (iDisposeHandler.Lock)
             {
-                if (iContainer != null)
-                {
-                    iContainer.Dispose();
-                    iContainer = null;
-                }
                 if (iRadio != null)
                 {
                     iRadio.Dispose();
@@ -502,17 +417,13 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<IWatchableContainer<IMediaPreset>> Container
+        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
         {
             get
             {
                 using (iDisposeHandler.Lock)
                 {
-                    Task<IWatchableContainer<IMediaPreset>> task = Task<IWatchableContainer<IMediaPreset>>.Factory.StartNew(() =>
-                    {
-                        return iContainer;
-                    });
-                    return task;
+                    return iRadio.Snapshot;
                 }
             }
         }
@@ -526,11 +437,6 @@ namespace OpenHome.Av
         {
             SetEnabled(false);
 
-            if (iContainer != null)
-            {
-                iContainer.Dispose();
-                iContainer = null;
-            }
             if (iRadio != null)
             {
                 iRadio.Dispose();
@@ -549,7 +455,6 @@ namespace OpenHome.Av
                     s.Device.Create<IProxyRadio>((radio) =>
                     {
                         iRadio = radio;
-                        iContainer = new StandardRoomWatcherContainer(iNetwork, s, radio.Container.Result);
                         SetEnabled(true);
                     });
                     return;

@@ -7,7 +7,7 @@ namespace OpenHome.Av
 {
     public interface ISourceController : IDisposable
     {
-        Task<IWatchableContainer<IMediaPreset>> Container { get; }
+        IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot { get; }
 
         void Play();
         void Pause();

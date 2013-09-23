@@ -189,7 +189,7 @@ namespace OpenHome.Av
         Task SetId(uint aId, string aUri);
         Task SetChannel(string aUri, IMediaMetadata aMetadata);
 
-        Task<IWatchableContainer<IMediaPreset>> Container { get; }
+        IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot { get; }
 
         uint ChannelsMax { get; }
         string ProtocolInfo { get; }
@@ -248,6 +248,14 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
+        {
+            get
+            {
+                return iMediaSupervisor.Snapshot;
+            }
+        }
+
         public uint ChannelsMax
         {
             get
@@ -271,8 +279,6 @@ namespace OpenHome.Av
         public abstract Task SeekSecondRelative(int aValue);
         public abstract Task SetId(uint aId, string aUri);
         public abstract Task SetChannel(string aUri, IMediaMetadata aMetadata);
-
-        public abstract Task<IWatchableContainer<IMediaPreset>> Container { get; }
         
         protected uint iChannelsMax;
         protected string iProtocolInfo;
@@ -280,6 +286,8 @@ namespace OpenHome.Av
         protected Watchable<uint> iId;
         protected Watchable<string> iTransportState;
         protected Watchable<IInfoMetadata> iMetadata;
+
+        protected MediaSupervisor<IMediaPreset> iMediaSupervisor;
     }
 
     class ServiceRadioNetwork : ServiceRadio
@@ -305,7 +313,6 @@ namespace OpenHome.Av
             iSubscribed.Dispose();
             iSubscribed = null;
 
-            Do.Assert(iContainer == null);
             Do.Assert(iCacheSession == null);
 
             iService.Dispose();
@@ -317,7 +324,8 @@ namespace OpenHome.Av
             Task task = Task.Factory.StartNew(() =>
             {
                 iCacheSession = Network.IdCache.CreateSession(string.Format("Radio({0})", Device.Udn), ReadList);
-                iContainer = new RadioContainer(Network, iCacheSession, this);
+
+                iMediaSupervisor = new MediaSupervisor<IMediaPreset>(Network, new RadioSnapshot(Network, iCacheSession, new List<uint>(), this));
 
                 iService.Subscribe();
                 iSubscribed.WaitOne();
@@ -342,11 +350,12 @@ namespace OpenHome.Av
         {
             iService.Unsubscribe();
 
-            if (iContainer != null)
+            if (iMediaSupervisor != null)
             {
-                iContainer.Dispose();
-                iContainer = null;
+                iMediaSupervisor.Dispose();
+                iMediaSupervisor = null;
             }
+
             if (iCacheSession != null)
             {
                 iCacheSession.Dispose();
@@ -454,18 +463,6 @@ namespace OpenHome.Av
             return task;
         }
 
-        public override Task<IWatchableContainer<IMediaPreset>> Container
-        {
-            get
-            {
-                Task<IWatchableContainer<IMediaPreset>> task = Task<IWatchableContainer<IMediaPreset>>.Factory.StartNew(() =>
-                {
-                    return iContainer;
-                });
-                return task;
-            }
-        }
-
         private void HandleIdChanged()
         {
             Network.Schedule(() =>
@@ -480,7 +477,7 @@ namespace OpenHome.Av
             {
                 IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
                 iCacheSession.SetValid(idArray.Where(v => v != 0).ToList());
-                iContainer.UpdateSnapshot(idArray);
+                iMediaSupervisor.Update(new RadioSnapshot(Network, iCacheSession, idArray, this));
             });
         }
 
@@ -506,54 +503,10 @@ namespace OpenHome.Av
 
         private ManualResetEvent iSubscribed;
         private CpProxyAvOpenhomeOrgRadio1 iService;
-        private RadioContainer iContainer;
         private IIdCacheSession iCacheSession;
     }
 
-    class RadioContainer : IWatchableContainer<IMediaPreset>, IDisposable
-    {
-        private readonly DisposeHandler iDisposeHandler;
-        private readonly INetwork iNetwork;
-        private readonly ServiceRadio iRadio;
-        private readonly IIdCacheSession iCacheSession;
-        private readonly Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
-
-        public RadioContainer(INetwork aNetwork, IIdCacheSession aCacheSession, ServiceRadio aRadio)
-        {
-            iDisposeHandler = new DisposeHandler();
-            iNetwork = aNetwork;
-            iRadio = aRadio;
-            iCacheSession = aCacheSession;
-            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new RadioSnapshot(iNetwork, iCacheSession, new List<uint>(), iRadio));
-        }
-
-        public void Dispose()
-        {
-            iDisposeHandler.Dispose();
-            iSnapshot.Dispose();
-        }
-
-        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iSnapshot;
-                }
-            }
-        }
-
-        internal void UpdateSnapshot(IList<uint> aIdArray)
-        {
-            using (iDisposeHandler.Lock)
-            {
-                iSnapshot.Update(new RadioSnapshot(iNetwork, iCacheSession, aIdArray, iRadio));
-            }
-        }
-    }
-
-    class RadioSnapshot : IWatchableSnapshot<IMediaPreset>
+    class RadioSnapshot : IMediaClientSnapshot<IMediaPreset>
     {
         private readonly INetwork iNetwork;
         private readonly IIdCacheSession iCacheSession;
@@ -584,38 +537,33 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<IWatchableFragment<IMediaPreset>> Read(uint aIndex, uint aCount)
+        public IEnumerable<IMediaPreset> Read(CancellationToken aCancellationToken, uint aIndex, uint aCount)
         {
             Do.Assert(aIndex + aCount <= Total);
 
-            Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
+            List<uint> idList = new List<uint>();
+            for (uint i = aIndex; i < aIndex + aCount; ++i)
             {
-                List<uint> idList = new List<uint>();
-                for (uint i = aIndex; i < aIndex + aCount; ++i)
-                {
-                    idList.Add(iIdArray.Where(v => v != 0).ElementAt((int)i));
-                }
+                idList.Add(iIdArray.Where(v => v != 0).ElementAt((int)i));
+            }
 
-                List<IMediaPreset> presets = new List<IMediaPreset>();
-                IEnumerable<IIdCacheEntry> entries = iCacheSession.Entries(idList).Result;
-                uint index = aIndex;
-                foreach(IIdCacheEntry e in entries)
-                {
-                    uint id = iIdArray.Where(v => v != 0).ElementAt((int)index);
-                    presets.Add(new MediaPresetRadio(iNetwork, (uint)(iIdArray.IndexOf(id) + 1), id, e.Metadata, e.Uri, iRadio));
-                    ++index;
-                }
+            List<IMediaPreset> presets = new List<IMediaPreset>();
+            IEnumerable<IIdCacheEntry> entries = iCacheSession.Entries(idList).Result;
+            uint index = aIndex;
+            foreach (IIdCacheEntry e in entries)
+            {
+                uint id = iIdArray.Where(v => v != 0).ElementAt((int)index);
+                presets.Add(new MediaPresetRadio(iNetwork, (uint)(iIdArray.IndexOf(id) + 1), id, e.Metadata, e.Uri, iRadio));
+                ++index;
+            }
 
-                return new WatchableFragment<IMediaPreset>(aIndex, presets);
-            });
-            return task;
+            return presets;
         }
     }
 
     class ServiceRadioMock : ServiceRadio, IMockable
     {
         private IIdCacheSession iCacheSession;
-        private RadioContainer iContainer;
         private IList<IMediaMetadata> iPresets;
         private List<uint> iIdArray;
 
@@ -648,10 +596,10 @@ namespace OpenHome.Av
 
         public override void Dispose()
         {
-            if (iContainer != null)
+            if (iMediaSupervisor != null)
             {
-                iContainer.Dispose();
-                iContainer = null;
+                iMediaSupervisor.Dispose();
+                iMediaSupervisor = null;
             }
 
             if (iCacheSession != null)
@@ -667,23 +615,23 @@ namespace OpenHome.Av
         {
             iCacheSession = Network.IdCache.CreateSession(string.Format("Radio({0})", Device.Udn), ReadList);
             iCacheSession.SetValid(iIdArray.Where(v => v != 0).ToList());
-            iContainer = new RadioContainer(Network, iCacheSession, this);
-            iContainer.UpdateSnapshot(iIdArray);
+            iMediaSupervisor = new MediaSupervisor<IMediaPreset>(Network, new RadioSnapshot(Network, iCacheSession, iIdArray, this));
 
             return base.OnSubscribe();
         }
 
         protected override void OnUnsubscribe()
         {
+            if (iMediaSupervisor != null)
+            {
+                iMediaSupervisor.Dispose();
+                iMediaSupervisor = null;
+            } 
+            
             if (iCacheSession != null)
             {
                 iCacheSession.Dispose();
                 iCacheSession = null;
-            }
-            if (iContainer != null)
-            {
-                iContainer.Dispose();
-                iContainer = null;
             }
 
             base.OnUnsubscribe();
@@ -763,18 +711,6 @@ namespace OpenHome.Av
                 });
             });
             return task;
-        }
-
-        public override Task<IWatchableContainer<IMediaPreset>> Container
-        {
-            get
-            {
-                Task<IWatchableContainer<IMediaPreset>> task = Task<IWatchableContainer<IMediaPreset>>.Factory.StartNew(() =>
-                {
-                    return iContainer;
-                });
-                return task;
-            }
         }
 
         private Task<IEnumerable<IIdCacheEntry>> ReadList(IEnumerable<uint> aIdList)
@@ -934,11 +870,11 @@ namespace OpenHome.Av
             return iService.SetChannel(aUri, aMetadata);
         }
 
-        public Task<IWatchableContainer<IMediaPreset>> Container
+        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
         {
             get
             {
-                return iService.Container;
+                return iService.Snapshot;
             }
         }
     }

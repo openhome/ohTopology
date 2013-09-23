@@ -6,7 +6,7 @@ using OpenHome.Os;
 using OpenHome.Av;
 using OpenHome.Os.App;
 
-namespace TestLinnHouse
+namespace TestStandardHouse
 {
     class Program
     {
@@ -96,8 +96,7 @@ namespace TestLinnHouse
                 {
                     if (v)
                     {
-                        IWatchableContainer<IMediaPreset> container = iWatcherRadio.Container.Result;
-                        iFactoryRadioPresets.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherRadio.Room.Name, container.Snapshot, w =>
+                        iFactoryRadioPresets.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherRadio.Room.Name, iWatcherRadio.Snapshot, w =>
                         {
                             if (iRadioPresets != null)
                             {
