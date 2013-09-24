@@ -10,7 +10,7 @@ namespace OpenHome.Av
         Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata, bool aPlay);
         Task<uint> InsertNext(string aUri, IMediaMetadata aMetadata, bool aPlay);
         Task<uint> InsertEnd(string aUri, IMediaMetadata aMetadata, bool aPlay);
-        Task DeleteId(uint aValue);
+        Task Delete(IMediaPreset aValue);
         Task DeleteAll();
     }
 
