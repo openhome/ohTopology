@@ -881,7 +881,7 @@ namespace OpenHome.Av
 
         private bool IsConfigured(ITopology4Source aSource)
         {
-            if (aSource.Name.StartsWith("Hdmi"))
+            if (aSource.Name.StartsWith("HDMI") || aSource.Name.StartsWith("Hdmi"))
             {
                 try
                 {
