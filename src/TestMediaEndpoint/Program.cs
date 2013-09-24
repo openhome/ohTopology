@@ -246,13 +246,13 @@ namespace TestMediaEndpoint
                 {
                     client.Schedule(() =>
                     {
-                        session.Browse(null, (s) =>
+                        session.Browse(null, () =>
                         {
-                            if (s.Total >= 100)
+                            if (session.Snapshot.Total >= 100)
                             {
                                 for (int j = 0; j < 20; j++)
                                 {
-                                    s.Read(0, 100).ContinueWith((t) =>
+                                    session.Snapshot.Read(0, 100).ContinueWith((t) =>
                                     {
                                         try
                                         {

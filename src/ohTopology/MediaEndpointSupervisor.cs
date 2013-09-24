@@ -180,7 +180,7 @@ namespace OpenHome.Av
         private readonly DisposeHandler iDisposeHandler;
 
         private Func<CancellationToken, IMediaEndpointClientSnapshot> iSnapshotFunction;
-        private Action<IWatchableSnapshot<IMediaDatum>> iAction;
+        private Action iAction;
 
         private CancellationTokenSource iCancellationSource;
 
@@ -203,7 +203,7 @@ namespace OpenHome.Av
                 return (null);
             };
 
-            iAction = (s) =>
+            iAction = () =>
             {
                 Do.Assert(false);
             };
@@ -281,7 +281,7 @@ namespace OpenHome.Av
 
                             iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, token, snapshot);
 
-                            iAction(iSnapshot);
+                            iAction();
 
                             previous.Dispose();
                         }
@@ -290,7 +290,7 @@ namespace OpenHome.Av
             }, token);
         }
 
-        private void UpdateSnapshot(Func<CancellationToken, IMediaEndpointClientSnapshot> aSnapshotFunction, Action<IWatchableSnapshot<IMediaDatum>> aAction)
+        private void UpdateSnapshot(Func<CancellationToken, IMediaEndpointClientSnapshot> aSnapshotFunction, Action aAction)
         {
             // called on the watchable thread
 
@@ -301,7 +301,15 @@ namespace OpenHome.Av
 
         // IMediaEndpointSession
 
-        public void Browse(IMediaDatum aDatum, Action<IWatchableSnapshot<IMediaDatum>> aAction)
+        public IWatchableSnapshot<IMediaDatum> Snapshot
+        {
+            get
+            {
+                return (iSnapshot);
+            }
+        }
+
+        public void Browse(IMediaDatum aDatum, Action aAction)
         {
             iClient.Assert(); // must be called on the watchable thread
 
@@ -311,7 +319,7 @@ namespace OpenHome.Av
             }
         }
 
-        public void List(ITag aTag, Action<IWatchableSnapshot<IMediaDatum>> aAction)
+        public void List(ITag aTag, Action aAction)
         {
             iClient.Assert(); // must be called on the watchable thread
 
@@ -321,7 +329,7 @@ namespace OpenHome.Av
             }
         }
 
-        public void Link(ITag aTag, string aValue, Action<IWatchableSnapshot<IMediaDatum>> aAction)
+        public void Link(ITag aTag, string aValue, Action aAction)
         {
             iClient.Assert(); // must be called on the watchable thread
 
@@ -331,7 +339,7 @@ namespace OpenHome.Av
             }
         }
 
-        public void Search(string aValue, Action<IWatchableSnapshot<IMediaDatum>> aAction)
+        public void Search(string aValue, Action aAction)
         {
             iClient.Assert(); // must be called on the watchable thread
 

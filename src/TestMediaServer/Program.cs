@@ -17,7 +17,6 @@ namespace TestMediaServer
         private IWatchableUnordered<IDevice> iMediaServers;
         
         private IProxyMediaEndpoint iProxy;
-        private IWatchableSnapshot<IMediaDatum> iSnapshot;
 
         private AutoResetEvent iReady;
 
@@ -54,19 +53,19 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                session.Browse(null, UpdateSnapshot);
+                session.Browse(null,  () => iReady.Set());
             });
 
             iReady.WaitOne();
 
-            Do.Assert(iSnapshot.Alpha == null);
-            Do.Assert(iSnapshot.Total == 4);
+            Do.Assert(session.Snapshot.Alpha == null);
+            Do.Assert(session.Snapshot.Total == 4);
 
             IWatchableFragment<IMediaDatum> rootFragment = null;
             
             iNetwork.Execute(() =>
             {
-                rootFragment = iSnapshot.Read(0, 4).Result;
+                rootFragment = session.Snapshot.Read(0, 4).Result;
             });
 
             Do.Assert(rootFragment.Index == 0);
@@ -99,8 +98,8 @@ namespace TestMediaServer
 
             iReady.WaitOne();
 
-            Do.Assert(iSnapshot.Alpha == null);
-            Do.Assert(iSnapshot.Total == 12521);
+            Do.Assert(session.Snapshot.Alpha == null);
+            Do.Assert(session.Snapshot.Total == 12521);
 
             iNetwork.Execute(() =>
             {
@@ -109,14 +108,14 @@ namespace TestMediaServer
 
             iReady.WaitOne();
 
-            Do.Assert(iSnapshot.Alpha == null);
-            Do.Assert(iSnapshot.Total == 882);
+            Do.Assert(session.Snapshot.Alpha == null);
+            Do.Assert(session.Snapshot.Total == 882);
 
             IWatchableFragment<IMediaDatum> fragment = null;
                 
             iNetwork.Execute(() =>
             {
-                fragment = iSnapshot.Read(100, 1).Result;
+                fragment = session.Snapshot.Read(100, 1).Result;
             });
 
             Do.Assert(fragment.Index == 100);
@@ -134,12 +133,12 @@ namespace TestMediaServer
 
             iReady.WaitOne();
 
-            Do.Assert(iSnapshot.Alpha == null);
-            Do.Assert(iSnapshot.Total == 2);
+            Do.Assert(session.Snapshot.Alpha == null);
+            Do.Assert(session.Snapshot.Total == 2);
 
             iNetwork.Execute(() =>
             {
-                fragment = iSnapshot.Read(0, 1).Result;
+                fragment = session.Snapshot.Read(0, 1).Result;
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 1);
@@ -156,12 +155,12 @@ namespace TestMediaServer
 
             iReady.WaitOne();
 
-            Do.Assert(iSnapshot.Alpha == null);
-            Do.Assert(iSnapshot.Total == 15);
+            Do.Assert(session.Snapshot.Alpha == null);
+            Do.Assert(session.Snapshot.Total == 15);
 
             iNetwork.Execute(() =>
             {
-                fragment = iSnapshot.Read(0, 1).Result;
+                fragment = session.Snapshot.Read(0, 1).Result;
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
@@ -180,12 +179,12 @@ namespace TestMediaServer
 
             iReady.WaitOne();
 
-            Do.Assert(iSnapshot.Alpha == null);
-            Do.Assert(iSnapshot.Total == 1000);
+            Do.Assert(session.Snapshot.Alpha == null);
+            Do.Assert(session.Snapshot.Total == 1000);
 
             iNetwork.Execute(() =>
             {
-                fragment = iSnapshot.Read(100, 1).Result;
+                fragment = session.Snapshot.Read(100, 1).Result;
             });
 
             Do.Assert(fragment.Index == 100);
@@ -202,12 +201,12 @@ namespace TestMediaServer
 
             iReady.WaitOne();
 
-            Do.Assert(iSnapshot.Alpha == null);
-            Do.Assert(iSnapshot.Total == 18);
+            Do.Assert(session.Snapshot.Alpha == null);
+            Do.Assert(session.Snapshot.Total == 18);
 
             iNetwork.Execute(() =>
             {
-                fragment = iSnapshot.Read(0, 1).Result;
+                fragment = session.Snapshot.Read(0, 1).Result;
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
@@ -226,12 +225,12 @@ namespace TestMediaServer
 
             iReady.WaitOne();
 
-            Do.Assert(iSnapshot.Alpha == null);
-            Do.Assert(iSnapshot.Total == 124);
+            Do.Assert(session.Snapshot.Alpha == null);
+            Do.Assert(session.Snapshot.Total == 124);
 
             iNetwork.Execute(() =>
             {
-                fragment = iSnapshot.Read(100, 1).Result;
+                fragment = session.Snapshot.Read(100, 1).Result;
             });
 
             Do.Assert(fragment.Index == 100);
@@ -248,12 +247,12 @@ namespace TestMediaServer
 
             iReady.WaitOne();
 
-            Do.Assert(iSnapshot.Alpha == null);
-            Do.Assert(iSnapshot.Total == 16);
+            Do.Assert(session.Snapshot.Alpha == null);
+            Do.Assert(session.Snapshot.Total == 16);
 
             iNetwork.Execute(() =>
             {
-                fragment = iSnapshot.Read(0, 1).Result;
+                fragment = session.Snapshot.Read(0, 1).Result;
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
@@ -274,12 +273,12 @@ namespace TestMediaServer
 
             iReady.WaitOne();
 
-            Do.Assert(iSnapshot.Alpha == null);
-            Do.Assert(iSnapshot.Total == 2);
+            Do.Assert(session.Snapshot.Alpha == null);
+            Do.Assert(session.Snapshot.Total == 2);
 
             iNetwork.Execute(() =>
             {
-                fragment = iSnapshot.Read(0, 1).Result;
+                fragment = session.Snapshot.Read(0, 1).Result;
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 1);
@@ -296,12 +295,12 @@ namespace TestMediaServer
 
             iReady.WaitOne();
 
-            Do.Assert(iSnapshot.Alpha == null);
-            Do.Assert(iSnapshot.Total == 15);
+            Do.Assert(session.Snapshot.Alpha == null);
+            Do.Assert(session.Snapshot.Total == 15);
 
             iNetwork.Execute(() =>
             {
-                fragment = iSnapshot.Read(0, 1).Result;
+                fragment = session.Snapshot.Read(0, 1).Result;
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
@@ -322,12 +321,12 @@ namespace TestMediaServer
 
             iReady.WaitOne();
 
-            Do.Assert(iSnapshot.Alpha == null);
-            Do.Assert(iSnapshot.Total == 18);
+            Do.Assert(session.Snapshot.Alpha == null);
+            Do.Assert(session.Snapshot.Total == 18);
 
             iNetwork.Execute(() =>
             {
-                fragment = iSnapshot.Read(0, 1).Result;
+                fragment = session.Snapshot.Read(0, 1).Result;
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
@@ -348,12 +347,12 @@ namespace TestMediaServer
 
             iReady.WaitOne();
 
-            Do.Assert(iSnapshot.Alpha == null);
-            Do.Assert(iSnapshot.Total == 16);
+            Do.Assert(session.Snapshot.Alpha == null);
+            Do.Assert(session.Snapshot.Total == 16);
 
             iNetwork.Execute(() =>
             {
-                fragment = iSnapshot.Read(0, 1).Result;
+                fragment = session.Snapshot.Read(0, 1).Result;
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
@@ -374,8 +373,8 @@ namespace TestMediaServer
 
             iReady.WaitOne();
 
-            Do.Assert(iSnapshot.Alpha == null);
-            Do.Assert(iSnapshot.Total == 556);
+            Do.Assert(session.Snapshot.Alpha == null);
+            Do.Assert(session.Snapshot.Total == 556);
 
             iNetwork.Execute(() =>
             {
@@ -383,9 +382,8 @@ namespace TestMediaServer
             });
         }
 
-        private void UpdateSnapshot(IWatchableSnapshot<IMediaDatum> aValue)
+        private void UpdateSnapshot()
         {
-            iSnapshot = aValue;
             iReady.Set();
         }
 

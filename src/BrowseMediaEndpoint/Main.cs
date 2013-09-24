@@ -108,11 +108,11 @@ namespace BrowseMediaEndpoint
 
                 sw.Start();
 
-                iMediaEndpointSession.Search(aValue, (s) =>
+                iMediaEndpointSession.Search(aValue, () =>
                 {
                     sw.Stop();
 
-                    Console.WriteLine("{0} items in {1}ms", s.Total, sw.Milliseconds);
+                    Console.WriteLine("{0} items in {1}ms", iMediaEndpointSession.Snapshot.Total, sw.Milliseconds);
                 });
             }
             catch

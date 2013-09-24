@@ -15,10 +15,11 @@ namespace OpenHome.Av
 {
     public interface IMediaEndpointSession : IDisposable
     {
-        void Browse(IMediaDatum aDatum, Action<IWatchableSnapshot<IMediaDatum>> aAction); // null = home
-        void List(ITag aTag, Action<IWatchableSnapshot<IMediaDatum>> aAction);
-        void Link(ITag aTag, string aValue, Action<IWatchableSnapshot<IMediaDatum>> aAction);
-        void Search(string aValue, Action<IWatchableSnapshot<IMediaDatum>> aAction);
+        IWatchableSnapshot<IMediaDatum> Snapshot { get; }
+        void Browse(IMediaDatum aDatum, Action aAction); // null = home
+        void List(ITag aTag, Action aAction);
+        void Link(ITag aTag, string aValue, Action aAction);
+        void Search(string aValue, Action aAction);
     }
 
     public interface IProxyMediaEndpoint : IProxy
