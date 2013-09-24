@@ -77,9 +77,9 @@ namespace OpenHome.Av
             return t1;
         }
 
-        public Task DeleteId(uint aValue)
+        public Task Delete(IMediaPreset aMediaPreset)
         {
-            return iPlaylist.DeleteId(aValue);
+            return iPlaylist.Delete(aMediaPreset);
         }
 
         public Task DeleteAll()

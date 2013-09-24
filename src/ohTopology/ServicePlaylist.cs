@@ -73,6 +73,17 @@ namespace OpenHome.Av
             }
         }
 
+        public uint Id
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iId;
+                }
+            }
+        }
+
         public IMediaMetadata Metadata
         {
             get
@@ -175,7 +186,7 @@ namespace OpenHome.Av
         Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata);
         Task<uint> InsertNext(string aUri, IMediaMetadata aMetadata);
         Task<uint> InsertEnd(string aUri, IMediaMetadata aMetadata);
-        Task DeleteId(uint aValue);
+        Task Delete(IMediaPreset aValue);
         Task DeleteAll();
         Task SetRepeat(bool aValue);
         Task SetShuffle(bool aValue);
@@ -298,7 +309,7 @@ namespace OpenHome.Av
         public abstract Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata);
         public abstract Task<uint> InsertNext(string aUri, IMediaMetadata aMetadata);
         public abstract Task<uint> InsertEnd(string aUri, IMediaMetadata aMetadata);
-        public abstract Task DeleteId(uint aValue);
+        public abstract Task Delete(IMediaPreset aValue);
         public abstract Task DeleteAll();
         public abstract Task SetRepeat(bool aValue);
         public abstract Task SetShuffle(bool aValue);
@@ -509,11 +520,12 @@ namespace OpenHome.Av
             return task;
         }
 
-        public override Task DeleteId(uint aValue)
+        public override Task Delete(IMediaPreset aValue)
         {
+            uint id = (aValue as MediaPresetPlaylist).Id;
             Task task = Task.Factory.StartNew(() =>
             {
-                iService.SyncDeleteId(aValue);
+                iService.SyncDeleteId(id);
             });
             return task;
         }
@@ -979,14 +991,15 @@ namespace OpenHome.Av
             return task;
         }
 
-        public override Task DeleteId(uint aValue)
+        public override Task Delete(IMediaPreset aValue)
         {
+            uint id = (aValue as MediaPresetPlaylist).Id;
             Task task = Task.Factory.StartNew(() =>
             {
                 Network.Schedule(() =>
                 {
-                    int index = iIdArray.IndexOf(aValue);
-                    iIdArray.Remove(aValue);
+                    int index = iIdArray.IndexOf(id);
+                    iIdArray.Remove(id);
                     if (index < iIdArray.Count)
                     {
                         iId.Update(iIdArray.ElementAt(index));
@@ -1197,9 +1210,9 @@ namespace OpenHome.Av
             return iService.InsertEnd(aUri, aMetadata);
         }
 
-        public Task DeleteId(uint aValue)
+        public Task Delete(IMediaPreset aValue)
         {
-            return iService.DeleteId(aValue);
+            return iService.Delete(aValue);
         }
 
         public Task DeleteAll()
