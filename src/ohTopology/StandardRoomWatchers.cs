@@ -93,52 +93,6 @@ namespace OpenHome.Av
         }
     }
 
-    class StandardRoomWatcherSnapshot : IWatchableSnapshot<IMediaPreset>
-    {
-        private readonly ITopology4Source iSource;
-        private IWatchableSnapshot<IMediaPreset> iSnapshot;
-
-        public StandardRoomWatcherSnapshot(ITopology4Source aSource, IWatchableSnapshot<IMediaPreset> aSnapshot)
-        {
-            iSource = aSource;
-            iSnapshot = aSnapshot;
-        }
-
-        public uint Total
-        {
-            get
-            {
-                return iSnapshot.Total;
-            }
-        }
-
-        public IEnumerable<uint> Alpha
-        {
-            get
-            {
-                return iSnapshot.Alpha;
-            }
-        }
-
-        public Task<IWatchableFragment<IMediaPreset>> Read(uint aIndex, uint aCount)
-        {
-            Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
-            {
-                List<IMediaPreset> data = new List<IMediaPreset>();
-                IWatchableFragment<IMediaPreset> fragment = iSnapshot.Read(aIndex, aCount).Result;
-
-                foreach (IMediaPreset p in fragment.Data)
-                {
-                    data.Add(new StandardRoomWatcherMediaPreset(iSource, p));
-                }
-
-                return new WatchableFragment<IMediaPreset>(aIndex, data);
-            });
-
-            return task;
-        }
-    }
-
     public interface IStandardRoomWatcher : IDisposable
     {
         IStandardRoom Room { get; }
