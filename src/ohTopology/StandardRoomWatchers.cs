@@ -39,17 +39,6 @@ namespace OpenHome.Av
             }
         }
 
-        public uint Id
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iPreset.Id;
-                }
-            }
-        }
-
         public IMediaMetadata Metadata
         {
             get
@@ -665,17 +654,6 @@ namespace OpenHome.Av
                 using (iDisposeHandler.Lock)
                 {
                     return iIndex;
-                }
-            }
-        }
-
-        public uint Id
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iId;
                 }
             }
         }

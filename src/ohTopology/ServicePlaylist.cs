@@ -73,17 +73,6 @@ namespace OpenHome.Av
             }
         }
 
-        public uint Id
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iId;
-                }
-            }
-        }
-
         public IMediaMetadata Metadata
         {
             get
