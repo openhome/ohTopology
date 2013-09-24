@@ -478,7 +478,7 @@ namespace OpenHome.Av
         private readonly Watchable<bool> iEnabled;
 
         private IProxyReceiver iReceiver;
-        private SendersContainer iContainer;
+        private MediaSupervisor<IMediaPreset> iSupervisor;
         private IWatchableOrdered<IProxySender> iSenders;
 
         public StandardRoomWatcherSenders(IStandardHouse aHouse, IStandardRoom aRoom)
@@ -525,8 +525,8 @@ namespace OpenHome.Av
 
             if (iReceiver != null)
             {
-                iContainer.Dispose();
-                iContainer = null;
+                iSupervisor.Dispose();
+                iSupervisor = null;
                 iReceiver.Dispose();
                 iReceiver = null;
             }
@@ -545,8 +545,8 @@ namespace OpenHome.Av
 
                     if (iReceiver != null)
                     {
-                        iContainer.Dispose();
-                        iContainer = null;
+                        iSupervisor.Dispose();
+                        iSupervisor = null;
                         iReceiver.Dispose();
                         iReceiver = null;
                     }
@@ -590,16 +590,13 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<IWatchableContainer<IMediaPreset>> Container
+        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
         {
             get
             {
                 using (iDisposeHandler.Lock)
                 {
-                    return Task<IWatchableContainer<IMediaPreset>>.Factory.StartNew(() =>
-                    {
-                        return iContainer;
-                    });
+                    return iSupervisor.Snapshot;
                 }
             }
         }
@@ -615,8 +612,8 @@ namespace OpenHome.Av
 
             if (iReceiver != null)
             {
-                iContainer.Dispose();
-                iContainer = null;
+                iSupervisor.Dispose();
+                iSupervisor = null;
                 iReceiver.Dispose();
                 iReceiver = null;
             }
@@ -637,8 +634,8 @@ namespace OpenHome.Av
                 {
                     s.Device.Create<IProxyReceiver>((receiver) =>
                     {
-                        Do.Assert(iContainer == null);
-                        iContainer = new SendersContainer(iNetwork, receiver, iSenders);
+                        Do.Assert(iSupervisor == null);
+                        iSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new SendersSnapshot(iNetwork, receiver, iSenders.Values));
                         iReceiver = receiver;
                         SetEnabled(true);
                     });
@@ -811,90 +808,7 @@ namespace OpenHome.Av
         }
     }
 
-    class SendersContainer : IWatchableContainer<IMediaPreset>, IDisposable, IOrderedWatcher<IProxySender>
-    {
-        private readonly DisposeHandler iDisposeHandler;
-        private readonly INetwork iNetwork;
-        private IProxyReceiver iReceiver;
-        private readonly IWatchableOrdered<IProxySender> iSenders;
-        private readonly Watchable<IWatchableSnapshot<IMediaPreset>> iSnapshot;
-        private bool iSendersInitialised;
-
-        public SendersContainer(INetwork aNetwork, IProxyReceiver aReceiver, IWatchableOrdered<IProxySender> aSenders)
-        {
-            iDisposeHandler = new DisposeHandler();
-            iNetwork = aNetwork;
-            iReceiver = aReceiver;
-            iSenders = aSenders;
-            iSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(aNetwork, "Snapshot", new SendersSnapshot(iNetwork, iReceiver, new List<IProxySender>()));
-            iSendersInitialised = false;
-            aNetwork.Schedule(() =>
-            {
-                iSenders.AddWatcher(this);
-            });
-        }
-
-        public void Dispose()
-        {
-            iDisposeHandler.Dispose();
-            iNetwork.Execute(() =>
-            {
-                iSenders.RemoveWatcher(this);
-            });
-            iSnapshot.Dispose();
-        }
-
-        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iSnapshot;
-                }
-            }
-        }
-
-        public void OrderedOpen()
-        {
-        }
-
-        public void OrderedInitialised()
-        {
-            UpdateSnapshot(iSenders.Values);
-            iSendersInitialised = true;
-        }
-
-        public void OrderedClose()
-        {
-        }
-
-        public void OrderedAdd(IProxySender aItem, uint aIndex)
-        {
-            if (iSendersInitialised)
-            {
-                UpdateSnapshot(iSenders.Values);
-            }
-        }
-
-        public void OrderedMove(IProxySender aItem, uint aFrom, uint aTo)
-        {
-        }
-
-        public void OrderedRemove(IProxySender aItem, uint aIndex)
-        {
-        }
-
-        private void UpdateSnapshot(IEnumerable<IProxySender> aSenders)
-        {
-            using (iDisposeHandler.Lock)
-            {
-                iSnapshot.Update(new SendersSnapshot(iNetwork, iReceiver, aSenders));
-            }
-        }
-    }
-
-    class SendersSnapshot : IWatchableSnapshot<IMediaPreset>
+    class SendersSnapshot : IMediaClientSnapshot<IMediaPreset>
     {
         private readonly IEnumerable<IProxySender> iSenders;
         private readonly IProxyReceiver iReceiver;
@@ -923,24 +837,20 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<IWatchableFragment<IMediaPreset>> Read(uint aIndex, uint aCount)
+        public IEnumerable<IMediaPreset> Read(CancellationToken aCancellationToken, uint aIndex, uint aCount)
         {
-            Task<IWatchableFragment<IMediaPreset>> task = Task<IWatchableFragment<IMediaPreset>>.Factory.StartNew(() =>
+            uint index = aIndex;
+            List<IMediaPreset> presets = new List<IMediaPreset>();
+            iSenders.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v =>
             {
-                uint index = aIndex;
-                List<IMediaPreset> presets = new List<IMediaPreset>();
-                iSenders.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v =>
-                {
-                    MediaMetadata metadata = new MediaMetadata();
-                    metadata.Add(iNetwork.TagManager.Audio.Title, v.Metadata.Value.Name);
-                    metadata.Add(iNetwork.TagManager.Audio.Artwork, v.Metadata.Value.ArtworkUri);
-                    metadata.Add(iNetwork.TagManager.Audio.Uri, v.Metadata.Value.Uri);
-                    presets.Add(new MediaPresetSender(iNetwork, index, index, metadata, v.Metadata.Value, iReceiver));
-                    ++index;
-                });
-                return new WatchableFragment<IMediaPreset>(aIndex, presets);
+                MediaMetadata metadata = new MediaMetadata();
+                metadata.Add(iNetwork.TagManager.Audio.Title, v.Metadata.Value.Name);
+                metadata.Add(iNetwork.TagManager.Audio.Artwork, v.Metadata.Value.ArtworkUri);
+                metadata.Add(iNetwork.TagManager.Audio.Uri, v.Metadata.Value.Uri);
+                presets.Add(new MediaPresetSender(iNetwork, index, index, metadata, v.Metadata.Value, iReceiver));
+                ++index;
             });
-            return task;
+            return presets;
         }
     }
 
