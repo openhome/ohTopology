@@ -16,7 +16,7 @@ namespace OpenHome.Av
         IWatchable<bool> HasInfoNext { get; }
         IWatchable<IInfoMetadata> InfoNext { get; }
 
-        IWatchable<bool> HasContainer { get; }
+        IWatchable<bool> HasSnapshot { get; }
 
         IWatchable<bool> HasSourceControl { get; }
         IWatchable<string> TransportState { get; }
@@ -31,7 +31,7 @@ namespace OpenHome.Av
         void SetStandby(bool aValue);
 
         // Source Control
-        Task<IWatchableContainer<IMediaPreset>> Container { get; }
+        IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot { get; }
 
         void Play();
         void Pause();
@@ -332,7 +332,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<bool> HasContainer
+        public IWatchable<bool> HasSnapshot
         {
             get
             {
@@ -340,22 +340,22 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<IWatchableContainer<IMediaPreset>> Container
+        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
         {
             get
             {
-                Task<IWatchableContainer<IMediaPreset>> task = null;
+                IWatchable<IWatchableSnapshot<IMediaPreset>> snapshot = null;
                 iNetwork.Execute(() =>
                 {
                     if (iActive.Value)
                     {
                         if (iHasSourceControl.Value)
                         {
-                            task = iSourceController.Container;
+                            snapshot = iSourceController.Snapshot;
                         }
                     }
                 });
-                return task;
+                return snapshot;
             }
         }
 

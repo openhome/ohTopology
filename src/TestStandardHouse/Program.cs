@@ -6,7 +6,7 @@ using OpenHome.Os;
 using OpenHome.Av;
 using OpenHome.Os.App;
 
-namespace TestLinnHouse
+namespace TestStandardHouse
 {
     class Program
     {
@@ -64,7 +64,7 @@ namespace TestLinnHouse
                 {
                     if (w)
                     {
-                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Unconfigured.Snapshot, v =>
+                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Unconfigured, v =>
                         {
                             string info = "\nUnconfigured source begin\n";
                             IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
@@ -76,7 +76,7 @@ namespace TestLinnHouse
                             info += "Unconfigured source end";
                             return info;
                         });
-                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Configured.Snapshot, v =>
+                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Configured, v =>
                         {
                             string info = "\nConfigured source begin\n";
                             IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
@@ -96,8 +96,7 @@ namespace TestLinnHouse
                 {
                     if (v)
                     {
-                        IWatchableContainer<IMediaPreset> container = iWatcherRadio.Container.Result;
-                        iFactoryRadioPresets.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherRadio.Room.Name, container.Snapshot, w =>
+                        iFactoryRadioPresets.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherRadio.Room.Name, iWatcherRadio.Snapshot, w =>
                         {
                             if (iRadioPresets != null)
                             {
