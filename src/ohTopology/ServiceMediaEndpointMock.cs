@@ -393,7 +393,7 @@ namespace OpenHome.Av
                 return (new MediaEndpointSnapshotMock(SearchMetadata(aValue)));
         }
 
-        public IEnumerable<IMediaDatum> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
+        public Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
         {
             var snapshot = aSnapshot as MediaEndpointSnapshotMock;
 
@@ -423,9 +423,11 @@ namespace OpenHome.Av
             iAlphaMap = null;
         }
 
-        public IEnumerable<IMediaDatum> Read(uint aIndex, uint aCount)
+        public Task<IEnumerable<IMediaDatum>> Read(uint aIndex, uint aCount)
         {
-            return (iData.Skip((int)aIndex).Take((int)aCount));
+            var tcs = new TaskCompletionSource<IEnumerable<IMediaDatum>>();
+            tcs.SetResult(iData.Skip((int)aIndex).Take((int)aCount));
+            return (tcs.Task);
         }
 
         // IMediaEndpointClientSnapshot

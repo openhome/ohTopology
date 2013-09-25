@@ -77,10 +77,12 @@ namespace TestMediaEndpoint
             return (new TestMediaEndpointClientSnapshot("0", 100, null));
         }
 
-        public IEnumerable<IMediaDatum> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
+        public Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
         {
             Console.WriteLine("Read       : {0} {1} {2} {3}", aSession, aSnapshot.GetHashCode(), aIndex, aCount);
-            return (null);
+            var tcs = new TaskCompletionSource<IEnumerable<IMediaDatum>>();
+            tcs.SetResult(null);
+            return (tcs.Task);
         }
 
         // IWatchableThread
@@ -232,6 +234,7 @@ namespace TestMediaEndpoint
             {
                 var client = new TestMediaEndpointClient();
                 var supervisor = new MediaEndpointSupervisor(client);
+                var cts = new CancellationTokenSource();
 
                 Task<IMediaEndpointSession> sessionTask = null;
 
@@ -252,7 +255,7 @@ namespace TestMediaEndpoint
                             {
                                 for (int j = 0; j < 20; j++)
                                 {
-                                    session.Snapshot.Read(0, 100).ContinueWith((t) =>
+                                    session.Snapshot.Read(cts.Token, 0, 100).ContinueWith((t) =>
                                     {
                                         try
                                         {

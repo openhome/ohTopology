@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Threading;
 
 using OpenHome.Os;
 using OpenHome.Av;
@@ -66,8 +67,9 @@ namespace TestStandardHouse
                     {
                         iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Unconfigured, v =>
                         {
+                            var cts = new CancellationTokenSource();
                             string info = "\nUnconfigured source begin\n";
-                            IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
+                            IWatchableFragment<IMediaPreset> fragment = v.Read(cts.Token, 0, v.Total).Result;
                             foreach (IMediaPreset p in fragment.Data)
                             {
                                 info += p.Metadata[iTagManager.Audio.Title].Value + "\n";
@@ -78,8 +80,9 @@ namespace TestStandardHouse
                         });
                         iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Configured, v =>
                         {
+                            var cts = new CancellationTokenSource();
                             string info = "\nConfigured source begin\n";
-                            IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
+                            IWatchableFragment<IMediaPreset> fragment = v.Read(cts.Token, 0, v.Total).Result;
                             foreach (IMediaPreset p in fragment.Data)
                             {
                                 info += p.Metadata[iTagManager.Audio.Title].Value + "\n";
@@ -108,8 +111,9 @@ namespace TestStandardHouse
                                 iRadioPresets = null;
                             }
 
+                            var cts = new CancellationTokenSource();
                             string info = "\nPresets begin\n";
-                            IWatchableFragment<IMediaPreset> fragment = w.Read(0, w.Total).Result;
+                            IWatchableFragment<IMediaPreset> fragment = w.Read(cts.Token, 0, w.Total).Result;
                             iRadioPresets = fragment;
                             foreach (IMediaPreset p in fragment.Data)
                             {

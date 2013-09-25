@@ -248,18 +248,38 @@ namespace OpenHome.Av
             throw new NotImplementedException();
         }
 
-        public IEnumerable<IMediaDatum> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
+        public Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
         {
+            var tcs = new TaskCompletionSource<IEnumerable<IMediaDatum>>();
+
             var snapshot = aSnapshot as MediaEndpointSnapshotContentDirectory;
 
-            string result;
-            uint numberReturned;
-            uint totalMatches;
-            uint updateID;
+            iProxy.BeginBrowse(snapshot.Id, "BrowseDirectChildren", "", aIndex, aCount, "", (r) =>
+            {
+                string result;
+                uint numberReturned;
+                uint totalMatches;
+                uint updateID;
 
-            iProxy.SyncBrowse(snapshot.Id, "BrowseDirectChildren", "", aIndex, aCount, "", out result, out numberReturned, out totalMatches, out updateID);
+                try
+                {
+                    iProxy.EndBrowse(r, out result, out numberReturned, out totalMatches, out updateID);
 
-            return (Parse(result));
+                    if (aCancellationToken.IsCancellationRequested)
+                    {
+                        tcs.SetCanceled();
+                        return;
+                    }
+
+                    tcs.SetResult(Parse(result));
+                }
+                catch
+                {
+                    tcs.SetCanceled();
+                }
+            });
+
+            return (tcs.Task);
         }
 
         // IDispose

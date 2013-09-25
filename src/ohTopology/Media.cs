@@ -30,7 +30,7 @@ namespace OpenHome.Av
     {
         uint Total { get; }
         IEnumerable<uint> Alpha { get; } // null if no alpha map
-        Task<IWatchableFragment<T>> Read(uint aIndex, uint aCount);
+        Task<IWatchableFragment<T>> Read(CancellationToken aCancellationToken, uint aIndex, uint aCount);
     }
 
     public interface IWatchableContainer<T>
@@ -141,7 +141,7 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<IWatchableFragment<T>> Read(uint aIndex, uint aCount)
+        public Task<IWatchableFragment<T>> Read(CancellationToken aCancellationToken, uint aIndex, uint aCount)
         {
             Do.Assert(aIndex + aCount <= iSnapshot.Total);
 
