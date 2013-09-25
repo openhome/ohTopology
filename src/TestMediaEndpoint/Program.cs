@@ -234,7 +234,6 @@ namespace TestMediaEndpoint
             {
                 var client = new TestMediaEndpointClient();
                 var supervisor = new MediaEndpointSupervisor(client);
-                var cts = new CancellationTokenSource();
 
                 Task<IMediaEndpointSession> sessionTask = null;
 

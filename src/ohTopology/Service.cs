@@ -54,6 +54,7 @@ namespace OpenHome.Av
             }
 
             // wait for any inflight subscriptions to complete
+
             if (iSubscribeTask != null)
             {
                 try

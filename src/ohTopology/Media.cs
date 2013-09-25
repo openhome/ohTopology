@@ -41,27 +41,29 @@ namespace OpenHome.Av
     public class MediaSupervisor<T> : IDisposable
     {
         private readonly DisposeHandler iDisposeHandler;
-        private CancellationTokenSource iCancellationToken;
+        private CancellationTokenSource iCancellationTokenSource;
         private Watchable<IWatchableSnapshot<T>> iSnapshot;
 
         public MediaSupervisor(IWatchableThread aThread, IMediaClientSnapshot<T> aClientSnapshot)
         {
             iDisposeHandler = new DisposeHandler();
-            iCancellationToken = new CancellationTokenSource();
-            iSnapshot = new Watchable<IWatchableSnapshot<T>>(aThread, "Snapshot", new MediaSnapshot<T>(iCancellationToken.Token, aClientSnapshot));
+            iCancellationTokenSource = new CancellationTokenSource();
+            iSnapshot = new Watchable<IWatchableSnapshot<T>>(aThread, "Snapshot", new MediaSnapshot<T>(iCancellationTokenSource.Token, aClientSnapshot));
         }
 
         public void Dispose()
         {
             iDisposeHandler.Dispose();
 
-            iCancellationToken.Cancel();
+            iCancellationTokenSource.Cancel();
 
             MediaSnapshot<T> snapshot = iSnapshot.Value as MediaSnapshot<T>;
 
             iSnapshot.Dispose();
 
             snapshot.Dispose();
+
+            iCancellationTokenSource.Dispose();
         }
 
         public IWatchable<IWatchableSnapshot<T>> Snapshot
@@ -79,12 +81,15 @@ namespace OpenHome.Av
         {
             using (iDisposeHandler.Lock)
             {
-                iCancellationToken.Cancel();
-
                 MediaSnapshot<T> snapshot = iSnapshot.Value as MediaSnapshot<T>;
 
-                iCancellationToken = new CancellationTokenSource();
-                iSnapshot.Update(new MediaSnapshot<T>(iCancellationToken.Token, aClientSnapshot));
+                iCancellationTokenSource.Cancel();
+                
+                iCancellationTokenSource.Dispose();
+
+                iCancellationTokenSource = new CancellationTokenSource();
+                
+                iSnapshot.Update(new MediaSnapshot<T>(iCancellationTokenSource.Token, aClientSnapshot));
 
                 snapshot.Dispose();
             }

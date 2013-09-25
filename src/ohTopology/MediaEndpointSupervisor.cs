@@ -171,7 +171,7 @@ namespace OpenHome.Av
         private Func<CancellationToken, IMediaEndpointClientSnapshot> iSnapshotFunction;
         private Action iAction;
 
-        private CancellationTokenSource iCancellationSource;
+        private CancellationTokenSource iCancellationTokenSource;
 
         private Task iTask;
 
@@ -197,13 +197,13 @@ namespace OpenHome.Av
                 Do.Assert(false);
             };
 
-            iCancellationSource = new CancellationTokenSource();
+            iCancellationTokenSource = new CancellationTokenSource();
 
             iTask = Task.Factory.StartNew(() => { });
 
-            var token = iCancellationSource.Token;
+            var token = iCancellationTokenSource.Token;
 
-            iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, iCancellationSource.Token, iSnapshotFunction(token));
+            iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, token, iSnapshotFunction(token));
 
             iSequence = 0;
         }
@@ -222,7 +222,7 @@ namespace OpenHome.Av
 
             // first cancel current snapshot to prevent further activity on it and begin completing outstanding tasks
 
-            iCancellationSource.Cancel();
+            iCancellationTokenSource.Cancel();
 
             try
             {
@@ -236,9 +236,11 @@ namespace OpenHome.Av
 
             sequence = ++iSequence;
 
-            iCancellationSource = new CancellationTokenSource();
+            iCancellationTokenSource.Dispose();
 
-            var token = iCancellationSource.Token;
+            iCancellationTokenSource = new CancellationTokenSource();
+
+            var token = iCancellationTokenSource.Token;
 
             iTask = Task.Factory.StartNew(() =>
             {
@@ -344,7 +346,7 @@ namespace OpenHome.Av
         {
             iClient.Assert(); // must be called on the watchable thread
 
-            iCancellationSource.Cancel();
+            iCancellationTokenSource.Cancel();
 
             try
             {
@@ -358,6 +360,8 @@ namespace OpenHome.Av
 
             iSnapshot.Dispose();
 
+            iCancellationTokenSource.Dispose();
+
             iDispose(iId);
         }
     }
@@ -370,7 +374,7 @@ namespace OpenHome.Av
     {
         private readonly IMediaEndpointClient iClient;
         private readonly DisposeHandler iDisposeHandler;
-        private readonly CancellationTokenSource iCancellationSource;
+        private readonly CancellationTokenSource iCancellationTokenSource;
         private readonly List<Task> iCreateTasks;
         private readonly List<Task> iDestroyTasks;
         private readonly Dictionary<string, MediaEndpointSupervisorSession> iSessions;
@@ -379,7 +383,7 @@ namespace OpenHome.Av
         {
             iClient = aClient;
             iDisposeHandler = new DisposeHandler();
-            iCancellationSource = new CancellationTokenSource();
+            iCancellationTokenSource = new CancellationTokenSource();
             iCreateTasks = new List<Task>();
             iDestroyTasks = new List<Task>();
             iSessions = new Dictionary<string, MediaEndpointSupervisorSession>();
@@ -421,7 +425,7 @@ namespace OpenHome.Av
 
         public void Close()
         {
-            iCancellationSource.Cancel();
+            iCancellationTokenSource.Cancel();
         }
 
         public Task<IMediaEndpointSession> CreateSession()
@@ -432,7 +436,7 @@ namespace OpenHome.Av
             {
                 var task = Task.Factory.StartNew<IMediaEndpointSession>(() =>
                 {
-                    var token = iCancellationSource.Token;
+                    var token = iCancellationTokenSource.Token;
 
                     string id;
 
@@ -499,7 +503,7 @@ namespace OpenHome.Av
 
             var task = Task.Factory.StartNew(() =>
             {
-                var token = iCancellationSource.Token;
+                var token = iCancellationTokenSource.Token;
 
                 token.ThrowIfCancellationRequested();
 
@@ -548,7 +552,7 @@ namespace OpenHome.Av
             // users of the supervisor must close it, then indicate that their endpoint has disappeared, then dispose their supervisor
             // this gives clients the opportunity to dispose all their sessions in advance of the supervisor itself being disposed
 
-            Do.Assert(iCancellationSource.IsCancellationRequested);
+            Do.Assert(iCancellationTokenSource.IsCancellationRequested);
 
             iDisposeHandler.Dispose();
 
@@ -597,7 +601,7 @@ namespace OpenHome.Av
                 Do.Assert(iDestroyTasks.Count == 0);
             }
 
-            iCancellationSource.Dispose();
+            iCancellationTokenSource.Dispose();
         }
     }
 }
