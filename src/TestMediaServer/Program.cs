@@ -44,8 +44,6 @@ namespace TestMediaServer
             Do.Assert(iProxy.SupportsLink(iNetwork.TagManager.Audio.Genre));
             Do.Assert(iProxy.SupportsSearch());
 
-            var cts = new CancellationTokenSource();
-
             IMediaEndpointSession session = null;
 
             iNetwork.Execute(() =>
@@ -67,7 +65,7 @@ namespace TestMediaServer
             
             iNetwork.Execute(() =>
             {
-                rootFragment = session.Snapshot.Read(cts.Token, 0, 4).Result;
+                rootFragment = session.Snapshot.Read(0, 4).Result;
             });
 
             Do.Assert(rootFragment.Index == 0);
@@ -117,7 +115,7 @@ namespace TestMediaServer
                 
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(cts.Token, 100, 1).Result;
+                fragment = session.Snapshot.Read(100, 1).Result;
             });
 
             Do.Assert(fragment.Index == 100);
@@ -140,7 +138,7 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(cts.Token, 0, 1).Result;
+                fragment = session.Snapshot.Read(0, 1).Result;
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 1);
@@ -162,7 +160,7 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(cts.Token, 0, 1).Result;
+                fragment = session.Snapshot.Read(0, 1).Result;
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
@@ -186,7 +184,7 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(cts.Token, 100, 1).Result;
+                fragment = session.Snapshot.Read(100, 1).Result;
             });
 
             Do.Assert(fragment.Index == 100);
@@ -208,7 +206,7 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(cts.Token, 0, 1).Result;
+                fragment = session.Snapshot.Read(0, 1).Result;
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
@@ -232,7 +230,7 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(cts.Token, 100, 1).Result;
+                fragment = session.Snapshot.Read(100, 1).Result;
             });
 
             Do.Assert(fragment.Index == 100);
@@ -254,7 +252,7 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(cts.Token, 0, 1).Result;
+                fragment = session.Snapshot.Read(0, 1).Result;
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
@@ -280,7 +278,7 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(cts.Token, 0, 1).Result;
+                fragment = session.Snapshot.Read(0, 1).Result;
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 1);
@@ -302,7 +300,7 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(cts.Token, 0, 1).Result;
+                fragment = session.Snapshot.Read(0, 1).Result;
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
@@ -328,7 +326,7 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(cts.Token, 0, 1).Result;
+                fragment = session.Snapshot.Read(0, 1).Result;
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
@@ -354,7 +352,7 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(cts.Token, 0, 1).Result;
+                fragment = session.Snapshot.Read(0, 1).Result;
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);

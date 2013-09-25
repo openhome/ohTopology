@@ -255,7 +255,7 @@ namespace TestMediaEndpoint
                             {
                                 for (int j = 0; j < 20; j++)
                                 {
-                                    session.Snapshot.Read(cts.Token, 0, 100).ContinueWith((t) =>
+                                    session.Snapshot.Read(0, 100).ContinueWith((t) =>
                                     {
                                         try
                                         {

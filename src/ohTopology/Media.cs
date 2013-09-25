@@ -30,7 +30,7 @@ namespace OpenHome.Av
     {
         uint Total { get; }
         IEnumerable<uint> Alpha { get; } // null if no alpha map
-        Task<IWatchableFragment<T>> Read(CancellationToken aCancellationToken, uint aIndex, uint aCount);
+        Task<IWatchableFragment<T>> Read(uint aIndex, uint aCount, CancellationToken aCancellationToken);
     }
 
     public interface IWatchableContainer<T>
@@ -141,7 +141,7 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<IWatchableFragment<T>> Read(CancellationToken aCancellationToken, uint aIndex, uint aCount)
+        public Task<IWatchableFragment<T>> Read(uint aIndex, uint aCount, CancellationToken aCancellationToken)
         {
             Do.Assert(aIndex + aCount <= iSnapshot.Total);
 
@@ -415,6 +415,17 @@ namespace OpenHome.Av
             metadata.Add(aTagManager.System.Folder, aMetadata);
             
             return metadata;
+        }
+
+        public static Task<IWatchableFragment<T>> Read<T>(this IWatchableSnapshot<T> aSnapshot, uint aIndex, uint aCount)
+        {
+            var cts = new CancellationTokenSource();
+
+            return (aSnapshot.Read(aIndex, aCount, cts.Token).ContinueWith<IWatchableFragment<T>>((t) =>
+            {
+                cts.Dispose();
+                return (t.Result);
+            }));
         }
     }
 }

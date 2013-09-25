@@ -83,7 +83,7 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<IWatchableFragment<IMediaDatum>> Read(CancellationToken aCancellationToken, uint aIndex, uint aCount)
+        public Task<IWatchableFragment<IMediaDatum>> Read(uint aIndex, uint aCount, CancellationToken aCancellationToken)
         {
             iClient.Assert(); // Must be called on the watchable thread;
 
@@ -113,7 +113,7 @@ namespace OpenHome.Av
                             }
                             catch
                             {
-                                tcs.SetCanceled();
+                                cts.Cancel();
                             }
 
                             if (cts.IsCancellationRequested)
