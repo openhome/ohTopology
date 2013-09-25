@@ -33,7 +33,7 @@ namespace OpenHome.Av
         IMediaEndpointClientSnapshot List(CancellationToken aCancellationToken, string aSession, ITag aTag);
         IMediaEndpointClientSnapshot Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue);
         IMediaEndpointClientSnapshot Search(CancellationToken aCancellationToken, string aSession, string aValue);
-        IEnumerable<IMediaDatum> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount);
+        Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount);
     }
 
     internal class MediaEndpointSupervisorSnapshot : IWatchableSnapshot<IMediaDatum>, IDisposable
@@ -83,7 +83,7 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<IWatchableFragment<IMediaDatum>> Read(uint aIndex, uint aCount)
+        public Task<IWatchableFragment<IMediaDatum>> Read(uint aIndex, uint aCount, CancellationToken aCancellationToken)
         {
             iClient.Assert(); // Must be called on the watchable thread;
 
@@ -91,55 +91,53 @@ namespace OpenHome.Av
 
             using (iDisposeHandler.Lock)
             {
-                var task = Task.Factory.StartNew<IWatchableFragment<IMediaDatum>>(() =>
+                var tcs = new TaskCompletionSource<IWatchableFragment<IMediaDatum>>();
+
+                if (aCount == 0)
                 {
-                    iCancellationToken.ThrowIfCancellationRequested();
-
-                    if (aCount == 0)
-                    {
-                        return (new WatchableFragment<IMediaDatum>(aIndex, Enumerable.Empty<IMediaDatum>()));
-                    }
-
-                    IEnumerable<IMediaDatum> data;
-
-                    try
-                    {
-                        data = iClient.Read(iCancellationToken, iSession.Id, iSnapshot, aIndex, aCount);
-                    }
-                    catch
-                    {
-                        throw new OperationCanceledException();
-                    }
-
-                    iCancellationToken.ThrowIfCancellationRequested();
-
-                    return (new WatchableFragment<IMediaDatum>(aIndex, data));
-                });
-
-                lock (iTasks)
+                    tcs.SetResult(new WatchableFragment<IMediaDatum>(aIndex, Enumerable.Empty<IMediaDatum>()));
+                }
+                else
                 {
-                    Task completion = null;
+                    Task task = null;
 
-                    completion = task.ContinueWith((t) =>
+                    var cts = CancellationTokenSource.CreateLinkedTokenSource(iCancellationToken, aCancellationToken);
+
+                    lock (iTasks)
                     {
-                        try
+                        task = iClient.Read(cts.Token, iSession.Id, iSnapshot, aIndex, aCount).ContinueWith((t) =>
                         {
-                            t.Wait();
-                        }
-                        catch
-                        {
-                        }
+                            try
+                            {
+                                t.Wait();
+                            }
+                            catch
+                            {
+                                cts.Cancel();
+                            }
 
-                        lock (iTasks)
-                        {
-                            iTasks.Remove(completion);
-                        }
-                    });
+                            if (cts.IsCancellationRequested)
+                            {
+                                tcs.SetCanceled();
+                            }
+                            else
+                            {
+                                tcs.SetResult(new WatchableFragment<IMediaDatum>(aIndex, t.Result));
+                            }
 
-                    iTasks.Add(completion);
+                            lock (iTasks)
+                            {
+                                iTasks.Remove(task);
+                            }
+
+                            cts.Dispose();
+                        });
+
+                        iTasks.Add(task);
+                    }
                 }
 
-                return (task);
+                return (tcs.Task);
             }
         }
 

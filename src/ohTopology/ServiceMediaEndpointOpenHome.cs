@@ -288,20 +288,55 @@ namespace OpenHome.Av
             return (GetSnapshot("search?session={0}&val={1}", aSession, Encode(aValue)));
         }
 
-        public IEnumerable<IMediaDatum> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
+        public Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
         {
+            var tcs = new TaskCompletionSource<IEnumerable<IMediaDatum>>();
+
             var uri = CreateUri("read?session={0}&index={1}&count={2}", aSession, aIndex, aCount);
 
-            using (var client = new WebClient())
+            var client = new WebClient();
+
+            client.Encoding = iEncoding;
+
+            var cancellation = aCancellationToken.Register(() => client.CancelAsync());
+            
+            client.DownloadStringCompleted += (sender, args) =>
             {
-                client.Encoding = iEncoding;
+                client.Dispose();
 
-                var session = client.DownloadString(uri);
+                cancellation.Dispose();
 
-                var json = JsonParser.Parse(session);
+                if (aCancellationToken.IsCancellationRequested || args.Error != null)
+                {
+                    tcs.SetCanceled();
+                }
+                else
+                {
+                    var json = JsonParser.Parse(args.Result);
 
-                return (GetData(json));
-            }
+                    if (aCancellationToken.IsCancellationRequested)
+                    {
+                        tcs.SetCanceled();
+                    }
+                    else
+                    {
+                        var data = GetData(json);
+
+                        if (aCancellationToken.IsCancellationRequested)
+                        {
+                            tcs.SetCanceled();
+                        }
+                        else
+                        {
+                            tcs.SetResult(data);
+                        }
+                    }
+                }
+            };
+
+            client.DownloadStringAsync(new Uri(uri));
+
+            return (tcs.Task);
         }
 
         // IDispose
