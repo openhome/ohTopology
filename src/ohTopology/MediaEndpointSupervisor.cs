@@ -107,30 +107,21 @@ namespace OpenHome.Av
                     {
                         task = iClient.Read(cts.Token, iSession.Id, iSnapshot, aIndex, aCount).ContinueWith((t) =>
                         {
+                            cts.Dispose();
+
                             try
                             {
-                                t.Wait();
+                                tcs.SetResult(new WatchableFragment<IMediaDatum>(aIndex, t.Result));
                             }
                             catch
                             {
-                                cts.Cancel();
-                            }
-
-                            if (cts.IsCancellationRequested)
-                            {
                                 tcs.SetCanceled();
-                            }
-                            else
-                            {
-                                tcs.SetResult(new WatchableFragment<IMediaDatum>(aIndex, t.Result));
                             }
 
                             lock (iTasks)
                             {
                                 iTasks.Remove(task);
                             }
-
-                            cts.Dispose();
                         });
 
                         iTasks.Add(task);
