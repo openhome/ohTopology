@@ -209,7 +209,6 @@ namespace TestMediaEndpoint
 
             if (throws)
             {
-                Console.WriteLine("CreateLinkedTokenSource ERROR");
                 Do.Assert(false);
             }
         }
