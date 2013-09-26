@@ -172,7 +172,7 @@ namespace TestMediaEndpoint
     {
         static int Main(string[] args)
         {
-            TestLinkedTokenSource();
+            //TestLinkedTokenSource();
             TestMediaEndpointSupervisorSesssionHandling();
             TestMediaEndpointSupervisorContainerHandling();
             return (0);
