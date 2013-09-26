@@ -167,17 +167,26 @@ namespace OpenHome.Av
 
         private void HandleMetadataChanged()
         {
+            IMediaMetadata metadata = iNetwork.TagManager.FromDidlLite(iService.PropertyMetadata());
+            string uri = iService.PropertyUri();
             Network.Schedule(() =>
             {
-                iMetadata.Update(new InfoMetadata(Network.TagManager.FromDidlLite(iService.PropertyMetadata()), iService.PropertyUri()));
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iMetadata.Update(new InfoMetadata(metadata, uri));
+                });
             });
         }
 
         private void HandleTransportStateChanged()
         {
+            string transportState = iService.PropertyTransportState();
             Network.Schedule(() =>
             {
-                iTransportState.Update(iService.PropertyTransportState());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iTransportState.Update(transportState);
+                });
             });
         }
 

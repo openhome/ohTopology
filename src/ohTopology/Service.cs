@@ -18,13 +18,13 @@ namespace OpenHome.Av
         protected readonly INetwork iNetwork;
         private readonly IDevice iDevice;
 
-        private readonly DisposeHandler iDisposeHandler;
         private readonly CancellationTokenSource iCancelSubscribe;
         private readonly ManualResetEvent iSubscribed;
         private readonly List<Task> iTasks;
         private uint iRefCount;
         private object iRefCountLock;
 
+        protected readonly DisposeHandler iDisposeHandler;
         protected Task iSubscribeTask;
 
         protected Service(INetwork aNetwork, IDevice aDevice)

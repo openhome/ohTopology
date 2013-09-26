@@ -118,17 +118,25 @@ namespace OpenHome.Av
 
         private void HandleDurationChanged()
         {
+            uint duration = iService.PropertyDuration();
             Network.Schedule(() =>
             {
-                iDuration.Update(iService.PropertyDuration());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iDuration.Update(duration);
+                });
             });
         }
 
         private void HandleSecondsChanged()
         {
+            uint seconds = iService.PropertySeconds();
             Network.Schedule(() =>
             {
-                iSeconds.Update(iService.PropertySeconds());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iSeconds.Update(seconds);
+                });
             });
         }
 

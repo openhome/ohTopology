@@ -420,49 +420,73 @@ namespace OpenHome.Av
 
         private void HandleRoomChanged()
         {
+            string room = iService.PropertyProductRoom();
             Network.Schedule(() =>
             {
-                iRoom.Update(iService.PropertyProductRoom());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iRoom.Update(room);
+                });
             });
         }
 
         private void HandleNameChanged()
         {
+            string name = iService.PropertyProductName();
             Network.Schedule(() =>
             {
-                iName.Update(iService.PropertyProductName());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iName.Update(name);
+                });
             });
         }
 
         private void HandleSourceIndexChanged()
         {
+            uint sourceIndex = iService.PropertySourceIndex();
             Network.Schedule(() =>
             {
-                iSourceIndex.Update(iService.PropertySourceIndex());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iSourceIndex.Update(sourceIndex);
+                });
             });
         }
 
         private void HandleSourceXmlChanged()
         {
+            string sourceXml = iService.PropertySourceXml();
             Network.Schedule(() =>
             {
-                iSourceXml.Update(iService.PropertySourceXml());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iSourceXml.Update(sourceXml);
+                });
             });
         }
 
         private void HandleStandbyChanged()
         {
+            bool standby = iService.PropertyStandby();
             Network.Schedule(() =>
             {
-                iStandby.Update(iService.PropertyStandby());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iStandby.Update(standby);
+                });
             });
         }
 
         private void HandleParameterXmlChanged()
         {
+            string paramXml = iServiceConfiguration.PropertyParameterXml();
             Network.Schedule(() =>
             {
-                ParseParameterXml(iServiceConfiguration.PropertyParameterXml());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    ParseParameterXml(paramXml);
+                });
             });
         }
 

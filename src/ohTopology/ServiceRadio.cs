@@ -457,39 +457,55 @@ namespace OpenHome.Av
 
         private void HandleIdChanged()
         {
+            uint id = iService.PropertyId();
             Network.Schedule(() =>
             {
-                iId.Update(iService.PropertyId());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iId.Update(id);
+                });
             });
         }
 
         private void HandleIdArrayChanged()
         {
+            IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
             Network.Schedule(() =>
             {
-                IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
-                iCacheSession.SetValid(idArray.Where(v => v != 0).ToList());
-                iMediaSupervisor.Update(new RadioSnapshot(Network, iCacheSession, idArray, this));
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iCacheSession.SetValid(idArray.Where(v => v != 0).ToList());
+                    iMediaSupervisor.Update(new RadioSnapshot(Network, iCacheSession, idArray, this));
+                });
             });
         }
 
         private void HandleMetadataChanged()
         {
+            IMediaMetadata metadata = iNetwork.TagManager.FromDidlLite(iService.PropertyMetadata());
+            string uri = iService.PropertyUri();
             Network.Schedule(() =>
             {
-                iMetadata.Update(
-                    new InfoMetadata(
-                        Network.TagManager.FromDidlLite(iService.PropertyMetadata()),
-                        iService.PropertyUri()
-                    ));
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iMetadata.Update(
+                        new InfoMetadata(
+                            metadata,
+                            uri
+                        ));
+                });
             });
         }
 
         private void HandleTransportStateChanged()
         {
+            string transportState = iService.PropertyTransportState();
             Network.Schedule(() =>
             {
-                iTransportState.Update(iService.PropertyTransportState());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iTransportState.Update(transportState);
+                });
             });
         }
 

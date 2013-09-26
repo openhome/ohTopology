@@ -240,7 +240,6 @@ namespace OpenHome.Av
         public ServiceInfoNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
             : base(aNetwork, aDevice)
         {
-            iThread = aNetwork;
             iSubscribed = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgInfo1(aCpDevice);
 
@@ -293,41 +292,58 @@ namespace OpenHome.Av
 
         private void HandleDetailsChanged()
         {
-            iThread.Schedule(() =>
+            uint bitDepth = iService.PropertyBitDepth();
+            uint bitRate = iService.PropertyBitRate();
+            string codec = iService.PropertyCodecName();
+            uint duration = iService.PropertyDuration();
+            bool lossless = iService.PropertyLossless();
+            uint sampleRate = iService.PropertySampleRate();
+            Network.Schedule(() =>
             {
-                iDetails.Update(
-                    new InfoDetails(
-                        iService.PropertyBitDepth(),
-                        iService.PropertyBitRate(),
-                        iService.PropertyCodecName(),
-                        iService.PropertyDuration(),
-                        iService.PropertyLossless(),
-                        iService.PropertySampleRate()
-                    ));
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iDetails.Update(
+                        new InfoDetails(
+                            bitDepth,
+                            bitRate,
+                            codec,
+                            duration,
+                            lossless,
+                            sampleRate
+                        ));
+                });
             });
         }
 
         private void HandleMetadataChanged()
         {
-            iThread.Schedule(() =>
+            IMediaMetadata metadata = iNetwork.TagManager.FromDidlLite(iService.PropertyMetadata());
+            string uri = iService.PropertyUri();
+            Network.Schedule(() =>
             {
-                iMetadata.Update(
-                    new InfoMetadata(
-                        Network.TagManager.FromDidlLite(iService.PropertyMetadata()),
-                        iService.PropertyUri()
-                    ));
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iMetadata.Update(
+                        new InfoMetadata(
+                            metadata,
+                            uri
+                        ));
+                });
             });
         }
 
         private void HandleMetatextChanged()
         {
-            iThread.Schedule(() =>
+            IMediaMetadata metadata = iNetwork.TagManager.FromDidlLite(iService.PropertyMetatext());
+            Network.Schedule(() =>
             {
-                iMetatext.Update(new InfoMetatext(Network.TagManager.FromDidlLite(iService.PropertyMetatext())));
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iMetatext.Update(new InfoMetatext(metadata));
+                });
             });
         }
 
-        private IWatchableThread iThread;
         private ManualResetEvent iSubscribed;
         private CpProxyAvOpenhomeOrgInfo1 iService;
     }

@@ -591,23 +591,29 @@ namespace OpenHome.Av
 
         private void HandleIdChanged()
         {
+            IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
+            uint id = iService.PropertyId();
             Network.Schedule(() =>
             {
-                IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
-                uint id = iService.PropertyId();
-                iId.Update(id);
-                EvaluateInfoNext(id, idArray);
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iId.Update(id);
+                    EvaluateInfoNext(id, idArray);
+                });
             });
         }
 
         private void HandleIdArrayChanged()
         {
+            IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
             Network.Schedule(() =>
             {
-                IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
-                iCacheSession.SetValid(idArray);
-                iMediaSupervisor.Update(new PlaylistSnapshot(Network, iCacheSession, idArray, this));
-                EvaluateInfoNext(iId.Value, idArray);
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iCacheSession.SetValid(idArray);
+                    iMediaSupervisor.Update(new PlaylistSnapshot(Network, iCacheSession, idArray, this));
+                    EvaluateInfoNext(iId.Value, idArray);
+                });
             });
         }
 
@@ -633,25 +639,37 @@ namespace OpenHome.Av
 
         private void HandleTransportStateChanged()
         {
+            string transportState = iService.PropertyTransportState();
             Network.Schedule(() =>
             {
-                iTransportState.Update(iService.PropertyTransportState());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iTransportState.Update(transportState);
+                });
             });
         }
 
         private void HandleRepeatChanged()
         {
+            bool repeat = iService.PropertyRepeat();
             Network.Schedule(() =>
             {
-                iRepeat.Update(iService.PropertyRepeat());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iRepeat.Update(repeat);
+                });
             });
         }
 
         private void HandleShuffleChanged()
         {
+            bool shuffle = iService.PropertyShuffle();
             Network.Schedule(() =>
             {
-                iShuffle.Update(iService.PropertyShuffle());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iShuffle.Update(shuffle);
+                });
             });
         }
 

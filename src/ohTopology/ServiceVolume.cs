@@ -308,66 +308,98 @@ namespace OpenHome.Av
 
         private void HandleVolumeUnityChanged()
         {
+            uint unity = iService.PropertyVolumeUnity();
             Network.Schedule(() =>
             {
-                iVolumeUnity.Update(iService.PropertyVolumeUnity());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iVolumeUnity.Update(unity);
+                });
             });
         }
 
         private void HandleVolumeStepsChanged()
         {
+            uint steps = iService.PropertyVolumeSteps();
             Network.Schedule(() =>
             {
-                iVolumeSteps.Update(iService.PropertyVolumeSteps());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iVolumeSteps.Update(steps);
+                });
             });
         }
 
         private void HandleVolumeMilliDbPerStepChanged()
         {
+            uint step = iService.PropertyVolumeMilliDbPerStep();
             Network.Schedule(() =>
             {
-                iVolumeMilliDbPerStep.Update(iService.PropertyVolumeMilliDbPerStep());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iVolumeMilliDbPerStep.Update(step);
+                });
             });
         }
 
         private void HandleVolumeLimitChanged()
         {
+            uint limit = iService.PropertyVolumeLimit();
             Network.Schedule(() =>
             {
-                iVolumeLimit.Update(iService.PropertyVolumeLimit());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iVolumeLimit.Update(limit);
+                });
             });
         }
 
         private void HandleVolumeChanged()
         {
+            uint volume = iService.PropertyVolume();
             Network.Schedule(() =>
             {
-                Console.WriteLine("VolumeChanged: " + Device.Udn + " " + iService.PropertyVolume());
-                iValue.Update(iService.PropertyVolume());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    Console.WriteLine("VolumeChanged: " + Device.Udn + " " + iService.PropertyVolume());
+                    iValue.Update(volume);
+                });
             });
         }
 
         private void HandleMuteChanged()
         {
+            bool mute = iService.PropertyMute();
             Network.Schedule(() =>
             {
-                iMute.Update(iService.PropertyMute());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iMute.Update(mute);
+                });
             });
         }
 
         private void HandleFadeChanged()
         {
+            int fade = iService.PropertyFade();
             Network.Schedule(() =>
             {
-                iFade.Update(iService.PropertyFade());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iFade.Update(fade);
+                });
             });
         }
 
         private void HandleBalanceChanged()
         {
+            int balance = iService.PropertyBalance();
             Network.Schedule(() =>
             {
-                iBalance.Update(iService.PropertyBalance());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iBalance.Update(balance);
+                });
             });
         }
 

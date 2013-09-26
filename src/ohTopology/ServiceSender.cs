@@ -222,25 +222,37 @@ namespace OpenHome.Av
 
         private void HandleAudioChanged()
         {
+            bool audio = iService.PropertyAudio();
             Network.Schedule(() =>
             {
-                iAudio.Update(iService.PropertyAudio());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iAudio.Update(audio);
+                });
             });
         }
 
         private void HandleMetadataChanged()
         {
+            string metadata = iService.PropertyMetadata();
             Network.Schedule(() =>
             {
-                iMetadata.Update(new SenderMetadata(iService.PropertyMetadata()));
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iMetadata.Update(new SenderMetadata(metadata));
+                });
             });
         }
 
         private void HandleStatusChanged()
         {
+            string status = iService.PropertyStatus();
             Network.Schedule(() =>
             {
-                iStatus.Update(iService.PropertyStatus());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iStatus.Update(status);
+                });
             });
         }
 
