@@ -80,8 +80,18 @@ namespace TestMediaEndpoint
         public Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
         {
             Console.WriteLine("Read       : {0} {1} {2} {3}", aSession, aSnapshot.GetHashCode(), aIndex, aCount);
+            
             var tcs = new TaskCompletionSource<IEnumerable<IMediaDatum>>();
-            tcs.SetResult(null);
+
+            if (aCancellationToken.IsCancellationRequested)
+            {
+                tcs.SetCanceled();
+            }
+            else
+            {
+                tcs.SetResult(null);
+            }
+
             return (tcs.Task);
         }
 

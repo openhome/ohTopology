@@ -65,7 +65,9 @@ namespace OpenHome.Av
             {
                 Do.Assert(!iCancellationTokenSource.IsCancellationRequested);
 
+                Console.WriteLine("snapshot cancel");
                 iCancellationTokenSource.Cancel();
+                Console.WriteLine("snapshot canceled");
             }
         }
 
