@@ -345,7 +345,7 @@ namespace OpenHome.Av
 
         public override void Dispose()
         {
-            iSupervisor.Close();
+            iSupervisor.Cancel();
 
             base.Dispose();
 

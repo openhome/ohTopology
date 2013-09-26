@@ -424,13 +424,7 @@ namespace OpenHome.Av
 
         public static Task<IWatchableFragment<T>> Read<T>(this IWatchableSnapshot<T> aSnapshot, uint aIndex, uint aCount)
         {
-            var cts = new CancellationTokenSource();
-
-            return (aSnapshot.Read(aIndex, aCount, cts.Token).ContinueWith<IWatchableFragment<T>>((t) =>
-            {
-                cts.Dispose();
-                return (t.Result);
-            }));
+            return (aSnapshot.Read(aIndex, aCount, CancellationToken.None));
         }
     }
 }

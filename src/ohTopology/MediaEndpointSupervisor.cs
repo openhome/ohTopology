@@ -61,7 +61,10 @@ namespace OpenHome.Av
 
         public void Cancel()
         {
-            iCancellationTokenSource.Cancel();
+            using (iDisposeHandler.Lock)
+            {
+                iCancellationTokenSource.Cancel();
+            }
         }
 
         // IWatchableSnapshot<IMediaDatum>
@@ -144,9 +147,9 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            Do.Assert(iCancellationTokenSource.IsCancellationRequested);
-
             iDisposeHandler.Dispose();
+
+            Do.Assert(iCancellationTokenSource.IsCancellationRequested);
 
             Task[] tasks;
 
@@ -436,9 +439,12 @@ namespace OpenHome.Av
             }
         }
 
-        public void Close()
+        public void Cancel()
         {
-            iCancellationTokenSource.Cancel();
+            using (iDisposeHandler.Lock)
+            {
+                iCancellationTokenSource.Cancel();
+            }
         }
 
         public Task<IMediaEndpointSession> CreateSession()
@@ -565,9 +571,9 @@ namespace OpenHome.Av
             // users of the supervisor must close it, then indicate that their endpoint has disappeared, then dispose their supervisor
             // this gives clients the opportunity to dispose all their sessions in advance of the supervisor itself being disposed
 
-            Do.Assert(iCancellationTokenSource.IsCancellationRequested);
-
             iDisposeHandler.Dispose();
+
+            Do.Assert(iCancellationTokenSource.IsCancellationRequested);
 
             // now guaranteed that no more sessions are being created
 
