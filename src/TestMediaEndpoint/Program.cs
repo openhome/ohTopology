@@ -172,9 +172,42 @@ namespace TestMediaEndpoint
     {
         static int Main(string[] args)
         {
+            TestLinkedTokenSource();
             TestMediaEndpointSupervisorSesssionHandling();
             TestMediaEndpointSupervisorContainerHandling();
             return (0);
+        }
+
+        static void TestLinkedTokenSource()
+        {
+            var cts1 = new CancellationTokenSource();
+            var cts2 = new CancellationTokenSource();
+            var ctsl = CancellationTokenSource.CreateLinkedTokenSource(cts1.Token, cts2.Token);
+            ctsl.Dispose();
+
+            bool throws = false;
+
+            try
+            {
+                cts1.Cancel();
+                cts1.Dispose();
+            }
+            catch
+            {
+                throws = true;
+            }
+
+            try
+            {
+                cts2.Cancel();
+                cts2.Dispose();
+            }
+            catch
+            {
+                throws = true;
+            }
+
+            Do.Assert(!throws);
         }
 
         static bool SessionCreateAndDestroy(int aMilliseconds)
