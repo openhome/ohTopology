@@ -103,45 +103,49 @@ namespace OpenHome.Av
             {
                 var tcs = new TaskCompletionSource<IWatchableFragment<IMediaDatum>>();
 
+                if (iCancellationTokenSource.IsCancellationRequested)
+                {
+                    tcs.SetCanceled();
+                    return (tcs.Task);
+                }
+
                 if (aCount == 0)
                 {
                     tcs.SetResult(new WatchableFragment<IMediaDatum>(aIndex, Enumerable.Empty<IMediaDatum>()));
+                    return (tcs.Task);
                 }
-                else
+
+                Task task = null;
+
+                var cts = CancellationTokenSource.CreateLinkedTokenSource(iCancellationTokenSource.Token, aCancellationToken);
+
+                lock (iTasks)
                 {
-                    Task task = null;
-
-                    var cts = CancellationTokenSource.CreateLinkedTokenSource(iCancellationTokenSource.Token, aCancellationToken);
-
-                    lock (iTasks)
+                    task = iClient.Read(cts.Token, iSession.Id, iSnapshot, aIndex, aCount).ContinueWith((t) =>
                     {
-                        task = iClient.Read(cts.Token, iSession.Id, iSnapshot, aIndex, aCount).ContinueWith((t) =>
+                        Console.WriteLine("cts dispose");
+                        cts.Dispose();
+                        Console.WriteLine("cts disposed");
+
+                        try
                         {
+                            tcs.SetResult(new WatchableFragment<IMediaDatum>(aIndex, t.Result));
+                        }
+                        catch
+                        {
+                            tcs.SetCanceled();
+                        }
 
-                            Console.WriteLine("cts dispose");
-                            cts.Dispose();
-                            Console.WriteLine("cts disposed");
+                        lock (iTasks)
+                        {
+                            iTasks.Remove(task);
+                        }
+                    });
 
-                            try
-                            {
-                                tcs.SetResult(new WatchableFragment<IMediaDatum>(aIndex, t.Result));
-                            }
-                            catch
-                            {
-                                tcs.SetCanceled();
-                            }
+                    iTasks.Add(task);
 
-                            lock (iTasks)
-                            {
-                                iTasks.Remove(task);
-                            }
-                        });
-
-                        iTasks.Add(task);
-                    }
+                    return (tcs.Task);
                 }
-
-                return (tcs.Task);
             }
         }
 
@@ -291,6 +295,8 @@ namespace OpenHome.Av
                             return;
                         }
 
+                        Do.Assert(iSnapshot == null);
+
                         iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, snapshot);
 
                         iAction();
@@ -383,8 +389,11 @@ namespace OpenHome.Av
 
             iDisposeHandler.Dispose();
 
-            iSnapshot.Cancel();
-            iSnapshot.Dispose();
+            if (iSnapshot != null)
+            {
+                iSnapshot.Cancel();
+                iSnapshot.Dispose();
+            }
 
             iCancellationTokenSource.Dispose();
 
