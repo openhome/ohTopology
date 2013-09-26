@@ -36,6 +36,48 @@ namespace OpenHome.Av
         Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount);
     }
 
+    internal class CancellationTokenLink : IDisposable
+    {
+        private readonly CancellationToken[] iCancellationTokens;
+        private readonly CancellationTokenSource iCancellationTokenSource = new CancellationTokenSource();
+        private readonly List<CancellationTokenRegistration> iCancellationTokenRegistrations;
+
+        public CancellationTokenLink(params CancellationToken[] aCancellationTokens)
+        {
+            iCancellationTokens = aCancellationTokens;
+            iCancellationTokenSource = new CancellationTokenSource();
+            iCancellationTokenRegistrations = new List<CancellationTokenRegistration>();
+
+            foreach (var token in iCancellationTokens)
+            {
+                iCancellationTokenRegistrations.Add(token.Register(() =>
+                {
+                    iCancellationTokenSource.Cancel();
+                }));
+            }
+        }
+
+        public CancellationToken Token
+        {
+            get
+            {
+                return (iCancellationTokenSource.Token);
+            }
+        }
+
+        // IDisposable
+
+        public void Dispose()
+        {
+            foreach (var registration in iCancellationTokenRegistrations)
+            {
+                registration.Dispose();
+            }
+
+            iCancellationTokenSource.Dispose();
+        }
+    }
+
     internal class MediaEndpointSupervisorSnapshot : IWatchableSnapshot<IMediaDatum>, IDisposable
     {
         private readonly IMediaEndpointClient iClient;
@@ -119,14 +161,14 @@ namespace OpenHome.Av
 
                 Task task = null;
 
-                var cts = CancellationTokenSource.CreateLinkedTokenSource(iCancellationTokenSource.Token, aCancellationToken);
+                var ctl = new CancellationTokenLink(iCancellationTokenSource.Token, aCancellationToken);
 
                 lock (iTasks)
                 {
-                    task = iClient.Read(cts.Token, iSession.Id, iSnapshot, aIndex, aCount).ContinueWith((t) =>
+                    task = iClient.Read(ctl.Token, iSession.Id, iSnapshot, aIndex, aCount).ContinueWith((t) =>
                     {
                         Console.WriteLine("cts dispose");
-                        cts.Dispose();
+                        ctl.Dispose();
                         Console.WriteLine("cts disposed");
 
                         try
