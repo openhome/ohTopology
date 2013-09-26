@@ -23,8 +23,22 @@ namespace TestMediaEndpoint
 
         private void ReportException(Exception aException)
         {
-            Console.WriteLine("WATCHABLE THREAD EXCEPTION");
-            Console.WriteLine(aException.Message + "\n" + aException.StackTrace);
+            var aggregate = aException as AggregateException;
+
+            if (aggregate != null)
+            {
+                Console.WriteLine("WATCHABLE THREAD AGGREGATE EXCEPTION");
+
+                foreach (var exception in aggregate.InnerExceptions)
+                {
+                    ReportException(exception);
+                }
+            }
+            else
+            {
+                Console.WriteLine("WATCHABLE THREAD EXCEPTION");
+                Console.WriteLine(aException.Message + "\n" + aException.StackTrace);
+            }
         }
 
         public void Wait()
