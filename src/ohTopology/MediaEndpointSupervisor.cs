@@ -61,7 +61,10 @@ namespace OpenHome.Av
 
         public void Cancel()
         {
-            iCancellationTokenSource.Cancel();
+            using (iDisposeHandler.Lock)
+            {
+                iCancellationTokenSource.Cancel();
+            }
         }
 
         // IWatchableSnapshot<IMediaDatum>
