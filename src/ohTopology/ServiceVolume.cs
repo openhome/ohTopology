@@ -197,7 +197,6 @@ namespace OpenHome.Av
         public ServiceVolumeNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
             : base(aNetwork, aDevice)
         {
-            iSubscribed = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgVolume1(aCpDevice);
 
             iService.SetPropertyBalanceChanged(HandleBalanceChanged);
@@ -216,31 +215,32 @@ namespace OpenHome.Av
         {
             base.Dispose();
 
-            iSubscribed.Dispose();
-            iSubscribed = null;
-
             iService.Dispose();
             iService = null;
         }
 
         protected override Task OnSubscribe()
         {
-            Task task = Task.Factory.StartNew(() =>
-            {
-                iService.Subscribe();
-                iSubscribed.WaitOne();
-            });
-            return task;
+            Do.Assert(iSubscribedSource == null);
+
+            iSubscribedSource = new TaskCompletionSource<bool>();
+
+            iService.Subscribe();
+
+            return iSubscribedSource.Task.ContinueWith((t) => { });
         }
 
         protected override void OnCancelSubscribe()
         {
-            iSubscribed.Set();
+            if (iSubscribedSource != null)
+            {
+                iSubscribedSource.TrySetCanceled();
+            }
         }
 
         private void HandleInitialEvent()
         {
-            iSubscribed.Set();
+            iSubscribedSource.SetResult(true);
         }
 
         protected override void OnUnsubscribe()
@@ -249,7 +249,8 @@ namespace OpenHome.Av
             {
                 iService.Unsubscribe();
             }
-            iSubscribed.Reset();
+
+            iSubscribedSource = null;
         }
 
         public override Task SetBalance(int aValue)
@@ -403,7 +404,7 @@ namespace OpenHome.Av
             });
         }
 
-        private ManualResetEvent iSubscribed;
+        private TaskCompletionSource<bool> iSubscribedSource;
         private CpProxyAvOpenhomeOrgVolume1 iService;
     }
 

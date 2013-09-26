@@ -270,8 +270,6 @@ namespace OpenHome.Av
         public ServiceProductNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
             : base(aNetwork, aDevice)
         {
-            iSubscribed = new ManualResetEvent(false);
-            iSubscribedConfiguration = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgProduct1(aCpDevice);
             iServiceConfiguration = new CpProxyLinnCoUkConfiguration1(aCpDevice);
 
@@ -300,9 +298,6 @@ namespace OpenHome.Av
         {
             base.Dispose();
 
-            iSubscribed.Dispose();
-            iSubscribed = null;
-
             iService.Dispose();
             iService = null;
 
@@ -318,26 +313,41 @@ namespace OpenHome.Av
 
         protected override Task OnSubscribe()
         {
-            Task task = Task.Factory.StartNew(() =>
-            {
-                iService.Subscribe();
-                iServiceConfiguration.Subscribe();
+            Do.Assert(iSubscribedSource == null);
+            Do.Assert(iSubscribedConfigurationSource == null);
+            Do.Assert(iSubscribedVolkanoSource == null);
 
-                if (iServiceVolkano != null)
-                {
-                    iServiceVolkano.SyncProductId(out iProductId);
-                }
+            iSubscribedSource = new TaskCompletionSource<bool>();
+            iSubscribedConfigurationSource = new TaskCompletionSource<bool>();
+            iSubscribedVolkanoSource = new TaskCompletionSource<bool>();
+
+            iService.Subscribe();
+            iServiceConfiguration.Subscribe();
+
+            if (iServiceVolkano != null)
+            {
+                iServiceVolkano.BeginProductId(CallbackProductId);
+            }
                 
-                iSubscribed.WaitOne();
-                iSubscribedConfiguration.WaitOne();
-            });
-            return task;
+            return Task.Factory.ContinueWhenAll(
+                new Task[] { iSubscribedSource.Task, iSubscribedConfigurationSource.Task, iSubscribedVolkanoSource.Task },
+                (t) => { });
         }
 
         protected override void OnCancelSubscribe()
         {
-            iSubscribed.Set();
-            iSubscribedConfiguration.Set();
+            if (iSubscribedSource != null)
+            {
+                iSubscribedSource.TrySetCanceled();
+            }
+            if (iSubscribedConfigurationSource != null)
+            {
+                iSubscribedConfigurationSource.TrySetCanceled();
+            }
+            if (iSubscribedVolkanoSource != null)
+            {
+                iSubscribedVolkanoSource.TrySetCanceled();
+            }
         }
 
         private void HandleInitialEvent()
@@ -355,17 +365,21 @@ namespace OpenHome.Av
             iProductInfo = iService.PropertyProductInfo();
             iProductUrl = iService.PropertyProductUrl();
 
-            iSubscribed.Set();
+            iSubscribedSource.SetResult(true);
         }
 
         private void HandleInitialEventConfiguration()
         {
+            string propertyXml = iServiceConfiguration.PropertyParameterXml();
             Network.Schedule(() =>
             {
-                ParseParameterXml(iServiceConfiguration.PropertyParameterXml());
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    ParseParameterXml(propertyXml);
+                });
             });
 
-            iSubscribedConfiguration.Set();
+            iSubscribedConfigurationSource.SetResult(true);
         }
 
         protected override void OnUnsubscribe()
@@ -378,8 +392,10 @@ namespace OpenHome.Av
             {
                 iServiceConfiguration.Unsubscribe();
             }
-            iSubscribed.Reset();
-            iSubscribedConfiguration.Reset();
+
+            iSubscribedSource = null;
+            iSubscribedConfigurationSource = null;
+            iSubscribedVolkanoSource = null;
         }
 
         public override Task SetSourceIndex(uint aValue)
@@ -416,6 +432,16 @@ namespace OpenHome.Av
                 iServiceConfiguration.SyncSetParameter("TuneIn Radio", "Password", aValue);
             });
             return task;
+        }
+
+        private void CallbackProductId(IntPtr aPtr)
+        {
+            iSubscribedVolkanoSource.SetResult(true);
+
+            iDisposeHandler.WhenNotDisposed(() =>
+            {
+                iServiceVolkano.EndProductId(aPtr, out iProductId);
+            });
         }
 
         private void HandleRoomChanged()
@@ -517,8 +543,9 @@ namespace OpenHome.Av
             }
         }
 
-        private ManualResetEvent iSubscribed;
-        private ManualResetEvent iSubscribedConfiguration;
+        private TaskCompletionSource<bool> iSubscribedSource;
+        private TaskCompletionSource<bool> iSubscribedConfigurationSource;
+        private TaskCompletionSource<bool> iSubscribedVolkanoSource;
         private CpProxyAvOpenhomeOrgProduct1 iService;
         private CpProxyLinnCoUkConfiguration1 iServiceConfiguration;
         private CpProxyLinnCoUkVolkano1 iServiceVolkano;
