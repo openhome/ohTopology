@@ -27,25 +27,31 @@ namespace OpenHome.Av
 
         protected void Added(CpDeviceList aList, CpDevice aDevice)
         {
-            iNetwork.Execute(() =>
+            iNetwork.Schedule(() =>
             {
-                Device device = Create(iNetwork, aDevice);
-                iCpDeviceLookup.Add(device.Udn, device);
-                iNetwork.Add(device);
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    Device device = Create(iNetwork, aDevice);
+                    iCpDeviceLookup.Add(device.Udn, device);
+                    iNetwork.Add(device);
+                });
             });
         }
 
         protected void Removed(CpDeviceList aList, CpDevice aDevice)
         {
-            iNetwork.Execute(() =>
+            iNetwork.Schedule(() =>
             {
-                Device device;
-                if (iCpDeviceLookup.TryGetValue(aDevice.Udn(), out device))
+                iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iCpDeviceLookup.Remove(device.Udn);
-                    iNetwork.Remove(device);
-                    device.Dispose();
-                }
+                    Device device;
+                    if (iCpDeviceLookup.TryGetValue(aDevice.Udn(), out device))
+                    {
+                        iCpDeviceLookup.Remove(device.Udn);
+                        iNetwork.Remove(device);
+                        device.Dispose();
+                    }
+                });
             });
         }
 
