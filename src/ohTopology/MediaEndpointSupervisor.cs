@@ -63,6 +63,8 @@ namespace OpenHome.Av
         {
             using (iDisposeHandler.Lock)
             {
+                Do.Assert(!iCancellationTokenSource.IsCancellationRequested);
+
                 iCancellationTokenSource.Cancel();
             }
         }
@@ -236,8 +238,15 @@ namespace OpenHome.Av
             // called on the watchable thread
 
             // first cancel current snapshot to prevent further activity on it and begin completing outstanding tasks
+            
+            var previous = iSnapshot;
 
-            iSnapshot.Cancel();
+            iSnapshot = null;
+
+            if (previous != null)
+            {
+                previous.Cancel();
+            }
 
             try
             {
@@ -282,15 +291,16 @@ namespace OpenHome.Av
                             return;
                         }
 
-                        var previous = iSnapshot;
-
                         iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, snapshot);
 
                         iAction();
 
-                        Console.WriteLine("previuous dispose");
-                        previous.Dispose();
-                        Console.WriteLine("previuous disposed");
+                        if (previous != null)
+                        {
+                            Console.WriteLine("previuous dispose");
+                            previous.Dispose();
+                            Console.WriteLine("previuous disposed");
+                        }
                     }
                 });
             }, token);
