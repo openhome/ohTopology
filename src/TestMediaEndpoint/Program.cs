@@ -207,7 +207,11 @@ namespace TestMediaEndpoint
                 throws = true;
             }
 
-            Do.Assert(!throws);
+            if (throws)
+            {
+                Console.WriteLine("CreateLinkedTokenSource ERROR");
+                Do.Assert(false);
+            }
         }
 
         static bool SessionCreateAndDestroy(int aMilliseconds)
