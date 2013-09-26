@@ -10,28 +10,19 @@ using OpenHome.Av;
 
 namespace TestMediaServer
 {
-    public class Client : IUnorderedWatcher<IDevice>, IDisposable
+    public class Client
     {
         private readonly INetwork iNetwork;
-        
-        private IWatchableUnordered<IDevice> iMediaServers;
         
         private IProxyMediaEndpoint iProxy;
 
         private AutoResetEvent iReady;
 
-        public Client(INetwork aNetwork)
+        public Client(INetwork aNetwork, IProxyMediaEndpoint aProxy)
         {
             iNetwork = aNetwork;
-
-            iNetwork.Execute(() =>
-            {
-                iMediaServers = aNetwork.Create<IProxyMediaEndpoint>();
-                iMediaServers.AddWatcher(this);
-            });
-
-            iNetwork.Wait();
-
+            iProxy = aProxy;
+            
             iReady = new AutoResetEvent(false);
         }
 
@@ -386,43 +377,6 @@ namespace TestMediaServer
         {
             iReady.Set();
         }
-
-        // IUnorderedWatcher<IWatchableDevice>
-
-        public void UnorderedOpen()
-        {
-        }
-
-        public void UnorderedInitialised()
-        {
-        }
-
-        public void UnorderedAdd(IDevice aDevice)
-        {
-            aDevice.Create<IProxyMediaEndpoint>((t) =>
-            {
-                iProxy = t;
-            });
-        }
-
-        public void UnorderedClose()
-        {
-        }
-
-        public void UnorderedRemove(IDevice aItem)
-        {
-        }
-
-        // IDisposable
-
-        public void Dispose()
-        {
-            iNetwork.Execute(() =>
-            {
-                iProxy.Dispose();
-                iMediaServers.RemoveWatcher(this);
-            });
-        }
     }
 
     class Program
@@ -431,20 +385,34 @@ namespace TestMediaServer
         {
             using (var network = new Network(50))
             {
-                using (DeviceInjectorMock mockInjector = new DeviceInjectorMock(network, System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location)))
+                var path = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
+
+                var device = DeviceFactory.CreateMediaServer(network, "4c494e4e-0026-0f99-0000-000000000000", path);
+
+                IProxyMediaEndpoint proxy =null;
+
+                using (var ready = new ManualResetEvent(false))
                 {
-                    network.Execute(() =>
+                    device.Create<IProxyMediaEndpoint>((p) =>
                     {
-                        mockInjector.Execute("medium");
+                        proxy = p;
+                        ready.Set();
                     });
 
-                    using (var client = new Client(network))
-                    {
-                        client.Run();
-                    }
-
-                    Console.WriteLine("Test completed successfully");
+                    ready.WaitOne();
                 }
+
+                var client = new Client(network, proxy);
+
+                client.Run();
+
+                network.Execute(() =>
+                {
+                    proxy.Dispose();
+                    device.Dispose();
+                });
+
+                Console.WriteLine("Test completed successfully");
             }
         }
 
