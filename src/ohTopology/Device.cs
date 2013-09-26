@@ -155,23 +155,26 @@ namespace OpenHome.Av
             }
 
             List<Action> linked = new List<Action>(iJoiners);
+
             foreach (Action a in linked)
             {
                 a();
             }
+            
             if (iJoiners.Count > 0)
             {
                 throw new Exception("Device joiners > 0");
             }
+            
             iJoiners = null;
 
             foreach (IService s in iServices.Values)
             {
                 s.Dispose();
             }
+            
             iServices.Clear();
             iServices = null;
-
             iDisposed = true;
         }
     }

@@ -302,9 +302,11 @@ namespace OpenHome.Av
             
             client.DownloadStringCompleted += (sender, args) =>
             {
-                client.Dispose();
-
+                Console.WriteLine("cancellation dispose");
                 cancellation.Dispose();
+                Console.WriteLine("cancellation disposed");
+
+                client.Dispose();
 
                 if (aCancellationToken.IsCancellationRequested || args.Error != null)
                 {

@@ -40,23 +40,28 @@ namespace OpenHome.Av
     {
         private readonly IMediaEndpointClient iClient;
         private readonly MediaEndpointSupervisorSession iSession;
-        private readonly CancellationToken iCancellationToken;
         private readonly IMediaEndpointClientSnapshot iSnapshot;
 
         private readonly DisposeHandler iDisposeHandler;
+        private readonly CancellationTokenSource iCancellationTokenSource;
 
         private readonly List<Task> iTasks;
 
-        public MediaEndpointSupervisorSnapshot(IMediaEndpointClient aClient, MediaEndpointSupervisorSession aSession, CancellationToken aCancellationToken, IMediaEndpointClientSnapshot aSnapshot)
+        public MediaEndpointSupervisorSnapshot(IMediaEndpointClient aClient, MediaEndpointSupervisorSession aSession, IMediaEndpointClientSnapshot aSnapshot)
         {
             iClient = aClient;
             iSession = aSession;
-            iCancellationToken = aCancellationToken;
             iSnapshot = aSnapshot;
 
             iDisposeHandler = new DisposeHandler();
+            iCancellationTokenSource = new CancellationTokenSource();
 
             iTasks = new List<Task>();
+        }
+
+        public void Cancel()
+        {
+            iCancellationTokenSource.Cancel();
         }
 
         // IWatchableSnapshot<IMediaDatum>
@@ -101,13 +106,16 @@ namespace OpenHome.Av
                 {
                     Task task = null;
 
-                    var cts = CancellationTokenSource.CreateLinkedTokenSource(iCancellationToken, aCancellationToken);
+                    var cts = CancellationTokenSource.CreateLinkedTokenSource(iCancellationTokenSource.Token, aCancellationToken);
 
                     lock (iTasks)
                     {
                         task = iClient.Read(cts.Token, iSession.Id, iSnapshot, aIndex, aCount).ContinueWith((t) =>
                         {
+
+                            Console.WriteLine("cts dispose");
                             cts.Dispose();
+                            Console.WriteLine("cts disposed");
 
                             try
                             {
@@ -136,6 +144,8 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
+            Do.Assert(iCancellationTokenSource.IsCancellationRequested);
+
             iDisposeHandler.Dispose();
 
             Task[] tasks;
@@ -157,6 +167,8 @@ namespace OpenHome.Av
             {
                 Do.Assert(iTasks.Count == 0);
             }
+
+            iCancellationTokenSource.Dispose();
         }
     }
 
@@ -203,7 +215,7 @@ namespace OpenHome.Av
 
             var token = iCancellationTokenSource.Token;
 
-            iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, token, iSnapshotFunction(token));
+            iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, iSnapshotFunction(token));
 
             iSequence = 0;
         }
@@ -222,7 +234,7 @@ namespace OpenHome.Av
 
             // first cancel current snapshot to prevent further activity on it and begin completing outstanding tasks
 
-            iCancellationTokenSource.Cancel();
+            iSnapshot.Cancel();
 
             try
             {
@@ -235,10 +247,6 @@ namespace OpenHome.Av
             uint sequence;
 
             sequence = ++iSequence;
-
-            iCancellationTokenSource.Dispose();
-
-            iCancellationTokenSource = new CancellationTokenSource();
 
             var token = iCancellationTokenSource.Token;
 
@@ -254,30 +262,34 @@ namespace OpenHome.Av
                 }
                 catch
                 {
-                    throw new OperationCanceledException();
+                    throw new OperationCanceledException(token);
                 }
 
-                if (snapshot != null)
+                if (snapshot == null)
                 {
-                    iClient.Schedule(() =>
-                    {
-                        if (!token.IsCancellationRequested)
-                        {
-                            if (iSequence != sequence)
-                            {
-                                return;
-                            }
-
-                            var previous = iSnapshot;
-
-                            iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, token, snapshot);
-
-                            iAction();
-
-                            previous.Dispose();
-                        }
-                    });
+                    throw new OperationCanceledException(token);
                 }
+
+                iClient.Schedule(() =>
+                {
+                    if (!token.IsCancellationRequested)
+                    {
+                        if (iSequence != sequence)
+                        {
+                            return;
+                        }
+
+                        var previous = iSnapshot;
+
+                        iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, snapshot);
+
+                        iAction();
+
+                        Console.WriteLine("previuous dispose");
+                        previous.Dispose();
+                        Console.WriteLine("previuous disposed");
+                    }
+                });
             }, token);
         }
 
@@ -358,6 +370,7 @@ namespace OpenHome.Av
 
             iDisposeHandler.Dispose();
 
+            iSnapshot.Cancel();
             iSnapshot.Dispose();
 
             iCancellationTokenSource.Dispose();
