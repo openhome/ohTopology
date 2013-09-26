@@ -23,6 +23,7 @@ namespace TestMediaEndpoint
 
         private void ReportException(Exception aException)
         {
+            Console.WriteLine("WATCHABLE THREAD EXCEPTION");
             Console.WriteLine(aException.Message + "\n" + aException.StackTrace);
         }
 
