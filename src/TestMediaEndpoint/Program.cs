@@ -192,7 +192,7 @@ namespace TestMediaEndpoint
 
                 Thread.Sleep(aMilliseconds);
 
-                supervisor.Close();
+                supervisor.Cancel();
 
                 client.Execute(() =>
                 {
@@ -274,7 +274,7 @@ namespace TestMediaEndpoint
 
                 client.Wait();
 
-                supervisor.Close();
+                supervisor.Cancel();
 
                 client.Execute(() =>
                 {
