@@ -239,7 +239,9 @@ namespace OpenHome.Av
 
             sequence = ++iSequence;
 
+            Console.WriteLine("iCts dispose");
             iCancellationTokenSource.Dispose();
+            Console.WriteLine("iCts disposed");
 
             iCancellationTokenSource = new CancellationTokenSource();
 
