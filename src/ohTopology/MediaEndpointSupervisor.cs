@@ -107,7 +107,7 @@ namespace OpenHome.Av
                     {
                         task = iClient.Read(cts.Token, iSession.Id, iSnapshot, aIndex, aCount).ContinueWith((t) =>
                         {
-                            cts.Dispose();
+                            //cts.Dispose();
 
                             try
                             {

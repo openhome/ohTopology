@@ -302,7 +302,7 @@ namespace OpenHome.Av
             
             client.DownloadStringCompleted += (sender, args) =>
             {
-                //cancellation.Dispose();
+                cancellation.Dispose();
 
                 client.Dispose();
 
