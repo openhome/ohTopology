@@ -172,7 +172,7 @@ namespace TestMediaEndpoint
     {
         static int Main(string[] args)
         {
-            TestLinkedTokenSource();
+            //TestLinkedTokenSource();
             TestMediaEndpointSupervisorSesssionHandling();
             TestMediaEndpointSupervisorContainerHandling();
             return (0);
@@ -209,7 +209,6 @@ namespace TestMediaEndpoint
 
             if (throws)
             {
-                Console.WriteLine("CreateLinkedTokenSource ERROR");
                 Do.Assert(false);
             }
         }

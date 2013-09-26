@@ -106,10 +106,7 @@ namespace OpenHome.Av
             using (iDisposeHandler.Lock)
             {
                 Do.Assert(!iCancellationTokenSource.IsCancellationRequested);
-
-                Console.WriteLine("snapshot cancel");
                 iCancellationTokenSource.Cancel();
-                Console.WriteLine("snapshot canceled");
             }
         }
 
@@ -167,9 +164,7 @@ namespace OpenHome.Av
                 {
                     task = iClient.Read(ctl.Token, iSession.Id, iSnapshot, aIndex, aCount).ContinueWith((t) =>
                     {
-                        Console.WriteLine("cts dispose");
                         ctl.Dispose();
-                        Console.WriteLine("cts disposed");
 
                         try
                         {
@@ -347,9 +342,7 @@ namespace OpenHome.Av
 
                         if (previous != null)
                         {
-                            Console.WriteLine("previuous dispose");
                             previous.Dispose();
-                            Console.WriteLine("previuous disposed");
                         }
                     }
                 });
