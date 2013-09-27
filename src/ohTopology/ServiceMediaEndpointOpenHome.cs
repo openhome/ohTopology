@@ -64,21 +64,47 @@ namespace OpenHome.Av
             return (iUri + "/res" + aValue);
         }
 
-        private IMediaEndpointClientSnapshot GetSnapshot(string aFormat, params object[] aArguments)
+        private Task<IMediaEndpointClientSnapshot> GetSnapshot(CancellationToken aCancellationToken, string aFormat, params object[] aArguments)
         {
+            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
+
             var uri = CreateUri(aFormat, aArguments);
 
-            using (var client = new WebClient())
+            var client = new WebClient();
+
+            client.Encoding = iEncoding;
+
+            var cancellation = aCancellationToken.Register(() => client.CancelAsync());
+
+            client.DownloadStringCompleted += (sender, args) =>
             {
-                var session = client.DownloadString(uri);
+                cancellation.Dispose();
 
-                var json = JsonParser.Parse(session) as JsonObject;
+                client.Dispose();
 
-                var total = GetTotal(json["Total"]);
-                var alpha = GetAlpha(json["Alpha"]);
+                if (aCancellationToken.IsCancellationRequested || args.Error != null)
+                {
+                    tcs.SetCanceled();
+                }
+                else
+                {
+                    try
+                    {
+                        var json = JsonParser.Parse(args.Result) as JsonObject;
+                        var total = GetTotal(json["Total"]);
+                        var alpha = GetAlpha(json["Alpha"]);
+                        tcs.SetResult(new MediaEndpointSnapshotOpenHome(total, alpha));
+                    }
+                    catch
+                    {
+                        tcs.SetCanceled();
+                    }
+                }
+            };
 
-                return (new MediaEndpointSnapshotOpenHome(total, alpha));
-            }
+            client.DownloadStringAsync(new Uri(uri));
+
+            return (tcs.Task);
         }
 
         private uint GetTotal(JsonValue aValue)
@@ -216,76 +242,114 @@ namespace OpenHome.Av
 
         // IMediaEndpointClient
 
-        public string Create(CancellationToken aCancellationToken)
+        public Task<string> Create(CancellationToken aCancellationToken)
         {
-            using (var client = new WebClient())
+            var tcs = new TaskCompletionSource<string>();
+
+            var uri = CreateUri("create");
+
+            var client = new WebClient();
+
+            client.Encoding = iEncoding;
+
+            var cancellation = aCancellationToken.Register(() => client.CancelAsync());
+
+            client.DownloadStringCompleted += (sender, args) =>
             {
-                var uri = CreateUri("create");
+                cancellation.Dispose();
 
-                var jsession = client.DownloadString(uri);
+                client.Dispose();
 
-                var json = JsonParser.Parse(jsession) as JsonString;
-
-                var session = json.Value();
-
-                var refresh = iSessionHandler("me." + iId + "." + session, (id, seq) =>
+                if (aCancellationToken.IsCancellationRequested || args.Error != null)
                 {
-                    iSupervisor.Refresh(session);
-                });
+                    tcs.SetCanceled();
+                }
+                else
+                {
+                    try
+                    {
+                        var json = JsonParser.Parse(args.Result) as JsonString;
 
-                iRefreshHandlers.Add(session, refresh);
+                        var session = json.Value();
 
-                return (session);
-            }
+                        var refresh = iSessionHandler("me." + iId + "." + session, (id, seq) =>
+                        {
+                            iSupervisor.Refresh(session);
+                        });
+
+                        iRefreshHandlers.Add(session, refresh);
+
+                        tcs.SetResult(session);
+
+                    }
+                    catch
+                    {
+                        tcs.SetCanceled();
+                    }
+                }
+            };
+
+            client.DownloadStringAsync(new Uri(uri));
+
+            return (tcs.Task);
         }
 
-        public void Destroy(CancellationToken aCancellationToken, string aId)
+        public Task<string> Destroy(CancellationToken aCancellationToken, string aId)
         {
-            using (var client = new WebClient())
+            var tcs = new TaskCompletionSource<string>();
+
+            var uri = CreateUri("destroy?session={0}", aId);
+
+            var client = new WebClient();
+
+            client.Encoding = iEncoding;
+
+            var cancellation = aCancellationToken.Register(() => client.CancelAsync());
+
+            client.DownloadStringCompleted += (sender, args) =>
             {
-                IDisposable refresh;
+                cancellation.Dispose();
 
-                if (iRefreshHandlers.TryGetValue(aId, out refresh))
-                {
-                    iRefreshHandlers.Remove(aId);
-                    refresh.Dispose();
-                }
+                client.Dispose();
 
-                var uri = CreateUri("destroy?session={0}", aId);
+                if (aCancellationToken.IsCancellationRequested || args.Error != null)
+                {
+                    tcs.SetCanceled();
+                }
+                else
+                {
+                    tcs.SetResult(aId);
+                }
+            };
 
-                try
-                {
-                    client.DownloadString(uri);
-                }
-                catch
-                {
-                }
-            }
+            client.DownloadStringAsync(new Uri(uri));
+
+            return (tcs.Task);
         }
 
-        public IMediaEndpointClientSnapshot Browse(CancellationToken aCancellationToken, string aSession, IMediaDatum aDatum)
+        public Task<IMediaEndpointClientSnapshot> Browse(CancellationToken aCancellationToken, string aSession, IMediaDatum aDatum)
         {
             if (aDatum == null)
             {
-                return (GetSnapshot("browse?session={0}&id={1}", aSession, "0"));
+                return (GetSnapshot(aCancellationToken, "browse?session={0}&id={1}", aSession, "0"));
             }
 
-            return (GetSnapshot("browse?session={0}&id={1}", aSession, aDatum.Id));
+            return (GetSnapshot(aCancellationToken, "browse?session={0}&id={1}", aSession, aDatum.Id));
         }
 
-        public IMediaEndpointClientSnapshot List(CancellationToken aCancellationToken, string aSession, ITag aTag)
+        public Task<IMediaEndpointClientSnapshot> List(CancellationToken aCancellationToken, string aSession, ITag aTag)
         {
-            return (GetSnapshot("link?session={0}&tag={1}&val={2}", aSession, aTag.Id));
+            return (GetSnapshot(aCancellationToken, "link?session={0}&tag={1}&val={2}", aSession, aTag.Id));
         }
 
-        public IMediaEndpointClientSnapshot Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
+        public Task<IMediaEndpointClientSnapshot> Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
         {
-            return (GetSnapshot("link?session={0}&tag={1}&val={2}", aSession, aTag.Id, Encode(aValue)));
+            return (GetSnapshot(aCancellationToken, "link?session={0}&tag={1}&val={2}", aSession, aTag.Id, Encode(aValue)));
         }
 
-        public IMediaEndpointClientSnapshot Search(CancellationToken aCancellationToken, string aSession, string aValue)
+        public Task<IMediaEndpointClientSnapshot> Search(CancellationToken aCancellationToken, string aSession, string aValue)
         {
-            return (GetSnapshot("search?session={0}&val={1}", aSession, Encode(aValue)));
+            return (GetSnapshot(aCancellationToken, "search?session={0}&val={1}", aSession, Encode(aValue)));
         }
 
         public Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
