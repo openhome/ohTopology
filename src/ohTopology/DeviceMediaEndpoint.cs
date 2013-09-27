@@ -140,7 +140,7 @@ namespace OpenHome.Av
 
                             lock (iDevices)
                             {
-                                iDevices.Add(udn, new DeviceInjectorDeviceOpenHome(this, udn, uri));
+                                iDevices.Add(udn, new DeviceInjectorDeviceOpenHome(this, udn, uri, aDevice));
                             }
                         }
                     }
@@ -236,9 +236,12 @@ namespace OpenHome.Av
         private IDisposable iEventMediaEndpoints;
         
         private bool iDisposed;
+        private CpDevice iDevice;
 
-        public DeviceInjectorDeviceOpenHome(DeviceInjectorMediaEndpoint aInjector, string aUdn, Uri aUri)
+        public DeviceInjectorDeviceOpenHome(DeviceInjectorMediaEndpoint aInjector, string aUdn, Uri aUri, CpDevice aDevice)
         {
+            iDevice = aDevice;
+            iDevice.AddRef();
             iInjector = aInjector;
             iUdn = aUdn;
             iUri = aUri;
@@ -434,6 +437,7 @@ namespace OpenHome.Av
             lock (iEndpoints)
             {
                 iDisposed = true;
+                iDevice.RemoveRef();
 
                 foreach (var entry in iEndpoints)
                 {
