@@ -12,7 +12,7 @@ namespace OpenHome.Av
     public abstract class DeviceInjector : IDisposable
     {
         private readonly Network iNetwork;
-        private readonly Dictionary<string, Device> iCpDeviceLookup;
+        private readonly Dictionary<CpDevice, Device> iCpDeviceLookup;
 
         protected readonly DisposeHandler iDisposeHandler;
         protected CpDeviceListUpnpServiceType iDeviceList;
@@ -22,7 +22,7 @@ namespace OpenHome.Av
             iDisposeHandler = new DisposeHandler();
             iNetwork = aNetwork;
 
-            iCpDeviceLookup = new Dictionary<string, Device>();
+            iCpDeviceLookup = new Dictionary<CpDevice, Device>();
         }
 
         protected void Added(CpDeviceList aList, CpDevice aDevice)
@@ -34,7 +34,7 @@ namespace OpenHome.Av
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
                     Device device = Create(iNetwork, aDevice);
-                    iCpDeviceLookup.Add(device.Udn, device);
+                    iCpDeviceLookup.Add(aDevice, device);
                     iNetwork.Add(device);
                 });
             });
@@ -47,9 +47,9 @@ namespace OpenHome.Av
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
                     Device device;
-                    if (iCpDeviceLookup.TryGetValue(aDevice.Udn(), out device))
+                    if (iCpDeviceLookup.TryGetValue(aDevice, out device))
                     {
-                        iCpDeviceLookup.Remove(device.Udn);
+                        iCpDeviceLookup.Remove(aDevice);
                         iNetwork.Remove(device);
                         device.Dispose();
                     }
@@ -86,9 +86,10 @@ namespace OpenHome.Av
 
             iNetwork.Execute(() =>
             {
-                foreach (var device in iCpDeviceLookup.Values)
+                foreach (var d in iCpDeviceLookup)
                 {
-                    device.Dispose();
+                    d.Value.Dispose();
+                    d.Key.RemoveRef();
                 }
             });
             iCpDeviceLookup.Clear();
