@@ -108,6 +108,8 @@ namespace OpenHome.Av
 
         private void Added(CpDeviceList aList, CpDevice aDevice)
         {
+            aDevice.AddRef();
+
             iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
@@ -174,6 +176,8 @@ namespace OpenHome.Av
                         }
                     }
                 });
+
+                aDevice.RemoveRef();
             });
         }
 
@@ -241,7 +245,6 @@ namespace OpenHome.Av
         public DeviceInjectorDeviceOpenHome(DeviceInjectorMediaEndpoint aInjector, string aUdn, Uri aUri, CpDevice aDevice)
         {
             iDevice = aDevice;
-            iDevice.AddRef();
             iInjector = aInjector;
             iUdn = aUdn;
             iUri = aUri;
@@ -437,7 +440,6 @@ namespace OpenHome.Av
             lock (iEndpoints)
             {
                 iDisposed = true;
-                iDevice.RemoveRef();
 
                 foreach (var entry in iEndpoints)
                 {

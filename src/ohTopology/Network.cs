@@ -27,6 +27,8 @@ namespace OpenHome.Av
 
         protected void Added(CpDeviceList aList, CpDevice aDevice)
         {
+            aDevice.AddRef();
+
             iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
@@ -52,6 +54,8 @@ namespace OpenHome.Av
                         device.Dispose();
                     }
                 });
+
+                aDevice.RemoveRef();
             });
         }
 
