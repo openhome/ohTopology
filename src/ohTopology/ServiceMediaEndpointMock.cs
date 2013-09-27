@@ -289,108 +289,131 @@ namespace OpenHome.Av
 
         // IMediaEndpointClient
 
-        public string Create(CancellationToken aCancellationToken)
+        public Task<string> Create(CancellationToken aCancellationToken)
         {
-            return (Guid.NewGuid().ToString());
+            var tcs = new TaskCompletionSource<string>();
+            tcs.SetResult(Guid.NewGuid().ToString());
+            return (tcs.Task);
         }
 
-        public void Destroy(CancellationToken aCancellationToken, string aId)
+        public Task<string> Destroy(CancellationToken aCancellationToken, string aId)
         {
+            var tcs = new TaskCompletionSource<string>();
+            tcs.SetResult(aId);
+            return (tcs.Task);
         }
 
-        public IMediaEndpointClientSnapshot Browse(CancellationToken aCancellationToken, string aSession, IMediaDatum aDatum)
+        public Task<IMediaEndpointClientSnapshot> Browse(CancellationToken aCancellationToken, string aSession, IMediaDatum aDatum)
         {
-             if (aDatum == null)
-             {
-                 return (new MediaEndpointSnapshotMock(iRoot));
-             }
+            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
 
-             Do.Assert(aDatum.Type.Any());
+            if (aDatum == null)
+            {
+                tcs.SetResult(new MediaEndpointSnapshotMock(iRoot));
+                return (tcs.Task);
+            }
 
-             if (aDatum.Type.First() == iNetwork.TagManager.Container.Title)
-             {
-                 // Top Level Container
+            Do.Assert(aDatum.Type.Any());
 
-                 if (aDatum.Type.Skip(1).Any())
-                 {
-                     ITag tag = aDatum.Type.Skip(1).First();
+            if (aDatum.Type.First() == iNetwork.TagManager.Container.Title)
+            {
+                // Top Level Container
 
-                     if (tag == iNetwork.TagManager.Audio.Artist)
-                     {
-                         return (BrowseRootArtists());
-                     }
+                if (aDatum.Type.Skip(1).Any())
+                {
+                    ITag tag = aDatum.Type.Skip(1).First();
 
-                     if (tag == iNetwork.TagManager.Audio.Album)
-                     {
-                         return (BrowseRootAlbums());
-                     }
+                    if (tag == iNetwork.TagManager.Audio.Artist)
+                    {
+                        tcs.SetResult(BrowseRootArtists());
+                        return (tcs.Task);
+                    }
 
-                     if (tag == iNetwork.TagManager.Audio.Genre)
-                     {
-                         return (BrowseRootGenres());
-                     }
+                    if (tag == iNetwork.TagManager.Audio.Album)
+                    {
+                        tcs.SetResult(BrowseRootAlbums());
+                        return (tcs.Task);
+                    }
 
-                     Do.Assert(false);
-                 }
+                    if (tag == iNetwork.TagManager.Audio.Genre)
+                    {
+                        tcs.SetResult(BrowseRootGenres());
+                        return (tcs.Task);
+                    }
 
-                 return (BrowseRootTracks());
-             }
+                    Do.Assert(false);
+                }
 
-             if (aDatum.Type.First() == iNetwork.TagManager.Audio.Artist)
-             {
-                 // Artist/Album
+                tcs.SetResult(BrowseRootTracks());
+                return (tcs.Task);
+            }
 
-                 var artist = aDatum[iNetwork.TagManager.Audio.Artist].Value;
+            if (aDatum.Type.First() == iNetwork.TagManager.Audio.Artist)
+            {
+                // Artist/Album
 
-                 return (BrowseArtistAlbums(artist));
-             }
+                var artist = aDatum[iNetwork.TagManager.Audio.Artist].Value;
+                tcs.SetResult(BrowseArtistAlbums(artist));
+                return (tcs.Task);
+            }
 
-             if (aDatum.Type.First() == iNetwork.TagManager.Audio.Album)
-             {
-                 // Artist/Album
+            if (aDatum.Type.First() == iNetwork.TagManager.Audio.Album)
+            {
+                // Artist/Album
 
-                 var album = aDatum[iNetwork.TagManager.Audio.Album].Value;
+                var album = aDatum[iNetwork.TagManager.Audio.Album].Value;
+                tcs.SetResult(BrowseAlbumTracks(album));
+                return (tcs.Task);
+            }
 
-                 return (BrowseAlbumTracks(album));
-             }
+            Do.Assert(aDatum.Type.First() == iNetwork.TagManager.Audio.Genre);
 
-             Do.Assert(aDatum.Type.First() == iNetwork.TagManager.Audio.Genre);
+            // Genre/Tracks
 
-             // Genre/Tracks
-
-             var genre = aDatum[iNetwork.TagManager.Audio.Genre].Value;
-
-             return (BrowseGenreTracks(genre));
+            var genre = aDatum[iNetwork.TagManager.Audio.Genre].Value;
+            tcs.SetResult(BrowseGenreTracks(genre));
+            return (tcs.Task);
         }
 
-        public IMediaEndpointClientSnapshot List(CancellationToken aCancellationToken, string aSession, ITag aTag)
+        public Task<IMediaEndpointClientSnapshot> List(CancellationToken aCancellationToken, string aSession, ITag aTag)
         {
-            throw new OperationCanceledException();
+            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
+            tcs.SetException(new InvalidOperationException());
+            return (tcs.Task);
         }
 
-        public IMediaEndpointClientSnapshot Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
+        public Task<IMediaEndpointClientSnapshot> Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
         {
+            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
+
             if (aTag == iNetwork.TagManager.Audio.Artist)
             {
-                return (BrowseArtistAlbums(aValue));
+                tcs.SetResult(BrowseArtistAlbums(aValue));
+                return (tcs.Task);
             }
 
             if (aTag == iNetwork.TagManager.Audio.Album)
             {
-                return (BrowseAlbumTracks(aValue));
+                tcs.SetResult(BrowseAlbumTracks(aValue));
+                return (tcs.Task);
             }
 
             if (aTag == iNetwork.TagManager.Audio.Genre)
             {
-                return (BrowseGenreTracks(aValue));
+                tcs.SetResult(BrowseGenreTracks(aValue));
+                return (tcs.Task);
             }
 
-            throw new OperationCanceledException();
+            tcs.SetException(new InvalidOperationException());
+
+            return (tcs.Task);
         }
 
-        public IMediaEndpointClientSnapshot Search(CancellationToken aCancellationToken, string aSession, string aValue)
+        public Task<IMediaEndpointClientSnapshot> Search(CancellationToken aCancellationToken, string aSession, string aValue)
         {
-                return (new MediaEndpointSnapshotMock(SearchMetadata(aValue)));
+            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
+            tcs.SetResult(new MediaEndpointSnapshotMock(SearchMetadata(aValue)));
+            return (tcs.Task);
         }
 
         public Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)

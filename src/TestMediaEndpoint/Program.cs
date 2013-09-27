@@ -48,20 +48,26 @@ namespace TestMediaEndpoint
 
         // IMediaEndpointClient
 
-        public string Create(CancellationToken aCancellationToken)
+        public Task<string> Create(CancellationToken aCancellationToken)
         {
-            var id = Guid.NewGuid().ToString();
-            Console.WriteLine("Create     : {0}", id);
-            return (id);
+            var tcs = new TaskCompletionSource<string>();
+            tcs.SetResult(Guid.NewGuid().ToString());
+            Console.WriteLine("Create     : {0}", tcs.Task.Result);
+            return (tcs.Task);
         }
 
-        public void Destroy(CancellationToken aCancellationToken, string aId)
+        public Task<string> Destroy(CancellationToken aCancellationToken, string aId)
         {
-            Console.WriteLine("Destroy    : {0}", aId);
+            var tcs = new TaskCompletionSource<string>();
+            tcs.SetResult(aId);
+            Console.WriteLine("Create     : {0}", aId);
+            return (tcs.Task);
         }
 
-        public IMediaEndpointClientSnapshot Browse(CancellationToken aCancellationToken, string aSession, IMediaDatum aDatum)
+        public Task<IMediaEndpointClientSnapshot> Browse(CancellationToken aCancellationToken, string aSession, IMediaDatum aDatum)
         {
+            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
+
             string id = string.Empty;
 
             if (aDatum != null)
@@ -71,25 +77,33 @@ namespace TestMediaEndpoint
 
             Console.WriteLine("Browse     : {0} {1}", aSession, id);
 
-            return (new TestMediaEndpointClientSnapshot("0", 100, null));
+            tcs.SetResult(new TestMediaEndpointClientSnapshot("0", 100, null));
+            
+            return (tcs.Task);
         }
 
-        public IMediaEndpointClientSnapshot List(CancellationToken aCancellationToken, string aSession, ITag aTag)
+        public Task<IMediaEndpointClientSnapshot> List(CancellationToken aCancellationToken, string aSession, ITag aTag)
         {
             Console.WriteLine("List       : {0} {1}", aSession, aTag.FullName);
-            return (new TestMediaEndpointClientSnapshot("0", 100, null));
+            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
+            tcs.SetResult(new TestMediaEndpointClientSnapshot("0", 100, null));
+            return (tcs.Task);
         }
 
-        public IMediaEndpointClientSnapshot Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
+        public Task<IMediaEndpointClientSnapshot> Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
         {
             Console.WriteLine("Link       : {0} {1} {2}", aSession, aTag.FullName, aValue);
-            return (new TestMediaEndpointClientSnapshot("0", 100, null));
+            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
+            tcs.SetResult(new TestMediaEndpointClientSnapshot("0", 100, null));
+            return (tcs.Task);
         }
 
-        public IMediaEndpointClientSnapshot Search(CancellationToken aCancellationToken, string aSession, string aValue)
+        public Task<IMediaEndpointClientSnapshot> Search(CancellationToken aCancellationToken, string aSession, string aValue)
         {
             Console.WriteLine("Search     : {0} {1}", aSession, aValue);
-            return (new TestMediaEndpointClientSnapshot("0", 100, null));
+            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
+            tcs.SetResult(new TestMediaEndpointClientSnapshot("0", 100, null));
+            return (tcs.Task);
         }
 
         public Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)

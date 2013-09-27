@@ -205,17 +205,24 @@ namespace OpenHome.Av
 
         // IMediaEndpointClient
 
-        public string Create(CancellationToken aCancellationToken)
+        public Task<string> Create(CancellationToken aCancellationToken)
         {
-            return (Guid.NewGuid().ToString());
+            var tcs = new TaskCompletionSource<string>();
+            tcs.SetResult(Guid.NewGuid().ToString());
+            return (tcs.Task);
         }
 
-        public void Destroy(CancellationToken aCancellationToken, string aId)
+        public Task<string> Destroy(CancellationToken aCancellationToken, string aId)
         {
+            var tcs = new TaskCompletionSource<string>();
+            tcs.SetResult(aId);
+            return (tcs.Task);
         }
 
-        public IMediaEndpointClientSnapshot Browse(CancellationToken aCancellationToken, string aSession, IMediaDatum aDatum)
+        public Task<IMediaEndpointClientSnapshot> Browse(CancellationToken aCancellationToken, string aSession, IMediaDatum aDatum)
         {
+            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
+
             string id = "0";
 
             if (aDatum != null)
@@ -223,29 +230,53 @@ namespace OpenHome.Av
                 id = aDatum.Id;
             }
 
-            string result;
-            uint returned;
-            uint total;
-            uint updateId;
+            iProxy.BeginBrowse(id, "BrowseDirectChildren", "", 0, 1, "", (r) =>
+            {
+                string result;
+                uint returned;
+                uint total;
+                uint update;
 
-            iProxy.SyncBrowse(id, "BrowseDirectChildren", "", 0, 1, "", out result, out returned, out total, out updateId);
+                try
+                {
+                    iProxy.EndBrowse(r, out result, out returned, out total, out update);
 
-            return (new MediaEndpointSnapshotContentDirectory(id, total));
+                    if (aCancellationToken.IsCancellationRequested)
+                    {
+                        tcs.SetCanceled();
+                        return;
+                    }
+
+                    tcs.SetResult(new MediaEndpointSnapshotContentDirectory(id, total));
+                }
+                catch
+                {
+                    tcs.SetCanceled();
+                }
+            });
+
+            return (tcs.Task);
         }
 
-        public IMediaEndpointClientSnapshot List(CancellationToken aCancellationToken, string aSession, ITag aTag)
+        public Task<IMediaEndpointClientSnapshot> List(CancellationToken aCancellationToken, string aSession, ITag aTag)
         {
-            throw new NotImplementedException();
+            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
+            tcs.SetException(new InvalidOperationException());
+            return (tcs.Task);
         }
 
-        public IMediaEndpointClientSnapshot Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
+        public Task<IMediaEndpointClientSnapshot> Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
         {
-            throw new NotImplementedException();
+            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
+            tcs.SetException(new InvalidOperationException());
+            return (tcs.Task);
         }
 
-        public IMediaEndpointClientSnapshot Search(CancellationToken aCancellationToken, string aSession, string aValue)
+        public Task<IMediaEndpointClientSnapshot> Search(CancellationToken aCancellationToken, string aSession, string aValue)
         {
-            throw new NotImplementedException();
+            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
+            tcs.SetException(new InvalidOperationException());
+            return (tcs.Task);
         }
 
         public Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
@@ -257,13 +288,13 @@ namespace OpenHome.Av
             iProxy.BeginBrowse(snapshot.Id, "BrowseDirectChildren", "", aIndex, aCount, "", (r) =>
             {
                 string result;
-                uint numberReturned;
-                uint totalMatches;
-                uint updateID;
+                uint returned;
+                uint total;
+                uint update;
 
                 try
                 {
-                    iProxy.EndBrowse(r, out result, out numberReturned, out totalMatches, out updateID);
+                    iProxy.EndBrowse(r, out result, out returned, out total, out update);
 
                     if (aCancellationToken.IsCancellationRequested)
                     {
