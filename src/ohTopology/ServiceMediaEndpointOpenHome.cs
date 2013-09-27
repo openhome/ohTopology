@@ -74,11 +74,17 @@ namespace OpenHome.Av
 
             client.Encoding = iEncoding;
 
-            var cancellation = aCancellationToken.Register(() => client.CancelAsync());
+            var registrations = new List<CancellationTokenRegistration>();
 
             client.DownloadStringCompleted += (sender, args) =>
             {
-                cancellation.Dispose();
+                lock (registrations)
+                {
+                    foreach (var registration in registrations)
+                    {
+                        registration.Dispose();
+                    }
+                }
 
                 client.Dispose();
 
@@ -102,7 +108,18 @@ namespace OpenHome.Av
                 }
             };
 
-            client.DownloadStringAsync(new Uri(uri));
+            if (aCancellationToken.IsCancellationRequested)
+            {
+                tcs.SetCanceled();
+            }
+            else
+            {
+                lock (registrations)
+                {
+                    client.DownloadStringAsync(new Uri(uri));
+                    registrations.Add(aCancellationToken.Register(() => client.CancelAsync()));
+                }
+            }
 
             return (tcs.Task);
         }
@@ -252,11 +269,17 @@ namespace OpenHome.Av
 
             client.Encoding = iEncoding;
 
-            var cancellation = aCancellationToken.Register(() => client.CancelAsync());
+            var registrations = new List<CancellationTokenRegistration>();
 
             client.DownloadStringCompleted += (sender, args) =>
             {
-                cancellation.Dispose();
+                lock (registrations)
+                {
+                    foreach (var registration in registrations)
+                    {
+                        registration.Dispose();
+                    }
+                }
 
                 client.Dispose();
 
@@ -289,7 +312,18 @@ namespace OpenHome.Av
                 }
             };
 
-            client.DownloadStringAsync(new Uri(uri));
+            if (aCancellationToken.IsCancellationRequested)
+            {
+                tcs.SetCanceled();
+            }
+            else
+            {
+                lock (registrations)
+                {
+                    client.DownloadStringAsync(new Uri(uri));
+                    registrations.Add(aCancellationToken.Register(() => client.CancelAsync()));
+                }
+            }
 
             return (tcs.Task);
         }
@@ -304,11 +338,17 @@ namespace OpenHome.Av
 
             client.Encoding = iEncoding;
 
-            var cancellation = aCancellationToken.Register(() => client.CancelAsync());
+            var registrations = new List<CancellationTokenRegistration>();
 
             client.DownloadStringCompleted += (sender, args) =>
             {
-                cancellation.Dispose();
+                lock (registrations)
+                {
+                    foreach (var registration in registrations)
+                    {
+                        registration.Dispose();
+                    }
+                }
 
                 client.Dispose();
 
@@ -322,7 +362,18 @@ namespace OpenHome.Av
                 }
             };
 
-            client.DownloadStringAsync(new Uri(uri));
+            if (aCancellationToken.IsCancellationRequested)
+            {
+                tcs.SetCanceled();
+            }
+            else
+            {
+                lock (registrations)
+                {
+                    client.DownloadStringAsync(new Uri(uri));
+                    registrations.Add(aCancellationToken.Register(() => client.CancelAsync()));
+                }
+            }
 
             return (tcs.Task);
         }
@@ -362,11 +413,17 @@ namespace OpenHome.Av
 
             client.Encoding = iEncoding;
 
-            var cancellation = aCancellationToken.Register(() => client.CancelAsync());
-            
+            var registrations = new List<CancellationTokenRegistration>();
+
             client.DownloadStringCompleted += (sender, args) =>
             {
-                cancellation.Dispose();
+                lock (registrations)
+                {
+                    foreach (var registration in registrations)
+                    {
+                        registration.Dispose();
+                    }
+                }
 
                 client.Dispose();
 
@@ -398,7 +455,18 @@ namespace OpenHome.Av
                 }
             };
 
-            client.DownloadStringAsync(new Uri(uri));
+            if (aCancellationToken.IsCancellationRequested)
+            {
+                tcs.SetCanceled();
+            }
+            else
+            {
+                lock (registrations)
+                {
+                    client.DownloadStringAsync(new Uri(uri));
+                    registrations.Add(aCancellationToken.Register(() => client.CancelAsync()));
+                }
+            }
 
             return (tcs.Task);
         }
