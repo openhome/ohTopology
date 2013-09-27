@@ -87,7 +87,6 @@ namespace OpenHome.Av
         public ServiceReceiverNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
             : base(aNetwork, aDevice)
         {
-            iSubscribed = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgReceiver1(aCpDevice);
 
             iService.SetPropertyMetadataChanged(HandleMetadataChanged);
@@ -100,33 +99,34 @@ namespace OpenHome.Av
         {
             base.Dispose();
 
-            iSubscribed.Dispose();
-            iSubscribed = null;
-
             iService.Dispose();
             iService = null;
         }
 
         protected override Task OnSubscribe()
         {
-            Task task = Task.Factory.StartNew(() =>
-            {
-                iService.Subscribe();
-                iSubscribed.WaitOne();
-            });
-            return task;
+            Do.Assert(iSubscribedSource == null);
+
+            iSubscribedSource = new TaskCompletionSource<bool>();
+
+            iService.Subscribe();
+
+            return iSubscribedSource.Task.ContinueWith((t) => { });
         }
 
         protected override void OnCancelSubscribe()
         {
-            iSubscribed.Set();
+            if (iSubscribedSource != null)
+            {
+                iSubscribedSource.TrySetCanceled();
+            }
         }
 
         private void HandleInitialEvent()
         {
             iProtocolInfo = iService.PropertyProtocolInfo();
 
-            iSubscribed.Set();
+            iSubscribedSource.SetResult(true);
         }
 
         protected override void OnUnsubscribe()
@@ -135,7 +135,8 @@ namespace OpenHome.Av
             {
                 iService.Unsubscribe();
             }
-            iSubscribed.Reset();
+
+            iSubscribedSource = null;
         }
 
         public override Task Play()
@@ -190,7 +191,7 @@ namespace OpenHome.Av
             });
         }
 
-        private ManualResetEvent iSubscribed;
+        private TaskCompletionSource<bool> iSubscribedSource;
         private CpProxyAvOpenhomeOrgReceiver1 iService;
     }
 

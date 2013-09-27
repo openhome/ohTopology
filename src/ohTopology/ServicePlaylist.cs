@@ -331,7 +331,6 @@ namespace OpenHome.Av
         public ServicePlaylistNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
             : base(aNetwork, aDevice)
         {
-            iSubscribed = new ManualResetEvent(false);
             iService = new CpProxyAvOpenhomeOrgPlaylist1(aCpDevice);
 
             iService.SetPropertyIdChanged(HandleIdChanged);
@@ -347,9 +346,6 @@ namespace OpenHome.Av
         {
             base.Dispose();
 
-            iSubscribed.Dispose();
-            iSubscribed = null;
-
             Do.Assert(iCacheSession == null);
 
             iService.Dispose();
@@ -358,21 +354,25 @@ namespace OpenHome.Av
 
         protected override Task OnSubscribe()
         {
-            Task task = Task.Factory.StartNew(() =>
-            {
-                iCacheSession = Network.IdCache.CreateSession(string.Format("Playlist({0})", Device.Udn), ReadList);
+            Do.Assert(iSubscribedSource == null);
 
-                iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new PlaylistSnapshot(iNetwork, iCacheSession, new List<uint>(), this));
+            iSubscribedSource = new TaskCompletionSource<bool>();
 
-                iService.Subscribe();
-                iSubscribed.WaitOne();
-            });
-            return task;
+            iCacheSession = Network.IdCache.CreateSession(string.Format("Playlist({0})", Device.Udn), ReadList);
+
+            iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new PlaylistSnapshot(iNetwork, iCacheSession, new List<uint>(), this));
+
+            iService.Subscribe();
+
+            return iSubscribedSource.Task.ContinueWith((t) => { });
         }
 
         protected override void OnCancelSubscribe()
         {
-            iSubscribed.Set();
+            if (iSubscribedSource != null)
+            {
+                iSubscribedSource.TrySetCanceled();
+            }
         }
 
         private void HandleInitialEvent()
@@ -380,7 +380,7 @@ namespace OpenHome.Av
             iTracksMax = iService.PropertyTracksMax();
             iProtocolInfo = iService.PropertyProtocolInfo();
 
-            iSubscribed.Set();
+            iSubscribedSource.SetResult(true);
         }
 
         protected override void OnUnsubscribe()
@@ -402,7 +402,7 @@ namespace OpenHome.Av
                 iCacheSession = null;
             }
 
-            iSubscribed.Reset();
+            iSubscribedSource = null;
         }
 
         public override Task Play()
@@ -673,7 +673,7 @@ namespace OpenHome.Av
             });
         }
 
-        private ManualResetEvent iSubscribed;
+        private TaskCompletionSource<bool> iSubscribedSource;
         private CpProxyAvOpenhomeOrgPlaylist1 iService;
         private IIdCacheSession iCacheSession;
     }
