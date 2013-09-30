@@ -35,55 +35,74 @@ namespace OpenHome.Av
     public class Device : IDevice, IMockable, IDisposable
     {
         private string iUdn;
-        private bool iDisposed;
-        private List<Action> iJoiners;
 
-        protected Dictionary<Type, Service> iServices;
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly List<Action> iJoiners;
+        protected readonly Dictionary<Type, Service> iServices;
 
         public Device(string aUdn)
         {
             iUdn = aUdn;
-            iDisposed = false;
 
+            iDisposeHandler = new DisposeHandler();
             iJoiners = new List<Action>();
             iServices = new Dictionary<Type, Service>();
         }
 
         public void Join(Action aAction)
         {
-            iJoiners.Add(aAction);
+            using (iDisposeHandler.Lock)
+            {
+                iJoiners.Add(aAction);
+            }
         }
 
-        public void UnJoin(Action aAction)
+        public void Unjoin(Action aAction)
         {
-            iJoiners.Remove(aAction);
+            using (iDisposeHandler.Lock)
+            {
+                iJoiners.Remove(aAction);
+            }
         }
 
         public string Udn
         {
             get
             {
-                return iUdn;
+                using (iDisposeHandler.Lock)
+                {
+                    return iUdn;
+                }
             }
         }
 
         public void Add<T>(Service aService) where T : IProxy
         {
-            iServices.Add(typeof(T), aService);
+            using (iDisposeHandler.Lock)
+            {
+                iServices.Add(typeof(T), aService);
+            }
         }
 
         public bool HasService(Type aServiceType)
         {
-            return iServices.ContainsKey(aServiceType);
+            using (iDisposeHandler.Lock)
+            {
+                return iServices.ContainsKey(aServiceType);
+            }
         }
 
         public void Create<T>(Action<T> aCallback) where T : IProxy
         {
-            if (!iServices.ContainsKey(typeof(T)))
+            using (iDisposeHandler.Lock)
             {
-                throw new ServiceNotFoundException("Cannot find service of type " + typeof(T) + " on " + iUdn);
+                if (!iServices.ContainsKey(typeof(T)))
+                {
+                    throw new ServiceNotFoundException("Cannot find service of type " + typeof(T) + " on " + iUdn);
+                }
+
+                iServices[typeof(T)].Create<T>(aCallback);
             }
-            iServices[typeof(T)].Create<T>(aCallback);
         }
 
         private IService GetService(string aType)
@@ -130,9 +149,9 @@ namespace OpenHome.Av
         {
             bool complete = true;
 
-            foreach (Service s in iServices.Values)
+            foreach (Service service in iServices.Values)
             {
-                complete &= s.Wait();
+                complete &= service.Wait();
             }
 
             return complete;
@@ -149,33 +168,17 @@ namespace OpenHome.Av
 
         public virtual void Dispose()
         {
-            if (iDisposed)
-            {
-                throw new ObjectDisposedException("Device.Dispose");
-            }
+            iDisposeHandler.Dispose();
 
-            List<Action> linked = new List<Action>(iJoiners);
-
-            foreach (Action a in linked)
+            foreach (Action action in iJoiners)
             {
-                a();
+                action();
             }
             
-            if (iJoiners.Count > 0)
-            {
-                throw new Exception("Device joiners > 0");
-            }
-            
-            iJoiners = null;
-
             foreach (IService s in iServices.Values)
             {
                 s.Dispose();
             }
-            
-            iServices.Clear();
-            iServices = null;
-            iDisposed = true;
         }
     }
 }

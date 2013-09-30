@@ -326,6 +326,8 @@ namespace OpenHome.Av
                     }
                 });
             }
+
+            iThread.Execute();
         }
 
         public void Add(Device aDevice)

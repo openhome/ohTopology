@@ -5,6 +5,6 @@ namespace OpenHome.Av
     public interface IJoinable
     {
         void Join(Action aAction);
-        void UnJoin(Action aAction);
+        void Unjoin(Action aAction);
     }
 }

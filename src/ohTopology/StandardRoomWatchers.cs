@@ -123,7 +123,7 @@ namespace OpenHome.Av
                     {
                         iSources.RemoveWatcher(this);
                     });
-                    iRoom.UnJoin(SetInactive);
+                    iRoom.Unjoin(SetInactive);
                     iIsActive = false;
                 }
             }
@@ -215,7 +215,7 @@ namespace OpenHome.Av
 
                     OnSetInactive();
 
-                    iRoom.UnJoin(SetInactive);
+                    iRoom.Unjoin(SetInactive);
                     iIsActive = false;
                 }
             }
@@ -459,7 +459,7 @@ namespace OpenHome.Av
                     {
                         iSources.RemoveWatcher(this);
                     });
-                    iRoom.UnJoin(SetInactive);
+                    iRoom.Unjoin(SetInactive);
                     iIsActive = false;
                 }
             }
@@ -494,7 +494,7 @@ namespace OpenHome.Av
                         iReceiver = null;
                     }
 
-                    iRoom.UnJoin(SetInactive);
+                    iRoom.Unjoin(SetInactive);
                     iIsActive = false;
                 }
             }

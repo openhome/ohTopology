@@ -161,7 +161,7 @@ namespace OpenHome.Av
                     {
                         iSource.RemoveWatcher(this);
                     });
-                    iRoom.UnJoin(SetInactive);
+                    iRoom.Unjoin(SetInactive);
                     iIsActive = false;
                 }
             }
@@ -185,7 +185,7 @@ namespace OpenHome.Av
                     iActive.Update(false);
 
                     iSource.RemoveWatcher(this);
-                    iRoom.UnJoin(SetInactive);
+                    iRoom.Unjoin(SetInactive);
                 }
             }
         }

@@ -523,7 +523,7 @@ namespace OpenHome.Av
             }
         }
 
-        public void UnJoin(Action aAction)
+        public void Unjoin(Action aAction)
         {
             iJoiners.Remove(aAction);
         }
