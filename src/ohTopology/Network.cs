@@ -310,24 +310,34 @@ namespace OpenHome.Av
             }
         }
 
+        private bool WaitDevices()
+        {
+            bool complete = true;
+
+            iThread.Execute(() =>
+            {
+                foreach (Device device in iDevices)
+                {
+                    complete &= device.Wait();
+                }
+            });
+
+            return (complete);
+        }
+
         public void Wait()
         {
-            bool complete = false;
-
-            while (!complete)
+            while (true)
             {
-                iThread.Execute(() =>
+                while (!WaitDevices());
+
+                iThread.Execute();
+
+                if (WaitDevices())
                 {
-                    complete = true;
-
-                    foreach (Device device in iDevices)
-                    {
-                        complete &= device.Wait();
-                    }
-                });
+                    break;
+                }
             }
-
-            iThread.Execute();
         }
 
         public void Add(Device aDevice)

@@ -178,7 +178,7 @@ namespace TestZone
             MockableScriptRunner runner = new MockableScriptRunner();
 
             RoomWatcher watcher = new RoomWatcher(network.TagManager, runner);
-            
+
             network.Schedule(() =>
             {
                 house.Rooms.AddWatcher(watcher);
