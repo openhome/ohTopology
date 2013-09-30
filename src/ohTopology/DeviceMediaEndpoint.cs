@@ -34,7 +34,7 @@ namespace OpenHome.Av
         private readonly Network iNetwork;
 
         private readonly DisposeHandler iDisposeHandler;
-        private readonly Dictionary<string, IDisposable> iDevices;
+        private readonly Dictionary<CpDevice, IDisposable> iDevices;
         private readonly EventSupervisor iEventSupervisor;
         private readonly CpDeviceListUpnpServiceType iDeviceList;
 
@@ -43,7 +43,7 @@ namespace OpenHome.Av
             iNetwork = aNetwork;
 
             iDisposeHandler = new DisposeHandler();
-            iDevices = new Dictionary<string, IDisposable>();
+            iDevices = new Dictionary<CpDevice, IDisposable>();
             iEventSupervisor = new EventSupervisor(iNetwork);
             iDeviceList = new CpDeviceListUpnpServiceType("upnp.org", "ContentDirectory", 1, Added, Removed);
         }
@@ -108,6 +108,8 @@ namespace OpenHome.Av
 
         private void Added(CpDeviceList aList, CpDevice aDevice)
         {
+            aDevice.AddRef();
+
             iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
@@ -140,7 +142,7 @@ namespace OpenHome.Av
 
                             lock (iDevices)
                             {
-                                iDevices.Add(udn, new DeviceInjectorDeviceOpenHome(this, udn, uri, aDevice));
+                                iDevices.Add(aDevice, new DeviceInjectorDeviceOpenHome(this, udn, uri, aDevice));
                             }
                         }
                     }
@@ -148,7 +150,7 @@ namespace OpenHome.Av
                     {
                         lock (iDevices)
                         {
-                            iDevices.Add(udn, new DeviceInjectorDeviceContentDirectory(this, udn, aDevice, xml));
+                            iDevices.Add(aDevice, new DeviceInjectorDeviceContentDirectory(this, udn, aDevice, xml));
                         }
                     }
                 });
@@ -167,13 +169,15 @@ namespace OpenHome.Av
 
                     lock (iDevices)
                     {
-                        if (iDevices.TryGetValue(udn, out device))
+                        if (iDevices.TryGetValue(aDevice, out device))
                         {
-                            iDevices.Remove(udn);
+                            iDevices.Remove(aDevice);
                             device.Dispose();
                         }
                     }
                 });
+
+                aDevice.RemoveRef();
             });
         }
 
@@ -195,9 +199,10 @@ namespace OpenHome.Av
 
             iNetwork.Execute(() =>
             {
-                foreach (var device in iDevices.Values)
+                foreach (var d in iDevices)
                 {
-                    device.Dispose();
+                    d.Value.Dispose();
+                    d.Key.RemoveRef();
                 }
             });
         }
@@ -234,14 +239,13 @@ namespace OpenHome.Av
 
         private IEventSupervisorSession iEventSession;
         private IDisposable iEventMediaEndpoints;
-        
+
         private bool iDisposed;
         private CpDevice iDevice;
 
         public DeviceInjectorDeviceOpenHome(DeviceInjectorMediaEndpoint aInjector, string aUdn, Uri aUri, CpDevice aDevice)
         {
             iDevice = aDevice;
-            iDevice.AddRef();
             iInjector = aInjector;
             iUdn = aUdn;
             iUri = aUri;
@@ -421,7 +425,7 @@ namespace OpenHome.Av
                     {
                         return (iEventSession.Create(id, action));
                     });
-                    
+
                     refresh.Add(entry.Key, device);
                     iInjector.AddDevice(device);
                 }
@@ -437,7 +441,6 @@ namespace OpenHome.Av
             lock (iEndpoints)
             {
                 iDisposed = true;
-                iDevice.RemoveRef();
 
                 foreach (var entry in iEndpoints)
                 {

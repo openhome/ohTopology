@@ -35,8 +35,6 @@ namespace OpenHome.Av
         {
             iDevice = aDevice;
 
-            iDevice.AddRef();
-
             var elements = aXml.Descendants(XName.Get("device", "urn:schemas-upnp-org:device-1-0"));
 
             var upnpFriendlyName = GetDeviceElementValue(elements, "friendlyName");
@@ -129,7 +127,6 @@ namespace OpenHome.Av
         public override void Dispose()
         {
             iProxy.Dispose();
-            iDevice.RemoveRef();
             base.Dispose();
         }
     }
