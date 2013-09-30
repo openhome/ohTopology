@@ -189,7 +189,7 @@ namespace TestTopology4
 
             try
             {
-                runner.Run(network, new StringReader(File.ReadAllText(args[0])), mocker);
+                runner.Run(network.Wait, new StringReader(File.ReadAllText(args[0])), mocker);
             }
             catch (MockableScriptRunner.AssertError)
             {

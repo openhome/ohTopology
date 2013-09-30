@@ -328,8 +328,8 @@ namespace TestStandardHouse
 
             try
             {
-                runner.Run(network, new StringReader(File.ReadAllText(args[0])), mocker);
-                //runner.Run(thread, Console.In, mocker);
+                runner.Run(network.Wait, new StringReader(File.ReadAllText(args[0])), mocker);
+                //runner.Run(thread.Wait, Console.In, mocker);
             }
             catch (MockableScriptRunner.AssertError)
             {

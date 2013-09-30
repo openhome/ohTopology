@@ -26,9 +26,9 @@ namespace OpenHome.Av
             iProductLookup = new Dictionary<IDevice, IProxyProduct>();
             iProducts = new WatchableUnordered<IProxyProduct>(iNetwork);
 
-            iDevices = iNetwork.Create<IProxyProduct>();
-            iNetwork.Schedule(() =>
+            iNetwork.Execute(() =>
             {
+                iDevices = iNetwork.Create<IProxyProduct>();
                 iDevices.AddWatcher(this);
             });
         }

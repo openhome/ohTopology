@@ -254,7 +254,7 @@ namespace OpenHome.Av
         }
     }
 
-    public interface INetwork : IMockThread, IDisposable
+    public interface INetwork : IWatchableThread, IDisposable
     {
         IIdCache IdCache { get; }
         ITagManager TagManager { get; }
@@ -263,8 +263,10 @@ namespace OpenHome.Av
 
     public class Network : INetwork
     {
-        private readonly IMockThread iThread;
+        private readonly List<Exception> iExceptions;
+        private readonly IWatchableThread iThread;
 
+        private readonly Action iDispose;
         private readonly DisposeHandler iDisposeHandler;
         private readonly IdCache iCache;
         private readonly ITagManager iTagManager;
@@ -273,8 +275,9 @@ namespace OpenHome.Av
 
         public Network(uint aMaxCacheEntries)
         {
-            iThread = new MockThread();
-
+            iExceptions = new List<Exception>();
+            iThread = new MockThread(ReportException);
+            iDispose = () => { (iThread as MockThread).Dispose(); };
             iDisposeHandler = new DisposeHandler();
             iCache = new IdCache(aMaxCacheEntries);
             iTagManager = new TagManager();
@@ -284,8 +287,9 @@ namespace OpenHome.Av
 
         public Network(IWatchableThread aWatchableThread, uint aMaxCacheEntries)
         {
-            iThread = new MockThreadAdapter(aWatchableThread);
-
+            iExceptions = new List<Exception>();
+            iThread = aWatchableThread;
+            iDispose = () => { };
             iDisposeHandler = new DisposeHandler();
             iCache = new IdCache(aMaxCacheEntries);
             iTagManager = new TagManager();
@@ -293,28 +297,64 @@ namespace OpenHome.Av
             iDeviceLists = new Dictionary<Type, WatchableUnordered<IDevice>>();
         }
 
+        private void ReportException(Exception aException)
+        {
+            lock (iExceptions)
+            {
+                iExceptions.Add(aException);
+            }
+        }
+
+        public void Wait()
+        {
+            bool complete = false;
+
+            while (!complete)
+            {
+                iThread.Execute(() =>
+                {
+                    complete = true;
+
+                    foreach (Device device in iDevices)
+                    {
+                        complete &= device.Wait();
+                    }
+                });
+            }
+        }
+
         public void Add(Device aDevice)
         {
-            iDevices.Add(aDevice);
-
-            foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> kvp in iDeviceLists)
+            using (iDisposeHandler.Lock)
             {
-                if (aDevice.HasService(kvp.Key))
+                Assert();
+
+                iDevices.Add(aDevice);
+
+                foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> kvp in iDeviceLists)
                 {
-                    kvp.Value.Add(aDevice);
+                    if (aDevice.HasService(kvp.Key))
+                    {
+                        kvp.Value.Add(aDevice);
+                    }
                 }
             }
         }
 
         public void Remove(Device aDevice)
         {
-            iDevices.Remove(aDevice);
-
-            foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> l in iDeviceLists)
+            using (iDisposeHandler.Lock)
             {
-                if (aDevice.HasService(l.Key))
+                Assert();
+
+                iDevices.Remove(aDevice);
+
+                foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> l in iDeviceLists)
                 {
-                    l.Value.Remove(aDevice);
+                    if (aDevice.HasService(l.Key))
+                    {
+                        l.Value.Remove(aDevice);
+                    }
                 }
             }
         }
@@ -323,9 +363,12 @@ namespace OpenHome.Av
         {
             using (iDisposeHandler.Lock)
             {
+                Assert();
+
                 Type key = typeof(T);
 
                 WatchableUnordered<IDevice> list;
+
                 if (iDeviceLists.TryGetValue(key, out list))
                 {
                     return list;
@@ -385,32 +428,6 @@ namespace OpenHome.Av
             iThread.Execute(aAction);
         }
 
-        // IMockThread
-
-        public void Wait()
-        {
-            bool complete = false;
-
-            while (!complete)
-            {
-                Device[] devices = null;
-
-                using (iDisposeHandler.Lock)
-                {
-                    devices = iDevices.ToArray();
-                }
-
-                // potential problems here if a device is disposed while it is in this shallow copy
-
-                foreach (Device device in devices)
-                {
-                    complete |= device.Wait();
-                }
-
-                iThread.Wait();
-            }
-        }
-
         // IDisposable
 
         public void Dispose()
@@ -422,7 +439,12 @@ namespace OpenHome.Av
                 list.Dispose();
             }
 
-            iThread.Dispose();
+            iDispose();
+
+            if (iExceptions.Count > 0)
+            {
+                throw (new AggregateException(iExceptions.ToArray()));
+            }
         }
     }
 }

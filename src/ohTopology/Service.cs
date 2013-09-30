@@ -234,19 +234,17 @@ namespace OpenHome.Av
 
         public bool Wait()
         {
-            bool complete = false;
-            Task[] tasks = null;
+            Task[] tasks;
 
             lock (iTasks)
             {
                 tasks = iTasks.ToArray();
                 iTasks.Clear();
-                complete = (tasks.Length == 0);
             }
 
             Task.WaitAll(tasks);
 
-            return complete;
+            return (tasks.Length == 0);
         }
 
         // IWatchableThread

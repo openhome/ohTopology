@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -15,138 +16,76 @@ namespace OpenHome.Av
         void Execute(IEnumerable<string> aValue);
     }
 
-    public interface IMockThread : IWatchableThread, IDisposable
+    public class MockThread : IWatchableThread, IDisposable
     {
-        void Wait();
-    }
+        private readonly Action<Exception> iExceptionReporter;
 
-    public class MockThread : IMockThread
-    {
-        private readonly object iLock;
-        private readonly List<Exception> iExceptions;
-        private Task iTask;
-        private int iRunningTaskId;
+        private readonly BlockingCollection<Action> iActionQueue;
+        private readonly Thread iThread;
 
-        public MockThread()
+        public MockThread(Action<Exception> aExceptionReporter)
         {
-            iLock = new object();
-            iExceptions = new List<Exception>();
-            iTask = Task.Factory.StartNew(() => { });
+            iExceptionReporter = aExceptionReporter;
+            iActionQueue = new BlockingCollection<Action>();
+            iThread = new Thread(Run);
+            iThread.Start();
+        }
+
+        void Run()
+        {
+            foreach (var action in iActionQueue.GetConsumingEnumerable())
+            {
+                InvokeAction(action);
+            }
+        }
+
+        void InvokeAction(Action aAction)
+        {
+            try
+            {
+                aAction();
+            }
+            catch (Exception e)
+            {
+                iExceptionReporter(e);
+            }
         }
 
         // IWatchableThread
 
         public void Assert()
         {
-            lock (iLock)
-            {
-                Do.Assert(Task.CurrentId == iRunningTaskId);
-            }
+            Do.Assert(iThread.ManagedThreadId == Thread.CurrentThread.ManagedThreadId);
         }
 
         public void Schedule(Action aAction)
         {
-            lock (iLock)
-            {
-                iTask = iTask.ContinueWith(t =>
-                {
-                    lock (iLock)
-                    {
-                        iRunningTaskId = Task.CurrentId.Value;
-                    }
-
-                    try
-                    {
-                        aAction();
-                    }
-                    catch (Exception e)
-                    {
-                        lock (iLock)
-                        {
-                            iExceptions.Add(e);
-                        }
-                    }
-                });
-            }
+            iActionQueue.Add(aAction);
         }
 
         public void Execute(Action aAction)
         {
-            Task wait = null;
-
-            lock (iLock)
+            if (iThread.ManagedThreadId == Thread.CurrentThread.ManagedThreadId)
             {
-                if (Task.CurrentId == iRunningTaskId)
-                {
-                    aAction();
-                    return;
-                }
-
-                wait = iTask = iTask.ContinueWith(t =>
-                {
-                    lock (iLock)
-                    {
-                        iRunningTaskId = wait.Id;
-                    }
-
-                    try
-                    {
-                        aAction();
-                    }
-                    catch (Exception e)
-                    {
-                        lock (iLock)
-                        {
-                            iExceptions.Add(e);
-                        }
-                    }
-                });
+                InvokeAction(aAction);
             }
-
-            wait.Wait();
-        }
-
-        // IMockThread
-
-        public void Wait()
-        {
-            bool complete = false;
-
-            while (!complete)
+            else
             {
-                Task wait = null;
-
-                lock (iLock)
+                using (var ready = new ManualResetEvent(false))
                 {
-                    if (Task.CurrentId == iRunningTaskId)
+                    iActionQueue.Add(() =>
                     {
-                        break; // ignore wait if issued from the watchable thread
-                    }
-
-                    wait = iTask = iTask.ContinueWith(t =>
-                    {
-                        lock (iLock)
+                        try
                         {
-                            iRunningTaskId = wait.Id;
+                            aAction();
                         }
-
-                        lock (iLock)
+                        finally
                         {
-                            complete = (iTask.Id == wait.Id);
+                            ready.Set();
                         }
                     });
-                }
 
-                wait.Wait();
-            }
-
-            lock (iLock)
-            {
-                if (iExceptions.Any())
-                {
-                    var exception = new AggregateException(iExceptions);
-                    iExceptions.Clear();
-                    throw (exception);
+                    ready.WaitOne();
                 }
             }
         }
@@ -155,47 +94,8 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            Wait();
-        }
-    }
-
-    internal class MockThreadAdapter : IMockThread
-    {
-        private readonly IWatchableThread iWatchableThread;
-
-        public MockThreadAdapter(IWatchableThread aWatchableThread)
-        {
-            iWatchableThread = aWatchableThread;
-        }
-
-        // IWatchableThread
-
-        public void Assert()
-        {
-            iWatchableThread.Assert();
-        }
-
-        public void Execute(Action aAction)
-        {
-            iWatchableThread.Execute(aAction);
-        }
-
-        public void Schedule(Action aAction)
-        {
-            iWatchableThread.Schedule(aAction);
-        }
-
-        // IMockThread
-
-        public void Wait()
-        {
-            throw new NotImplementedException();
-        }
-
-        // IDisposable
-
-        public void Dispose()
-        {
+            iActionQueue.CompleteAdding();
+            iThread.Join();
         }
     }
 
@@ -268,7 +168,7 @@ namespace OpenHome.Av
             iResultQueue = new Queue<string>();
         }
 
-        public void Run(IMockThread aThread, TextReader aStream, IMockable aMockable)
+        public void Run(Action aWait, TextReader aStream, IMockable aMockable)
         {
             bool wait = true;
 
@@ -313,7 +213,7 @@ namespace OpenHome.Av
                         {
                             try
                             {
-                                aThread.Wait();
+                                aWait();
                             }
                             catch (Exception e)
                             {
@@ -341,7 +241,7 @@ namespace OpenHome.Av
 					{
                         try
                         {
-                            aThread.Wait();
+                            aWait();
                         }
                         catch (Exception e)
                         {

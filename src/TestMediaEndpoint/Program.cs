@@ -12,7 +12,7 @@ using OpenHome.Av;
 
 namespace TestMediaEndpoint
 {
-    public class TestMediaEndpointClient : IMediaEndpointClient
+    public class TestMediaEndpointClient : IMediaEndpointClient, IDisposable
     {
         private readonly WatchableThread iWatchableThread;
 
@@ -39,11 +39,6 @@ namespace TestMediaEndpoint
                 Console.WriteLine("WATCHABLE THREAD EXCEPTION");
                 Console.WriteLine(aException.Message + "\n" + aException.StackTrace);
             }
-        }
-
-        public void Wait()
-        {
-            iWatchableThread.Wait();
         }
 
         // IMediaEndpointClient
@@ -139,6 +134,13 @@ namespace TestMediaEndpoint
         public void Schedule(Action aAction)
         {
             iWatchableThread.Schedule(aAction);
+        }
+
+        // IDisposable
+
+        public void Dispose()
+        {
+            iWatchableThread.Dispose();
         }
     }
 
@@ -286,6 +288,7 @@ namespace TestMediaEndpoint
                 Thread.Sleep(aMilliseconds);
 
                 supervisor.Dispose();
+                client.Dispose();
             }
             catch
             {
@@ -347,7 +350,7 @@ namespace TestMediaEndpoint
                     Thread.Sleep(aMilliseconds);
                 }
 
-                client.Wait();
+                client.Execute();
 
                 supervisor.Cancel();
 
@@ -357,6 +360,7 @@ namespace TestMediaEndpoint
                 });
 
                 supervisor.Dispose();
+                client.Dispose();
             }
             catch
             {

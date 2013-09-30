@@ -128,11 +128,11 @@ namespace OpenHome.Av
 
         public bool Wait()
         {
-            bool complete = false;
+            bool complete = true;
 
             foreach (Service s in iServices.Values)
             {
-                complete |= s.Wait();
+                complete &= s.Wait();
             }
 
             return complete;

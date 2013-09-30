@@ -44,7 +44,7 @@ namespace TestTopology
 
         static int Main(string[] args)
         {
-            if(args.Length != 1)
+            if (args.Length != 1)
             {
                 Console.WriteLine("Usage: TestTopology1.exe <testscript>");
                 return 1;
@@ -69,7 +69,7 @@ namespace TestTopology
 
             try
             {
-                runner.Run(network, new StreamReader(args[0]), mocker);
+                runner.Run(network.Wait, new StreamReader(args[0]), mocker);
             }
             catch(MockableScriptRunner.AssertError)
             {

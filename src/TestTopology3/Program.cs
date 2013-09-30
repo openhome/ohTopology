@@ -85,7 +85,7 @@ namespace TestTopology3
 
             try
             {
-                runner.Run(network, new StreamReader(args[0]), mocker);
+                runner.Run(network.Wait, new StreamReader(args[0]), mocker);
             }
             catch (MockableScriptRunner.AssertError)
             {
