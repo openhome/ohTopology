@@ -328,22 +328,17 @@ namespace TestMediaEndpoint
                     {
                         session.Browse(null, () =>
                         {
+                            var tasks = new List<Task<IWatchableFragment<IMediaDatum>>>();
+
                             if (session.Snapshot.Total >= 100)
                             {
                                 for (int j = 0; j < 20; j++)
                                 {
-                                    session.Snapshot.Read(0, 100).ContinueWith((t) =>
-                                    {
-                                        try
-                                        {
-                                            t.Wait();
-                                        }
-                                        catch
-                                        {
-                                        }
-                                    });
+                                    tasks.Add(session.Snapshot.Read(0, 100));
                                 }
                             }
+
+                            Task.WaitAll(tasks.ToArray());
                         });
                     });
 
