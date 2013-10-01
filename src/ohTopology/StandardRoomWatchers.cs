@@ -695,7 +695,7 @@ namespace OpenHome.Av
         {
             using (iDisposeHandler.Lock)
             {
-                iReceiver.SetSender(iSenderMetadata);
+                iReceiver.Play(iSenderMetadata);
             }
         }
 

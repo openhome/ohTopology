@@ -594,8 +594,7 @@ namespace OpenHome.Av
                             {
                                 if (!iDisposed)
                                 {
-                                    Task action = receiver.SetSender(sender.Metadata.Value);
-                                    action.ContinueWith((t) => { receiver.Play(); });
+                                    receiver.Play(sender.Metadata.Value);
                                     receiver.Dispose();
                                     sender.Dispose();
                                 }

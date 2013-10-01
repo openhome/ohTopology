@@ -19,8 +19,8 @@ namespace OpenHome.Av
         IWatchable<string> TransportState { get; }
 
         Task Play();
+        Task Play(ISenderMetadata aMetadata);
         Task Stop();
-        Task SetSender(ISenderMetadata aMetadata);
     }
 
     public abstract class ServiceReceiver : Service
@@ -73,8 +73,8 @@ namespace OpenHome.Av
         }
 
         public abstract Task Play();
+        public abstract Task Play(ISenderMetadata aMetadata);
         public abstract Task Stop();
-        public abstract Task SetSender(ISenderMetadata aMetadata);
 
         protected string iProtocolInfo;
 
@@ -148,20 +148,21 @@ namespace OpenHome.Av
             return task;
         }
 
+        public override Task Play(ISenderMetadata aMetadata)
+        {
+            Task task = Task.Factory.StartNew(() =>
+            {
+                iService.SyncSetSender(aMetadata.Uri, aMetadata.ToString());
+                iService.SyncPlay();
+            });
+            return task;
+        }
+
         public override Task Stop()
         {
             Task task = Task.Factory.StartNew(() =>
             {
                 iService.SyncStop();
-            });
-            return task;
-        }
-
-        public override Task SetSender(ISenderMetadata aMetadata)
-        {
-            Task task = Task.Factory.StartNew(() =>
-            {
-                iService.SyncSetSender(aMetadata.Uri, aMetadata.ToString());
             });
             return task;
         }
@@ -214,19 +215,20 @@ namespace OpenHome.Av
             });
         }
 
+        public override Task Play(ISenderMetadata aMetadata)
+        {
+            return Start(() =>
+            {
+                iMetadata.Update(new InfoMetadata(Network.TagManager.FromDidlLite(aMetadata.ToString()), aMetadata.Uri));
+                iTransportState.Update("Playing");
+            });
+        }
+
         public override Task Stop()
         {
             return Start(() =>
             {
                 iTransportState.Update("Stopped");
-            });
-        }
-
-        public override Task SetSender(ISenderMetadata aMetadata)
-        {
-            return Start(() =>
-            {
-                iMetadata.Update(new InfoMetadata(Network.TagManager.FromDidlLite(aMetadata.ToString()), aMetadata.Uri));
             });
         }
 
@@ -287,14 +289,14 @@ namespace OpenHome.Av
             return iService.Play();
         }
 
+        public Task Play(ISenderMetadata aMetadata)
+        {
+            return iService.Play(aMetadata);
+        }
+
         public Task Stop()
         {
             return iService.Stop();
-        }
-
-        public Task SetSender(ISenderMetadata aMetadata)
-        {
-            return iService.SetSender(aMetadata);
         }
     }
 }
