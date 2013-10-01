@@ -521,7 +521,10 @@ namespace OpenHome.Av
 
         public void Unjoin(Action aAction)
         {
-            iJoiners.Remove(aAction);
+            using (iDisposeHandler.Lock)
+            {
+                iJoiners.Remove(aAction);
+            }
         }
 
         public void SetStandby(bool aValue)
