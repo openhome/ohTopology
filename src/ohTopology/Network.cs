@@ -327,15 +327,18 @@ namespace OpenHome.Av
 
         public void Wait()
         {
-            while (true)
+            for (int i = 0; i < 100; i++)
             {
-                while (!WaitDevices());
-
-                iThread.Execute();
-
-                if (WaitDevices())
+                while (true)
                 {
-                    break;
+                    while (!WaitDevices()) ;
+
+                    iThread.Execute();
+
+                    if (WaitDevices())
+                    {
+                        break;
+                    }
                 }
             }
         }
