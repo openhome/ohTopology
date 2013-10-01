@@ -29,6 +29,7 @@ public:
     CpTopology1Job(ICpTopology1Handler& aHandler);
     void Set(Net::CpDevice& aDevice, ICpTopology1HandlerFunction aFunction);
     virtual void Execute();
+	virtual ~CpTopolgy1Job() {}
 private:
     ICpTopology1Handler* iHandler;
     Net::CpDevice* iDevice;
@@ -44,7 +45,7 @@ public:
     
     void Refresh();
     
-    ~CpTopology1();
+    virtual ~CpTopology1();
     
 private:
     void ProductAdded(Net::CpDevice& aDevice);
