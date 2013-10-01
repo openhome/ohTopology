@@ -327,8 +327,8 @@ namespace OpenHome.Av
 
         public void Wait()
         {
-            //for (int i = 0; i < 100; i++)
-            //{
+            for (int i = 0; i < 2; i++)
+            {
                 while (true)
                 {
                     while (!WaitDevices()) ;
@@ -340,7 +340,7 @@ namespace OpenHome.Av
                         break;
                     }
                 }
-            //}
+            }
         }
 
         public void Add(Device aDevice)
