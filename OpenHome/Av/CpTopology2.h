@@ -117,7 +117,7 @@ public:
     CpTopology2Job(ICpTopology2Handler& aHandler);
     void Set(CpTopology2Group& aGroup, ICpTopology2HandlerFunction aFunction);
     virtual void Execute();
-	virtual ~CpTopolgy2Job() {}
+	virtual ~CpTopology2Job() {}
 private:
     ICpTopology2Handler* iHandler;
     CpTopology2Group* iGroup;

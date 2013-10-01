@@ -29,7 +29,7 @@ public:
     CpTopology1Job(ICpTopology1Handler& aHandler);
     void Set(Net::CpDevice& aDevice, ICpTopology1HandlerFunction aFunction);
     virtual void Execute();
-	virtual ~CpTopolgy1Job() {}
+	virtual ~CpTopology1Job() {}
 private:
     ICpTopology1Handler* iHandler;
     Net::CpDevice* iDevice;
