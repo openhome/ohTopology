@@ -454,10 +454,6 @@ namespace OpenHome.Av
                 {
                     a();
                 }
-                if (iJoiners.Count > 0)
-                {
-                    throw new Exception("StandardRoom joiners > 0");
-                }
 
                 iRoom.Roots.RemoveWatcher(this);
                 iDisposed = true;
