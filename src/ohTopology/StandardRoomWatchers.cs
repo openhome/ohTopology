@@ -215,7 +215,6 @@ namespace OpenHome.Av
 
                     OnSetInactive();
 
-                    iRoom.Unjoin(SetInactive);
                     iIsActive = false;
                 }
             }
