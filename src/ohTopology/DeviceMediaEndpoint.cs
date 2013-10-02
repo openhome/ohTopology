@@ -108,12 +108,12 @@ namespace OpenHome.Av
 
         private void Added(CpDeviceList aList, CpDevice aDevice)
         {
+            aDevice.AddRef();
+
             iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    aDevice.AddRef();
-
                     var udn = aDevice.Udn();
 
                     string deviceXml;
