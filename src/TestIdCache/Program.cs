@@ -81,7 +81,7 @@ namespace TestIdCache
 
         static int Main(string[] args)
         {
-            Network network = new Network(50);
+            Network network = new Network(50, new Log(new LogConsole()));
             IIdCache cache = network.IdCache;
             CacheWatcher watcher = new CacheWatcher();
 

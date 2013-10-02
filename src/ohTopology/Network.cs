@@ -278,7 +278,7 @@ namespace OpenHome.Av
         private readonly List<Device> iDevices;
         private readonly Dictionary<Type, WatchableUnordered<IDevice>> iDeviceLists;
 
-        public Network(uint aMaxCacheEntries)
+        public Network(uint aMaxCacheEntries, ILog aLog)
         {
             iExceptions = new List<Exception>();
             iThread = new MockThread(ReportException);
@@ -290,7 +290,7 @@ namespace OpenHome.Av
             iDeviceLists = new Dictionary<Type, WatchableUnordered<IDevice>>();
         }
 
-        public Network(IWatchableThread aWatchableThread, uint aMaxCacheEntries)
+        public Network(IWatchableThread aWatchableThread, uint aMaxCacheEntries, ILog aLog)
         {
             iExceptions = new List<Exception>();
             iThread = aWatchableThread;

@@ -312,9 +312,11 @@ namespace OpenHome.Av
 
     class Topology4Group : ITopology4Root, ITopology4Registration, IWatcher<uint>, IWatcher<string>, IDisposable
     {
-        public Topology4Group(INetwork aNetwork, string aRoom, string aName, ITopologymGroup aGroup, IEnumerable<ITopology2Source> aSources)
+        public Topology4Group(INetwork aNetwork, string aRoom, string aName, ITopologymGroup aGroup, IEnumerable<ITopology2Source> aSources, ILog aLog)
         {
             iDisposed = false;
+
+            iLog = aLog;
 
             iNetwork = aNetwork;
             iName = aName;
@@ -604,6 +606,11 @@ namespace OpenHome.Av
 
         private ITopology4Source EvaluateSource()
         {
+            if(iSources.Count <= iSourceIndex)
+            {
+                iLog.Write("EvaluateSource of {0}, iSources.Count={1}, iSourceIndex={2}", iName, iSources.Count, iSourceIndex);
+            }
+
             // set the source for this group
             Topology4Source source = iSources[(int)iSourceIndex];
 
@@ -625,7 +632,6 @@ namespace OpenHome.Av
             {
                 iParent.EvaluateSourceFromChild();
             }
-
 
             ITopology4Source source = EvaluateSource();
             iWatchableSource.Update(source);
@@ -673,6 +679,8 @@ namespace OpenHome.Av
         }
 
         private bool iDisposed;
+
+        private readonly ILog iLog;
 
         private INetwork iNetwork;
         private ITopologymGroup iGroup;
@@ -805,10 +813,12 @@ namespace OpenHome.Av
 
     class Topology4Room : ITopology4Room, IUnorderedWatcher<ITopologymGroup>, IWatcher<bool>, IDisposable
     {
-        public Topology4Room(INetwork aNetwork, ITopology3Room aRoom)
+        public Topology4Room(INetwork aNetwork, ITopology3Room aRoom, ILog aLog)
         {
             iNetwork = aNetwork;
             iRoom = aRoom;
+
+            iLog = aLog;
 
             iName = iRoom.Name;
             iStandbyCount = 0;
@@ -946,7 +956,7 @@ namespace OpenHome.Av
 
             foreach (var kvp in iGroupLookup)
             {
-                Topology4Group group = new Topology4Group(iNetwork, kvp.Value.Room, kvp.Value.Name, kvp.Key, kvp.Value.Sources);
+                Topology4Group group = new Topology4Group(iNetwork, kvp.Value.Room, kvp.Value.Name, kvp.Key, kvp.Value.Sources, iLog);
                 InsertIntoTree(group);
                 if (!string.IsNullOrEmpty(group.ProductId))
                 {
@@ -1076,6 +1086,8 @@ namespace OpenHome.Av
         private INetwork iNetwork;
         private ITopology3Room iRoom;
 
+        private readonly ILog iLog;
+
         private string iName;
         private uint iStandbyCount;
         private EStandby iStandby;
@@ -1098,11 +1110,12 @@ namespace OpenHome.Av
 
     public class Topology4 : ITopology4, IUnorderedWatcher<ITopology3Room>, IDisposable
     {
-        public Topology4(ITopology3 aTopology3)
+        public Topology4(ITopology3 aTopology3, ILog aLog)
         {
-            iDisposed = false;
+            iDisposeHandler = new DisposeHandler();
             iNetwork = aTopology3.Network;
             iTopology3 = aTopology3;
+            iLog = aLog;
 
             iRooms = new WatchableUnordered<ITopology4Room>(iNetwork);
 
@@ -1116,10 +1129,7 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            if (iDisposed)
-            {
-                throw new ObjectDisposedException("Topology3.Dispose");
-            }
+            iDisposeHandler.Dispose();
 
             iNetwork.Execute(() =>
             {
@@ -1130,21 +1140,19 @@ namespace OpenHome.Av
                     r.Dispose();
                 }
             });
-            iTopology3 = null;
             iRoomLookup.Clear();
-            iRoomLookup = null;
 
             iRooms.Dispose();
-            iRooms = null;
-
-            iDisposed = true;
         }
 
         public IWatchableUnordered<ITopology4Room> Rooms
         {
             get
             {
-                return iRooms;
+                using (iDisposeHandler.Lock)
+                {
+                    return iRooms;
+                }
             }
         }
 
@@ -1152,7 +1160,10 @@ namespace OpenHome.Av
         {
             get
             {
-                return iNetwork;
+                using (iDisposeHandler.Lock)
+                {
+                    return iNetwork;
+                }
             }
         }
 
@@ -1170,26 +1181,33 @@ namespace OpenHome.Av
 
         public void UnorderedAdd(ITopology3Room aItem)
         {
-            Topology4Room room = new Topology4Room(iNetwork, aItem);
-            iRooms.Add(room);
-            iRoomLookup.Add(aItem, room);
+            iDisposeHandler.WhenNotDisposed(() =>
+            {
+                Topology4Room room = new Topology4Room(iNetwork, aItem, iLog);
+                iRooms.Add(room);
+                iRoomLookup.Add(aItem, room);
+            });
         }
 
         public void UnorderedRemove(ITopology3Room aItem)
         {
-            // schedule notification of L4 room removal
-            Topology4Room room = iRoomLookup[aItem];
-            iRooms.Remove(room);
-            iRoomLookup.Remove(aItem);
+            iDisposeHandler.WhenNotDisposed(() =>
+            {
+                // schedule notification of L4 room removal
+                Topology4Room room = iRoomLookup[aItem];
+                iRooms.Remove(room);
+                iRoomLookup.Remove(aItem);
 
-            room.Dispose();
+                room.Dispose();
+            });
         }
 
-        private bool iDisposed;
-        private INetwork iNetwork;
-        private ITopology3 iTopology3;
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly INetwork iNetwork;
+        private readonly ITopology3 iTopology3;
+        private readonly ILog iLog;
 
-        private WatchableUnordered<ITopology4Room> iRooms;
-        private Dictionary<ITopology3Room, Topology4Room> iRoomLookup;
+        private readonly WatchableUnordered<ITopology4Room> iRooms;
+        private readonly Dictionary<ITopology3Room, Topology4Room> iRoomLookup;
     }
 }

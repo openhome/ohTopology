@@ -126,7 +126,7 @@ namespace OpenHome.Av
 
     public class Topology3 : ITopology3, IUnorderedWatcher<ITopologymGroup>, IDisposable
     {
-        public Topology3(ITopologym aTopologym)
+        public Topology3(ITopologym aTopologym, ILog aLog)
         {
             iDisposed = false;
             iNetwork = aTopologym.Network;
