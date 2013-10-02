@@ -13,16 +13,19 @@ using OpenHome.Os.App;
 
 namespace BrowseMediaEndpoint
 {
-    public class Main
+    public class Main : IDisposable
     {
         private readonly Library iLibrary;
         private readonly NetworkAdapter iAdapter;
 
         private readonly WatchableThread iWatchableThread;
         private readonly Network iNetwork;
-        private readonly DeviceInjectorMediaEndpoint iDeviceInjectorMediaEndpoint;
-        private readonly IWatchableUnordered<IDevice> iDevices;
+        
+        private DeviceInjectorMediaEndpoint iDeviceInjectorMediaEndpoint;
+        private IWatchableUnordered<IDevice> iDevices;
+
         private IProxyMediaEndpoint iMediaEndpoint;
+        
         private IMediaEndpointSession iMediaEndpointSession;
 
         private void ReportException(Exception aException)
@@ -41,9 +44,11 @@ namespace BrowseMediaEndpoint
 
             iNetwork = new Network(iWatchableThread, 5000);
 
-            iDeviceInjectorMediaEndpoint = new DeviceInjectorMediaEndpoint(iNetwork);
-
-            iDevices = iNetwork.Create<IProxyMediaEndpoint>();
+            iNetwork.Execute(() =>
+            {
+                iDeviceInjectorMediaEndpoint = new DeviceInjectorMediaEndpoint(iNetwork);
+                iDevices = iNetwork.Create<IProxyMediaEndpoint>();
+            });
         }
 
         public void Run()
@@ -191,6 +196,15 @@ namespace BrowseMediaEndpoint
                     }
                 });
             }
+        }
+
+        // IDisposable
+
+        public void Dispose()
+        {
+            iDeviceInjectorMediaEndpoint.Dispose();
+            iNetwork.Dispose();
+            iWatchableThread.Dispose();
         }
     }
 }
