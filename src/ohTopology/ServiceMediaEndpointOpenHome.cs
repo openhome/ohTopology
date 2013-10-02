@@ -390,7 +390,7 @@ namespace OpenHome.Av
 
         public Task<IMediaEndpointClientSnapshot> List(CancellationToken aCancellationToken, string aSession, ITag aTag)
         {
-            return (GetSnapshot(aCancellationToken, "link?session={0}&tag={1}&val={2}", aSession, aTag.Id));
+            return (GetSnapshot(aCancellationToken, "list?session={0}&tag={1}", aSession, aTag.Id));
         }
 
         public Task<IMediaEndpointClientSnapshot> Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)

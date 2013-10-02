@@ -74,10 +74,13 @@ namespace BrowseMediaEndpoint
                         case "x":
                             return;
                         case "l":
-                            iWatchableThread.Schedule(List);
+                            List(tokens.Skip(1));
                             break;
                         case "s":
                             Search(tokens.Skip(1));
+                            break;
+                        case "a":
+                            All();
                             break;
                         default:
                             Select(tokens);
@@ -86,7 +89,92 @@ namespace BrowseMediaEndpoint
                 }
                 else
                 {
-                    iWatchableThread.Schedule(List);
+                    iWatchableThread.Schedule(EnumerateEndpoints);
+                }
+            }
+        }
+
+        private void All()
+        {
+            if (iMediaEndpoint != null)
+            {
+                iWatchableThread.Schedule(() =>
+                {
+                    if (iMediaEndpointSession.Snapshot != null)
+                    {
+                        iMediaEndpointSession.Snapshot.Read(0, iMediaEndpointSession.Snapshot.Total).ContinueWith((t) =>
+                        {
+                            iNetwork.Schedule(() =>
+                            {
+                                All(t.Result.Data);
+                            });
+                        }, TaskContinuationOptions.OnlyOnRanToCompletion);
+                    }
+                });
+            }
+        }
+
+        private void All(IEnumerable<IMediaDatum> aValue)
+        {
+            foreach (var entry in aValue)
+            {
+                All(entry);
+            }
+        }
+
+        private void All(IMediaDatum aValue)
+        {
+            Console.WriteLine("Type: {0}", string.Join(":", aValue.Type.Select(t => t.FullName)));
+
+            foreach (var metadatum in aValue)
+            {
+                All(metadatum);
+            }
+        }
+
+        private void All(KeyValuePair<ITag, IMediaValue> aValue)
+        {
+            Console.WriteLine("{0}: {1}", aValue.Key.FullName, string.Join(":", aValue.Value.Values));
+        }
+
+        private void List(IEnumerable<string> aTokens)
+        {
+            if (iMediaEndpoint != null)
+            {
+                if (aTokens.Any())
+                {
+                    iWatchableThread.Schedule(() =>
+                    {
+                        List(aTokens.First());
+                    });
+                }
+            }
+        }
+
+        private void List(string aValue)
+        {
+            var tag = iNetwork.TagManager.Audio[aValue];
+
+            if (tag != null)
+            {
+                if (iMediaEndpoint.SupportsList())
+                {
+                    var sw = new Stopwatch();
+
+                    var count = 0;
+
+                    sw.Start();
+
+                    iMediaEndpointSession.List(tag, () =>
+                    {
+                        if (count++ == 0)
+                        {
+                            sw.Stop();
+                            Console.WriteLine("{0}ms", sw.Milliseconds);
+                        }
+
+                        Console.WriteLine("{0}: {1} items", count, iMediaEndpointSession.Snapshot.Total);
+                    });
                 }
             }
         }
@@ -111,13 +199,19 @@ namespace BrowseMediaEndpoint
             {
                 var sw = new Stopwatch();
 
+                var count = 0;
+
                 sw.Start();
 
                 iMediaEndpointSession.Search(aValue, () =>
                 {
-                    sw.Stop();
+                    if (count++ == 0)
+                    {
+                        sw.Stop();
+                        Console.WriteLine("{0}ms", sw.Milliseconds);
+                    }
 
-                    Console.WriteLine("{0} items in {1}ms", iMediaEndpointSession.Snapshot.Total, sw.Milliseconds);
+                    Console.WriteLine("{0}: {1} items", count, iMediaEndpointSession.Snapshot.Total);
                 });
             }
             catch
@@ -194,7 +288,7 @@ namespace BrowseMediaEndpoint
             }
         }
 
-        private void List()
+        private void EnumerateEndpoints()
         {
             uint index = 0;
 
