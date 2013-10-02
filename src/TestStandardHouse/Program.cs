@@ -311,11 +311,13 @@ namespace TestStandardHouse
 
             Mockable mocker = new Mockable();
 
-            Network network = new Network(50);
+            Log log = new Log(new LogConsole());
+
+            Network network = new Network(50, log);
             DeviceInjectorMock mockInjector = new DeviceInjectorMock(network, Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
             mocker.Add("network", mockInjector);
 
-            StandardHouse house = new StandardHouse(network);
+            StandardHouse house = new StandardHouse(network, log);
 
             MockableScriptRunner runner = new MockableScriptRunner();
 

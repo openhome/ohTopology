@@ -383,7 +383,7 @@ namespace TestMediaServer
     {
         static void Main(string[] args)
         {
-            using (var network = new Network(50))
+            using (var network = new Network(50, new Log(new LogConsole())))
             {
                 var path = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
 

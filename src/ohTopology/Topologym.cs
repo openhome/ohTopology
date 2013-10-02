@@ -439,7 +439,7 @@ namespace OpenHome.Av
 
     public class Topologym : ITopologym, IUnorderedWatcher<ITopology2Group>, IDisposable
     {
-        public Topologym(ITopology2 aTopology2)
+        public Topologym(ITopology2 aTopology2, ILog aLog)
         {
             iDisposed = false;
 

@@ -16,7 +16,7 @@ namespace OpenHome.Av
 
     public class Topology1 : ITopology1, IUnorderedWatcher<IDevice>, IDisposable
     {
-        public Topology1(INetwork aNetwork)
+        public Topology1(INetwork aNetwork, ILog aLog)
         {
             iDisposed = false;
 

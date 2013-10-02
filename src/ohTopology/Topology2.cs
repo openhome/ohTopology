@@ -331,7 +331,7 @@ namespace OpenHome.Av
 
     public class Topology2 : ITopology2, IUnorderedWatcher<IProxyProduct>, IDisposable
     {
-        public Topology2(ITopology1 aTopology1)
+        public Topology2(ITopology1 aTopology1, ILog aLog)
         {
             iDisposed = false;
 

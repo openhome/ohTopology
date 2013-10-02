@@ -168,15 +168,17 @@ namespace TestTopology4
 
             Mockable mocker = new Mockable();
 
-            Network network = new Network(50);
+            Log log = new Log(new LogConsole());
+
+            Network network = new Network(50, log);
             DeviceInjectorMock mockInjector = new DeviceInjectorMock(network, Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
             mocker.Add("network", mockInjector);
 
-            Topology1 topology1 = new Topology1(network);
-            Topology2 topology2 = new Topology2(topology1);
-            Topologym topologym = new Topologym(topology2);
-            Topology3 topology3 = new Topology3(topologym);
-            Topology4 topology4 = new Topology4(topology3);
+            Topology1 topology1 = new Topology1(network, log);
+            Topology2 topology2 = new Topology2(topology1, log);
+            Topologym topologym = new Topologym(topology2, log);
+            Topology3 topology3 = new Topology3(topologym, log);
+            Topology4 topology4 = new Topology4(topology3, log);
 
             MockableScriptRunner runner = new MockableScriptRunner();
 

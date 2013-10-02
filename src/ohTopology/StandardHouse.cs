@@ -400,16 +400,16 @@ namespace OpenHome.Av
 
     public class StandardHouse : IUnorderedWatcher<ITopology4Room>, IWatcher<IEnumerable<ITopology4Registration>>, IStandardHouse, IMockable, IDisposable
     {
-        public StandardHouse(INetwork aNetwork)
+        public StandardHouse(INetwork aNetwork, ILog aLog)
         {
             iDisposeHandler = new DisposeHandler();
             iNetwork = aNetwork;
 
-            iTopology1 = new Topology1(aNetwork);
-            iTopology2 = new Topology2(iTopology1);
-            iTopologym = new Topologym(iTopology2);
-            iTopology3 = new Topology3(iTopologym);
-            iTopology4 = new Topology4(iTopology3);
+            iTopology1 = new Topology1(aNetwork, aLog);
+            iTopology2 = new Topology2(iTopology1, aLog);
+            iTopologym = new Topologym(iTopology2, aLog);
+            iTopology3 = new Topology3(iTopologym, aLog);
+            iTopology4 = new Topology4(iTopology3, aLog);
  
             iWatchableRooms = new WatchableOrdered<IStandardRoom>(iNetwork);
             iRoomLookup = new Dictionary<ITopology4Room, StandardRoom>();
