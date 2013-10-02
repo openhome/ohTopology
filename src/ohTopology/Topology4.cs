@@ -312,9 +312,11 @@ namespace OpenHome.Av
 
     class Topology4Group : ITopology4Root, ITopology4Registration, IWatcher<uint>, IWatcher<string>, IDisposable
     {
-        public Topology4Group(INetwork aNetwork, string aRoom, string aName, ITopologymGroup aGroup, IEnumerable<ITopology2Source> aSources)
+        public Topology4Group(INetwork aNetwork, string aRoom, string aName, ITopologymGroup aGroup, IEnumerable<ITopology2Source> aSources, ILog aLog)
         {
             iDisposed = false;
+
+            iLog = aLog;
 
             iNetwork = aNetwork;
             iName = aName;
@@ -604,6 +606,11 @@ namespace OpenHome.Av
 
         private ITopology4Source EvaluateSource()
         {
+            if(iSources.Count <= iSourceIndex)
+            {
+                iLog.Write("EvaluateSource of {0}, iSources.Count={1}, iSourceIndex={2}", iName, iSources.Count, iSourceIndex);
+            }
+
             // set the source for this group
             Topology4Source source = iSources[(int)iSourceIndex];
 
@@ -672,6 +679,8 @@ namespace OpenHome.Av
         }
 
         private bool iDisposed;
+
+        private readonly ILog iLog;
 
         private INetwork iNetwork;
         private ITopologymGroup iGroup;
@@ -809,6 +818,8 @@ namespace OpenHome.Av
             iNetwork = aNetwork;
             iRoom = aRoom;
 
+            iLog = aLog;
+
             iName = iRoom.Name;
             iStandbyCount = 0;
             iStandby = EStandby.eOn;
@@ -945,7 +956,7 @@ namespace OpenHome.Av
 
             foreach (var kvp in iGroupLookup)
             {
-                Topology4Group group = new Topology4Group(iNetwork, kvp.Value.Room, kvp.Value.Name, kvp.Key, kvp.Value.Sources);
+                Topology4Group group = new Topology4Group(iNetwork, kvp.Value.Room, kvp.Value.Name, kvp.Key, kvp.Value.Sources, iLog);
                 InsertIntoTree(group);
                 if (!string.IsNullOrEmpty(group.ProductId))
                 {
@@ -1074,6 +1085,8 @@ namespace OpenHome.Av
 
         private INetwork iNetwork;
         private ITopology3Room iRoom;
+
+        private readonly ILog iLog;
 
         private string iName;
         private uint iStandbyCount;
