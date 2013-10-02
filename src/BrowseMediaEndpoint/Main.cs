@@ -173,11 +173,23 @@ namespace BrowseMediaEndpoint
                     {
                         if (index++ == aIndex)
                         {
+                            if (iMediaEndpoint != null)
+                            {
+                                iMediaEndpointSession.Dispose();
+                                iMediaEndpoint.Dispose();
+                            }
+
                             iMediaEndpoint = me;
+
                             iMediaEndpointSession = iMediaEndpoint.CreateSession().Result;
+                            
                             Select();
+
+                            return;
                         }
                     }
+
+                    me.Dispose();
                 });
             }
         }
@@ -194,6 +206,8 @@ namespace BrowseMediaEndpoint
                     {
                         Console.WriteLine("{0}. {1}:{2}", index++, me.Type, me.Name);
                     }
+
+                    me.Dispose();
                 });
             }
         }
@@ -202,8 +216,19 @@ namespace BrowseMediaEndpoint
 
         public void Dispose()
         {
+            if (iMediaEndpoint != null)
+            {
+                iWatchableThread.Execute(() =>
+                {
+                    iMediaEndpointSession.Dispose();
+                    iMediaEndpoint.Dispose();
+                });
+            }
+
             iDeviceInjectorMediaEndpoint.Dispose();
+
             iNetwork.Dispose();
+            
             iWatchableThread.Dispose();
         }
     }
