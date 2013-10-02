@@ -42,7 +42,7 @@ namespace BrowseMediaEndpoint
 
             iWatchableThread = new WatchableThread(ReportException);
 
-            iNetwork = new Network(iWatchableThread, 5000);
+            iNetwork = new Network(iWatchableThread, 5000, new Log(new LogConsole()));
 
             iNetwork.Execute(() =>
             {
