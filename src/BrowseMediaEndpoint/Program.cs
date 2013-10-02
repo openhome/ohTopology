@@ -10,27 +10,41 @@ namespace BrowseMediaEndpoint
 {
     class Program
     {
-        static void Main(string[] args)
+        static NetworkAdapter FindDefaultAdapter(string aToken)
         {
-            var initParams = new OpenHome.Net.Core.InitParams();
-            var library = Library.Create(initParams);
-
-            var adapters = new List<NetworkAdapter>();
-
             using (var subnets = new SubnetList())
             {
                 var count = subnets.Size();
 
                 if (count == 0)
                 {
-                    Console.WriteLine("No network adapter");
-                    return;
+                    return (null);
                 }
 
-                var main = new Main(library, subnets.SubnetAt(0));
+                var adapter = subnets.SubnetAt(0);
 
+                adapter.AddRef(aToken);
+
+                return (adapter);
+            }
+        }
+
+        static void Main(string[] args)
+        {
+            var initParams = new OpenHome.Net.Core.InitParams();
+            
+            var library = Library.Create(initParams);
+
+            var adapter = FindDefaultAdapter("main");
+
+            using (var main = new Main(library, adapter))
+            {
                 main.Run();
             }
+
+            adapter.RemoveRef("main");
+
+            library.Dispose();
         }
     }
 }

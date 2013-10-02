@@ -34,8 +34,8 @@ namespace OpenHome.Av
         private readonly Network iNetwork;
 
         private readonly DisposeHandler iDisposeHandler;
-        private readonly Dictionary<CpDevice, IDisposable> iDevices;
         private readonly EventSupervisor iEventSupervisor;
+        private readonly Dictionary<CpDevice, IDisposable> iDevices;
         private readonly CpDeviceListUpnpServiceType iDeviceList;
 
         public DeviceInjectorMediaEndpoint(Network aNetwork)
@@ -43,8 +43,8 @@ namespace OpenHome.Av
             iNetwork = aNetwork;
 
             iDisposeHandler = new DisposeHandler();
-            iDevices = new Dictionary<CpDevice, IDisposable>();
             iEventSupervisor = new EventSupervisor(iNetwork);
+            iDevices = new Dictionary<CpDevice, IDisposable>();
             iDeviceList = new CpDeviceListUpnpServiceType("upnp.org", "ContentDirectory", 1, Added, Removed);
         }
 
@@ -108,12 +108,12 @@ namespace OpenHome.Av
 
         private void Added(CpDeviceList aList, CpDevice aDevice)
         {
-            aDevice.AddRef();
-
             iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
+                    aDevice.AddRef();
+
                     var udn = aDevice.Udn();
 
                     string deviceXml;
@@ -175,9 +175,9 @@ namespace OpenHome.Av
                             device.Dispose();
                         }
                     }
-                });
 
-                aDevice.RemoveRef();
+                    aDevice.RemoveRef();
+                });
             });
         }
 
@@ -199,12 +199,14 @@ namespace OpenHome.Av
 
             iNetwork.Execute(() =>
             {
-                foreach (var d in iDevices)
+                foreach (var device in iDevices)
                 {
-                    d.Value.Dispose();
-                    d.Key.RemoveRef();
+                    device.Value.Dispose();
+                    device.Key.RemoveRef();
                 }
             });
+
+            iEventSupervisor.Dispose();
         }
     }
 
