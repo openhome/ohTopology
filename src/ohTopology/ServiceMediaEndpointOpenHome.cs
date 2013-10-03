@@ -398,6 +398,11 @@ namespace OpenHome.Av
             return (GetSnapshot(aCancellationToken, "link?session={0}&tag={1}&val={2}", aSession, aTag.Id, Encode(aValue)));
         }
 
+        public Task<IMediaEndpointClientSnapshot> Match(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
+        {
+            return (GetSnapshot(aCancellationToken, "match?session={0}&tag={1}&val={2}", aSession, aTag.Id, Encode(aValue)));
+        }
+
         public Task<IMediaEndpointClientSnapshot> Search(CancellationToken aCancellationToken, string aSession, string aValue)
         {
             return (GetSnapshot(aCancellationToken, "search?session={0}&val={1}", aSession, Encode(aValue)));

@@ -93,6 +93,14 @@ namespace TestMediaEndpoint
             return (tcs.Task);
         }
 
+        public Task<IMediaEndpointClientSnapshot> Match(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
+        {
+            Console.WriteLine("Match      : {0} {1} {2}", aSession, aTag.FullName, aValue);
+            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
+            tcs.SetResult(new TestMediaEndpointClientSnapshot("0", 100, null));
+            return (tcs.Task);
+        }
+
         public Task<IMediaEndpointClientSnapshot> Search(CancellationToken aCancellationToken, string aSession, string aValue)
         {
             Console.WriteLine("Search     : {0} {1}", aSession, aValue);

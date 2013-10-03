@@ -36,15 +36,15 @@ namespace OpenHome.Av
             iUriProvider = aUriProvider;
             iSupervisor = new MediaEndpointSupervisor(this);
 
-            iArtists = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Artist] != null)
-                .SelectMany(m => m[iNetwork.TagManager.Audio.Artist].Values)
+            iArtists = iMetadata.Where(m => m[iNetwork.TagManager.Audio.AlbumArtist] != null)
+                .SelectMany(m => m[iNetwork.TagManager.Audio.AlbumArtist].Values)
                 .Distinct()
                 .OrderBy(v => v)
                 .Select(v =>
                 {
-                    var datum = new MediaDatum(null, iNetwork.TagManager.Audio.Artist, iNetwork.TagManager.Audio.Album);
+                    var datum = new MediaDatum(null, iNetwork.TagManager.Audio.AlbumArtist, iNetwork.TagManager.Audio.Album);
                     datum.Add(iNetwork.TagManager.Container.Title, v);
-                    datum.Add(iNetwork.TagManager.Audio.Artist, v);
+                    datum.Add(iNetwork.TagManager.Audio.AlbumArtist, v);
                     return (datum);
                 });
 
@@ -198,6 +198,93 @@ namespace OpenHome.Av
                 .Select(m => new MediaDatum(m, null));
 
             return (new MediaEndpointSnapshotMock(tracks));
+        }
+
+        private IEnumerable<IMediaDatum> MatchMetadata(ITag aTag, string aValue)
+        {
+            var values = Tokeniser.Parse(aValue.ToLower());
+
+            if (values.Any())
+            {
+                foreach (var metadata in iMetadata)
+                {
+                    if (MatchMetadata(aTag, values, metadata))
+                    {
+                        yield return new MediaDatum(metadata, null);
+                    }
+                }
+            }
+        }
+
+        private bool MatchMetadata(ITag aTag, IEnumerable<string> aValues, IMediaMetadata aMetadata)
+        {
+            foreach (var value in aValues)
+            {
+                if (!MatchMetadataToken(aTag, value, aMetadata))
+                {
+                    return (false);
+                }
+            }
+
+            return (true);
+        }
+
+        private bool MatchMetadataToken(ITag aTag, string aValue, IMediaMetadata aMetadata)
+        {
+            if (aValue.EndsWith("*"))
+            {
+                return (MatchMetadataTokenStartsWith(aTag, aValue.Substring(0, aValue.Length - 1), aMetadata));
+            }
+
+            foreach (var metadatum in aMetadata)
+            {
+                if (metadatum.Key == aTag)
+                {
+                    foreach (var value in metadatum.Value.Values)
+                    {
+                        var tokens = Tokeniser.Parse(value);
+
+                        foreach (var token in tokens)
+                        {
+                            if (token.ToLower() == aValue)
+                            {
+                                return (true);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return (false);
+        }
+
+        private bool MatchMetadataTokenStartsWith(ITag aTag, string aValue, IMediaMetadata aMetadata)
+        {
+            if (aValue.Length == 0)
+            {
+                return (true);
+            }
+
+            foreach (var metadatum in aMetadata)
+            {
+                if (metadatum.Key == aTag)
+                {
+                    foreach (var value in metadatum.Value.Values)
+                    {
+                        var tokens = Tokeniser.Parse(value);
+
+                        foreach (var token in tokens)
+                        {
+                            if (token.ToLower().StartsWith(aValue))
+                            {
+                                return (true);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return (false);
         }
 
         private IEnumerable<IMediaDatum> SearchMetadata(string aValue)
@@ -406,6 +493,13 @@ namespace OpenHome.Av
 
             tcs.SetException(new InvalidOperationException());
 
+            return (tcs.Task);
+        }
+
+        public Task<IMediaEndpointClientSnapshot> Match(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
+        {
+            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
+            tcs.SetResult(new MediaEndpointSnapshotMock(MatchMetadata(aTag, aValue)));
             return (tcs.Task);
         }
 

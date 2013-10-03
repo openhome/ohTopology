@@ -272,6 +272,13 @@ namespace OpenHome.Av
             return (tcs.Task);
         }
 
+        public Task<IMediaEndpointClientSnapshot> Match(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
+        {
+            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
+            tcs.SetException(new InvalidOperationException());
+            return (tcs.Task);
+        }
+
         public Task<IMediaEndpointClientSnapshot> Search(CancellationToken aCancellationToken, string aSession, string aValue)
         {
             var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();

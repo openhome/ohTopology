@@ -19,6 +19,7 @@ namespace OpenHome.Av
         void Browse(IMediaDatum aDatum, Action aAction); // null = home
         void List(ITag aTag, Action aAction);
         void Link(ITag aTag, string aValue, Action aAction);
+        void Match(ITag aTag, string aValue, Action aAction);
         void Search(string aValue, Action aAction);
     }
 
