@@ -141,30 +141,67 @@ namespace OpenHome.Av
 
         public override Task Play()
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginPlay((ptr) =>
             {
-                iService.SyncPlay();
+                try
+                {
+                    iService.EndPlay(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         public override Task Play(ISenderMetadata aMetadata)
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginSetSender(aMetadata.Uri, aMetadata.ToString(), (ptr1) =>
             {
-                iService.SyncSetSender(aMetadata.Uri, aMetadata.ToString());
-                iService.SyncPlay();
+                try
+                {
+                    iService.EndSetSender(ptr1);
+                    iService.BeginPlay((ptr2) =>
+                    {
+                        try
+                        {
+                            iService.EndPlay(ptr2);
+                            taskSource.SetResult(true);
+                        }
+                        catch (Exception e)
+                        {
+                            taskSource.SetException(e);
+                        }
+                    });
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         public override Task Stop()
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginStop((ptr) =>
             {
-                iService.SyncStop();
+                try
+                {
+                    iService.EndStop(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         private void HandleMetadataChanged()

@@ -255,56 +255,110 @@ namespace OpenHome.Av
 
         public override Task SetBalance(int aValue)
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginSetBalance(aValue, (ptr) =>
             {
-                iService.SyncSetBalance(aValue);
+                try
+                {
+                    iService.EndSetBalance(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         public override Task SetFade(int aValue)
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginSetFade(aValue, (ptr) =>
             {
-                iService.SyncSetFade(aValue);
+                try
+                {
+                    iService.EndSetFade(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         public override Task SetMute(bool aValue)
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginSetMute(aValue, (ptr) =>
             {
-                iService.SyncSetMute(aValue);
+                try
+                {
+                    iService.EndSetMute(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         public override Task SetVolume(uint aValue)
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginSetVolume(aValue, (ptr) =>
             {
-                iService.SyncSetVolume(aValue);
+                try
+                {
+                    iService.EndSetVolume(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         public override Task VolumeDec()
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginVolumeDec((ptr) =>
             {
-                iService.SyncVolumeDec();
+                try
+                {
+                    iService.EndVolumeDec(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         public override Task VolumeInc()
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginVolumeInc((ptr) =>
             {
-                iService.SyncVolumeInc();
+                try
+                {
+                    iService.EndVolumeInc(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         private void HandleVolumeUnityChanged()

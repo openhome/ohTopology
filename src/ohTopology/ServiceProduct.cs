@@ -400,38 +400,74 @@ namespace OpenHome.Av
 
         public override Task SetSourceIndex(uint aValue)
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginSetSourceIndex(aValue, (ptr) =>
             {
-                iService.SyncSetSourceIndex(aValue);
+                try
+                {
+                    iService.EndSetSourceIndex(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         public override Task SetSourceIndexByName(string aValue)
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginSetSourceIndexByName(aValue, (ptr) =>
             {
-                iService.SyncSetSourceIndexByName(aValue);
+                try
+                {
+                    iService.EndSetSourceIndexByName(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         public override Task SetStandby(bool aValue)
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginSetStandby(aValue, (ptr) =>
             {
-                iService.SyncSetStandby(aValue);
+                try
+                {
+                    iService.EndSetStandby(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         public override Task SetRegistration(string aValue)
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iServiceConfiguration.BeginSetParameter("TuneIn Radio", "Password", aValue, (ptr) =>
             {
-                iServiceConfiguration.SyncSetParameter("TuneIn Radio", "Password", aValue);
+                try
+                {
+                    iServiceConfiguration.EndSetParameter(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         private void CallbackProductId(IntPtr aPtr)

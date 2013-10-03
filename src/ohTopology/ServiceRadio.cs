@@ -359,100 +359,173 @@ namespace OpenHome.Av
 
         public override Task Play()
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginPlay((ptr) =>
             {
-                iService.SyncPlay();
+                try
+                {
+                    iService.EndPlay(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         public override Task Pause()
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginPause((ptr) =>
             {
-                iService.SyncPause();
+                try
+                {
+                    iService.EndPause(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         public override Task Stop()
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginStop((ptr) =>
             {
-                iService.SyncStop();
+                try
+                {
+                    iService.EndStop(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         public override Task SeekSecondAbsolute(uint aValue)
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginSeekSecondAbsolute(aValue, (ptr) =>
             {
-                iService.SyncSeekSecondAbsolute(aValue);
+                try
+                {
+                    iService.EndSeekSecondAbsolute(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         public override Task SeekSecondRelative(int aValue)
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginSeekSecondRelative(aValue, (ptr) =>
             {
-                iService.SyncSeekSecondRelative(aValue);
+                try
+                {
+                    iService.EndSeekSecondRelative(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         public override Task SetId(uint aId, string aUri)
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginSetId(aId, aUri, (ptr) =>
             {
-                iService.SyncSetId(aId, aUri);
+                try
+                {
+                    iService.EndSetId(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         public override Task SetChannel(string aUri, IMediaMetadata aMetadata)
         {
-            Task task = Task.Factory.StartNew(() =>
+            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
+            iService.BeginSetChannel(aUri, iNetwork.TagManager.ToDidlLite(aMetadata), (ptr) =>
             {
-                iService.SyncSetChannel(aUri, Network.TagManager.ToDidlLite(aMetadata));
+                try
+                {
+                    iService.EndSetChannel(ptr);
+                    taskSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+            return taskSource.Task.ContinueWith((t) => { });
         }
 
         private Task<IEnumerable<IIdCacheEntry>> ReadList(IEnumerable<uint> aIdList)
         {
-            Task<IEnumerable<IIdCacheEntry>> task = Task<IEnumerable<IIdCacheEntry>>.Factory.StartNew(() =>
+            TaskCompletionSource<IEnumerable<IIdCacheEntry>> taskSource = new TaskCompletionSource<IEnumerable<IIdCacheEntry>>();
+
+            string idList = string.Empty;
+            foreach(uint id in aIdList)
             {
-                string idList = string.Empty;
-                foreach(uint id in aIdList)
+                idList += string.Format("{0} ", id);
+            }
+            idList.Trim(' ');
+
+            iService.BeginReadList(idList, (ptr) =>
+            {
+                try
                 {
-                    idList += string.Format("{0} ", id);
-                }
-                idList.Trim(' ');
+                    string channelList;
+                    iService.EndReadList(ptr, out channelList);
 
-                string channelList;
-                iService.SyncReadList(idList, out channelList);
+                    List<IIdCacheEntry> entries = new List<IIdCacheEntry>();
 
-                List<IIdCacheEntry> entries = new List<IIdCacheEntry>();
+                    XmlDocument document = new XmlDocument();
+                    document.LoadXml(channelList);
 
-                XmlDocument document = new XmlDocument();
-                document.LoadXml(channelList);
-
-                foreach (uint id in aIdList)
-                {
-                    if (id > 0)
+                    foreach (uint id in aIdList)
                     {
-                        XmlNode n = document.SelectSingleNode(string.Format("/ChannelList/Entry[Id={0}]/Metadata", id));
-                        IMediaMetadata metadata = Network.TagManager.FromDidlLite(n.InnerText);
-                        string uri = metadata[Network.TagManager.Audio.Uri].Value;
-                        entries.Add(new IdCacheEntry(metadata, uri));
+                        if (id > 0)
+                        {
+                            XmlNode n = document.SelectSingleNode(string.Format("/ChannelList/Entry[Id={0}]/Metadata", id));
+                            IMediaMetadata metadata = iNetwork.TagManager.FromDidlLite(n.InnerText);
+                            string uri = metadata[iNetwork.TagManager.Audio.Uri].Value;
+                            entries.Add(new IdCacheEntry(metadata, uri));
+                        }
                     }
-                }
 
-                return entries;
+                    taskSource.SetResult(entries);
+                }
+                catch (Exception e)
+                {
+                    taskSource.SetException(e);
+                }
             });
-            return task;
+
+            return taskSource.Task.ContinueWith((t) => { return t.Result; });
         }
 
         private void HandleIdChanged()
