@@ -52,10 +52,9 @@ namespace OpenHome.Av
                         iCpDeviceLookup.Remove(aDevice);
                         iNetwork.Remove(device);
                         device.Dispose();
+                        aDevice.RemoveRef();
                     }
                 });
-
-                aDevice.RemoveRef();
             });
         }
 

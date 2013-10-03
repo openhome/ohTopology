@@ -145,6 +145,10 @@ namespace OpenHome.Av
                                 iDevices.Add(aDevice, new DeviceInjectorDeviceOpenHome(this, udn, uri, aDevice));
                             }
                         }
+                        else
+                        {
+                            aDevice.RemoveRef();
+                        }
                     }
                     else
                     {
@@ -163,8 +167,6 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    var udn = aDevice.Udn();
-
                     IDisposable device;
 
                     lock (iDevices)
@@ -173,10 +175,9 @@ namespace OpenHome.Av
                         {
                             iDevices.Remove(aDevice);
                             device.Dispose();
+                            aDevice.RemoveRef();
                         }
                     }
-
-                    aDevice.RemoveRef();
                 });
             });
         }
