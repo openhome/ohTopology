@@ -21,6 +21,7 @@ namespace OpenHome.Av
             iDisposed = false;
 
             iNetwork = aNetwork;
+            iLog = aLog;
 
             iPendingSubscriptions = new List<IDevice>();
             iProductLookup = new Dictionary<IDevice, IProxyProduct>();
@@ -137,6 +138,7 @@ namespace OpenHome.Av
         private bool iDisposed;
 
         private INetwork iNetwork;
+        private readonly ILog iLog;
 
         private List<IDevice> iPendingSubscriptions;
         private Dictionary<IDevice, IProxyProduct> iProductLookup;

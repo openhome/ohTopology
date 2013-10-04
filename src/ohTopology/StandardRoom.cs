@@ -815,6 +815,17 @@ namespace OpenHome.Av
                         }
                         break;
                     }
+                    else if (aValue.Count() == 1)
+                    {
+                        if (!iWatchableZoneSender.Value.Enabled)
+                        {
+                            ZoneSender s = iZoneSender;
+                            iZoneSender = new ZoneSender(this, g.Device);
+                            iWatchableZoneSender.Update(iZoneSender);
+                            s.Dispose();
+                        }
+                        break;
+                    }
                 }
             }
             else
