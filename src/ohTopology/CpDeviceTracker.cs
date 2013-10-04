@@ -20,6 +20,7 @@ namespace OpenHome.Av
             {
                 iCpDevice = aCpDevice;
                 iCleanupAction = aCleanupAction;
+                aCpDevice.AddRef();
             }
 
             public void Dispose()
@@ -45,7 +46,6 @@ namespace OpenHome.Av
         /// </param>
         public void AddDevice(CpDevice aCpDevice, Action aCleanupAction)
         {
-            aCpDevice.AddRef();
             if (iCpDeviceLookup.ContainsKey(aCpDevice.Udn()))
             {
                 throw new ArgumentException("Device is already in table.");
