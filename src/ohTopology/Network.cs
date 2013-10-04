@@ -16,6 +16,7 @@ namespace OpenHome.Av
 
         protected readonly DisposeHandler iDisposeHandler;
         protected CpDeviceListUpnpServiceType iDeviceList;
+        bool iSuppressRemove;
 
         protected DeviceInjector(Network aNetwork)
         {
@@ -34,10 +35,15 @@ namespace OpenHome.Av
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
                     Device device = Create(iNetwork, aDevice);
-                    iCpDeviceLookup.AddDevice(aDevice, aCleanupAction: () => {
-                        iNetwork.Remove(device);
-                        device.Dispose();
-                    });
+                    iCpDeviceLookup.AddDevice(
+                        aDevice,
+                        aCleanupAction: () => {
+                            if (!iSuppressRemove)
+                            {
+                                iNetwork.Remove(device);
+                            }
+                            device.Dispose();
+                        });
                     iNetwork.Add(device);
                 });
                 aDevice.RemoveRef();
@@ -78,7 +84,12 @@ namespace OpenHome.Av
             iDeviceList.Dispose();
             iDeviceList = null;
 
-            iNetwork.Execute(() => iCpDeviceLookup.Dispose());
+            iNetwork.Execute(
+                () =>
+                {
+                    iSuppressRemove = true;
+                    iCpDeviceLookup.Dispose();
+                });
         }
     }
 
