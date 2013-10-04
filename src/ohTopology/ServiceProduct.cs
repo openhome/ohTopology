@@ -328,6 +328,10 @@ namespace OpenHome.Av
             {
                 iServiceVolkano.BeginProductId(CallbackProductId);
             }
+            else
+            {
+                iSubscribedVolkanoSource.SetResult(true);
+            }
                 
             return Task.Factory.ContinueWhenAll(
                 new Task[] { iSubscribedSource.Task, iSubscribedConfigurationSource.Task, iSubscribedVolkanoSource.Task },
