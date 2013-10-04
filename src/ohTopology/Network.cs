@@ -12,7 +12,7 @@ namespace OpenHome.Av
     public abstract class DeviceInjector : IDisposable
     {
         private readonly Network iNetwork;
-        private readonly Dictionary<CpDevice, Device> iCpDeviceLookup;
+        private readonly CpDeviceTracker iCpDeviceLookup;
 
         protected readonly DisposeHandler iDisposeHandler;
         protected CpDeviceListUpnpServiceType iDeviceList;
@@ -22,7 +22,7 @@ namespace OpenHome.Av
             iDisposeHandler = new DisposeHandler();
             iNetwork = aNetwork;
 
-            iCpDeviceLookup = new Dictionary<CpDevice, Device>();
+            iCpDeviceLookup = new CpDeviceTracker();
         }
 
         protected void Added(CpDeviceList aList, CpDevice aDevice)
@@ -34,28 +34,23 @@ namespace OpenHome.Av
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
                     Device device = Create(iNetwork, aDevice);
-                    iCpDeviceLookup.Add(aDevice, device);
+                    iCpDeviceLookup.AddDevice(aDevice, aCleanupAction: () => {
+                        iNetwork.Remove(device);
+                        device.Dispose();
+                    });
                     iNetwork.Add(device);
                 });
+                aDevice.RemoveRef();
             });
         }
 
         protected void Removed(CpDeviceList aList, CpDevice aDevice)
         {
-            iNetwork.Schedule(() =>
-            {
-                iDisposeHandler.WhenNotDisposed(() =>
-                {
-                    Device device;
-                    if (iCpDeviceLookup.TryGetValue(aDevice, out device))
-                    {
-                        iCpDeviceLookup.Remove(aDevice);
-                        iNetwork.Remove(device);
-                        device.Dispose();
-                        aDevice.RemoveRef();
-                    }
-                });
-            });
+            string udn = aDevice.Udn();
+
+            iNetwork.Schedule(
+                () => iDisposeHandler.WhenNotDisposed(
+                    () => iCpDeviceLookup.DestroyDeviceByUdn(udn)));
         }
 
         protected virtual Device Create(INetwork aNetwork, CpDevice aDevice)
@@ -83,15 +78,7 @@ namespace OpenHome.Av
             iDeviceList.Dispose();
             iDeviceList = null;
 
-            iNetwork.Execute(() =>
-            {
-                foreach (var d in iCpDeviceLookup)
-                {
-                    d.Value.Dispose();
-                    d.Key.RemoveRef();
-                }
-            });
-            iCpDeviceLookup.Clear();
+            iNetwork.Execute(() => iCpDeviceLookup.Dispose());
         }
     }
 

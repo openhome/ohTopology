@@ -35,7 +35,7 @@ namespace OpenHome.Av
 
         private readonly DisposeHandler iDisposeHandler;
         private readonly EventSupervisor iEventSupervisor;
-        private readonly Dictionary<CpDevice, IDisposable> iDevices;
+        private readonly CpDeviceTracker iDevices;
         private readonly CpDeviceListUpnpServiceType iDeviceList;
 
         public DeviceInjectorMediaEndpoint(Network aNetwork)
@@ -44,7 +44,7 @@ namespace OpenHome.Av
 
             iDisposeHandler = new DisposeHandler();
             iEventSupervisor = new EventSupervisor(iNetwork);
-            iDevices = new Dictionary<CpDevice, IDisposable>();
+            iDevices = new CpDeviceTracker();
             iDeviceList = new CpDeviceListUpnpServiceType("upnp.org", "ContentDirectory", 1, Added, Removed);
         }
 
@@ -142,7 +142,8 @@ namespace OpenHome.Av
 
                             lock (iDevices)
                             {
-                                iDevices.Add(aDevice, new DeviceInjectorDeviceOpenHome(this, udn, uri, aDevice));
+                                var device = new DeviceInjectorDeviceOpenHome(this, udn, uri, aDevice);
+                                iDevices.AddDevice(aDevice, device.Dispose);
                             }
                         }
                         else
@@ -154,32 +155,28 @@ namespace OpenHome.Av
                     {
                         lock (iDevices)
                         {
-                            iDevices.Add(aDevice, new DeviceInjectorDeviceContentDirectory(this, udn, aDevice, xml));
+                            var device = new DeviceInjectorDeviceContentDirectory(this, udn, aDevice, xml);
+                            iDevices.AddDevice(aDevice, device.Dispose);
                         }
                     }
                 });
+                // The CpDeviceTracker adds its own reference. We can drop ours
+                // unconditionally.
+                aDevice.RemoveRef();
             });
         }
 
         private void Removed(CpDeviceList aList, CpDevice aDevice)
         {
-            iNetwork.Schedule(() =>
-            {
-                iDisposeHandler.WhenNotDisposed(() =>
+            var udn = aDevice.Udn();
+            iNetwork.Schedule(() => iDisposeHandler.WhenNotDisposed(
+                () =>
                 {
-                    IDisposable device;
-
                     lock (iDevices)
                     {
-                        if (iDevices.TryGetValue(aDevice, out device))
-                        {
-                            iDevices.Remove(aDevice);
-                            device.Dispose();
-                            aDevice.RemoveRef();
-                        }
+                        iDevices.DestroyDeviceByUdn(udn);
                     }
-                });
-            });
+                }));
         }
 
         public void Refresh()
@@ -198,14 +195,7 @@ namespace OpenHome.Av
 
             iDeviceList.Dispose();
 
-            iNetwork.Execute(() =>
-            {
-                foreach (var device in iDevices)
-                {
-                    device.Value.Dispose();
-                    device.Key.RemoveRef();
-                }
-            });
+            iNetwork.Execute(() => iDevices.Dispose());
 
             iEventSupervisor.Dispose();
         }
