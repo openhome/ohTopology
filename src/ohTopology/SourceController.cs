@@ -24,13 +24,13 @@ namespace OpenHome.Av
 
     public class SourceController
     {
-        public static ISourceController Create(ITopology4Source aSource, Watchable<bool> aHasSourceControl,
+        public static ISourceController Create(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasSourceControl,
             Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<bool> aHasContainer, Watchable<string> aTransportState, Watchable<bool> aCanPause,
             Watchable<bool> aCanSkip, Watchable<bool> aCanSeek, Watchable<bool> aHasPlayMode, Watchable<bool> aShuffle, Watchable<bool> aRepeat)
         {
             if (aSource.Type == "Playlist")
             {
-                return new SourceControllerPlaylist(aSource, aHasSourceControl, aHasInfoNext, aInfoNext, aHasContainer, aTransportState, aCanPause, aCanSkip, aCanSeek, aHasPlayMode, aShuffle, aRepeat);
+                return new SourceControllerPlaylist(aThread, aSource, aHasSourceControl, aHasInfoNext, aInfoNext, aHasContainer, aTransportState, aCanPause, aCanSkip, aCanSeek, aHasPlayMode, aShuffle, aRepeat);
             }
             else if (aSource.Type == "Radio")
             {
