@@ -15,7 +15,7 @@ namespace OpenHome.Av
     class MediaPresetPlaylist : IMediaPreset, IWatcher<uint>, IWatcher<string>
     {
         private readonly DisposeHandler iDisposeHandler;
-        private readonly INetwork iNetwork;
+        private readonly IWatchableThread iThread;
         private readonly uint iIndex;
         private readonly uint iId;
         private readonly IMediaMetadata iMetadata;
@@ -24,39 +24,36 @@ namespace OpenHome.Av
         private readonly Watchable<bool> iPlaying;
         private uint iCurrentId;
         private string iCurrentTransportState;
-        private bool iDisposed;
 
-        public MediaPresetPlaylist(INetwork aNetwork, uint aIndex, uint aId, IMediaMetadata aMetadata, ServicePlaylist aPlaylist)
+        public MediaPresetPlaylist(IWatchableThread aThread, uint aIndex, uint aId, IMediaMetadata aMetadata, ServicePlaylist aPlaylist)
         {
-            iDisposed = false;
             iDisposeHandler = new DisposeHandler();
 
-            iNetwork = aNetwork;
+            iThread = aThread;
             iIndex = aIndex;
             iId = aId;
             iMetadata = aMetadata;
             iPlaylist = aPlaylist;
 
-            iBuffering = new Watchable<bool>(iNetwork, "Buffering", false);
-            iPlaying = new Watchable<bool>(iNetwork, "Playing", false);
-            iNetwork.Schedule(() =>
+            iBuffering = new Watchable<bool>(iThread, "Buffering", false);
+            iPlaying = new Watchable<bool>(iThread, "Playing", false);
+            iThread.Schedule(() =>
             {
-                if (!iDisposed)
+                iDisposeHandler.WhenNotDisposed(() =>
                 {
                     iPlaylist.Id.AddWatcher(this);
                     iPlaylist.TransportState.AddWatcher(this);
-                }
+                });
             });
         }
 
         public void Dispose()
         {
             iDisposeHandler.Dispose();
-            iNetwork.Execute(() =>
+            iThread.Execute(() =>
             {
                 iPlaylist.Id.RemoveWatcher(this);
                 iPlaylist.TransportState.RemoveWatcher(this);
-                iDisposed = true;
             });
             iBuffering.Dispose();
             iPlaying.Dispose();
