@@ -615,20 +615,29 @@ expect Test Room update HasSourceControl False
 expect Test Room update HasSourceControl True
 empty
 
+mock network update 50 product sourceindex 1
+expect Test Room update HasSourceControl False
+expect Test Room update HasSourceControl True
+empty
 mock network update 50 radio id 5
 empty
 mock network update 50 radio transportstate Playing
 expect Test Room update Playing 5 True
+expect Test Room update TransportState Playing
 empty
 
 mock network update 50 radio id 7
 expect Test Room update Playing 5 False
 empty
 mock network update 50 radio transportstate Stopped
+expect Test Room update TransportState Stopped
+empty
 mock network update 50 radio transportstate Playing
 expect Test Room update Playing 7 True
+expect Test Room update TransportState Playing
 empty
 
 mock network update 50 radio transportstate Stopped
 expect Test Room update Playing 7 False
+expect Test Room update TransportState Stopped
 empty
