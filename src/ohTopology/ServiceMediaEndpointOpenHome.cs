@@ -126,8 +126,8 @@ namespace OpenHome.Av
 
         private uint GetTotal(JsonValue aValue)
         {
-            var value = aValue as JsonString;
-            return (uint.Parse(value.Value()));
+            var value = aValue as JsonInteger;
+            return ((uint)value.Value);
         }
 
         private IEnumerable<uint> GetAlpha(JsonValue aValue)
@@ -142,8 +142,8 @@ namespace OpenHome.Av
 
         private uint GetAlphaElement(JsonValue aValue)
         {
-            var value = aValue as JsonString;
-            return (uint.Parse(value.Value()));
+            var value = aValue as JsonInteger;
+            return ((uint)value.Value);
         }
 
         private IEnumerable<IMediaDatum> GetData(JsonValue aValue)
@@ -293,7 +293,7 @@ namespace OpenHome.Av
                     {
                         var json = JsonParser.Parse(args.Result) as JsonString;
 
-                        var session = json.Value();
+                        var session = json.Value;
 
                         var refresh = iSessionHandler("me." + iId + "." + session, (id, seq) =>
                         {
@@ -303,7 +303,6 @@ namespace OpenHome.Av
                         iRefreshHandlers.Add(session, refresh);
 
                         tcs.SetResult(session);
-
                     }
                     catch
                     {
