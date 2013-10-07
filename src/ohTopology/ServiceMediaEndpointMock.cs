@@ -153,8 +153,8 @@ namespace OpenHome.Av
 
         private IMediaEndpointClientSnapshot BrowseArtistAlbums(string aArtist)
         {
-            var albums = iMetadata.Where(m => m[iNetwork.TagManager.Audio.Artist] != null)
-                .Where(m => m[iNetwork.TagManager.Audio.Artist].Values.Contains(aArtist))
+            var albums = iMetadata.Where(m => m[iNetwork.TagManager.Audio.AlbumArtist] != null)
+                .Where(m => m[iNetwork.TagManager.Audio.AlbumArtist].Values.Contains(aArtist))
                 .GroupBy(m => m[iNetwork.TagManager.Audio.Album].Value)
                 .Select(m =>
                 {
@@ -435,11 +435,11 @@ namespace OpenHome.Av
                 return (tcs.Task);
             }
 
-            if (aDatum.Type.First() == iNetwork.TagManager.Audio.Artist)
+            if (aDatum.Type.First() == iNetwork.TagManager.Audio.AlbumArtist)
             {
                 // Artist/Album
 
-                var artist = aDatum[iNetwork.TagManager.Audio.Artist].Value;
+                var artist = aDatum[iNetwork.TagManager.Audio.AlbumArtist].Value;
                 tcs.SetResult(BrowseArtistAlbums(artist));
                 return (tcs.Task);
             }

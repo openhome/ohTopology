@@ -100,7 +100,7 @@ namespace TestMediaServer
             iReady.WaitOne();
 
             Do.Assert(session.Snapshot.Alpha == null);
-            Do.Assert(session.Snapshot.Total == 882);
+            Do.Assert(session.Snapshot.Total == 650);
 
             IWatchableFragment<IMediaDatum> fragment = null;
                 
@@ -113,9 +113,9 @@ namespace TestMediaServer
             Do.Assert(fragment.Data.Count() == 1);
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 2);
-            Do.Assert(fragment.Data.ElementAt(0).Type.ElementAt(0) == iNetwork.TagManager.Audio.Artist);
+            Do.Assert(fragment.Data.ElementAt(0).Type.ElementAt(0) == iNetwork.TagManager.Audio.AlbumArtist);
             Do.Assert(fragment.Data.ElementAt(0).Type.ElementAt(1) == iNetwork.TagManager.Audio.Album);
-            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Artist].Value == "Bon Jovi");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumArtist].Value == "Cecilia Bartoli & Bryn Terfel");
 
             iNetwork.Execute(() =>
             {
@@ -125,7 +125,7 @@ namespace TestMediaServer
             iReady.WaitOne();
 
             Do.Assert(session.Snapshot.Alpha == null);
-            Do.Assert(session.Snapshot.Total == 2);
+            Do.Assert(session.Snapshot.Total == 1);
 
             iNetwork.Execute(() =>
             {
@@ -134,9 +134,9 @@ namespace TestMediaServer
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 1);
             Do.Assert(fragment.Data.ElementAt(0).Type.ElementAt(0) == iNetwork.TagManager.Audio.Album);
-            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Artist].Value == "Bon Jovi");
-            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumTitle].Value == "Crossroad");
-            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumArtist].Value == "Bon Jovi");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Artist].Value == "Cecilia Bartoli & Bryn Terfel");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumTitle].Value == "Cecilia & Bryn: Duets");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumArtist].Value == "Cecilia Bartoli & Bryn Terfel");
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumDiscs].Value == "1");
 
             iNetwork.Execute(() =>
@@ -147,7 +147,7 @@ namespace TestMediaServer
             iReady.WaitOne();
 
             Do.Assert(session.Snapshot.Alpha == null);
-            Do.Assert(session.Snapshot.Total == 15);
+            Do.Assert(session.Snapshot.Total == 18);
 
             iNetwork.Execute(() =>
             {
@@ -155,13 +155,13 @@ namespace TestMediaServer
             });
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
-            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Artist].Value == "Bon Jovi");
-            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumTitle].Value == "Crossroad");
-            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumArtist].Value == "Bon Jovi");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Artist].Value == "Cecilia Bartoli");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumTitle].Value == "Cecilia & Bryn: Duets");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumArtist].Value == "Cecilia Bartoli & Bryn Terfel");
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.AlbumDiscs].Value == "1");
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Track].Value == "1");
-            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Title].Value == "Livin' on a prayer");
-            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Duration].Value == "251");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Title].Value == "Le nozze di Figaro: Duet: Cinque...dieci... venti... trenta...");
+            Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Duration].Value == "160");
 
             iNetwork.Execute(() =>
             {
