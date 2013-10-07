@@ -76,6 +76,9 @@ namespace BrowseMediaEndpoint
                         case "l":
                             List(tokens.Skip(1));
                             break;
+                        case "m":
+                            Match(tokens.Skip(1));
+                            break;
                         case "s":
                             Search(tokens.Skip(1));
                             break;
@@ -176,6 +179,60 @@ namespace BrowseMediaEndpoint
                         Console.WriteLine("{0}: {1} items", count, iMediaEndpointSession.Snapshot.Total);
                     });
                 }
+            }
+        }
+
+        private void Match(IEnumerable<string> aTokens)
+        {
+            if (iMediaEndpoint != null)
+            {
+                if (aTokens.Any())
+                {
+                    var tag = iNetwork.TagManager.Audio[aTokens.First()];
+
+                    if (tag != null)
+                    {
+                        Match(tag, aTokens.Skip(1));
+                    }
+                }
+            }
+        }
+
+        private void Match(ITag aTag, IEnumerable<string> aTokens)
+        {
+            if (aTokens.Any())
+            {
+                iWatchableThread.Schedule(() =>
+                {
+                    Match(aTag, aTokens.First());
+                });
+            }
+        }
+
+        private void Match(ITag aTag, string aValue)
+        {
+            try
+            {
+                var sw = new Stopwatch();
+
+                var count = 0;
+
+                sw.Start();
+
+                iMediaEndpointSession.Match(aTag, aValue, () =>
+                {
+                    if (count++ == 0)
+                    {
+                        sw.Stop();
+                        Console.WriteLine("{0}ms", sw.Milliseconds);
+                    }
+
+                    Console.WriteLine("{0}: {1} items", count, iMediaEndpointSession.Snapshot.Total);
+                });
+            }
+            catch
+            {
+                Console.WriteLine("Operation failed");
             }
         }
 
@@ -304,6 +361,8 @@ namespace BrowseMediaEndpoint
                     me.Dispose();
                 });
             }
+
+            Select();
         }
 
         // IDisposable

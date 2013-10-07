@@ -32,6 +32,7 @@ namespace OpenHome.Av
         Task<IMediaEndpointClientSnapshot> Browse(CancellationToken aCancellationToken, string aSession, IMediaDatum aDatum);
         Task<IMediaEndpointClientSnapshot> List(CancellationToken aCancellationToken, string aSession, ITag aTag);
         Task<IMediaEndpointClientSnapshot> Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue);
+        Task<IMediaEndpointClientSnapshot> Match(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue);
         Task<IMediaEndpointClientSnapshot> Search(CancellationToken aCancellationToken, string aSession, string aValue);
         Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount);
     }
@@ -393,6 +394,16 @@ namespace OpenHome.Av
             using (iDisposeHandler.Lock)
             {
                 UpdateSnapshot((c) => iClient.Link(c, iId, aTag, aValue), aAction);
+            }
+        }
+
+        public void Match(ITag aTag, string aValue, Action aAction)
+        {
+            iClient.Assert(); // must be called on the watchable thread
+
+            using (iDisposeHandler.Lock)
+            {
+                UpdateSnapshot((c) => iClient.Match(c, iId, aTag, aValue), aAction);
             }
         }
 

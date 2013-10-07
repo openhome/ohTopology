@@ -126,8 +126,8 @@ namespace OpenHome.Av
 
         private uint GetTotal(JsonValue aValue)
         {
-            var value = aValue as JsonString;
-            return (uint.Parse(value.Value()));
+            var value = aValue as JsonInteger;
+            return ((uint)value.Value);
         }
 
         private IEnumerable<uint> GetAlpha(JsonValue aValue)
@@ -142,8 +142,8 @@ namespace OpenHome.Av
 
         private uint GetAlphaElement(JsonValue aValue)
         {
-            var value = aValue as JsonString;
-            return (uint.Parse(value.Value()));
+            var value = aValue as JsonInteger;
+            return ((uint)value.Value);
         }
 
         private IEnumerable<IMediaDatum> GetData(JsonValue aValue)
@@ -293,7 +293,7 @@ namespace OpenHome.Av
                     {
                         var json = JsonParser.Parse(args.Result) as JsonString;
 
-                        var session = json.Value();
+                        var session = json.Value;
 
                         var refresh = iSessionHandler("me." + iId + "." + session, (id, seq) =>
                         {
@@ -303,7 +303,6 @@ namespace OpenHome.Av
                         iRefreshHandlers.Add(session, refresh);
 
                         tcs.SetResult(session);
-
                     }
                     catch
                     {
@@ -396,6 +395,11 @@ namespace OpenHome.Av
         public Task<IMediaEndpointClientSnapshot> Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
         {
             return (GetSnapshot(aCancellationToken, "link?session={0}&tag={1}&val={2}", aSession, aTag.Id, Encode(aValue)));
+        }
+
+        public Task<IMediaEndpointClientSnapshot> Match(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
+        {
+            return (GetSnapshot(aCancellationToken, "match?session={0}&tag={1}&val={2}", aSession, aTag.Id, Encode(aValue)));
         }
 
         public Task<IMediaEndpointClientSnapshot> Search(CancellationToken aCancellationToken, string aSession, string aValue)

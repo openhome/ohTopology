@@ -19,10 +19,11 @@ namespace OpenHome.Av
         void Browse(IMediaDatum aDatum, Action aAction); // null = home
         void List(ITag aTag, Action aAction);
         void Link(ITag aTag, string aValue, Action aAction);
+        void Match(ITag aTag, string aValue, Action aAction);
         void Search(string aValue, Action aAction);
     }
 
-    public interface IProxyMediaEndpoint : IProxy
+    public interface IProxyMediaEndpointV1
     {
         string Id { get; }
         string Type { get; }
@@ -40,7 +41,106 @@ namespace OpenHome.Av
         string ModelArtwork { get; }
         DateTime Started { get; }
         IEnumerable<string> Attributes { get; }
+    }
+
+    public interface IProxyMediaEndpoint : IProxyMediaEndpointV1, IProxy
+    {
         Task<IMediaEndpointSession> CreateSession();
+    }
+
+    internal class ProxyMediaEndpointV1 : Proxy<ServiceMediaEndpoint>, IProxyMediaEndpoint
+    {
+        public ProxyMediaEndpointV1(ServiceMediaEndpoint aService)
+            : base(aService)
+        {
+        }
+
+        // IProxyMediaEndpoint
+
+        public string Id
+        {
+            get { return (iService.Id); }
+        }
+
+        public string Type
+        {
+            get { return (iService.Type); }
+        }
+
+        public string Name
+        {
+            get { return (iService.Name); }
+        }
+
+        public string Info
+        {
+            get { return (iService.Info); }
+        }
+
+        public string Url
+        {
+            get { return (iService.Url); }
+        }
+
+        public string Artwork
+        {
+            get { return (iService.Artwork); }
+        }
+
+        public string ManufacturerName
+        {
+            get { return (iService.ManufacturerName); }
+        }
+
+        public string ManufacturerInfo
+        {
+            get { return (iService.ManufacturerInfo); }
+        }
+
+        public string ManufacturerUrl
+        {
+            get { return (iService.ManufacturerUrl); }
+        }
+
+        public string ManufacturerArtwork
+        {
+            get { return (iService.ManufacturerArtwork); }
+        }
+
+        public string ModelName
+        {
+            get { return (iService.ModelName); }
+        }
+
+        public string ModelInfo
+        {
+            get { return (iService.ModelInfo); }
+        }
+
+        public string ModelUrl
+        {
+            get { return (iService.ModelUrl); }
+        }
+
+        public string ModelArtwork
+        {
+            get { return (iService.ModelArtwork); }
+        }
+
+        public DateTime Started
+        {
+            get { return (iService.Started); }
+        }
+
+        public IEnumerable<string> Attributes
+        {
+            get { return (iService.Attributes); }
+        }
+
+        public Task<IMediaEndpointSession> CreateSession()
+        {
+            return (iService.CreateSession());
+        }
     }
 
     internal class ProxyMediaEndpoint : Proxy<ServiceMediaEndpoint>, IProxyMediaEndpoint
