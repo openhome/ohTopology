@@ -500,7 +500,7 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, ITopology4Source aValue)
         {
-            iSourceController = SourceController.Create(aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iHasContainer, iTransportState, iCanPause, iCanSkip, iCanSeek, iHasPlayMode, iShuffle, iRepeat);
+            iSourceController = SourceController.Create(iNetwork, aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iHasContainer, iTransportState, iCanPause, iCanSkip, iCanSeek, iHasPlayMode, iShuffle, iRepeat);
         }
 
         public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
@@ -511,7 +511,7 @@ namespace OpenHome.Av
                 iSourceController = null;
             }
 
-            iSourceController = SourceController.Create(aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iHasContainer, iTransportState, iCanPause, iCanSkip, iCanSeek, iHasPlayMode, iShuffle, iRepeat);
+            iSourceController = SourceController.Create(iNetwork, aValue, iHasSourceControl, iHasInfoNext, iInfoNext, iHasContainer, iTransportState, iCanPause, iCanSkip, iCanSeek, iHasPlayMode, iShuffle, iRepeat);
         }
 
         public void ItemClose(string aId, ITopology4Source aValue)

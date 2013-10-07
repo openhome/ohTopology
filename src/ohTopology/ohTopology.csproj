@@ -81,6 +81,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ByteArray.cs" />
+    <Compile Include="CpDeviceTracker.cs" />
+    <Compile Include="CpLinnCoUkSdp1.cs" />
     <Compile Include="MediaEndpointSupervisor.cs" />
     <Compile Include="DeviceMediaEndpointOpenHome.cs" />
     <Compile Include="DeviceMediaEndpointContentDirectory.cs" />
@@ -97,6 +99,7 @@
     <Compile Include="PlaylistWriter.cs" />
     <Compile Include="Service.cs" />
     <Compile Include="Media.cs" />
+    <Compile Include="ServiceSdp.cs" />
     <Compile Include="SourceController.cs" />
     <Compile Include="SourceControllerPlaylist.cs" />
     <Compile Include="SourceControllerRadio.cs" />

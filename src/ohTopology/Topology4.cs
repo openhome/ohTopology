@@ -10,44 +10,41 @@ namespace OpenHome.Av
     class MediaPresetExternal : IMediaPreset, IWatcher<ITopology4Source>
     {
         private readonly DisposeHandler iDisposeHandler;
-        private readonly INetwork iNetwork;
+        private readonly IWatchableThread iThread;
         private readonly uint iIndex;
         private readonly IMediaMetadata iMetadata;
         private readonly Topology4Source iSource;
         private readonly Topology4Group iGroup;
         private readonly Watchable<bool> iBuffering;
         private readonly Watchable<bool> iPlaying;
-        private bool iDisposed;
 
-        public MediaPresetExternal(INetwork aNetwork, Topology4Group aGroup, uint aIndex, IMediaMetadata aMetadata, Topology4Source aSource)
+        public MediaPresetExternal(IWatchableThread aThread, Topology4Group aGroup, uint aIndex, IMediaMetadata aMetadata, Topology4Source aSource)
         {
-            iDisposed = false;
             iDisposeHandler = new DisposeHandler();
 
-            iNetwork = aNetwork;
+            iThread = aThread;
             iIndex = aIndex;
             iMetadata = aMetadata;
             iSource = aSource;
             iGroup = aGroup;
 
-            iBuffering = new Watchable<bool>(aNetwork, "Buffering", false);
-            iPlaying = new Watchable<bool>(aNetwork, "Playing", false);
-            aNetwork.Schedule(() =>
+            iBuffering = new Watchable<bool>(aThread, "Buffering", false);
+            iPlaying = new Watchable<bool>(aThread, "Playing", false);
+            aThread.Schedule(() =>
             {
-                if (!iDisposed)
+                iDisposeHandler.WhenNotDisposed(() =>
                 {
                     iGroup.Source.AddWatcher(this);
-                }
+                });
             });
         }
 
         public void Dispose()
         {
             iDisposeHandler.Dispose();
-            iNetwork.Execute(() =>
+            iThread.Execute(() =>
             {
                 iGroup.Source.RemoveWatcher(this);
-                iDisposed = true;
             });
             iBuffering.Dispose();
             iPlaying.Dispose();
@@ -244,7 +241,15 @@ namespace OpenHome.Av
         {
             MediaMetadata metadata = new MediaMetadata();
             metadata.Add(iNetwork.TagManager.Audio.Title, iSource.Name);
-            return new MediaPresetExternal(iNetwork, iGroup, iSource.Index, metadata, this);
+
+            // get the root group of this group
+            Topology4Group group = iGroup;
+            while (group.Parent != null)
+            {
+                group = group.Parent;
+            }
+
+            return new MediaPresetExternal(iNetwork, group, iSource.Index, metadata, this);
         }
 
         public IEnumerable<ITopology4Group> Volumes

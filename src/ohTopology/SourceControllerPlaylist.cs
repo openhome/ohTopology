@@ -7,7 +7,7 @@ namespace OpenHome.Av
 {
     class SourceControllerPlaylist : IWatcher<string>, IWatcher<bool>, IWatcher<IInfoDetails>, IWatcher<IInfoMetadata>, ISourceController
     {
-        public SourceControllerPlaylist(ITopology4Source aSource, Watchable<bool> aHasSourceControl,
+        public SourceControllerPlaylist(IWatchableThread aThread, ITopology4Source aSource, Watchable<bool> aHasSourceControl,
             Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<bool> aHasContainer, Watchable<string> aTransportState, Watchable<bool> aCanPause,
             Watchable<bool> aCanSkip, Watchable<bool> aCanSeek, Watchable<bool> aHasPlayMode, Watchable<bool> aShuffle, Watchable<bool> aRepeat)
         {
@@ -30,6 +30,8 @@ namespace OpenHome.Av
                 if (!iDisposed)
                 {
                     iPlaylist = playlist;
+
+                    iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(aThread, aSource, playlist.Snapshot);
 
                     iHasContainer.Update(true);
                     iCanSkip.Update(true);
@@ -77,6 +79,8 @@ namespace OpenHome.Av
                 iPlaylist.Repeat.RemoveWatcher(this);
                 iPlaylist.TransportState.RemoveWatcher(this);
 
+                iWatchableSnapshot.Dispose();
+
                 iPlaylist.Dispose();
                 iPlaylist = null;
             }
@@ -113,7 +117,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return iPlaylist.Snapshot;
+                return iWatchableSnapshot.Snapshot;
             }
         }
 
@@ -239,6 +243,8 @@ namespace OpenHome.Av
 
         private IProxyPlaylist iPlaylist;
         private IProxyInfo iInfo;
+
+        private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
 
         private Watchable<bool> iHasSourceControl;
         private Watchable<IInfoMetadata> iInfoNext;
