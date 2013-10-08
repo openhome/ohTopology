@@ -708,7 +708,7 @@ namespace OpenHome.Av
                 try
                 {
                     string trackList;
-                    iService.SyncReadList(idList, out trackList);
+                    iService.EndReadList(ptr, out trackList);
 
                     List<IIdCacheEntry> entries = new List<IIdCacheEntry>();
 
