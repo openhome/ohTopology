@@ -146,10 +146,6 @@ namespace OpenHome.Av
                                 iDevices.AddDevice(aDevice, device.Dispose);
                             }
                         }
-                        else
-                        {
-                            aDevice.RemoveRef();
-                        }
                     }
                     else
                     {
