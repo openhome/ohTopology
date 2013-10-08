@@ -176,9 +176,12 @@ namespace OpenHome.Av
 
             iDeviceList.Dispose();
 
-            foreach (var device in iDevices.Values)
+            lock (iDevices)
             {
-                device.Dispose();
+                foreach (var device in iDevices.Values)
+                {
+                    device.Dispose();
+                }
             }
 
             iEventSupervisor.Dispose();
