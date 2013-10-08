@@ -16,36 +16,39 @@ namespace OpenHome.Av
         private readonly IWatchableThread iWatchableThread;
         private readonly DisposeHandler iDisposeHandler;
         private readonly List<Task> iTasks;
+        private readonly object iLock;
+        private Task iTask;
 
         public WatchableScheduler(IWatchableThread aWatchableThread)
         {
             iWatchableThread = aWatchableThread;
             iDisposeHandler = new DisposeHandler();
             iTasks = new List<Task>();
+            iLock = new object();
+            iTask = Task.Factory.StartNew(() => { });
         }
 
         public void Schedule(Action aAction)
         {
             using (iDisposeHandler.Lock)
             {
-                lock (iTasks)
+                lock (iLock)
                 {
-                    Task task = null;
-
-                    task = Task.Factory.StartNew(() =>
+                    iTask = iTask.ContinueWith((t) =>
                     {
-                        lock (iTasks)
-                        {
-                            iTasks.Remove(task);
-                        }
-
-                        iWatchableThread.Schedule(() =>
-                        {
-                            aAction();
-                        });
+                        iWatchableThread.Schedule(aAction);
                     });
+                }
+            }
+        }
 
-                    iTasks.Add(task);
+        public void Wait()
+        {
+            using (iDisposeHandler.Lock)
+            {
+                lock (iLock)
+                {
+                    iTask.Wait();
                 }
             }
         }
@@ -55,7 +58,7 @@ namespace OpenHome.Av
         public void Dispose()
         {
             iDisposeHandler.Dispose();
-            Task.WaitAll(iTasks.ToArray());
+            iTask.Wait();
         }
     }
 
@@ -507,6 +510,8 @@ namespace OpenHome.Av
         {
             bool complete = true;
 
+            iScheduler.Wait();
+
             iThread.Execute(() =>
             {
                 foreach (var device in iDevices.Values)
@@ -540,7 +545,7 @@ namespace OpenHome.Av
                 iScheduler.Schedule(() =>
                 {
                     Device handler = new Device(aDevice);
-                    iDevices.Add(handler.Udn, handler);
+                    iDevices[handler.Udn] = handler;
 
                     foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> kvp in iDeviceLists)
                     {
