@@ -545,7 +545,12 @@ namespace OpenHome.Av
                 iScheduler.Schedule(() =>
                 {
                     Device handler = new Device(aDevice);
-                    iDevices[handler.Udn] = handler;
+                    if (iDevices.ContainsKey(handler.Udn))
+                    {
+                        handler.Dispose();
+                        return;
+                    }
+                    iDevices.Add(handler.Udn, handler);
 
                     foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> kvp in iDeviceLists)
                     {
