@@ -176,12 +176,11 @@ namespace OpenHome.Av
         private readonly Hash iSessionId;
         private readonly Func<IList<uint>, Task<IEnumerable<IIdCacheEntry>>> iFunction;
         private readonly IdCache iCache;
-        private readonly Semaphore iSemaphoreFinished;
-        private readonly Semaphore iSemaphoreCancel;
         private readonly Semaphore iSemaphoreHigh;
         private readonly Queue<Task<IEnumerable<IIdCacheEntry>>> iQueueHigh;
         private readonly Semaphore iSemaphoreLow;
         private readonly Queue<Task<IEnumerable<IIdCacheEntry>>> iQueueLow;
+        private readonly Task iTask;
 
         public IdCacheSession(Hash aSessionId, Func<IList<uint>, Task<IEnumerable<IIdCacheEntry>>> aFunction, IdCache aCache)
         {
@@ -191,33 +190,26 @@ namespace OpenHome.Av
             iFunction = aFunction;
             iCache = aCache;
 
-            iSemaphoreFinished = new Semaphore(0, 1);
-            iSemaphoreCancel = new Semaphore(0, 1);
             iSemaphoreHigh = new Semaphore(0, 2000);
             iQueueHigh = new Queue<Task<IEnumerable<IIdCacheEntry>>>();
             iSemaphoreLow = new Semaphore(0, 2000);
             iQueueLow = new Queue<Task<IEnumerable<IIdCacheEntry>>>();
 
-            Task.Factory.StartNew(() =>
+            iTask = Task.Factory.StartNew(() =>
             {
-                bool exit = false;
-                while (!exit)
+                while (true)
                 {
-                    int result = Semaphore.WaitAny(new WaitHandle[] { iSemaphoreCancel, iSemaphoreHigh, iSemaphoreLow });
+                    int result = Semaphore.WaitAny(new WaitHandle[] { iSemaphoreHigh, iSemaphoreLow });
                     Task<IEnumerable<IIdCacheEntry>> job = null;
                     switch (result)
                     {
                         case 0:
-                            exit = true;
-                            iSemaphoreFinished.Release();
-                            return;
-                        case 1:
                             lock (iQueueHigh)
                             {
                                 job = iQueueHigh.Dequeue();
                             }
                             break;
-                        case 2:
+                        case 1:
                             lock (iQueueLow)
                             {
                                 job = iQueueLow.Dequeue();
@@ -228,8 +220,15 @@ namespace OpenHome.Av
                             break;
                     }
 
-                    job.Start();
-                    job.Wait();
+                    if (job != null)
+                    {
+                        job.Start();
+                        job.Wait();
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
             }, TaskCreationOptions.LongRunning);
         }
@@ -239,41 +238,52 @@ namespace OpenHome.Av
             iDisposeHandler.Dispose();
             iCache.DestroySession(iSessionId);
 
-            iSemaphoreCancel.Release();
-            iSemaphoreFinished.WaitOne();
+            lock(iQueueLow)
+            {
+                iQueueLow.Enqueue(null);
+            }
+            iSemaphoreLow.Release();
+
+            iTask.Wait();
         }
 
         public void SetValid(IList<uint> aValid)
         {
-            if (aValid.Count > 0)
+            using (iDisposeHandler.Lock)
             {
-                iCache.SetValid(iSessionId, aValid);
-                foreach (uint id in aValid)
+                if (aValid.Count > 0)
                 {
-                    lock (iQueueLow)
+                    iCache.SetValid(iSessionId, aValid);
+                    foreach (uint id in aValid)
                     {
-                        iQueueLow.Enqueue(CreateJob(new List<uint>(new uint[] { id })));
+                        lock (iQueueLow)
+                        {
+                            iQueueLow.Enqueue(CreateJob(new List<uint>(new uint[] { id })));
+                        }
+                        iSemaphoreLow.Release();
                     }
-                    iSemaphoreLow.Release();
                 }
             }
         }
 
         public Task<IEnumerable<IIdCacheEntry>> Entries(IEnumerable<uint> aIds)
         {
-            Task<IEnumerable<IIdCacheEntry>> task = Task<IEnumerable<IIdCacheEntry>>.Factory.StartNew(() =>
+            using (iDisposeHandler.Lock)
             {
-                Task<IEnumerable<IIdCacheEntry>> job = CreateJob(aIds);
-
-                lock (iQueueHigh)
+                Task<IEnumerable<IIdCacheEntry>> task = Task<IEnumerable<IIdCacheEntry>>.Factory.StartNew(() =>
                 {
-                    iQueueHigh.Enqueue(job);
-                }
-                iSemaphoreHigh.Release();
+                    Task<IEnumerable<IIdCacheEntry>> job = CreateJob(aIds);
 
-                return job.Result;
-            });
-            return task;
+                    lock (iQueueHigh)
+                    {
+                        iQueueHigh.Enqueue(job);
+                    }
+                    iSemaphoreHigh.Release();
+
+                    return job.Result;
+                });
+                return task;
+            }
         }
 
         private Task<IEnumerable<IIdCacheEntry>> CreateJob(IEnumerable<uint> aIds)
