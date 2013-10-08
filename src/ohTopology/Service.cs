@@ -10,13 +10,13 @@ namespace OpenHome.Av
 {
     public interface IService : IMockable, IDisposable
     {
-        void Create<T>(Action<T> aCallback) where T : IProxy;
+        void Create<T>(Action<T> aCallback, IDevice aDevice) where T : IProxy;
     }
 
     public abstract class Service : IService, IWatchableThread
     {
         protected readonly INetwork iNetwork;
-        private readonly IDevice iDevice;
+        private readonly IInjectorDevice iDevice;
 
         private readonly CancellationTokenSource iCancelSubscribe;
         private readonly ManualResetEvent iSubscribed;
@@ -27,7 +27,7 @@ namespace OpenHome.Av
         protected readonly DisposeHandler iDisposeHandler;
         protected Task iSubscribeTask;
 
-        protected Service(INetwork aNetwork, IDevice aDevice)
+        protected Service(INetwork aNetwork, IInjectorDevice aDevice)
         {
             iNetwork = aNetwork;
             iDevice = aDevice;
@@ -98,7 +98,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IDevice Device
+        public IInjectorDevice Device
         {
             get
             {
@@ -109,7 +109,7 @@ namespace OpenHome.Av
             }
         }
 
-        public void Create<T>(Action<T> aCallback) where T : IProxy
+        public void Create<T>(Action<T> aCallback, IDevice aDevice) where T : IProxy
         {
             using (iDisposeHandler.Lock)
             {
@@ -139,7 +139,7 @@ namespace OpenHome.Av
                         {
                             iNetwork.Schedule(() =>
                             {
-                                aCallback((T)OnCreate(iDevice));
+                                aCallback((T)OnCreate(aDevice));
                             });
                         }
                         else
@@ -159,7 +159,7 @@ namespace OpenHome.Av
                 }
                 else
                 {
-                    aCallback((T)OnCreate(iDevice));
+                    aCallback((T)OnCreate(aDevice));
                 }
             }
         }
@@ -279,10 +279,12 @@ namespace OpenHome.Av
     public class Proxy<T> where T : Service
     {
         protected readonly T iService;
+        private readonly IDevice iDevice;
 
-        protected Proxy(T aService)
+        protected Proxy(T aService, IDevice aDevice)
         {
             iService = aService;
+            iDevice = aDevice;
         }
 
         // IProxy
@@ -291,7 +293,7 @@ namespace OpenHome.Av
         {
             get
             {
-                return (iService.Device);
+                return (iDevice);
             }
         }
 

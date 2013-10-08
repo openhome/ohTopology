@@ -19,7 +19,7 @@ namespace OpenHome.Av
 
     public abstract class ServiceTime : Service
     {
-        protected ServiceTime(INetwork aNetwork, IDevice aDevice)
+        protected ServiceTime(INetwork aNetwork, IInjectorDevice aDevice)
             : base(aNetwork, aDevice)
         {
             iDuration = new Watchable<uint>(Network, "Duration", 0);
@@ -39,7 +39,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return new ProxyTime(this);
+            return new ProxyTime(this, aDevice);
         }
 
         public IWatchable<uint> Duration
@@ -64,9 +64,12 @@ namespace OpenHome.Av
 
     class ServiceTimeNetwork : ServiceTime
     {
-        public ServiceTimeNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
+        public ServiceTimeNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
             : base(aNetwork, aDevice)
         {
+            iCpDevice = aCpDevice;
+            iCpDevice.AddRef();
+
             iService = new CpProxyAvOpenhomeOrgTime1(aCpDevice);
 
             iService.SetPropertyDurationChanged(HandleDurationChanged);
@@ -81,6 +84,8 @@ namespace OpenHome.Av
 
             iService.Dispose();
             iService = null;
+
+            iCpDevice.RemoveRef();
         }
 
         protected override Task OnSubscribe()
@@ -141,13 +146,14 @@ namespace OpenHome.Av
             });
         }
 
+        private readonly CpDevice iCpDevice;
         private TaskCompletionSource<bool> iSubscribedSource;
         private CpProxyAvOpenhomeOrgTime1 iService;
     }
 
     class ServiceTimeMock : ServiceTime, IMockable
     {
-        public ServiceTimeMock(INetwork aNetwork, IDevice aDevice, uint aSeconds, uint aDuration)
+        public ServiceTimeMock(INetwork aNetwork, IInjectorDevice aDevice, uint aSeconds, uint aDuration)
             : base(aNetwork, aDevice)
         {
             iDuration.Update(aDuration);
@@ -176,8 +182,8 @@ namespace OpenHome.Av
 
     public class ProxyTime : Proxy<ServiceTime>, IProxyTime
     {
-        public ProxyTime(ServiceTime aService)
-            : base(aService)
+        public ProxyTime(ServiceTime aService, IDevice aDevice)
+            : base(aService, aDevice)
         {
         }
 

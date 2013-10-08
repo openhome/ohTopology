@@ -13,9 +13,9 @@ namespace OpenHome.Av
 {
     public static class DeviceFactory
     {
-        public static Device Create(INetwork aNetwork, CpDevice aDevice)
+        public static IInjectorDevice Create(INetwork aNetwork, CpDevice aDevice)
         {
-            Device device = new Device(aDevice.Udn());
+            InjectorDevice device = new InjectorDevice(aDevice.Udn());
             string value;
             if (aDevice.GetAttribute("Upnp.Service.av-openhome-org.Product", out value))
             {
@@ -73,17 +73,24 @@ namespace OpenHome.Av
                     device.Add<IProxyReceiver>(new ServiceReceiverNetwork(aNetwork, device, aDevice));
                 }
             }
+            if (aDevice.GetAttribute("Upnp.Service.linn-co-uk.Sdp", out value))
+            {
+                if (uint.Parse(value) == 1)
+                {
+                    device.Add<IProxyReceiver>(new ServiceSdpNetwork(aNetwork, device, aDevice));
+                }
+            }
             return device;
         }
 
-        public static Device CreateDs(INetwork aNetwork, string aUdn)
+        public static IInjectorDevice CreateDs(INetwork aNetwork, string aUdn)
         {
             return CreateDs(aNetwork, aUdn, "Main Room", "Mock DS", "Info Time Volume Sender");
         }
 
-        public static Device CreateDs(INetwork aNetwork, string aUdn, string aRoom, string aName, string aAttributes)
+        public static IInjectorDevice CreateDs(INetwork aNetwork, string aUdn, string aRoom, string aName, string aAttributes)
         {
-            Device device = new Device(aUdn);
+            InjectorDevice device = new InjectorDevice(aUdn);
             // add a factory for each type of watchable service
 
             // product service
@@ -134,14 +141,14 @@ namespace OpenHome.Av
             return device;
         }
 
-        public static Device CreateDsm(INetwork aNetwork, string aUdn)
+        public static IInjectorDevice CreateDsm(INetwork aNetwork, string aUdn)
         {
             return CreateDsm(aNetwork, aUdn, "Main Room", "Mock Dsm", "Info Time Volume Sender");
         }
 
-        public static Device CreateDsm(INetwork aNetwork, string aUdn, string aRoom, string aName, string aAttributes)
+        public static IInjectorDevice CreateDsm(INetwork aNetwork, string aUdn, string aRoom, string aName, string aAttributes)
         {
-            Device device = new Device(aUdn);
+            InjectorDevice device = new InjectorDevice(aUdn);
             // add a factory for each type of watchable service
 
             // product service
@@ -199,7 +206,7 @@ namespace OpenHome.Av
             return device;
         }
 
-        public static Device CreateMediaServer(INetwork aNetwork, string aUdn, string aResourceRoot)
+        public static IInjectorDevice CreateMediaServer(INetwork aNetwork, string aUdn, string aResourceRoot)
         {
             return (new DeviceMediaEndpointMock(aNetwork, aUdn, aResourceRoot));
         }

@@ -35,7 +35,7 @@ namespace OpenHome.Av
 
         private readonly DisposeHandler iDisposeHandler;
         private readonly EventSupervisor iEventSupervisor;
-        private readonly CpDeviceTracker iDevices;
+        private readonly Dictionary<string, IDisposable> iDevices;
         private readonly CpDeviceListUpnpServiceType iDeviceList;
 
         public DeviceInjectorMediaEndpoint(Network aNetwork)
@@ -44,7 +44,7 @@ namespace OpenHome.Av
 
             iDisposeHandler = new DisposeHandler();
             iEventSupervisor = new EventSupervisor(iNetwork);
-            iDevices = new CpDeviceTracker();
+            iDevices = new Dictionary<string, IDisposable>();
             iDeviceList = new CpDeviceListUpnpServiceType("upnp.org", "ContentDirectory", 1, Added, Removed);
         }
 
@@ -56,25 +56,18 @@ namespace OpenHome.Av
             }
         }
 
-        internal void AddDevice(Device aDevice)
+        internal void AddDevice(IInjectorDevice aDevice)
         {
             // Console.WriteLine("Add    : {0}", aDevice.Udn);
 
-            iNetwork.Execute(() =>
-            {
-                iNetwork.Add(aDevice);
-            });
+            iNetwork.Add(aDevice);
         }
 
-        internal void RemoveDevice(Device aDevice)
+        internal void RemoveDevice(IInjectorDevice aDevice)
         {
             Console.WriteLine("Remove : {0}", aDevice.Udn);
 
-            iNetwork.Execute(() =>
-            {
-                iNetwork.Remove(aDevice);
-                aDevice.Dispose();
-            });
+            iNetwork.Remove(aDevice);
         }
 
         internal IEventSupervisorSession CreateEventSession(string aEndpoint)
@@ -108,75 +101,63 @@ namespace OpenHome.Av
 
         private void Added(CpDeviceList aList, CpDevice aDevice)
         {
-            aDevice.AddRef();
+            var udn = aDevice.Udn();
 
-            iNetwork.Schedule(() =>
+            string deviceXml;
+
+            aDevice.GetAttribute("Upnp.DeviceXml", out deviceXml);
+
+            var reader = XmlReader.Create(new StringReader(deviceXml));
+
+            var xml = XDocument.Load(reader);
+
+            var elements = xml.Descendants(XName.Get("device", "urn:schemas-upnp-org:device-1-0"));
+
+            var path = GetOpenHomeElementValue(elements, "X_PATH");
+
+            if (path != null)
             {
-                iDisposeHandler.WhenNotDisposed(() =>
+                var presentation = GetDeviceElementValue(elements, "presentationURL");
+
+                if (presentation != null)
                 {
-                    var udn = aDevice.Udn();
+                    var presentationUri = new Uri(presentation);
 
-                    string deviceXml;
+                    // get the uri to the openhome node's property server
 
-                    aDevice.GetAttribute("Upnp.DeviceXml", out deviceXml);
+                    var uri = new Uri(presentationUri, path);
 
-                    var reader = XmlReader.Create(new StringReader(deviceXml));
-
-                    var xml = XDocument.Load(reader);
-
-                    var elements = xml.Descendants(XName.Get("device", "urn:schemas-upnp-org:device-1-0"));
-
-                    var path = GetOpenHomeElementValue(elements, "X_PATH");
-
-                    if (path != null)
+                    lock (iDevices)
                     {
-                        var presentation = GetDeviceElementValue(elements, "presentationURL");
-
-                        if (presentation != null)
-                        {
-                            var presentationUri = new Uri(presentation);
-
-                            // get the uri to the openhome node's property server
-
-                            var uri = new Uri(presentationUri, path);
-
-                            lock (iDevices)
-                            {
-                                var device = new DeviceInjectorDeviceOpenHome(this, udn, uri, aDevice);
-                                iDevices.AddDevice(aDevice, device.Dispose);
-                            }
-                        }
-                        else
-                        {
-                            aDevice.RemoveRef();
-                        }
+                        var device = new DeviceInjectorDeviceOpenHome(this, udn, uri, aDevice);
+                        iDevices.Add(udn, device);
                     }
-                    else
-                    {
-                        lock (iDevices)
-                        {
-                            var device = new DeviceInjectorDeviceContentDirectory(this, udn, aDevice, xml);
-                            iDevices.AddDevice(aDevice, device.Dispose);
-                        }
-                    }
-                });
-                // The CpDeviceTracker adds its own reference. We can drop ours
-                // unconditionally.
-                aDevice.RemoveRef();
-            });
+                }
+            }
+            else
+            {
+                lock (iDevices)
+                {
+                    var device = new DeviceInjectorDeviceContentDirectory(this, udn, aDevice, xml);
+                    iDevices.Add(udn, device);
+                }
+            }
         }
 
         private void Removed(CpDeviceList aList, CpDevice aDevice)
         {
             var udn = aDevice.Udn();
-            iNetwork.Schedule(() => iDisposeHandler.WhenNotDisposed(
-                () =>
+
+            lock (iDevices)
+            {
+                IDisposable device;
+
+                if (iDevices.TryGetValue(udn, out device))
                 {
-                    lock (iDevices)
-                    {
-                        iDevices.DestroyDeviceByUdn(udn);
-                    }
-                }));
+                    device.Dispose();
+                    iDevices.Remove(udn);
+                }
+            }
         }
 
         public void Refresh()
@@ -195,7 +176,10 @@ namespace OpenHome.Av
 
             iDeviceList.Dispose();
 
-            iNetwork.Execute(() => iDevices.Dispose());
+            foreach (var device in iDevices.Values)
+            {
+                device.Dispose();
+            }
 
             iEventSupervisor.Dispose();
         }
@@ -218,7 +202,6 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            iInjector.RemoveDevice(iDevice);
         }
     }
 
@@ -227,23 +210,24 @@ namespace OpenHome.Av
         private readonly DeviceInjectorMediaEndpoint iInjector;
         private readonly string iUdn;
         private readonly Uri iUri;
+        private readonly CpDevice iDevice;
 
-        private Dictionary<string, Device> iEndpoints;
+        private Dictionary<string, IInjectorDevice> iEndpoints;
 
         private IEventSupervisorSession iEventSession;
         private IDisposable iEventMediaEndpoints;
 
         private bool iDisposed;
-        private CpDevice iDevice;
 
         public DeviceInjectorDeviceOpenHome(DeviceInjectorMediaEndpoint aInjector, string aUdn, Uri aUri, CpDevice aDevice)
         {
-            iDevice = aDevice;
             iInjector = aInjector;
             iUdn = aUdn;
             iUri = aUri;
+            iDevice = aDevice;
+            iDevice.AddRef();
 
-            iEndpoints = new Dictionary<string, Device>();
+            iEndpoints = new Dictionary<string, IInjectorDevice>();
 
             iDisposed = false;
 
@@ -388,7 +372,7 @@ namespace OpenHome.Av
 
         private void UpdateEndpointsLocked(JsonObject aEndpoints)
         {
-            var refresh = new Dictionary<string, Device>();
+            var refresh = new Dictionary<string, IInjectorDevice>();
 
             // remove old device
 
@@ -410,7 +394,7 @@ namespace OpenHome.Av
 
             foreach (var entry in aEndpoints)
             {
-                Device device;
+                IInjectorDevice device;
 
                 if (!refresh.TryGetValue(entry.Key, out device))
                 {
@@ -435,16 +419,13 @@ namespace OpenHome.Av
             {
                 iDisposed = true;
 
-                foreach (var entry in iEndpoints)
-                {
-                    iInjector.RemoveDevice(entry.Value);
-                }
-
                 if (iEventSession != null)
                 {
                     iEventMediaEndpoints.Dispose();
                     iEventSession.Dispose();
                 }
+
+                iDevice.RemoveRef();
             }
         }
     }

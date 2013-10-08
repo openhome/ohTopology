@@ -43,7 +43,7 @@ namespace OpenHome.Av
 
     public abstract class ServiceProduct : Service
     {
-        protected ServiceProduct(INetwork aNetwork, IDevice aDevice)
+        protected ServiceProduct(INetwork aNetwork, IInjectorDevice aDevice)
             : base(aNetwork, aDevice)
         {
             iRoom = new Watchable<string>(Network, "Room", string.Empty);
@@ -79,7 +79,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return new ProxyProduct(this);
+            return new ProxyProduct(this, aDevice);
         }
 
         // IServiceProduct methods
@@ -267,9 +267,12 @@ namespace OpenHome.Av
 
     class ServiceProductNetwork : ServiceProduct
     {
-        public ServiceProductNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
+        public ServiceProductNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
             : base(aNetwork, aDevice)
         {
+            iCpDevice = aCpDevice;
+            iCpDevice.AddRef();
+
             iService = new CpProxyAvOpenhomeOrgProduct1(aCpDevice);
             iServiceConfiguration = new CpProxyLinnCoUkConfiguration1(aCpDevice);
 
@@ -309,6 +312,8 @@ namespace OpenHome.Av
                 iServiceVolkano.Dispose();
                 iServiceVolkano = null;
             }
+
+            iCpDevice.RemoveRef();
         }
 
         protected override Task OnSubscribe()
@@ -583,6 +588,7 @@ namespace OpenHome.Av
             }
         }
 
+        private readonly CpDevice iCpDevice;
         private TaskCompletionSource<bool> iSubscribedSource;
         private TaskCompletionSource<bool> iSubscribedConfigurationSource;
         private TaskCompletionSource<bool> iSubscribedVolkanoSource;
@@ -698,7 +704,7 @@ namespace OpenHome.Av
 
     class ServiceProductMock : ServiceProduct
     {
-        public ServiceProductMock(INetwork aNetwork, IDevice aDevice, string aRoom, string aName, uint aSourceIndex, SourceXml aSourceXmlFactory, bool aStandby,
+        public ServiceProductMock(INetwork aNetwork, IInjectorDevice aDevice, string aRoom, string aName, uint aSourceIndex, SourceXml aSourceXmlFactory, bool aStandby,
             string aAttributes, string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl, string aModelImageUri, string aModelInfo, string aModelName,
             string aModelUrl, string aProductImageUri, string aProductInfo, string aProductUrl, string aProductId)
             : base(aNetwork, aDevice)
@@ -898,8 +904,8 @@ namespace OpenHome.Av
 
     public class ProxyProduct : Proxy<ServiceProduct>, IProxyProduct
     {
-        public ProxyProduct(ServiceProduct aService)
-            : base(aService)
+        public ProxyProduct(ServiceProduct aService, IDevice aDevice)
+            : base(aService, aDevice)
         {
         }
 

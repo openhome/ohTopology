@@ -24,7 +24,7 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    internal class DeviceMediaEndpointContentDirectory : Device
+    internal class DeviceMediaEndpointContentDirectory : InjectorDevice
     {
         private readonly CpDevice iDevice;
         private readonly CpProxyUpnpOrgContentDirectory1 iProxy;
@@ -34,6 +34,7 @@ namespace OpenHome.Av
             : base(aUdn)
         {
             iDevice = aDevice;
+            iDevice.AddRef();
 
             var elements = aXml.Descendants(XName.Get("device", "urn:schemas-upnp-org:device-1-0"));
 
@@ -128,6 +129,7 @@ namespace OpenHome.Av
         {
             iProxy.Dispose();
             base.Dispose();
+            iDevice.RemoveRef();
         }
     }
 }

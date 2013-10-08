@@ -36,7 +36,7 @@ namespace OpenHome.Av
 
     public abstract class ServiceVolume : Service
     {
-        protected ServiceVolume(INetwork aNetwork, IDevice aDevice)
+        protected ServiceVolume(INetwork aNetwork, IInjectorDevice aDevice)
             : base(aNetwork, aDevice)
         {
             iBalance = new Watchable<int>(Network, "Balance", 0);
@@ -80,7 +80,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return new ProxyVolume(this);
+            return new ProxyVolume(this, aDevice);
         }
 
         public IWatchable<int> Balance
@@ -194,9 +194,12 @@ namespace OpenHome.Av
 
     class ServiceVolumeNetwork : ServiceVolume
     {
-        public ServiceVolumeNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
+        public ServiceVolumeNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
             : base(aNetwork, aDevice)
         {
+            iCpDevice = aCpDevice;
+            iCpDevice.AddRef();
+
             iService = new CpProxyAvOpenhomeOrgVolume1(aCpDevice);
 
             iService.SetPropertyBalanceChanged(HandleBalanceChanged);
@@ -217,6 +220,8 @@ namespace OpenHome.Av
 
             iService.Dispose();
             iService = null;
+
+            iCpDevice.RemoveRef();
         }
 
         protected override Task OnSubscribe()
@@ -458,13 +463,14 @@ namespace OpenHome.Av
             });
         }
 
+        private readonly CpDevice iCpDevice;
         private TaskCompletionSource<bool> iSubscribedSource;
         private CpProxyAvOpenhomeOrgVolume1 iService;
     }
 
     class ServiceVolumeMock : ServiceVolume, IMockable
     {
-        public ServiceVolumeMock(INetwork aNetwork, IDevice aDevice, string aId, int aBalance, uint aBalanceMax, int aFade, uint aFadeMax, bool aMute, uint aValue, uint aVolumeLimit, uint aVolumeMax,
+        public ServiceVolumeMock(INetwork aNetwork, IInjectorDevice aDevice, string aId, int aBalance, uint aBalanceMax, int aFade, uint aFadeMax, bool aMute, uint aValue, uint aVolumeLimit, uint aVolumeMax,
             uint aVolumeMilliDbPerStep, uint aVolumeSteps, uint aVolumeUnity)
             : base(aNetwork, aDevice)
         {
@@ -625,8 +631,8 @@ namespace OpenHome.Av
 
     public class ProxyVolume : Proxy<ServiceVolume>, IProxyVolume
     {
-        public ProxyVolume(ServiceVolume aService)
-            : base(aService)
+        public ProxyVolume(ServiceVolume aService, IDevice aDevice)
+            : base(aService, aDevice)
         {
         }
 

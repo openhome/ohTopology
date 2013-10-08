@@ -81,7 +81,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ByteArray.cs" />
-    <Compile Include="CpDeviceTracker.cs" />
     <Compile Include="CpLinnCoUkSdp1.cs" />
     <Compile Include="MediaEndpointSupervisor.cs" />
     <Compile Include="DeviceMediaEndpointOpenHome.cs" />

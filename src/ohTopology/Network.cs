@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Collections;
+using System.Threading;
+using System.Threading.Tasks;
 
 using OpenHome.Os;
 using OpenHome.Os.App;
@@ -9,57 +11,91 @@ using OpenHome.Net.ControlPoint;
 
 namespace OpenHome.Av
 {
+    public class WatchableScheduler : IDisposable
+    {
+        private readonly IWatchableThread iWatchableThread;
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly List<Task> iTasks;
+
+        public WatchableScheduler(IWatchableThread aWatchableThread)
+        {
+            iWatchableThread = aWatchableThread;
+            iDisposeHandler = new DisposeHandler();
+            iTasks = new List<Task>();
+        }
+
+        public void Schedule(Action aAction)
+        {
+            using (iDisposeHandler.Lock)
+            {
+                lock (iTasks)
+                {
+                    Task task = null;
+
+                    task = Task.Factory.StartNew(() =>
+                    {
+                        lock (iTasks)
+                        {
+                            iTasks.Remove(task);
+                        }
+
+                        iWatchableThread.Schedule(() =>
+                        {
+                            aAction();
+                        });
+                    });
+
+                    iTasks.Add(task);
+                }
+            }
+        }
+
+        // IDisposable
+
+        public void Dispose()
+        {
+            iDisposeHandler.Dispose();
+            Task.WaitAll(iTasks.ToArray());
+        }
+    }
+
     public abstract class DeviceInjector : IDisposable
     {
         private readonly Network iNetwork;
-        private readonly CpDeviceTracker iCpDeviceLookup;
+        private readonly Dictionary<string, IInjectorDevice> iDeviceLookup;
 
         protected readonly DisposeHandler iDisposeHandler;
         protected CpDeviceListUpnpServiceType iDeviceList;
-        bool iSuppressRemove;
 
         protected DeviceInjector(Network aNetwork)
         {
             iDisposeHandler = new DisposeHandler();
             iNetwork = aNetwork;
 
-            iCpDeviceLookup = new CpDeviceTracker();
+            iDeviceLookup = new Dictionary<string,IInjectorDevice>();
         }
 
         protected void Added(CpDeviceList aList, CpDevice aDevice)
         {
-            aDevice.AddRef();
-
-            iNetwork.Schedule(() =>
-            {
-                iDisposeHandler.WhenNotDisposed(() =>
-                {
-                    Device device = Create(iNetwork, aDevice);
-                    iCpDeviceLookup.AddDevice(
-                        aDevice,
-                        aCleanupAction: () => {
-                            if (!iSuppressRemove)
-                            {
-                                iNetwork.Remove(device);
-                            }
-                            device.Dispose();
-                        });
-                    iNetwork.Add(device);
-                });
-                aDevice.RemoveRef();
-            });
+            IInjectorDevice device = Create(iNetwork, aDevice);
+            iDeviceLookup.Add(aDevice.Udn(), device);
+            iNetwork.Add(device);
         }
 
         protected void Removed(CpDeviceList aList, CpDevice aDevice)
         {
+            IInjectorDevice device;
+
             string udn = aDevice.Udn();
 
-            iNetwork.Schedule(
-                () => iDisposeHandler.WhenNotDisposed(
-                    () => iCpDeviceLookup.DestroyDeviceByUdn(udn)));
+            if (iDeviceLookup.TryGetValue(udn, out device))
+            {
+                iNetwork.Remove(device);
+                iDeviceLookup.Remove(udn);
+            }
         }
 
-        protected virtual Device Create(INetwork aNetwork, CpDevice aDevice)
+        protected virtual IInjectorDevice Create(INetwork aNetwork, CpDevice aDevice)
         {
             using (iDisposeHandler.Lock)
             {
@@ -83,13 +119,6 @@ namespace OpenHome.Av
 
             iDeviceList.Dispose();
             iDeviceList = null;
-
-            iNetwork.Execute(
-                () =>
-                {
-                    iSuppressRemove = true;
-                    iCpDeviceLookup.Dispose();
-                });
         }
     }
 
@@ -111,30 +140,107 @@ namespace OpenHome.Av
         }
     }
 
+    internal class InjectorDeviceAdapter : IInjectorDevice
+    {
+        private readonly IInjectorDevice iDevice;
+
+        public InjectorDeviceAdapter(IInjectorDevice aDevice)
+        {
+            iDevice = aDevice;
+        }
+
+        public string Udn
+        {
+            get
+            {
+                return iDevice.Udn;
+            }
+        }
+
+        public void Create<T>(Action<T> aCallback, IDevice aDevice) where T : IProxy
+        {
+            iDevice.Create<T>(aCallback, aDevice);
+        }
+
+        public bool HasService(Type aServiceType)
+        {
+            return iDevice.HasService(aServiceType);
+        }
+
+        public bool Wait()
+        {
+            return iDevice.Wait();
+        }
+
+        public void Execute(IEnumerable<string> aValue)
+        {
+            iDevice.Execute(aValue);
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+
+    internal class InjectorDeviceMock : IMockable, IDisposable
+    {
+        private readonly IInjectorDevice iDevice;
+        private IInjectorDevice iOn;
+
+        public InjectorDeviceMock(IInjectorDevice aDevice)
+        {
+            iDevice = aDevice;
+        }
+
+        public IInjectorDevice On()
+        {
+            Do.Assert(iOn == null);
+            iOn = new InjectorDeviceAdapter(iDevice);
+            return iOn;
+        }
+
+        public IInjectorDevice Off()
+        {
+            Do.Assert(iOn != null);
+            
+            var on = iOn;
+            iOn = null;
+
+            return on;
+        }
+
+        public void Dispose()
+        {
+            iDevice.Dispose();
+        }
+
+        public void Execute(IEnumerable<string> aValue)
+        {
+            iDevice.Execute(aValue);
+        }
+    }
+
     public class DeviceInjectorMock : IMockable, IDisposable
     {
         private Network iNetwork;
         private string iResourceRoot;
-        private Dictionary<string, Device> iMockDevices;
+        private Dictionary<string, InjectorDeviceMock> iMockDevices;
 
         public DeviceInjectorMock(Network aNetwork, string aResourceRoot)
         {
             iNetwork = aNetwork;
             iResourceRoot = aResourceRoot;
-            iMockDevices = new Dictionary<string, Device>();
+            iMockDevices = new Dictionary<string, InjectorDeviceMock>();
         }
 
         public void Dispose()
         {
             iNetwork.Execute(() =>
             {
-                foreach (Device d in iMockDevices.Values)
+                foreach (var d in iMockDevices.Values)
                 {
-                    iNetwork.Remove(d);
                     d.Dispose();
                 }
-                iMockDevices.Clear();
-                iMockDevices = null;
             });
         }
 
@@ -190,10 +296,10 @@ namespace OpenHome.Av
 
                     string udn = value.First();
 
-                    Device device;
+                    InjectorDeviceMock device;
                     if (iMockDevices.TryGetValue(udn, out device))
                     {
-                        iNetwork.Add(device);
+                        iNetwork.Add(device.On());
                         return;
                     }
                 }
@@ -203,10 +309,10 @@ namespace OpenHome.Av
 
                     string udn = value.First();
 
-                    Device device;
+                    InjectorDeviceMock device;
                     if (iMockDevices.TryGetValue(udn, out device))
                     {
-                        iNetwork.Remove(device);
+                        iNetwork.Remove(device.Off());
                         return;
                     }
                 }
@@ -216,11 +322,10 @@ namespace OpenHome.Av
 
                     string udn = value.First();
 
-                    Device device;
+                    InjectorDeviceMock device;
                     if (iMockDevices.TryGetValue(udn, out device))
                     {
-                        iNetwork.Remove(device);
-                        iMockDevices.Remove(device.Udn);
+                        iMockDevices.Remove(udn);
                         device.Dispose();
                         return;
                     }
@@ -231,8 +336,7 @@ namespace OpenHome.Av
 
                     string udn = value.First();
 
-                    Device device;
-
+                    InjectorDeviceMock device;
                     if (iMockDevices.TryGetValue(udn, out device))
                     {
                         device.Execute(value.Skip(1));
@@ -244,15 +348,105 @@ namespace OpenHome.Av
             });
         }
 
-        private void Create(Device aDevice)
+        private InjectorDeviceMock Create(IInjectorDevice aDevice)
         {
-            iMockDevices.Add(aDevice.Udn, aDevice);
+            InjectorDeviceMock device = new InjectorDeviceMock(aDevice);
+            iMockDevices.Add(aDevice.Udn, device);
+            return device;
         }
 
-        private void CreateAndAdd(Device aDevice)
+        private void CreateAndAdd(IInjectorDevice aDevice)
         {
-            Create(aDevice);
-            iNetwork.Add(aDevice);
+            InjectorDeviceMock device = Create(aDevice);
+            iNetwork.Add(device.On());
+        }
+    }
+
+    public class Device : IDevice, IDisposable
+    {
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly IInjectorDevice iDevice;
+        private readonly List<Action> iJoiners;
+
+        public Device(IInjectorDevice aDevice)
+        {
+            iDisposeHandler = new DisposeHandler();
+            iDevice = aDevice;
+            iJoiners = new List<Action>();
+        }
+
+        public string Udn
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iDevice.Udn;
+                }
+            }
+        }
+
+        public void Create<T>(Action<T> aCallback) where T : IProxy
+        {
+            using (iDisposeHandler.Lock)
+            {
+                iDevice.Create<T>(aCallback, this);
+            }
+        }
+
+        public void Join(Action aAction)
+        {
+            using (iDisposeHandler.Lock)
+            {
+                iJoiners.Add(aAction);
+            }
+        }
+
+        public void Unjoin(Action aAction)
+        {
+            using (iDisposeHandler.Lock)
+            {
+                iJoiners.Remove(aAction);
+            }
+        }
+
+        public void Dispose()
+        {
+            iDisposeHandler.Dispose();
+
+            foreach (Action action in iJoiners)
+            {
+                action();
+            }
+
+            iDevice.Dispose();
+        }
+
+        /*internal IInjectorDevice Device
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iDevice;
+                }
+            }
+        }*/
+
+        internal bool HasService(Type aServiceType)
+        {
+            using (iDisposeHandler.Lock)
+            {
+                return iDevice.HasService(aServiceType);
+            }
+        }
+
+        internal bool Wait()
+        {
+            using (iDisposeHandler.Lock)
+            {
+                return iDevice.Wait();
+            }
         }
     }
 
@@ -267,23 +461,24 @@ namespace OpenHome.Av
     {
         private readonly List<Exception> iExceptions;
         private readonly IWatchableThread iThread;
-
+        private readonly WatchableScheduler iScheduler;
         private readonly Action iDispose;
         private readonly DisposeHandler iDisposeHandler;
         private readonly IdCache iCache;
         private readonly ITagManager iTagManager;
-        private readonly List<Device> iDevices;
+        private readonly Dictionary<string, Device> iDevices;
         private readonly Dictionary<Type, WatchableUnordered<IDevice>> iDeviceLists;
 
         public Network(uint aMaxCacheEntries, ILog aLog)
         {
             iExceptions = new List<Exception>();
             iThread = new MockThread(ReportException);
+            iScheduler = new WatchableScheduler(iThread);
             iDispose = () => { (iThread as MockThread).Dispose(); };
             iDisposeHandler = new DisposeHandler();
             iCache = new IdCache(aMaxCacheEntries);
             iTagManager = new TagManager();
-            iDevices = new List<Device>();
+            iDevices = new Dictionary<string, Device>();
             iDeviceLists = new Dictionary<Type, WatchableUnordered<IDevice>>();
         }
 
@@ -291,11 +486,12 @@ namespace OpenHome.Av
         {
             iExceptions = new List<Exception>();
             iThread = aWatchableThread;
+            iScheduler = new WatchableScheduler(iThread);
             iDispose = () => { };
             iDisposeHandler = new DisposeHandler();
             iCache = new IdCache(aMaxCacheEntries);
             iTagManager = new TagManager();
-            iDevices = new List<Device>();
+            iDevices = new Dictionary<string, Device>();
             iDeviceLists = new Dictionary<Type, WatchableUnordered<IDevice>>();
         }
 
@@ -313,7 +509,7 @@ namespace OpenHome.Av
 
             iThread.Execute(() =>
             {
-                foreach (Device device in iDevices)
+                foreach (var device in iDevices.Values)
                 {
                     complete &= device.Wait();
                 }
@@ -337,39 +533,48 @@ namespace OpenHome.Av
             }
         }
 
-        public void Add(Device aDevice)
+        internal void Add(IInjectorDevice aDevice)
         {
             using (iDisposeHandler.Lock)
             {
-                Assert();
-
-                iDevices.Add(aDevice);
-
-                foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> kvp in iDeviceLists)
+                iScheduler.Schedule(() =>
                 {
-                    if (aDevice.HasService(kvp.Key))
+                    Device handler = new Device(aDevice);
+                    iDevices.Add(handler.Udn, handler);
+
+                    foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> kvp in iDeviceLists)
                     {
-                        kvp.Value.Add(aDevice);
+                        if (aDevice.HasService(kvp.Key))
+                        {
+                            kvp.Value.Add(handler);
+                        }
                     }
-                }
+                });
             }
         }
 
-        public void Remove(Device aDevice)
+        internal void Remove(IInjectorDevice aDevice)
         {
             using (iDisposeHandler.Lock)
             {
-                Assert();
-
-                iDevices.Remove(aDevice);
-
-                foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> l in iDeviceLists)
+                iScheduler.Schedule(() =>
                 {
-                    if (aDevice.HasService(l.Key))
+                    Device handler;
+
+                    if (iDevices.TryGetValue(aDevice.Udn, out handler))
                     {
-                        l.Value.Remove(aDevice);
+                        foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> kvp in iDeviceLists)
+                        {
+                            if (aDevice.HasService(kvp.Key))
+                            {
+                                kvp.Value.Remove(handler);
+                            }
+                        }
+
+                        iDevices.Remove(handler.Udn);
+                        handler.Dispose();
                     }
-                }
+                });
             }
         }
 
@@ -391,7 +596,7 @@ namespace OpenHome.Av
                 {
                     list = new WatchableUnordered<IDevice>(iThread);
                     iDeviceLists.Add(key, list);
-                    foreach (Device d in iDevices)
+                    foreach (Device d in iDevices.Values)
                     {
                         if (d.HasService(key))
                         {
@@ -448,9 +653,16 @@ namespace OpenHome.Av
         {
             iDisposeHandler.Dispose();
 
+            iScheduler.Dispose();
+
             foreach (WatchableUnordered<IDevice> list in iDeviceLists.Values)
             {
                 list.Dispose();
+            }
+
+            foreach (var device in iDevices.Values)
+            {
+                device.Dispose();
             }
 
             iDispose();

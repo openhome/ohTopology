@@ -188,7 +188,7 @@ namespace OpenHome.Av
 
     public abstract class ServiceSdp : Service
     {
-        protected ServiceSdp(INetwork aNetwork, IDevice aDevice)
+        protected ServiceSdp(INetwork aNetwork, IInjectorDevice aDevice)
             : base(aNetwork, aDevice)
         {
             iId = new Watchable<uint>(Network, "Id", 0);
@@ -216,7 +216,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return new ProxySdp(this);
+            return new ProxySdp(this, aDevice);
         }
 
         public IWatchable<uint> Id
@@ -281,9 +281,12 @@ namespace OpenHome.Av
 
     class ServiceSdpNetwork : ServiceSdp
     {
-        public ServiceSdpNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
+        public ServiceSdpNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
             : base(aNetwork, aDevice)
         {
+            iCpDevice = aCpDevice;
+            iCpDevice.AddRef();
+
             iService = new CpProxyLinnCoUkSdp1(aCpDevice);
 
             iService.SetPropertyTrackChanged(HandleIdChanged);
@@ -301,6 +304,8 @@ namespace OpenHome.Av
 
             iService.Dispose();
             iService = null;
+
+            iCpDevice.RemoveRef();
         }
 
         protected override Task OnSubscribe()
@@ -630,6 +635,7 @@ namespace OpenHome.Av
             });
         }
 
+        private readonly CpDevice iCpDevice;
         private TaskCompletionSource<bool> iSubscribedSource;
         private CpProxyLinnCoUkSdp1 iService;
     }
@@ -684,7 +690,7 @@ namespace OpenHome.Av
         private MediaSnapshot<IMediaPreset> iMediaSnapshot;
         private uint iTrackCount;
 
-        public ServiceSdpMock(INetwork aNetwork, IDevice aDevice, uint aId, uint aTrackCount, bool aRepeat, bool aShuffle, string aTransportState)
+        public ServiceSdpMock(INetwork aNetwork, IInjectorDevice aDevice, uint aId, uint aTrackCount, bool aRepeat, bool aShuffle, string aTransportState)
             : base(aNetwork, aDevice)
         {
             iTrackCount = aTrackCount;
@@ -891,8 +897,8 @@ namespace OpenHome.Av
 
     public class ProxySdp : Proxy<ServiceSdp>, IProxySdp
     {
-        public ProxySdp(ServiceSdp aService)
-            : base(aService)
+        public ProxySdp(ServiceSdp aService, IDevice aDevice)
+            : base(aService, aDevice)
         {
         }
 
