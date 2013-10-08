@@ -87,7 +87,7 @@ namespace OpenHome.Av
 
     public abstract class ServiceSender : Service
     {
-        protected ServiceSender(INetwork aNetwork, IDevice aDevice)
+        protected ServiceSender(INetwork aNetwork, IInjectorDevice aDevice)
             : base(aNetwork, aDevice)
         {
             iAudio = new Watchable<bool>(Network, "Audio", false);
@@ -111,7 +111,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return new ProxySender(this);
+            return new ProxySender(this, aDevice);
         }
 
         public IWatchable<bool> Audio
@@ -164,9 +164,12 @@ namespace OpenHome.Av
 
     class ServiceSenderNetwork : ServiceSender
     {
-        public ServiceSenderNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
+        public ServiceSenderNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
             : base(aNetwork, aDevice)
         {
+            iCpDevice = aCpDevice;
+            iCpDevice.AddRef();
+
             iService = new CpProxyAvOpenhomeOrgSender1(aCpDevice);
 
             iService.SetPropertyAudioChanged(HandleAudioChanged);
@@ -182,6 +185,8 @@ namespace OpenHome.Av
 
             iService.Dispose();
             iService = null;
+
+            iCpDevice.RemoveRef();
         }
 
         protected override Task OnSubscribe()
@@ -257,13 +262,14 @@ namespace OpenHome.Av
             });
         }
 
+        private readonly CpDevice iCpDevice;
         private TaskCompletionSource<bool> iSubscribedSource;
         private CpProxyAvOpenhomeOrgSender1 iService;
     }
 
     class ServiceSenderMock : ServiceSender, IMockable
     {
-        public ServiceSenderMock(INetwork aNetwork, IDevice aDevice, string aAttributes, string aPresentationUrl, bool aAudio, ISenderMetadata aMetadata, string aStatus)
+        public ServiceSenderMock(INetwork aNetwork, IInjectorDevice aDevice, string aAttributes, string aPresentationUrl, bool aAudio, ISenderMetadata aMetadata, string aStatus)
             : base(aNetwork, aDevice)
         {
             iAttributes = aAttributes;
@@ -311,8 +317,8 @@ namespace OpenHome.Av
 
     public class ProxySender : Proxy<ServiceSender>, IProxySender
     {
-        public ProxySender(ServiceSender aService)
-            : base(aService)
+        public ProxySender(ServiceSender aService, IDevice aDevice)
+            : base(aService, aDevice)
         {
         }
 

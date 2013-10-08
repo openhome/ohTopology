@@ -26,7 +26,7 @@ namespace OpenHome.Av
         string GetAudioUri(IMediaMetadata aMetadata);
     }
 
-    public class DeviceMediaEndpointMock : Device, IDeviceMediaEndpointMockUriProvider
+    public class DeviceMediaEndpointMock : InjectorDevice, IDeviceMediaEndpointMockUriProvider
     {
         private readonly INetwork iNetwork;
         private readonly IEnumerable<IMediaMetadata> iMetadata;

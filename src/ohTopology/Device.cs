@@ -15,6 +15,14 @@ namespace OpenHome.Av
         void Create<T>(Action<T> aCallback) where T : IProxy;
     }
 
+    public interface IInjectorDevice : IMockable, IDisposable
+    {
+        string Udn { get; }
+        void Create<T>(Action<T> aCallback, IDevice aDevice) where T : IProxy;
+        bool HasService(Type aServiceType);
+        bool Wait();
+    }
+
     public class ServiceNotFoundException : Exception
     {
         public ServiceNotFoundException()
@@ -32,7 +40,7 @@ namespace OpenHome.Av
         }
     }
 
-    public class Device : IDevice, IMockable, IDisposable
+    public class InjectorDevice : IInjectorDevice
     {
         private string iUdn;
 
@@ -40,7 +48,7 @@ namespace OpenHome.Av
         private readonly List<Action> iJoiners;
         protected readonly Dictionary<Type, Service> iServices;
 
-        public Device(string aUdn)
+        public InjectorDevice(string aUdn)
         {
             iUdn = aUdn;
 
@@ -92,7 +100,7 @@ namespace OpenHome.Av
             }
         }
 
-        public void Create<T>(Action<T> aCallback) where T : IProxy
+        public void Create<T>(Action<T> aCallback, IDevice aDevice) where T : IProxy
         {
             using (iDisposeHandler.Lock)
             {
@@ -101,7 +109,7 @@ namespace OpenHome.Av
                     throw new ServiceNotFoundException("Cannot find service of type " + typeof(T) + " on " + iUdn);
                 }
 
-                iServices[typeof(T)].Create<T>(aCallback);
+                iServices[typeof(T)].Create<T>(aCallback, aDevice);
             }
         }
 

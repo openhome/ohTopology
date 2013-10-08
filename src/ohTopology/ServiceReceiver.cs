@@ -25,7 +25,7 @@ namespace OpenHome.Av
 
     public abstract class ServiceReceiver : Service
     {
-        protected ServiceReceiver(INetwork aNetwork, IDevice aDevice)
+        protected ServiceReceiver(INetwork aNetwork, IInjectorDevice aDevice)
             : base(aNetwork, aDevice)
         {
             iMetadata = new Watchable<IInfoMetadata>(Network, "Metadata", InfoMetadata.Empty);
@@ -45,7 +45,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return new ProxyReceiver(this);
+            return new ProxyReceiver(this, aDevice);
         }
 
         public IWatchable<IInfoMetadata> Metadata
@@ -84,9 +84,12 @@ namespace OpenHome.Av
 
     class ServiceReceiverNetwork : ServiceReceiver
     {
-        public ServiceReceiverNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
+        public ServiceReceiverNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
             : base(aNetwork, aDevice)
         {
+            iCpDevice = aCpDevice;
+            iCpDevice.AddRef();
+
             iService = new CpProxyAvOpenhomeOrgReceiver1(aCpDevice);
 
             iService.SetPropertyMetadataChanged(HandleMetadataChanged);
@@ -101,6 +104,8 @@ namespace OpenHome.Av
 
             iService.Dispose();
             iService = null;
+
+            iCpDevice.RemoveRef();
         }
 
         protected override Task OnSubscribe()
@@ -229,13 +234,14 @@ namespace OpenHome.Av
             });
         }
 
+        private readonly CpDevice iCpDevice;
         private TaskCompletionSource<bool> iSubscribedSource;
         private CpProxyAvOpenhomeOrgReceiver1 iService;
     }
 
     class ServiceReceiverMock : ServiceReceiver, IMockable
     {
-        public ServiceReceiverMock(INetwork aNetwork, IDevice aDevice, string aMetadata, string aProtocolInfo, string aTransportState, string aUri)
+        public ServiceReceiverMock(INetwork aNetwork, IInjectorDevice aDevice, string aMetadata, string aProtocolInfo, string aTransportState, string aUri)
             : base(aNetwork, aDevice)
         {
             iProtocolInfo = aProtocolInfo;
@@ -301,8 +307,8 @@ namespace OpenHome.Av
 
     public class ProxyReceiver : Proxy<ServiceReceiver>, IProxyReceiver
     {
-        public ProxyReceiver(ServiceReceiver aService)
-            : base(aService)
+        public ProxyReceiver(ServiceReceiver aService, IDevice aDevice)
+            : base(aService, aDevice)
         {
         }
 

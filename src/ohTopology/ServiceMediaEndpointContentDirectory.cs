@@ -27,7 +27,7 @@ namespace OpenHome.Av
 
         private readonly MediaEndpointSupervisor iSupervisor;
 
-        public ServiceMediaEndpointContentDirectory(INetwork aNetwork, IDevice aDevice, string aId, string aType, string aName, string aInfo,
+        public ServiceMediaEndpointContentDirectory(INetwork aNetwork, IInjectorDevice aDevice, string aId, string aType, string aName, string aInfo,
             string aUrl, string aArtwork, string aManufacturerName, string aManufacturerInfo, string aManufacturerUrl,
             string aManufacturerArtwork, string aModelName, string aModelInfo, string aModelUrl, string aModelArtwork,
             DateTime aStarted, IEnumerable<string> aAttributes, CpProxyUpnpOrgContentDirectory1 aProxy)
@@ -41,7 +41,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return (new ProxyMediaEndpoint(this));
+            return (new ProxyMediaEndpoint(this, aDevice));
         }
 
         public override Task<IMediaEndpointSession> CreateSession()
@@ -53,7 +53,10 @@ namespace OpenHome.Av
         {
             Schedule(() =>
             {
-                iSupervisor.Refresh();
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iSupervisor.Refresh();
+                });
             });
         }
 

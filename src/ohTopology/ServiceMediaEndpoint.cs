@@ -50,8 +50,8 @@ namespace OpenHome.Av
 
     internal class ProxyMediaEndpointV1 : Proxy<ServiceMediaEndpoint>, IProxyMediaEndpoint
     {
-        public ProxyMediaEndpointV1(ServiceMediaEndpoint aService)
-            : base(aService)
+        public ProxyMediaEndpointV1(ServiceMediaEndpoint aService, IDevice aDevice)
+            : base(aService, aDevice)
         {
         }
 
@@ -145,8 +145,8 @@ namespace OpenHome.Av
 
     internal class ProxyMediaEndpoint : Proxy<ServiceMediaEndpoint>, IProxyMediaEndpoint
     {
-        public ProxyMediaEndpoint(ServiceMediaEndpoint aService)
-            : base(aService)
+        public ProxyMediaEndpoint(ServiceMediaEndpoint aService, IDevice aDevice)
+            : base(aService, aDevice)
         {
         }
 
@@ -257,7 +257,7 @@ namespace OpenHome.Av
         protected readonly DateTime iStarted;
         protected readonly IEnumerable<string> iAttributes;
 
-        protected ServiceMediaEndpoint(INetwork aNetwork, IDevice aDevice, string aId, string aType, string aName, string aInfo,
+        protected ServiceMediaEndpoint(INetwork aNetwork, IInjectorDevice aDevice, string aId, string aType, string aName, string aInfo,
             string aUrl, string aArtwork, string aManufacturerName, string aManufacturerInfo, string aManufacturerUrl,
             string aManufacturerArtwork, string aModelName, string aModelInfo, string aModelUrl, string aModelArtwork,
             DateTime aStarted, IEnumerable<string> aAttributes)

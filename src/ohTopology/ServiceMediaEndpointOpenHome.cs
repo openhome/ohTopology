@@ -28,7 +28,7 @@ namespace OpenHome.Av
         private readonly MediaEndpointSupervisor iSupervisor;
         private readonly Dictionary<string, IDisposable> iRefreshHandlers;
 
-        public ServiceMediaEndpointOpenHome(INetwork aNetwork, IDevice aDevice, string aId, string aType, string aName, string aInfo,
+        public ServiceMediaEndpointOpenHome(INetwork aNetwork, IInjectorDevice aDevice, string aId, string aType, string aName, string aInfo,
             string aUrl, string aArtwork, string aManufacturerName, string aManufacturerInfo, string aManufacturerUrl,
             string aManufacturerArtwork, string aModelName, string aModelInfo, string aModelUrl, string aModelArtwork,
             DateTime aStarted, IEnumerable<string> aAttributes, string aUri, Func<string, Action<string, uint>, IDisposable> aSessionHandler)
@@ -45,7 +45,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return (new ProxyMediaEndpoint(this));
+            return (new ProxyMediaEndpoint(this, aDevice));
         }
 
         public override Task<IMediaEndpointSession> CreateSession()

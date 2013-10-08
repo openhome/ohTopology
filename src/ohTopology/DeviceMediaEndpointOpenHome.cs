@@ -24,7 +24,7 @@ using OpenHome.Net.ControlPoint.Proxies;
 
 namespace OpenHome.Av
 {
-    internal class DeviceMediaEndpointOpenHome : Device
+    internal class DeviceMediaEndpointOpenHome : InjectorDevice
     {
         private int kVersionMin = 1;
         private int kVersionMax = 1;

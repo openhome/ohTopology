@@ -186,7 +186,7 @@ namespace OpenHome.Av
 
     public abstract class ServiceRadio : Service
     {
-        protected ServiceRadio(INetwork aNetwork, IDevice aDevice)
+        protected ServiceRadio(INetwork aNetwork, IInjectorDevice aDevice)
             : base(aNetwork, aDevice)
         {
             iId = new Watchable<uint>(aNetwork, "Id", 0);
@@ -210,7 +210,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return new ProxyRadio(this);
+            return new ProxyRadio(this, aDevice);
         }
         
         public IWatchable<uint> Id
@@ -281,9 +281,12 @@ namespace OpenHome.Av
 
     class ServiceRadioNetwork : ServiceRadio
     {
-        public ServiceRadioNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
+        public ServiceRadioNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
             : base(aNetwork, aDevice)
         {
+            iCpDevice = aCpDevice;
+            iCpDevice.AddRef();
+
             iService = new CpProxyAvOpenhomeOrgRadio1(aCpDevice);
 
             iService.SetPropertyIdChanged(HandleIdChanged);
@@ -302,6 +305,8 @@ namespace OpenHome.Av
 
             iService.Dispose();
             iService = null;
+
+            iCpDevice.RemoveRef();
         }
 
         protected override Task OnSubscribe()
@@ -582,6 +587,7 @@ namespace OpenHome.Av
             });
         }
 
+        private readonly CpDevice iCpDevice;
         private TaskCompletionSource<bool> iSubscribedSource;
         private CpProxyAvOpenhomeOrgRadio1 iService;
         private IIdCacheSession iCacheSession;
@@ -648,7 +654,7 @@ namespace OpenHome.Av
         private IList<IMediaMetadata> iPresets;
         private List<uint> iIdArray;
 
-        public ServiceRadioMock(INetwork aNetwork, IDevice aDevice, uint aId, IList<IMediaMetadata> aPresets, IInfoMetadata aMetadata, string aProtocolInfo, string aTransportState, uint aChannelsMax)
+        public ServiceRadioMock(INetwork aNetwork, IInjectorDevice aDevice, uint aId, IList<IMediaMetadata> aPresets, IInfoMetadata aMetadata, string aProtocolInfo, string aTransportState, uint aChannelsMax)
             : base(aNetwork, aDevice)
         {
             iChannelsMax = aChannelsMax;
@@ -887,8 +893,8 @@ namespace OpenHome.Av
 
     public class ProxyRadio : Proxy<ServiceRadio>, IProxyRadio
     {
-        public ProxyRadio(ServiceRadio aService)
-            : base(aService)
+        public ProxyRadio(ServiceRadio aService, IDevice aDevice)
+            : base(aService, aDevice)
         {
         }
 

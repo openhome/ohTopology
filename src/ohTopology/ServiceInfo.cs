@@ -179,7 +179,7 @@ namespace OpenHome.Av
 
     public abstract class ServiceInfo : Service
     {
-        protected ServiceInfo(INetwork aNetwork, IDevice aDevice)
+        protected ServiceInfo(INetwork aNetwork, IInjectorDevice aDevice)
             : base(aNetwork, aDevice)
         {
             iDetails = new Watchable<IInfoDetails>(Network, "Details", new InfoDetails());
@@ -203,7 +203,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return new ProxyInfo(this);
+            return new ProxyInfo(this, aDevice);
         }
 
         public IWatchable<IInfoDetails> Details
@@ -237,9 +237,12 @@ namespace OpenHome.Av
 
     class ServiceInfoNetwork : ServiceInfo
     {
-        public ServiceInfoNetwork(INetwork aNetwork, IDevice aDevice, CpDevice aCpDevice)
+        public ServiceInfoNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
             : base(aNetwork, aDevice)
         {
+            iCpDevice = aCpDevice;
+            iCpDevice.AddRef();
+
             iService = new CpProxyAvOpenhomeOrgInfo1(aCpDevice);
 
             iService.SetPropertyBitDepthChanged(HandleDetailsChanged);
@@ -255,6 +258,8 @@ namespace OpenHome.Av
 
             iService.Dispose();
             iService = null;
+
+            iCpDevice.RemoveRef();
         }
 
         protected override Task OnSubscribe()
@@ -345,13 +350,14 @@ namespace OpenHome.Av
             });
         }
 
+        private readonly CpDevice iCpDevice;
         private TaskCompletionSource<bool> iSubscribedSource;
         private CpProxyAvOpenhomeOrgInfo1 iService;
     }
 
     class ServiceInfoMock : ServiceInfo, IMockable
     {
-        public ServiceInfoMock(INetwork aNetwork, IDevice aDevice, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
+        public ServiceInfoMock(INetwork aNetwork, IInjectorDevice aDevice, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
             : base(aNetwork, aDevice)
         {
             iDetails.Update(aDetails);
@@ -435,8 +441,8 @@ namespace OpenHome.Av
 
     public class ProxyInfo : Proxy<ServiceInfo>, IProxyInfo
     {
-        public ProxyInfo(ServiceInfo aService)
-            : base(aService)
+        public ProxyInfo(ServiceInfo aService, IDevice aDevice)
+            : base(aService, aDevice)
         {
         }
 

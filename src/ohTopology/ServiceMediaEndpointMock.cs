@@ -25,7 +25,7 @@ namespace OpenHome.Av
         private readonly IEnumerable<IMediaDatum> iGenres;
         private readonly List<IMediaDatum> iRoot;
 
-        public ServiceMediaEndpointMock(INetwork aNetwork, IDevice aDevice, string aId, string aType, string aName, string aInfo,
+        public ServiceMediaEndpointMock(INetwork aNetwork, IInjectorDevice aDevice, string aId, string aType, string aName, string aInfo,
             string aUrl, string aArtwork, string aManufacturerName, string aManufacturerInfo, string aManufacturerUrl,
             string aManufacturerArtwork, string aModelName, string aModelInfo, string aModelUrl, string aModelArtwork,
             DateTime aStarted, IEnumerable<string> aAttributes, IEnumerable<IMediaMetadata> aMetadata, IDeviceMediaEndpointMockUriProvider aUriProvider)
@@ -91,7 +91,7 @@ namespace OpenHome.Av
 
         public override IProxy OnCreate(IDevice aDevice)
         {
-            return (new ProxyMediaEndpoint(this));
+            return (new ProxyMediaEndpoint(this, aDevice));
         }
 
         public override Task<IMediaEndpointSession> CreateSession()

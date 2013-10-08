@@ -388,6 +388,7 @@ namespace TestMediaServer
                 var path = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
 
                 var device = DeviceFactory.CreateMediaServer(network, "4c494e4e-0026-0f99-0000-000000000000", path);
+                var device2 = new Device(device);
 
                 IProxyMediaEndpoint proxy =null;
 
@@ -397,7 +398,7 @@ namespace TestMediaServer
                     {
                         proxy = p;
                         ready.Set();
-                    });
+                    }, device2);
 
                     ready.WaitOne();
                 }
@@ -409,7 +410,7 @@ namespace TestMediaServer
                 network.Execute(() =>
                 {
                     proxy.Dispose();
-                    device.Dispose();
+                    device2.Dispose();
                 });
 
                 Console.WriteLine("Test completed successfully");
