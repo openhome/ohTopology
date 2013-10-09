@@ -1138,13 +1138,13 @@ namespace OpenHome.Av
         }
     }
 
-    public class StandardRoomWatcherSdp : StandardRoomWatcher
+    public class StandardRoomWatcherDisc : StandardRoomWatcher
     {
         private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
         private ITopology4Source iSource;
         private IProxySdp iSdp;
 
-        public StandardRoomWatcherSdp(IStandardRoom aRoom)
+        public StandardRoomWatcherDisc(IStandardRoom aRoom)
             : base(aRoom)
         {
         }
