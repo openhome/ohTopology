@@ -103,6 +103,7 @@
     <Compile Include="SourceControllerPlaylist.cs" />
     <Compile Include="SourceControllerRadio.cs" />
     <Compile Include="SourceControllerReceiver.cs" />
+    <Compile Include="SourceSelectorMediaPreset.cs" />
     <Compile Include="StandardRoomInfo.cs" />
     <Compile Include="StandardMedia.cs" />
     <Compile Include="StandardRoom.cs" />

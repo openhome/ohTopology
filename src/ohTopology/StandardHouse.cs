@@ -431,8 +431,6 @@ namespace OpenHome.Av
 
             iNetwork.Execute(() =>
             {
-                iSendersWatcher.Dispose();
-
                 iTopology4.Rooms.RemoveWatcher(this);
 
                 // remove listeners from zones before disposing of zones
@@ -451,6 +449,8 @@ namespace OpenHome.Av
                 {
                     kvp.Value.Dispose();
                 }
+
+                iSendersWatcher.Dispose();
             });
             iWatchableRooms.Dispose();
             iRoomLookup.Clear();

@@ -680,6 +680,8 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, IEnumerable<ITopology4Root> aValue)
         {
+            Do.Assert(iWatchableSources == null);
+
             iWatchableSources = new Watchable<IEnumerable<ITopology4Source>>(iNetwork, "Sources", new List<ITopology4Source>());
 
             iRoots = aValue;

@@ -8,288 +8,6 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    class SourceSelectorMediaPreset : IMediaPreset
-    {
-        class MediaPresetPlaying : IWatcher<bool>, IDisposable
-        {
-            private readonly DisposeHandler iDisposeHandler;
-            private readonly IMediaPreset iPreset;
-            private readonly Action iAction;
-            private bool iPlaying;
-
-            public MediaPresetPlaying(IWatchableThread aThread, IMediaPreset aPreset, Action aAction)
-            {
-                iDisposeHandler = new DisposeHandler();
-                iPreset = aPreset;
-                iAction = aAction;
-
-                aThread.Schedule(() =>
-                {
-                    iDisposeHandler.WhenNotDisposed(() =>
-                    {
-                        iPreset.Playing.AddWatcher(this);
-                    });
-                });
-            }
-
-            public void Dispose()
-            {
-                iDisposeHandler.Dispose();
-
-                iPreset.Playing.RemoveWatcher(this);
-            }
-
-            public bool Playing
-            {
-                get
-                {
-                    return iPlaying;
-                }
-            }
-
-            public void ItemOpen(string aId, bool aValue)
-            {
-                iPlaying = aValue;
-                iAction();
-            }
-
-            public void ItemUpdate(string aId, bool aValue, bool aPrevious)
-            {
-                iPlaying = aValue;
-                iAction();
-            }
-
-            public void ItemClose(string aId, bool aValue)
-            {
-            }
-        }
-
-        private readonly DisposeHandler iDisposeHandler;
-        private readonly IWatchableThread iThread;
-        private readonly IMediaPreset iSource;
-        private readonly MediaPresetPlaying iSourcePlaying;
-        private readonly IMediaPreset iPreset;
-        private readonly MediaPresetPlaying iPresetPlaying;
-        private readonly Watchable<bool> iPlaying;
-
-        public SourceSelectorMediaPreset(IWatchableThread aThread, ITopology4Source aSource, IMediaPreset aPreset)
-        {
-            iDisposeHandler = new DisposeHandler();
-            iThread = aThread;
-            iSource = aSource.CreatePreset();
-            iPreset = aPreset;
-
-            iPlaying = new Watchable<bool>(iThread, "Playing", false);
-
-            iSourcePlaying = new MediaPresetPlaying(iThread, iSource, UpdatePlaying);
-            iPresetPlaying = new MediaPresetPlaying(iThread, iPreset, UpdatePlaying);
-        }
-
-        public void Dispose()
-        {
-            iDisposeHandler.Dispose();
-
-            iThread.Execute(() =>
-            {
-                iSourcePlaying.Dispose();
-                iPresetPlaying.Dispose();
-            });
-
-            iPlaying.Dispose();
-
-            iSource.Dispose();
-            iPreset.Dispose();
-        }
-
-        public uint Index
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iPreset.Index;
-                }
-            }
-        }
-
-        public IMediaMetadata Metadata
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iPreset.Metadata;
-                }
-            }
-        }
-
-        public IWatchable<bool> Buffering
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iPreset.Buffering;
-                }
-            }
-        }
-
-        public IWatchable<bool> Playing
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iPlaying;
-                }
-            }
-        }
-
-        public void Play()
-        {
-            using (iDisposeHandler.Lock)
-            {
-                iSource.Play();
-                iPreset.Play();
-            }
-        }
-
-        private void UpdatePlaying()
-        {
-            bool playing = false;
-            if (iSourcePlaying != null)
-            {
-                playing = iSourcePlaying.Playing;
-            }
-            if (iPresetPlaying != null)
-            {
-                playing &= iPresetPlaying.Playing;
-            }
-            iPlaying.Update(playing);
-        }
-    }
-
-    class SourceSelectorWatchableSnapshot : IWatchableSnapshot<IMediaPreset>
-    {
-        private readonly IWatchableThread iThread;
-        private readonly ITopology4Source iSource;
-        private readonly IWatchableSnapshot<IMediaPreset> iSnapshot;
-
-        public SourceSelectorWatchableSnapshot()
-        {
-        }
-
-        public SourceSelectorWatchableSnapshot(IWatchableThread aThread, ITopology4Source aSource, IWatchableSnapshot<IMediaPreset> aSnapshot)
-        {
-            iThread = aThread;
-            iSource = aSource;
-            iSnapshot = aSnapshot;
-        }
-
-        public uint Total
-        {
-            get
-            {
-                if (iSnapshot == null)
-                {
-                    return 0;
-                }
-
-                return iSnapshot.Total;
-            }
-        }
-
-        public IEnumerable<uint> Alpha
-        {
-            get
-            {
-                if (iSnapshot == null)
-                {
-                    return null;
-                }
-
-                return iSnapshot.Alpha;
-            }
-        }
-
-        public Task<IWatchableFragment<IMediaPreset>> Read(uint aIndex, uint aCount, CancellationToken aCancellationToken)
-        {
-            Do.Assert(iSnapshot != null);
-
-            return iSnapshot.Read(aIndex, aCount, aCancellationToken).ContinueWith((t) =>
-            {
-                List<IMediaPreset> presets = new List<IMediaPreset>();
-
-                foreach(IMediaPreset p in t.Result.Data)
-                {
-                    presets.Add(new SourceSelectorMediaPreset(iThread, iSource, p));
-                }
-
-                IWatchableFragment<IMediaPreset> fragment = new WatchableFragment<IMediaPreset>(aIndex, presets);
-
-                return fragment;
-            });
-        }
-    }
-
-    class WatchableSourceSelectorWatchableSnapshot : IWatcher<IWatchableSnapshot<IMediaPreset>>, IDisposable
-    {
-        private readonly DisposeHandler iDisposeHandler;
-        private readonly IWatchableThread iThread;
-        private readonly Watchable<IWatchableSnapshot<IMediaPreset>> iWatchableSourceSelectorSnapshot;
-        private ITopology4Source iSource;
-        private IWatchable<IWatchableSnapshot<IMediaPreset>> iWatchableSnapshot;
-
-        public WatchableSourceSelectorWatchableSnapshot(IWatchableThread aThread, ITopology4Source aSource, IWatchable<IWatchableSnapshot<IMediaPreset>> aWatchableSnapshot)
-        {
-            iDisposeHandler = new DisposeHandler();
-            iThread = aThread;
-            iSource = aSource;
-            iWatchableSnapshot = aWatchableSnapshot;
-
-            iWatchableSourceSelectorSnapshot = new Watchable<IWatchableSnapshot<IMediaPreset>>(iThread, "Snapshot", new SourceSelectorWatchableSnapshot());
-
-            iWatchableSnapshot.AddWatcher(this);
-        }
-
-        public void Dispose()
-        {
-            iDisposeHandler.Dispose();
-
-            iThread.Execute(() =>
-            {
-                iWatchableSnapshot.RemoveWatcher(this);
-            });
-
-            iWatchableSourceSelectorSnapshot.Dispose();
-        }
-
-        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
-        {
-            get
-            {
-                using (iDisposeHandler.Lock)
-                {
-                    return iWatchableSourceSelectorSnapshot;
-                }
-            }
-        }
-
-        public void ItemOpen(string aId, IWatchableSnapshot<IMediaPreset> aValue)
-        {
-            iWatchableSourceSelectorSnapshot.Update(new SourceSelectorWatchableSnapshot(iThread, iSource, aValue));
-        }
-
-        public void ItemUpdate(string aId, IWatchableSnapshot<IMediaPreset> aValue, IWatchableSnapshot<IMediaPreset> aPrevious)
-        {
-            iWatchableSourceSelectorSnapshot.Update(new SourceSelectorWatchableSnapshot(iThread, iSource, aValue));
-        }
-
-        public void ItemClose(string aId, IWatchableSnapshot<IMediaPreset> aValue)
-        {
-        }
-    }
-
     public interface IStandardRoomWatcher : IDisposable
     {
         IStandardRoom Room { get; }
@@ -622,13 +340,116 @@ namespace OpenHome.Av
         }
     }
 
-    public class StandardRoomWatcherSenders : IStandardRoomWatcher, IWatcher<IEnumerable<ITopology4Source>>
+    public class StandardRoomWatcherSenders : IStandardRoomWatcher, IWatcher<IEnumerable<ITopology4Source>>, IWatcher<IEnumerable<ISenderMetadata>>
     {
+        class SendersMetadataWatcher : IOrderedWatcher<IProxySender>, IWatcher<ISenderMetadata>, IDisposable
+        {
+            private readonly IWatchableOrdered<IProxySender> iSenders;
+            private readonly List<IProxySender> iProxies;
+            private readonly Watchable<IEnumerable<ISenderMetadata>> iMetadata;
+
+            public SendersMetadataWatcher(IWatchableThread aThread, IWatchableOrdered<IProxySender> aSenders)
+            {
+                iSenders = aSenders;
+                iProxies = new List<IProxySender>();
+                iMetadata = new Watchable<IEnumerable<ISenderMetadata>>(aThread, "Metadata", new List<ISenderMetadata>());
+
+                iSenders.AddWatcher(this);
+            }
+
+            public void Dispose()
+            {
+                iSenders.RemoveWatcher(this);
+
+                foreach (IProxySender s in iProxies)
+                {
+                    s.Metadata.RemoveWatcher(this);
+                }
+                iProxies.Clear();
+
+                iMetadata.Dispose();
+            }
+
+            public IWatchable<IEnumerable<ISenderMetadata>> Metadata
+            {
+                get
+                {
+                    return iMetadata;
+                }
+            }
+
+            public void OrderedOpen()
+            {
+            }
+
+            public void OrderedInitialised()
+            {
+            }
+
+            public void OrderedClose()
+            {
+            }
+
+            public void OrderedMove(IProxySender aItem, uint aFrom, uint aTo)
+            {
+            }
+
+            public void OrderedRemove(IProxySender aItem, uint aIndex)
+            {
+                aItem.Metadata.RemoveWatcher(this);
+                iProxies.Remove(aItem);
+            }
+
+            public void OrderedAdd(IProxySender aItem, uint aIndex)
+            {
+                aItem.Metadata.AddWatcher(this);
+                iProxies.Add(aItem);
+            }
+
+            public void ItemOpen(string aId, ISenderMetadata aValue)
+            {
+                List<ISenderMetadata> list = new List<ISenderMetadata>(iMetadata.Value);
+                list.Insert(InsertIndex(list, aValue), aValue);
+                iMetadata.Update(list);
+            }
+
+            public void ItemUpdate(string aId, ISenderMetadata aValue, ISenderMetadata aPrevious)
+            {
+                List<ISenderMetadata> list = new List<ISenderMetadata>(iMetadata.Value);
+                list.Remove(aPrevious);
+                list.Insert(InsertIndex(list, aValue), aValue);
+                iMetadata.Update(list);
+            }
+
+            public void ItemClose(string aId, ISenderMetadata aValue)
+            {
+                List<ISenderMetadata> list = new List<ISenderMetadata>(iMetadata.Value);
+                list.Remove(aValue);
+                iMetadata.Update(list);
+            }
+
+            private int InsertIndex(IList<ISenderMetadata> aList, ISenderMetadata aValue)
+            {
+                int index = 0;
+                foreach (ISenderMetadata m in aList)
+                {
+                    if (aValue.Name.CompareTo(m.Name) < 0)
+                    {
+                        break;
+                    }
+                    ++index;
+                }
+
+                return index;
+            }
+        }
+
         protected readonly DisposeHandler iDisposeHandler;
         protected readonly INetwork iNetwork;
 
         private readonly IStandardRoom iRoom;
         private readonly IWatchable<IEnumerable<ITopology4Source>> iSources;
+        private readonly SendersMetadataWatcher iSendersMetadataWatcher;
 
         private readonly object iLock;
         private bool iIsActive;
@@ -637,7 +458,6 @@ namespace OpenHome.Av
 
         private IProxyReceiver iReceiver;
         private MediaSupervisor<IMediaPreset> iSupervisor;
-        private IWatchableOrdered<IProxySender> iSenders;
 
         public StandardRoomWatcherSenders(IStandardHouse aHouse, IStandardRoom aRoom)
         {
@@ -646,7 +466,7 @@ namespace OpenHome.Av
             iRoom = aRoom;
             iSources = aRoom.Sources;
             iNetwork = aRoom.Network;
-            iSenders = aHouse.Senders;
+            iSendersMetadataWatcher = new SendersMetadataWatcher(iNetwork, aHouse.Senders);
 
             iLock = new object();
             iIsActive = true;
@@ -673,6 +493,7 @@ namespace OpenHome.Av
                     iNetwork.Execute(() =>
                     {
                         iSources.RemoveWatcher(this);
+                        iSendersMetadataWatcher.Metadata.RemoveWatcher(this);
                     });
                     iRoom.Unjoin(SetInactive);
                     iIsActive = false;
@@ -681,13 +502,9 @@ namespace OpenHome.Av
 
             iEnabled.Dispose();
 
-            if (iReceiver != null)
-            {
-                iSupervisor.Dispose();
-                iSupervisor = null;
-                iReceiver.Dispose();
-                iReceiver = null;
-            }
+            iSendersMetadataWatcher.Dispose();
+
+            DeleteProxy();
         }
 
         private void SetInactive()
@@ -700,16 +517,10 @@ namespace OpenHome.Av
                     iActive.Update(false);
 
                     iSources.RemoveWatcher(this);
+                    iSendersMetadataWatcher.Metadata.RemoveWatcher(this);
 
-                    if (iReceiver != null)
-                    {
-                        iSupervisor.Dispose();
-                        iSupervisor = null;
-                        iReceiver.Dispose();
-                        iReceiver = null;
-                    }
+                    DeleteProxy();
 
-                    iRoom.Unjoin(SetInactive);
                     iIsActive = false;
                 }
             }
@@ -768,13 +579,9 @@ namespace OpenHome.Av
         {
             SetEnabled(false);
 
-            if (iReceiver != null)
-            {
-                iSupervisor.Dispose();
-                iSupervisor = null;
-                iReceiver.Dispose();
-                iReceiver = null;
-            }
+            iSendersMetadataWatcher.Metadata.RemoveWatcher(this);
+
+            DeleteProxy();
 
             EvaluateEnabled(aValue);
         }
@@ -782,6 +589,20 @@ namespace OpenHome.Av
         public void ItemClose(string aId, IEnumerable<ITopology4Source> aValue)
         {
             iEnabled.Update(false);
+        }
+
+        public void ItemOpen(string aId, IEnumerable<ISenderMetadata> aValue)
+        {
+            iSupervisor.Update(new SendersSnapshot(iNetwork, iReceiver, aValue));
+        }
+
+        public void ItemUpdate(string aId, IEnumerable<ISenderMetadata> aValue, IEnumerable<ISenderMetadata> aPrevious)
+        {
+            iSupervisor.Update(new SendersSnapshot(iNetwork, iReceiver, aValue));
+        }
+
+        public void ItemClose(string aId, IEnumerable<ISenderMetadata> aValue)
+        {
         }
 
         private void EvaluateEnabled(IEnumerable<ITopology4Source> aValue)
@@ -793,8 +614,9 @@ namespace OpenHome.Av
                     s.Device.Create<IProxyReceiver>((receiver) =>
                     {
                         Do.Assert(iSupervisor == null);
-                        iSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new SendersSnapshot(iNetwork, receiver, iSenders.Values));
+                        iSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new SendersSnapshot(iNetwork, receiver, new List<ISenderMetadata>()));
                         iReceiver = receiver;
+                        iSendersMetadataWatcher.Metadata.AddWatcher(this);
                         SetEnabled(true);
                     });
                     return;
@@ -807,6 +629,17 @@ namespace OpenHome.Av
         private void SetEnabled(bool aValue)
         {
             iEnabled.Update(aValue);
+        }
+
+        private void DeleteProxy()
+        {
+            if (iReceiver != null)
+            {
+                iSupervisor.Dispose();
+                iSupervisor = null;
+                iReceiver.Dispose();
+                iReceiver = null;
+            }
         }
     }
 
@@ -957,22 +790,22 @@ namespace OpenHome.Av
 
     class SendersSnapshot : IMediaClientSnapshot<IMediaPreset>
     {
-        private readonly IEnumerable<IProxySender> iSenders;
+        private readonly IEnumerable<ISenderMetadata> iSendersMetadata;
         private readonly IProxyReceiver iReceiver;
         private readonly INetwork iNetwork;
 
-        public SendersSnapshot(INetwork aNetwork, IProxyReceiver aReceiver, IEnumerable<IProxySender> aSenders)
+        public SendersSnapshot(INetwork aNetwork, IProxyReceiver aReceiver, IEnumerable<ISenderMetadata> aSendersMetadata)
         {
             iNetwork = aNetwork;
             iReceiver = aReceiver;
-            iSenders = aSenders;
+            iSendersMetadata = aSendersMetadata;
         }
 
         public uint Total
         {
             get
             {
-                return ((uint)iSenders.Count());
+                return ((uint)iSendersMetadata.Count());
             }
         }
 
@@ -988,13 +821,13 @@ namespace OpenHome.Av
         {
             uint index = aIndex;
             List<IMediaPreset> presets = new List<IMediaPreset>();
-            iSenders.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v =>
+            iSendersMetadata.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v =>
             {
                 MediaMetadata metadata = new MediaMetadata();
-                metadata.Add(iNetwork.TagManager.Audio.Title, v.Metadata.Value.Name);
-                metadata.Add(iNetwork.TagManager.Audio.Artwork, v.Metadata.Value.ArtworkUri);
-                metadata.Add(iNetwork.TagManager.Audio.Uri, v.Metadata.Value.Uri);
-                presets.Add(new MediaPresetSender(iNetwork, index, index, metadata, v.Metadata.Value, iReceiver));
+                metadata.Add(iNetwork.TagManager.Audio.Title, v.Name);
+                metadata.Add(iNetwork.TagManager.Audio.Artwork, v.ArtworkUri);
+                metadata.Add(iNetwork.TagManager.Audio.Uri, v.Uri);
+                presets.Add(new MediaPresetSender(iNetwork, index, index, metadata, v, iReceiver));
                 ++index;
             });
             return presets;
@@ -1091,7 +924,7 @@ namespace OpenHome.Av
 
         private bool IsExternal(ITopology4Source aSource)
         {
-            return (aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi" || aSource.Type == "Disc");
+            return (aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi");
         }
 
         private bool IsConfigured(ITopology4Source aSource)
@@ -1223,6 +1056,89 @@ namespace OpenHome.Av
             List<IMediaPreset> presets = new List<IMediaPreset>();
             iSources.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v => presets.Add(v.CreatePreset()));
             return presets;
+        }
+    }
+
+    public class StandardRoomWatcherSdp : StandardRoomWatcher
+    {
+        private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
+        private ITopology4Source iSource;
+        private IProxySdp iSdp;
+
+        public StandardRoomWatcherSdp(IStandardRoom aRoom)
+            : base(aRoom)
+        {
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            DeleteProxy();
+        }
+
+        protected override void OnSetInactive()
+        {
+            using (iDisposeHandler.Lock)
+            {
+                DeleteProxy();
+            }
+        }
+
+        public IWatchable<IWatchableSnapshot<IMediaPreset>> Snapshot
+        {
+            get
+            {
+                using (iDisposeHandler.Lock)
+                {
+                    return iWatchableSnapshot.Snapshot;
+                }
+            }
+        }
+
+        protected override void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue)
+        {
+            EvaluateEnabled(aValue);
+        }
+
+        protected override void EvaluateEnabledUpdate(IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
+        {
+            SetEnabled(false);
+
+            DeleteProxy();
+
+            EvaluateEnabled(aValue);
+        }
+
+        private void EvaluateEnabled(IEnumerable<ITopology4Source> aValue)
+        {
+            foreach (ITopology4Source s in aValue)
+            {
+                if (s.Type == "Disc")
+                {
+                    s.Device.Create<IProxySdp>((sdp) =>
+                    {
+                        iSource = s;
+                        iSdp = sdp;
+                        iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, s, sdp.Snapshot);
+                        SetEnabled(true);
+                    });
+                    return;
+                }
+            }
+        }
+
+        private void DeleteProxy()
+        {
+            if (iSdp != null)
+            {
+                iWatchableSnapshot.Dispose();
+                iWatchableSnapshot = null;
+
+                iSdp.Dispose();
+                iSdp = null;
+                iSource = null;
+            }
         }
     }
 }
