@@ -93,9 +93,12 @@ namespace OpenHome.Av
 
         protected void Added(CpDeviceList aList, CpDevice aDevice)
         {
-            IInjectorDevice device = Create(iNetwork, aDevice);
-            iDeviceLookup.Add(aDevice.Udn(), device);
-            iNetwork.Add(device);
+            if (!FilterOut(aDevice))
+            {
+                IInjectorDevice device = Create(iNetwork, aDevice);
+                iDeviceLookup.Add(aDevice.Udn(), device);
+                iNetwork.Add(device);
+            }
         }
 
         protected void Removed(CpDeviceList aList, CpDevice aDevice)
@@ -117,6 +120,11 @@ namespace OpenHome.Av
             {
                 return (DeviceFactory.Create(aNetwork, aDevice));
             }
+        }
+
+        protected virtual bool FilterOut(CpDevice aCpDevice)
+        {
+            return false;
         }
 
         public void Refresh()
@@ -149,6 +157,12 @@ namespace OpenHome.Av
         public DeviceInjectorSender(Network aNetwork)
             : base(aNetwork, "av.openhome.org", "Sender", 1)
         {
+        }
+
+        protected override bool FilterOut(CpDevice aCpDevice)
+        {
+            string value;
+            return aCpDevice.GetAttribute("Upnp.Service.av-openhome-org.Product", out value);
         }
     }
 
