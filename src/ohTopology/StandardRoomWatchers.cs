@@ -823,14 +823,93 @@ namespace OpenHome.Av
             List<IMediaPreset> presets = new List<IMediaPreset>();
             iSendersMetadata.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v =>
             {
+                string room, name;
+                ParseName(v.Name, out room, out name);
+                string fullname = string.Format("{0} ({1})", room, name);
+                if (room == name || string.IsNullOrEmpty(name))
+                {
+                    fullname = room;
+                }
                 MediaMetadata metadata = new MediaMetadata();
-                metadata.Add(iNetwork.TagManager.Audio.Title, v.Name);
+                metadata.Add(iNetwork.TagManager.Audio.Title, fullname);
                 metadata.Add(iNetwork.TagManager.Audio.Artwork, v.ArtworkUri);
                 metadata.Add(iNetwork.TagManager.Audio.Uri, v.Uri);
                 presets.Add(new MediaPresetSender(iNetwork, index, index, metadata, v, iReceiver));
                 ++index;
             });
             return presets;
+        }
+
+        private static bool ParseBrackets(string aMetadata, out string aRoom, out string aName, char aOpen, char aClose)
+        {
+            int open = aMetadata.IndexOf(aOpen);
+
+            if (open >= 0)
+            {
+                int close = aMetadata.IndexOf(aClose);
+
+                if (close > -0)
+                {
+                    int bracketed = close - open - 1;
+
+                    if (bracketed > 1)
+                    {
+                        aRoom = aMetadata.Substring(0, open).Trim();
+                        aName = aMetadata.Substring(open + 1, bracketed).Trim();
+                        return (true);
+                    }
+                }
+            }
+
+            aRoom = aMetadata;
+            aName = aMetadata;
+
+            return (false);
+        }
+
+        private void ParseName(string aMetadata, out string aRoom, out string aName)
+        {
+            if (ParseBrackets(aMetadata, out aRoom, out aName, '(', ')'))
+            {
+                return;
+            }
+
+            if (ParseBrackets(aMetadata, out aRoom, out aName, '[', ']'))
+            {
+                return;
+            }
+
+            if (ParseBrackets(aMetadata, out aRoom, out aName, '<', '>'))
+            {
+                return;
+            }
+
+            int index = aMetadata.IndexOf(':');
+
+            if (index < 0)
+            {
+                index = aMetadata.IndexOf('.');
+            }
+
+            if (index < 0)
+            {
+                aRoom = aMetadata;
+                aName = aMetadata;
+                return;
+            }
+
+            string temp = aMetadata.Substring(0, index).Trim();
+            aName = aMetadata.Substring(index + 1).Trim();
+
+            index = temp.IndexOf('.');
+            if (index < 0)
+            {
+                aRoom = temp;
+            }
+            else
+            {
+                aRoom = temp.Substring(index + 1).Trim();
+            }
         }
     }
 
