@@ -589,6 +589,8 @@ namespace OpenHome.Av
         public void ItemClose(string aId, IEnumerable<ITopology4Source> aValue)
         {
             iEnabled.Update(false);
+
+            DeleteProxy();
         }
 
         public void ItemOpen(string aId, IEnumerable<ISenderMetadata> aValue)

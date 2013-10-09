@@ -40,6 +40,10 @@ namespace OpenHome.Av
             {
                 return new SourceControllerReceiver(aSource, aHasSourceControl, aHasInfoNext, aInfoNext, aHasContainer, aTransportState, aCanPause, aCanSkip, aCanSeek, aHasPlayMode, aShuffle, aRepeat);
             }
+            else if (aSource.Type == "Disc")
+            {
+                return new SourceControllerDisc(aSource, aHasSourceControl, aHasInfoNext, aInfoNext, aHasContainer, aTransportState, aCanPause, aCanSkip, aCanSeek, aHasPlayMode, aShuffle, aRepeat);
+            }
             /*else if (aSource.Type == "NetAux" || aSource.Type == "UpnpAv" || aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi")
             {
                 return new SourceControllerExternal(aSource, aHasSourceControl, aHasInfoNext, aInfoNext, aTransportState, aCanPause, aCanSeek, aCanSkip, aHasPlayMode, aShuffle, aRepeat);
