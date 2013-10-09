@@ -77,7 +77,7 @@ namespace OpenHome.Av
             {
                 if (uint.Parse(value) == 1)
                 {
-                    device.Add<IProxyReceiver>(new ServiceSdpNetwork(aNetwork, device, aDevice));
+                    device.Add<IProxySdp>(new ServiceSdpNetwork(aNetwork, device, aDevice));
                 }
             }
             return device;

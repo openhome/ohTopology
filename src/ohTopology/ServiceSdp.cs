@@ -677,8 +677,8 @@ namespace OpenHome.Av
             for (uint i = aIndex; i < aIndex + aCount; ++i)
             {
                 MediaMetadata metadata = new MediaMetadata();
-                metadata.Add(iNetwork.TagManager.Audio.Title, "Track " + (aIndex + 1));
-                tracks.Add(new MediaPresetSdp(iNetwork, i, i, metadata, iSdp));
+                metadata.Add(iNetwork.TagManager.Audio.Title, "Track " + (i + 1));
+                tracks.Add(new MediaPresetSdp(iNetwork, i, (i + 1), metadata, iSdp));
             }
 
             return tracks;
