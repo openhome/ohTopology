@@ -294,6 +294,7 @@ namespace OpenHome.Av
             iService.SetPropertyRepeatModeChanged(HandleRepeatChanged);
             iService.SetPropertyProgramModeChanged(HandleShuffleChanged);
             iService.SetPropertyTotalTracksChanged(HandleTotalTracksChanged);
+            iService.SetPropertyTrayStateChanged(HandleTrayStateChanged);
 
             iService.SetPropertyInitialEvent(HandleInitialEvent);
         }
@@ -443,18 +444,36 @@ namespace OpenHome.Av
         public override Task Eject()
         {
             TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
-            iService.BeginOpen((ptr) =>
+            if (iTrayState == "Tray Closed" || iTrayState == "Tray Closing")
             {
-                try
+                iService.BeginOpen((ptr) =>
                 {
-                    iService.EndOpen(ptr);
-                    taskSource.SetResult(true);
-                }
-                catch (Exception e)
+                    try
+                    {
+                        iService.EndOpen(ptr);
+                        taskSource.SetResult(true);
+                    }
+                    catch (Exception e)
+                    {
+                        taskSource.SetException(e);
+                    }
+                });
+            }
+            else if (iTrayState == "Tray Open" || iTrayState == "Tray Opening")
+            {
+                iService.BeginClose((ptr) =>
                 {
-                    taskSource.SetException(e);
-                }
-            });
+                    try
+                    {
+                        iService.EndClose(ptr);
+                        taskSource.SetResult(true);
+                    }
+                    catch (Exception e)
+                    {
+                        taskSource.SetException(e);
+                    }
+                });
+            }
             return taskSource.Task.ContinueWith((t) => { });
         }
 
@@ -466,7 +485,18 @@ namespace OpenHome.Av
                 try
                 {
                     iService.EndSetTrack(ptr);
-                    taskSource.SetResult(true);
+                    iService.BeginPlay((ptr2) =>
+                    {
+                        try
+                        {
+                            iService.EndPlay(ptr2);
+                            taskSource.SetResult(true);
+                        }
+                        catch (Exception e)
+                        {
+                            taskSource.SetException(e);
+                        }
+                    });
                 }
                 catch (Exception e)
                 {
@@ -578,7 +608,7 @@ namespace OpenHome.Av
             {
                 id = 0;
             }
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -590,7 +620,7 @@ namespace OpenHome.Av
         private void HandleTransportStateChanged()
         {
             string transportState = iService.PropertyPlayState();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -602,7 +632,7 @@ namespace OpenHome.Av
         private void HandleRepeatChanged()
         {
             string repeat = iService.PropertyRepeatMode();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -614,7 +644,7 @@ namespace OpenHome.Av
         private void HandleShuffleChanged()
         {
             string shuffle = iService.PropertyProgramMode();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -626,11 +656,23 @@ namespace OpenHome.Av
         private void HandleTotalTracksChanged()
         {
             int tracks = iService.PropertyTotalTracks();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iMediaSupervisor.Update(new SdpSnapshot(Network, (uint)tracks, this));
+                    iMediaSupervisor.Update(new SdpSnapshot(iNetwork, (uint)tracks, this));
+                });
+            });
+        }
+
+        private void HandleTrayStateChanged()
+        {
+            string trayState = iService.PropertyTrayState();
+            iNetwork.Schedule(() =>
+            {
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iTrayState = trayState;
                 });
             });
         }
@@ -638,6 +680,7 @@ namespace OpenHome.Av
         private readonly CpDevice iCpDevice;
         private TaskCompletionSource<bool> iSubscribedSource;
         private CpProxyLinnCoUkSdp1 iService;
+        private string iTrayState;
     }
 
     class SdpSnapshot : IMediaClientSnapshot<IMediaPreset>
