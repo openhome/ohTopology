@@ -464,12 +464,34 @@ namespace OpenHome.Av
         public override Task SetRegistration(string aValue)
         {
             TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
-            iServiceConfiguration.BeginSetParameter("TuneIn Radio", "Password", aValue, (ptr) =>
+            iServiceConfiguration.BeginSetParameter("TuneIn Radio", "Test Mode", "true", (ptr) =>
             {
                 try
                 {
                     iServiceConfiguration.EndSetParameter(ptr);
-                    taskSource.SetResult(true);
+                    iServiceConfiguration.BeginSetParameter("TuneIn Radio", "Password", aValue, (ptr2) =>
+                    {
+                        try
+                        {
+                            iServiceConfiguration.EndSetParameter(ptr2);
+                            iServiceConfiguration.BeginSetParameter("TuneIn Radio", "Test Mode", "false", (ptr3) =>
+                            {
+                                try
+                                {
+                                    iServiceConfiguration.EndSetParameter(ptr3);
+                                    taskSource.SetResult(true);
+                                }
+                                catch (Exception e)
+                                {
+                                    taskSource.SetException(e);
+                                }
+                            });
+                        }
+                        catch (Exception e)
+                        {
+                            taskSource.SetException(e);
+                        }
+                    });
                 }
                 catch (Exception e)
                 {
@@ -580,7 +602,7 @@ namespace OpenHome.Av
             System.Xml.XmlNode registration = document.SelectSingleNode("/ParameterList/Parameter[Target=\"TuneIn Radio\" and Name=\"Password\"]/Value");
             if (registration != null && registration.FirstChild != null)
             {
-                iRegistration.Update(registration.Value);
+                iRegistration.Update(registration.FirstChild.Value);
             }
             else
             {
