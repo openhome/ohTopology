@@ -817,7 +817,7 @@ namespace OpenHome.Av
                         }
                         break;
                     }
-                    else if (aValue.Count() == 1)
+                    /*else if (aValue.Count() == 1)
                     {
                         if (!iWatchableZoneSender.Value.Enabled)
                         {
@@ -827,7 +827,7 @@ namespace OpenHome.Av
                             s.Dispose();
                         }
                         break;
-                    }
+                    }*/
                 }
             }
             else
