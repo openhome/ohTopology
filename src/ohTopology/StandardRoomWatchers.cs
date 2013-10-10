@@ -458,6 +458,7 @@ namespace OpenHome.Av
 
         private IProxyReceiver iReceiver;
         private MediaSupervisor<IMediaPreset> iSupervisor;
+        private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
 
         public StandardRoomWatcherSenders(IStandardHouse aHouse, IStandardRoom aRoom)
         {
@@ -565,7 +566,7 @@ namespace OpenHome.Av
             {
                 using (iDisposeHandler.Lock)
                 {
-                    return iSupervisor.Snapshot;
+                    return iWatchableSnapshot.Snapshot;
                 }
             }
         }
@@ -615,8 +616,8 @@ namespace OpenHome.Av
                 {
                     s.Device.Create<IProxyReceiver>((receiver) =>
                     {
-                        Do.Assert(iSupervisor == null);
                         iSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new SendersSnapshot(iNetwork, receiver, new List<ISenderMetadata>()));
+                        iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, s, iSupervisor.Snapshot);
                         iReceiver = receiver;
                         iSendersMetadataWatcher.Metadata.AddWatcher(this);
                         SetEnabled(true);
@@ -637,8 +638,12 @@ namespace OpenHome.Av
         {
             if (iReceiver != null)
             {
+                iWatchableSnapshot.Dispose();
+                iWatchableSnapshot = null;
+
                 iSupervisor.Dispose();
                 iSupervisor = null;
+
                 iReceiver.Dispose();
                 iReceiver = null;
             }
