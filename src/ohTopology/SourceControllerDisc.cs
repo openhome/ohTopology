@@ -5,7 +5,7 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    class SourceControllerDisc : IWatcher<string>, IWatcher<IInfoDetails>, ISourceController
+    class SourceControllerDisc : IWatcher<string>, IWatcher<bool>, IWatcher<IInfoDetails>, ISourceController
     {
         public SourceControllerDisc(ITopology4Source aSource, Watchable<bool> aHasSourceControl,
             Watchable<bool> aHasInfoNext, Watchable<IInfoMetadata> aInfoNext, Watchable<bool> aHasContainer, Watchable<string> aTransportState, Watchable<bool> aCanPause,
@@ -18,6 +18,8 @@ namespace OpenHome.Av
             iCanPause = aCanPause;
             iCanSeek = aCanSeek;
             iTransportState = aTransportState;
+            iShuffle = aShuffle;
+            iRepeat = aRepeat;
 
             aSource.Device.Create<IProxySdp>((sdp) =>
             {
@@ -32,6 +34,8 @@ namespace OpenHome.Av
                     aCanSkip.Update(true);
                     aHasPlayMode.Update(true);
 
+                    iSdp.Shuffle.AddWatcher(this);
+                    iSdp.Repeat.AddWatcher(this);
                     iSdp.TransportState.AddWatcher(this);
 
                     iHasSourceControl.Update(true);
@@ -65,6 +69,8 @@ namespace OpenHome.Av
 
             if (iSdp != null)
             {
+                iSdp.Shuffle.RemoveWatcher(this);
+                iSdp.Repeat.RemoveWatcher(this);
                 iSdp.TransportState.RemoveWatcher(this);
 
                 iSdp.Dispose();
@@ -156,6 +162,34 @@ namespace OpenHome.Av
         {
         }
 
+        public void ItemOpen(string aId, bool aValue)
+        {
+            if (aId == "Shuffle")
+            {
+                iShuffle.Update(aValue);
+            }
+            if (aId == "Repeat")
+            {
+                iRepeat.Update(aValue);
+            }
+        }
+
+        public void ItemUpdate(string aId, bool aValue, bool aPrevious)
+        {
+            if (aId == "Shuffle")
+            {
+                iShuffle.Update(aValue);
+            }
+            if (aId == "Repeat")
+            {
+                iRepeat.Update(aValue);
+            }
+        }
+
+        public void ItemClose(string aId, bool aValue)
+        {
+        }
+
         public void ItemOpen(string aId, IInfoDetails aValue)
         {
             iCanPause.Update(aValue.Duration > 0);
@@ -182,5 +216,7 @@ namespace OpenHome.Av
         private Watchable<bool> iCanPause;
         private Watchable<bool> iCanSeek;
         private Watchable<string> iTransportState;
+        private Watchable<bool> iShuffle;
+        private Watchable<bool> iRepeat;
     }
 }
