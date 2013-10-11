@@ -31,7 +31,8 @@ namespace OpenHome.Av
 
         private readonly ServiceMediaEndpointOpenHome iService;
 
-        public DeviceMediaEndpointOpenHome(INetwork aNetwork, Uri aUri, string aId, JsonValue aJson, Func<string, Action<string, uint>, IDisposable> aSessionHandler)
+        public DeviceMediaEndpointOpenHome(INetwork aNetwork, Uri aUri, string aId, JsonValue aJson,
+            Func<string, Action<string, uint>, IDisposable> aSessionHandler, ILog aLog)
             : base(aId)
         {
             var json = aJson as JsonObject;
@@ -78,7 +79,7 @@ namespace OpenHome.Av
                                         started,
                                         attributes,
                                         uri,
-                                        aSessionHandler);
+                                        aSessionHandler, aLog);
 
                         Add<IProxyMediaEndpoint>(iService);
                     }

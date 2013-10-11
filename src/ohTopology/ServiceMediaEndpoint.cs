@@ -260,8 +260,8 @@ namespace OpenHome.Av
         protected ServiceMediaEndpoint(INetwork aNetwork, IInjectorDevice aDevice, string aId, string aType, string aName, string aInfo,
             string aUrl, string aArtwork, string aManufacturerName, string aManufacturerInfo, string aManufacturerUrl,
             string aManufacturerArtwork, string aModelName, string aModelInfo, string aModelUrl, string aModelArtwork,
-            DateTime aStarted, IEnumerable<string> aAttributes)
-            : base (aNetwork, aDevice)
+            DateTime aStarted, IEnumerable<string> aAttributes, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iId = aId;
             iType = aType;

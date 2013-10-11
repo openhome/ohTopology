@@ -30,7 +30,7 @@ namespace OpenHome.Av
         private readonly CpProxyUpnpOrgContentDirectory1 iProxy;
         private readonly ServiceMediaEndpointContentDirectory iService;
 
-        public DeviceMediaEndpointContentDirectory(INetwork aNetwork, string aUdn, CpDevice aDevice, XDocument aXml)
+        public DeviceMediaEndpointContentDirectory(INetwork aNetwork, string aUdn, CpDevice aDevice, XDocument aXml, ILog aLog)
             : base(aUdn)
         {
             iDevice = aDevice;
@@ -72,7 +72,7 @@ namespace OpenHome.Av
                             modelName, modelInfo, modelUrl, modelArtwork,
                             DateTime.Now,
                             new string[] { "Browse" },
-                            iProxy);
+                            iProxy, aLog);
 
             iProxy.Subscribe();
 

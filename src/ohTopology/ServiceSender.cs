@@ -56,7 +56,10 @@ namespace OpenHome.Av
             XmlNode uri = doc.FirstChild.SelectSingleNode("didl:item/didl:res", nsManager);
             iUri = uri.FirstChild.Value;
             XmlNode artworkUri = doc.FirstChild.SelectSingleNode("didl:item/upnp:albumArtURI", nsManager);
-            iArtworkUri = artworkUri.FirstChild.Value;
+            if (artworkUri != null && artworkUri.FirstChild != null)
+            {
+                iArtworkUri = artworkUri.FirstChild.Value;
+            }
         }
 
         public string Name
@@ -87,8 +90,8 @@ namespace OpenHome.Av
 
     public abstract class ServiceSender : Service
     {
-        protected ServiceSender(INetwork aNetwork, IInjectorDevice aDevice)
-            : base(aNetwork, aDevice)
+        protected ServiceSender(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iAudio = new Watchable<bool>(Network, "Audio", false);
             iMetadata = new Watchable<ISenderMetadata>(Network, "Metadata", SenderMetadata.Empty);
@@ -164,8 +167,8 @@ namespace OpenHome.Av
 
     class ServiceSenderNetwork : ServiceSender
     {
-        public ServiceSenderNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
-            : base(aNetwork, aDevice)
+        public ServiceSenderNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iCpDevice = aCpDevice;
             iCpDevice.AddRef();
@@ -269,8 +272,9 @@ namespace OpenHome.Av
 
     class ServiceSenderMock : ServiceSender, IMockable
     {
-        public ServiceSenderMock(INetwork aNetwork, IInjectorDevice aDevice, string aAttributes, string aPresentationUrl, bool aAudio, ISenderMetadata aMetadata, string aStatus)
-            : base(aNetwork, aDevice)
+        public ServiceSenderMock(INetwork aNetwork, IInjectorDevice aDevice, string aAttributes, string aPresentationUrl,
+            bool aAudio, ISenderMetadata aMetadata, string aStatus, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iAttributes = aAttributes;
             iPresentationUrl = aPresentationUrl;

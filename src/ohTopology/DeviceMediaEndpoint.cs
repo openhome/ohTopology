@@ -32,15 +32,17 @@ namespace OpenHome.Av
     public class DeviceInjectorMediaEndpoint : IDisposable
     {
         private readonly Network iNetwork;
+        private readonly ILog iLog;
 
         private readonly DisposeHandler iDisposeHandler;
         private readonly EventSupervisor iEventSupervisor;
         private readonly Dictionary<string, IDisposable> iDevices;
         private readonly CpDeviceListUpnpServiceType iDeviceList;
 
-        public DeviceInjectorMediaEndpoint(Network aNetwork)
+        public DeviceInjectorMediaEndpoint(Network aNetwork, ILog aLog)
         {
             iNetwork = aNetwork;
+            iLog = aLog;
 
             iDisposeHandler = new DisposeHandler();
             iEventSupervisor = new EventSupervisor(iNetwork);
@@ -129,7 +131,7 @@ namespace OpenHome.Av
 
                     lock (iDevices)
                     {
-                        var device = new DeviceInjectorDeviceOpenHome(this, udn, uri, aDevice);
+                        var device = new DeviceInjectorDeviceOpenHome(this, udn, uri, aDevice, iLog);
                         iDevices.Add(udn, device);
                     }
                 }
@@ -138,7 +140,7 @@ namespace OpenHome.Av
             {
                 lock (iDevices)
                 {
-                    var device = new DeviceInjectorDeviceContentDirectory(this, udn, aDevice, xml);
+                    var device = new DeviceInjectorDeviceContentDirectory(this, udn, aDevice, xml, iLog);
                     iDevices.Add(udn, device);
                 }
             }
@@ -194,10 +196,10 @@ namespace OpenHome.Av
 
         private readonly DeviceMediaEndpointContentDirectory iDevice;
 
-        public DeviceInjectorDeviceContentDirectory(DeviceInjectorMediaEndpoint aInjector, string aUdn, CpDevice aDevice, XDocument aXml)
+        public DeviceInjectorDeviceContentDirectory(DeviceInjectorMediaEndpoint aInjector, string aUdn, CpDevice aDevice, XDocument aXml, ILog aLog)
         {
             iInjector = aInjector;
-            iDevice = new DeviceMediaEndpointContentDirectory(iInjector.Network, aUdn, aDevice, aXml);
+            iDevice = new DeviceMediaEndpointContentDirectory(iInjector.Network, aUdn, aDevice, aXml, aLog);
             iInjector.AddDevice(iDevice);
         }
 
@@ -214,6 +216,7 @@ namespace OpenHome.Av
         private readonly string iUdn;
         private readonly Uri iUri;
         private readonly CpDevice iDevice;
+        private readonly ILog iLog;
 
         private Dictionary<string, IInjectorDevice> iEndpoints;
 
@@ -222,13 +225,14 @@ namespace OpenHome.Av
 
         private bool iDisposed;
 
-        public DeviceInjectorDeviceOpenHome(DeviceInjectorMediaEndpoint aInjector, string aUdn, Uri aUri, CpDevice aDevice)
+        public DeviceInjectorDeviceOpenHome(DeviceInjectorMediaEndpoint aInjector, string aUdn, Uri aUri, CpDevice aDevice, ILog aLog)
         {
             iInjector = aInjector;
             iUdn = aUdn;
             iUri = aUri;
             iDevice = aDevice;
             iDevice.AddRef();
+            iLog = aLog;
 
             iEndpoints = new Dictionary<string, IInjectorDevice>();
 
@@ -404,7 +408,7 @@ namespace OpenHome.Av
                     device = new DeviceMediaEndpointOpenHome(iInjector.Network, iUri, entry.Key, entry.Value, (id, action) =>
                     {
                         return (iEventSession.Create(id, action));
-                    });
+                    }, iLog);
 
                     refresh.Add(entry.Key, device);
                     iInjector.AddDevice(device);

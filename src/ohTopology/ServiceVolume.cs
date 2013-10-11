@@ -36,8 +36,8 @@ namespace OpenHome.Av
 
     public abstract class ServiceVolume : Service
     {
-        protected ServiceVolume(INetwork aNetwork, IInjectorDevice aDevice)
-            : base(aNetwork, aDevice)
+        protected ServiceVolume(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iBalance = new Watchable<int>(Network, "Balance", 0);
             iFade = new Watchable<int>(Network, "Fade", 0);
@@ -194,8 +194,8 @@ namespace OpenHome.Av
 
     class ServiceVolumeNetwork : ServiceVolume
     {
-        public ServiceVolumeNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
-            : base(aNetwork, aDevice)
+        public ServiceVolumeNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iCpDevice = aCpDevice;
             iCpDevice.AddRef();
@@ -471,8 +471,8 @@ namespace OpenHome.Av
     class ServiceVolumeMock : ServiceVolume, IMockable
     {
         public ServiceVolumeMock(INetwork aNetwork, IInjectorDevice aDevice, string aId, int aBalance, uint aBalanceMax, int aFade, uint aFadeMax, bool aMute, uint aValue, uint aVolumeLimit, uint aVolumeMax,
-            uint aVolumeMilliDbPerStep, uint aVolumeSteps, uint aVolumeUnity)
-            : base(aNetwork, aDevice)
+            uint aVolumeMilliDbPerStep, uint aVolumeSteps, uint aVolumeUnity, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             uint volumeLimit = aVolumeLimit;
             if (volumeLimit > aVolumeMax)

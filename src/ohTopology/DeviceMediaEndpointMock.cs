@@ -33,7 +33,7 @@ namespace OpenHome.Av
         private readonly HttpFramework iHttpFramework;
         private readonly List<Tuple<string, string>> iColors;
 
-        public DeviceMediaEndpointMock(INetwork aNetwork, string aUdn, string aResourceRoot)
+        public DeviceMediaEndpointMock(INetwork aNetwork, string aUdn, string aResourceRoot, ILog aLog)
             : base(aUdn)
         {
             iNetwork = aNetwork;
@@ -62,7 +62,7 @@ namespace OpenHome.Av
                 "OpenHome", "OpenHome", "http://www.openhome.org", "",
                 DateTime.Now,
                 new string[] { "Browse", "Link", "Search" },
-                iMetadata, this));
+                iMetadata, this, aLog));
         }
 
         private void Add(string aBackground, string aForeground)

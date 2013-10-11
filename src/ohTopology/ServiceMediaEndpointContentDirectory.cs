@@ -30,9 +30,9 @@ namespace OpenHome.Av
         public ServiceMediaEndpointContentDirectory(INetwork aNetwork, IInjectorDevice aDevice, string aId, string aType, string aName, string aInfo,
             string aUrl, string aArtwork, string aManufacturerName, string aManufacturerInfo, string aManufacturerUrl,
             string aManufacturerArtwork, string aModelName, string aModelInfo, string aModelUrl, string aModelArtwork,
-            DateTime aStarted, IEnumerable<string> aAttributes, CpProxyUpnpOrgContentDirectory1 aProxy)
+            DateTime aStarted, IEnumerable<string> aAttributes, CpProxyUpnpOrgContentDirectory1 aProxy, ILog aLog)
             : base (aNetwork, aDevice, aId, aType, aName, aInfo, aUrl, aArtwork, aManufacturerName, aManufacturerInfo,
-            aManufacturerUrl, aManufacturerArtwork, aModelName, aModelInfo, aModelUrl, aModelArtwork, aStarted, aAttributes)
+            aManufacturerUrl, aManufacturerArtwork, aModelName, aModelInfo, aModelUrl, aModelArtwork, aStarted, aAttributes, aLog)
         {
             iProxy = aProxy;
 
