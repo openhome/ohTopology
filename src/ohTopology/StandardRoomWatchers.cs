@@ -1109,7 +1109,7 @@ namespace OpenHome.Av
             {
                 return false;
             }
-            if (aSource.Name == "Front Aux")
+            if (aSource.Name == "Front Aux" || aSource.Name == "Analog Aux")
             {
                 return false;
             }
