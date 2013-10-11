@@ -41,24 +41,13 @@ namespace ShowMediaServers
 
             if (iSession != null)
             {
-                iSession.Browse(null).ContinueWith(ContainerCreated);
+                iSession.Browse(null, ContainerCreated);
             }
         }
 
-        private void ContainerCreated(Task<IWatchableContainer<IMediaDatum>> aTask)
+        private void ContainerCreated()
         {
-            var container = aTask.Result;
-
-            if (container != null)
-            {
-                iWatcher = container.Snapshot.CreateWatcher((snapshot) =>
-                {
-                    lock (iTasks)
-                    {
-                        iTasks.Add(snapshot.Read(0, snapshot.Total).ContinueWith(FragmentCreated));
-                    }
-                });
-            }
+            iWatcher = iSession.Snapshot.Read(0, iSession.Snapshot.Total).ContinueWith(FragmentCreated);
         }
 
         private void FragmentCreated(Task<IWatchableFragment<IMediaDatum>> aTask)
@@ -269,13 +258,15 @@ namespace ShowMediaServers
 
             library.StartCp(0x020a);
 
-            using (var network = new Network(watchableThread, 50))
+            Log log = new Log(new LogConsole());
+
+            using (var network = new Network(watchableThread, 50, log))
             {
-                using (var mock = new DeviceInjectorMock(network, "."))
+                using (var mock = new DeviceInjectorMock(network, ".", log))
                 {
                     mock.Execute("medium");
 
-                    using (var real = new DeviceInjectorMediaEndpoint(network))
+                    using (var real = new DeviceInjectorMediaEndpoint(network, log))
                     {
                         using (var client = new Client(network))
                         {

@@ -42,11 +42,13 @@ namespace BrowseMediaEndpoint
 
             iWatchableThread = new WatchableThread(ReportException);
 
-            iNetwork = new Network(iWatchableThread, 5000, new Log(new LogConsole()));
+            Log log = new Log(new LogConsole());
+
+            iNetwork = new Network(iWatchableThread, 5000, log);
 
             iNetwork.Execute(() =>
             {
-                iDeviceInjectorMediaEndpoint = new DeviceInjectorMediaEndpoint(iNetwork);
+                iDeviceInjectorMediaEndpoint = new DeviceInjectorMediaEndpoint(iNetwork, log);
                 iDevices = iNetwork.Create<IProxyMediaEndpoint>();
             });
         }
