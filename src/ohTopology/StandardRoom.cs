@@ -593,6 +593,9 @@ namespace OpenHome.Av
                             {
                                 if (!iDisposed)
                                 {
+                                    IMediaPreset preset = s.CreatePreset();
+                                    preset.Play();
+                                    preset.Dispose();
                                     receiver.Play(sender.Metadata.Value);
                                     receiver.Dispose();
                                     sender.Dispose();
