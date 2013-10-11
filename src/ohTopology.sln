@@ -27,8 +27,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestRegistration", "TestReg
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestMediaEndpoint", "TestMediaEndpoint\TestMediaEndpoint.csproj", "{2B115343-B3C3-40A0-AB30-924C7F236426}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrowseMediaEndpoint", "BrowseMediaEndpoint\BrowseMediaEndpoint.csproj", "{5184210C-450C-4123-AE4B-D31692D2B95E}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -169,16 +167,6 @@ Global
 		{2B115343-B3C3-40A0-AB30-924C7F236426}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{2B115343-B3C3-40A0-AB30-924C7F236426}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{2B115343-B3C3-40A0-AB30-924C7F236426}.Release|x86.ActiveCfg = Release|Any CPU
-		{5184210C-450C-4123-AE4B-D31692D2B95E}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{5184210C-450C-4123-AE4B-D31692D2B95E}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{5184210C-450C-4123-AE4B-D31692D2B95E}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{5184210C-450C-4123-AE4B-D31692D2B95E}.Debug|x86.ActiveCfg = Debug|x86
-		{5184210C-450C-4123-AE4B-D31692D2B95E}.Debug|x86.Build.0 = Debug|x86
-		{5184210C-450C-4123-AE4B-D31692D2B95E}.Release|Any CPU.ActiveCfg = Release|x86
-		{5184210C-450C-4123-AE4B-D31692D2B95E}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{5184210C-450C-4123-AE4B-D31692D2B95E}.Release|Mixed Platforms.Build.0 = Release|x86
-		{5184210C-450C-4123-AE4B-D31692D2B95E}.Release|x86.ActiveCfg = Release|x86
-		{5184210C-450C-4123-AE4B-D31692D2B95E}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
