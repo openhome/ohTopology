@@ -44,21 +44,38 @@ namespace OpenHome.Av
         {
             iMetadata = aMetadata;
 
-            XmlDocument doc = new XmlDocument();
-            XmlNamespaceManager nsManager = new XmlNamespaceManager(doc.NameTable);
-            nsManager.AddNamespace("didl", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
-            nsManager.AddNamespace("upnp", "urn:schemas-upnp-org:metadata-1-0/upnp/");
-            nsManager.AddNamespace("dc", "http://purl.org/dc/elements/1.1/");
-            doc.LoadXml(aMetadata);
-
-            XmlNode name = doc.FirstChild.SelectSingleNode("didl:item/dc:title", nsManager);
-            iName = name.FirstChild.Value;
-            XmlNode uri = doc.FirstChild.SelectSingleNode("didl:item/didl:res", nsManager);
-            iUri = uri.FirstChild.Value;
-            XmlNode artworkUri = doc.FirstChild.SelectSingleNode("didl:item/upnp:albumArtURI", nsManager);
-            if (artworkUri != null && artworkUri.FirstChild != null)
+            try
             {
-                iArtworkUri = artworkUri.FirstChild.Value;
+                XmlDocument doc = new XmlDocument();
+                XmlNamespaceManager nsManager = new XmlNamespaceManager(doc.NameTable);
+                nsManager.AddNamespace("didl", "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/");
+                nsManager.AddNamespace("upnp", "urn:schemas-upnp-org:metadata-1-0/upnp/");
+                nsManager.AddNamespace("dc", "http://purl.org/dc/elements/1.1/");
+                doc.LoadXml(aMetadata);
+
+                XmlNode name = doc.FirstChild.SelectSingleNode("didl:item/dc:title", nsManager);
+                if (name != null && name.FirstChild != null)
+                {
+                    iName = name.FirstChild.Value;
+                }
+                else
+                {
+                    iName = "No name element provided";
+                }
+                XmlNode uri = doc.FirstChild.SelectSingleNode("didl:item/didl:res", nsManager);
+                if (uri != null && uri.FirstChild != null)
+                {
+                    iUri = uri.FirstChild.Value;
+                }
+                XmlNode artworkUri = doc.FirstChild.SelectSingleNode("didl:item/upnp:albumArtURI", nsManager);
+                if (artworkUri != null && artworkUri.FirstChild != null)
+                {
+                    iArtworkUri = artworkUri.FirstChild.Value;
+                }
+            }
+            catch (XmlException)
+            {
+                iName = "Invalid metadata XML";
             }
         }
 
