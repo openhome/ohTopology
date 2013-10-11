@@ -591,6 +591,8 @@ namespace OpenHome.Av
         {
             iEnabled.Update(false);
 
+            iSendersMetadataWatcher.Metadata.RemoveWatcher(this);
+
             DeleteProxy();
         }
 
