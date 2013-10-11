@@ -503,11 +503,13 @@ namespace OpenHome.Av
 
         private void CallbackProductId(IntPtr aPtr)
         {
-            iSubscribedVolkanoSource.SetResult(true);
-
-            iDisposeHandler.WhenNotDisposed(() =>
+            Network.Schedule(() =>
             {
-                iServiceVolkano.EndProductId(aPtr, out iProductId);
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iServiceVolkano.EndProductId(aPtr, out iProductId);
+                    iSubscribedVolkanoSource.SetResult(true);
+                });
             });
         }
 
