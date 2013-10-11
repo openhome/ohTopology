@@ -196,7 +196,6 @@ private:
     std::vector<CpTopology4Group*> iRootList;
     std::vector<CpTopology4Source*> iSourceList;
     CpTopology4Group* iCurrentGroup;
-    TBool iActive;
     mutable Mutex iMutex;
     TUint iSourceCount;
     TUint iStandbyCount;
