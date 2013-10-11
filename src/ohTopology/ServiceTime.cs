@@ -19,8 +19,8 @@ namespace OpenHome.Av
 
     public abstract class ServiceTime : Service
     {
-        protected ServiceTime(INetwork aNetwork, IInjectorDevice aDevice)
-            : base(aNetwork, aDevice)
+        protected ServiceTime(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iDuration = new Watchable<uint>(Network, "Duration", 0);
             iSeconds = new Watchable<uint>(Network, "Seconds", 0);
@@ -64,8 +64,8 @@ namespace OpenHome.Av
 
     class ServiceTimeNetwork : ServiceTime
     {
-        public ServiceTimeNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
-            : base(aNetwork, aDevice)
+        public ServiceTimeNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iCpDevice = aCpDevice;
             iCpDevice.AddRef();
@@ -153,8 +153,8 @@ namespace OpenHome.Av
 
     class ServiceTimeMock : ServiceTime, IMockable
     {
-        public ServiceTimeMock(INetwork aNetwork, IInjectorDevice aDevice, uint aSeconds, uint aDuration)
-            : base(aNetwork, aDevice)
+        public ServiceTimeMock(INetwork aNetwork, IInjectorDevice aDevice, uint aSeconds, uint aDuration, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iDuration.Update(aDuration);
             iSeconds.Update(aSeconds);

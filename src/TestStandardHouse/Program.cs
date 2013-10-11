@@ -314,7 +314,7 @@ namespace TestStandardHouse
             Log log = new Log(new LogConsole());
 
             Network network = new Network(50, log);
-            DeviceInjectorMock mockInjector = new DeviceInjectorMock(network, Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
+            DeviceInjectorMock mockInjector = new DeviceInjectorMock(network, Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location), log);
             mocker.Add("network", mockInjector);
 
             StandardHouse house = new StandardHouse(network, log);

@@ -395,7 +395,6 @@ CpTopology4Room::CpTopology4Room(const Brx& aName, ICpTopology4Handler& aHandler
     : iName(aName)
     , iHandler(aHandler)
     , iCurrentGroup(0)
-    , iActive(false)
     , iMutex("T3RM")
     , iSourceCount(0)
     , iStandbyCount(0)

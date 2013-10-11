@@ -196,8 +196,8 @@ namespace OpenHome.Av
 
     public abstract class ServicePlaylist : Service
     {
-        protected ServicePlaylist(INetwork aNetwork, IInjectorDevice aDevice)
-            : base(aNetwork, aDevice)
+        protected ServicePlaylist(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iId = new Watchable<uint>(Network, "Id", 0);
             iInfoNext = new Watchable<IInfoMetadata>(Network, "InfoNext", InfoMetadata.Empty);
@@ -325,8 +325,8 @@ namespace OpenHome.Av
 
     class ServicePlaylistNetwork : ServicePlaylist
     {
-        public ServicePlaylistNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
-            : base(aNetwork, aDevice)
+        public ServicePlaylistNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iCpDevice = aCpDevice;
             iCpDevice.AddRef();
@@ -915,8 +915,9 @@ namespace OpenHome.Av
             }
         }
 
-        public ServicePlaylistMock(INetwork aNetwork, IInjectorDevice aDevice, uint aId, IList<IMediaMetadata> aTracks, bool aRepeat, bool aShuffle, string aTransportState, string aProtocolInfo, uint aTracksMax)
-            : base(aNetwork, aDevice)
+        public ServicePlaylistMock(INetwork aNetwork, IInjectorDevice aDevice, uint aId, IList<IMediaMetadata> aTracks, bool aRepeat, bool aShuffle,
+            string aTransportState, string aProtocolInfo, uint aTracksMax, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iIdFactory = 1;
             iTracksMax = aTracksMax;

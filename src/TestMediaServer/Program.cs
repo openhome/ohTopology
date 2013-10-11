@@ -385,9 +385,11 @@ namespace TestMediaServer
         {
             using (var network = new Network(50, new Log(new LogConsole())))
             {
+                Log log = new Log(new LogConsole());
+
                 var path = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
 
-                var device = DeviceFactory.CreateMediaServer(network, "4c494e4e-0026-0f99-0000-000000000000", path);
+                var device = DeviceFactory.CreateMediaServer(network, "4c494e4e-0026-0f99-0000-000000000000", path, log);
                 var device2 = new Device(device);
 
                 IProxyMediaEndpoint proxy =null;

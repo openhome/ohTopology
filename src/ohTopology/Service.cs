@@ -17,6 +17,7 @@ namespace OpenHome.Av
     {
         protected readonly INetwork iNetwork;
         private readonly IInjectorDevice iDevice;
+        protected readonly ILog iLog;
 
         private readonly CancellationTokenSource iCancelSubscribe;
         private readonly ManualResetEvent iSubscribed;
@@ -27,10 +28,11 @@ namespace OpenHome.Av
         protected readonly DisposeHandler iDisposeHandler;
         protected Task iSubscribeTask;
 
-        protected Service(INetwork aNetwork, IInjectorDevice aDevice)
+        protected Service(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
         {
             iNetwork = aNetwork;
             iDevice = aDevice;
+            iLog = aLog;
 
             iDisposeHandler = new DisposeHandler();
             iCancelSubscribe = new CancellationTokenSource();

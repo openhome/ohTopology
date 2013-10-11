@@ -43,8 +43,8 @@ namespace OpenHome.Av
 
     public abstract class ServiceProduct : Service
     {
-        protected ServiceProduct(INetwork aNetwork, IInjectorDevice aDevice)
-            : base(aNetwork, aDevice)
+        protected ServiceProduct(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iRoom = new Watchable<string>(Network, "Room", string.Empty);
             iName = new Watchable<string>(Network, "Name", string.Empty);
@@ -267,8 +267,8 @@ namespace OpenHome.Av
 
     class ServiceProductNetwork : ServiceProduct
     {
-        public ServiceProductNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
-            : base(aNetwork, aDevice)
+        public ServiceProductNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice, ILog aLog  )
+            : base(aNetwork, aDevice, aLog)
         {
             iCpDevice = aCpDevice;
             iCpDevice.AddRef();
@@ -464,12 +464,34 @@ namespace OpenHome.Av
         public override Task SetRegistration(string aValue)
         {
             TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
-            iServiceConfiguration.BeginSetParameter("TuneIn Radio", "Password", aValue, (ptr) =>
+            iServiceConfiguration.BeginSetParameter("TuneIn Radio", "Test Mode", "true", (ptr) =>
             {
                 try
                 {
                     iServiceConfiguration.EndSetParameter(ptr);
-                    taskSource.SetResult(true);
+                    iServiceConfiguration.BeginSetParameter("TuneIn Radio", "Password", aValue, (ptr2) =>
+                    {
+                        try
+                        {
+                            iServiceConfiguration.EndSetParameter(ptr2);
+                            iServiceConfiguration.BeginSetParameter("TuneIn Radio", "Test Mode", "false", (ptr3) =>
+                            {
+                                try
+                                {
+                                    iServiceConfiguration.EndSetParameter(ptr3);
+                                    taskSource.SetResult(true);
+                                }
+                                catch (Exception e)
+                                {
+                                    taskSource.SetException(e);
+                                }
+                            });
+                        }
+                        catch (Exception e)
+                        {
+                            taskSource.SetException(e);
+                        }
+                    });
                 }
                 catch (Exception e)
                 {
@@ -580,7 +602,7 @@ namespace OpenHome.Av
             System.Xml.XmlNode registration = document.SelectSingleNode("/ParameterList/Parameter[Target=\"TuneIn Radio\" and Name=\"Password\"]/Value");
             if (registration != null && registration.FirstChild != null)
             {
-                iRegistration.Update(registration.Value);
+                iRegistration.Update(registration.FirstChild.Value);
             }
             else
             {
@@ -706,8 +728,8 @@ namespace OpenHome.Av
     {
         public ServiceProductMock(INetwork aNetwork, IInjectorDevice aDevice, string aRoom, string aName, uint aSourceIndex, SourceXml aSourceXmlFactory, bool aStandby,
             string aAttributes, string aManufacturerImageUri, string aManufacturerInfo, string aManufacturerName, string aManufacturerUrl, string aModelImageUri, string aModelInfo, string aModelName,
-            string aModelUrl, string aProductImageUri, string aProductInfo, string aProductUrl, string aProductId)
-            : base(aNetwork, aDevice)
+            string aModelUrl, string aProductImageUri, string aProductInfo, string aProductUrl, string aProductId, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iSourceXmlFactory = aSourceXmlFactory;
 

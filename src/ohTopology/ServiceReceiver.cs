@@ -25,8 +25,8 @@ namespace OpenHome.Av
 
     public abstract class ServiceReceiver : Service
     {
-        protected ServiceReceiver(INetwork aNetwork, IInjectorDevice aDevice)
-            : base(aNetwork, aDevice)
+        protected ServiceReceiver(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iMetadata = new Watchable<IInfoMetadata>(Network, "Metadata", InfoMetadata.Empty);
             iTransportState = new Watchable<string>(Network, "TransportState", string.Empty);
@@ -84,8 +84,8 @@ namespace OpenHome.Av
 
     class ServiceReceiverNetwork : ServiceReceiver
     {
-        public ServiceReceiverNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
-            : base(aNetwork, aDevice)
+        public ServiceReceiverNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iCpDevice = aCpDevice;
             iCpDevice.AddRef();
@@ -241,8 +241,9 @@ namespace OpenHome.Av
 
     class ServiceReceiverMock : ServiceReceiver, IMockable
     {
-        public ServiceReceiverMock(INetwork aNetwork, IInjectorDevice aDevice, string aMetadata, string aProtocolInfo, string aTransportState, string aUri)
-            : base(aNetwork, aDevice)
+        public ServiceReceiverMock(INetwork aNetwork, IInjectorDevice aDevice, string aMetadata, string aProtocolInfo,
+            string aTransportState, string aUri, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iProtocolInfo = aProtocolInfo;
 

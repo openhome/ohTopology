@@ -593,6 +593,9 @@ namespace OpenHome.Av
                             {
                                 if (!iDisposed)
                                 {
+                                    IMediaPreset preset = s.CreatePreset();
+                                    preset.Play();
+                                    preset.Dispose();
                                     receiver.Play(sender.Metadata.Value);
                                     receiver.Dispose();
                                     sender.Dispose();
@@ -817,7 +820,7 @@ namespace OpenHome.Av
                         }
                         break;
                     }
-                    else if (aValue.Count() == 1)
+                    /*else if (aValue.Count() == 1)
                     {
                         if (!iWatchableZoneSender.Value.Enabled)
                         {
@@ -827,7 +830,7 @@ namespace OpenHome.Av
                             s.Dispose();
                         }
                         break;
-                    }
+                    }*/
                 }
             }
             else
