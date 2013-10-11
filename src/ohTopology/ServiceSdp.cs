@@ -188,8 +188,8 @@ namespace OpenHome.Av
 
     public abstract class ServiceSdp : Service
     {
-        protected ServiceSdp(INetwork aNetwork, IInjectorDevice aDevice)
-            : base(aNetwork, aDevice)
+        protected ServiceSdp(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iId = new Watchable<uint>(Network, "Id", 0);
             iTransportState = new Watchable<string>(Network, "TransportState", string.Empty);
@@ -281,8 +281,8 @@ namespace OpenHome.Av
 
     class ServiceSdpNetwork : ServiceSdp
     {
-        public ServiceSdpNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
-            : base(aNetwork, aDevice)
+        public ServiceSdpNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iCpDevice = aCpDevice;
             iCpDevice.AddRef();
@@ -733,8 +733,9 @@ namespace OpenHome.Av
         private MediaSnapshot<IMediaPreset> iMediaSnapshot;
         private uint iTrackCount;
 
-        public ServiceSdpMock(INetwork aNetwork, IInjectorDevice aDevice, uint aId, uint aTrackCount, bool aRepeat, bool aShuffle, string aTransportState)
-            : base(aNetwork, aDevice)
+        public ServiceSdpMock(INetwork aNetwork, IInjectorDevice aDevice, uint aId, uint aTrackCount, bool aRepeat,
+            bool aShuffle, string aTransportState, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iTrackCount = aTrackCount;
 

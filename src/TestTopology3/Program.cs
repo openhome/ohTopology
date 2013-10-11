@@ -68,7 +68,7 @@ namespace TestTopology3
             Log log = new Log(new LogConsole());
 
             Network network = new Network(50, log);
-            DeviceInjectorMock mockInjector = new DeviceInjectorMock(network, Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
+            DeviceInjectorMock mockInjector = new DeviceInjectorMock(network, Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location), log);
             mocker.Add("network", mockInjector);
 
             Topology1 topology1 = new Topology1(network, log);

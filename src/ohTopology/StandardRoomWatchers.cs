@@ -612,6 +612,10 @@ namespace OpenHome.Av
 
         private void EvaluateEnabled(IEnumerable<ITopology4Source> aValue)
         {
+            if (iSupervisor != null)
+            {
+                Console.WriteLine("here");
+            }
             foreach (ITopology4Source s in aValue)
             {
                 if (s.Type == "Receiver")

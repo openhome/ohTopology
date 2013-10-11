@@ -179,8 +179,8 @@ namespace OpenHome.Av
 
     public abstract class ServiceInfo : Service
     {
-        protected ServiceInfo(INetwork aNetwork, IInjectorDevice aDevice)
-            : base(aNetwork, aDevice)
+        protected ServiceInfo(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iDetails = new Watchable<IInfoDetails>(Network, "Details", new InfoDetails());
             iMetadata = new Watchable<IInfoMetadata>(Network, "Metadata", InfoMetadata.Empty);
@@ -237,8 +237,8 @@ namespace OpenHome.Av
 
     class ServiceInfoNetwork : ServiceInfo
     {
-        public ServiceInfoNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
-            : base(aNetwork, aDevice)
+        public ServiceInfoNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iCpDevice = aCpDevice;
             iCpDevice.AddRef();
@@ -357,8 +357,8 @@ namespace OpenHome.Av
 
     class ServiceInfoMock : ServiceInfo, IMockable
     {
-        public ServiceInfoMock(INetwork aNetwork, IInjectorDevice aDevice, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext)
-            : base(aNetwork, aDevice)
+        public ServiceInfoMock(INetwork aNetwork, IInjectorDevice aDevice, IInfoDetails aDetails, IInfoMetadata aMetadata, IInfoMetatext aMetatext, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iDetails.Update(aDetails);
             iMetadata.Update(aMetadata);

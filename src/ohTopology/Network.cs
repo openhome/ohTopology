@@ -79,14 +79,16 @@ namespace OpenHome.Av
     public abstract class DeviceInjector : IDisposable
     {
         private readonly Network iNetwork;
+        private readonly ILog iLog;
         private readonly Dictionary<string, IInjectorDevice> iDeviceLookup;
         protected readonly DisposeHandler iDisposeHandler;
         protected readonly CpDeviceListUpnpServiceType iDeviceList;
 
-        protected DeviceInjector(Network aNetwork, string aDomain, string aType, uint aVersion)
+        protected DeviceInjector(Network aNetwork, string aDomain, string aType, uint aVersion, ILog aLog)
         {
             iDisposeHandler = new DisposeHandler();
             iNetwork = aNetwork;
+            iLog = aLog;
             iDeviceList = new CpDeviceListUpnpServiceType(aDomain, aType, aVersion, Added, Removed);
             iDeviceLookup = new Dictionary<string,IInjectorDevice>();
         }
@@ -118,7 +120,7 @@ namespace OpenHome.Av
         {
             using (iDisposeHandler.Lock)
             {
-                return (DeviceFactory.Create(aNetwork, aDevice));
+                return (DeviceFactory.Create(aNetwork, aDevice, iLog));
             }
         }
 
@@ -146,16 +148,16 @@ namespace OpenHome.Av
 
     public class DeviceInjectorProduct : DeviceInjector
     {
-        public DeviceInjectorProduct(Network aNetwork)
-            : base(aNetwork, "av.openhome.org", "Product", 1)
+        public DeviceInjectorProduct(Network aNetwork, ILog aLog)
+            : base(aNetwork, "av.openhome.org", "Product", 1, aLog)
         {
         }
     }
 
     public class DeviceInjectorSender : DeviceInjector
     {
-        public DeviceInjectorSender(Network aNetwork)
-            : base(aNetwork, "av.openhome.org", "Sender", 1)
+        public DeviceInjectorSender(Network aNetwork, ILog aLog)
+            : base(aNetwork, "av.openhome.org", "Sender", 1, aLog)
         {
         }
 
@@ -248,11 +250,12 @@ namespace OpenHome.Av
 
     public class DeviceInjectorMock : IMockable, IDisposable
     {
-        private Network iNetwork;
-        private string iResourceRoot;
-        private Dictionary<string, InjectorDeviceMock> iMockDevices;
+        private readonly Network iNetwork;
+        private readonly ILog iLog;
+        private readonly string iResourceRoot;
+        private readonly Dictionary<string, InjectorDeviceMock> iMockDevices;
 
-        public DeviceInjectorMock(Network aNetwork, string aResourceRoot)
+        public DeviceInjectorMock(Network aNetwork, string aResourceRoot, ILog aLog)
         {
             iNetwork = aNetwork;
             iResourceRoot = aResourceRoot;
@@ -278,17 +281,17 @@ namespace OpenHome.Av
 
                 if (command == "small")
                 {
-                    CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
-                    CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000", iResourceRoot));
+                    CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender", iLog));
+                    CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000", iResourceRoot, iLog));
                     return;
                 }
                 else if (command == "medium")
                 {
-                    CreateAndAdd(DeviceFactory.CreateDs(iNetwork, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender"));
-                    CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender"));
-                    CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender"));
-                    CreateAndAdd(DeviceFactory.CreateDs(iNetwork, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender"));
-                    CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000", iResourceRoot));
+                    CreateAndAdd(DeviceFactory.CreateDs(iNetwork, "4c494e4e-0026-0f99-1111-ef000004013f", "Kitchen", "Sneaky Music DS", "Info Time Volume Sender", iLog));
+                    CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1112-ef000004013f", "Sitting Room", "Klimax DSM", "Info Time Volume Sender", iLog));
+                    CreateAndAdd(DeviceFactory.CreateDsm(iNetwork, "4c494e4e-0026-0f99-1113-ef000004013f", "Bedroom", "Kiko DSM", "Info Time Volume Sender", iLog));
+                    CreateAndAdd(DeviceFactory.CreateDs(iNetwork, "4c494e4e-0026-0f99-1114-ef000004013f", "Dining Room", "Majik DS", "Info Time Volume Sender", iLog));
+                    CreateAndAdd(DeviceFactory.CreateMediaServer(iNetwork, "4c494e4e-0026-0f99-0000-000000000000", iResourceRoot, iLog));
                     return;
                 }
                 else if (command == "large")
@@ -307,12 +310,12 @@ namespace OpenHome.Av
 
                     if (type == "ds")
                     {
-                        Create(DeviceFactory.CreateDs(iNetwork, udn));
+                        Create(DeviceFactory.CreateDs(iNetwork, udn, iLog));
                         return;
                     }
                     else if (type == "dsm")
                     {
-                        Create(DeviceFactory.CreateDsm(iNetwork, udn));
+                        Create(DeviceFactory.CreateDsm(iNetwork, udn, iLog));
                         return;
                     }
                 }

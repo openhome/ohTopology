@@ -186,8 +186,8 @@ namespace OpenHome.Av
 
     public abstract class ServiceRadio : Service
     {
-        protected ServiceRadio(INetwork aNetwork, IInjectorDevice aDevice)
-            : base(aNetwork, aDevice)
+        protected ServiceRadio(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iId = new Watchable<uint>(aNetwork, "Id", 0);
             iTransportState = new Watchable<string>(aNetwork, "TransportState", string.Empty);
@@ -281,8 +281,8 @@ namespace OpenHome.Av
 
     class ServiceRadioNetwork : ServiceRadio
     {
-        public ServiceRadioNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice)
-            : base(aNetwork, aDevice)
+        public ServiceRadioNetwork(INetwork aNetwork, IInjectorDevice aDevice, CpDevice aCpDevice, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iCpDevice = aCpDevice;
             iCpDevice.AddRef();
@@ -654,8 +654,9 @@ namespace OpenHome.Av
         private IList<IMediaMetadata> iPresets;
         private List<uint> iIdArray;
 
-        public ServiceRadioMock(INetwork aNetwork, IInjectorDevice aDevice, uint aId, IList<IMediaMetadata> aPresets, IInfoMetadata aMetadata, string aProtocolInfo, string aTransportState, uint aChannelsMax)
-            : base(aNetwork, aDevice)
+        public ServiceRadioMock(INetwork aNetwork, IInjectorDevice aDevice, uint aId, IList<IMediaMetadata> aPresets,
+            IInfoMetadata aMetadata, string aProtocolInfo, string aTransportState, uint aChannelsMax, ILog aLog)
+            : base(aNetwork, aDevice, aLog)
         {
             iChannelsMax = aChannelsMax;
             iProtocolInfo = aProtocolInfo;
