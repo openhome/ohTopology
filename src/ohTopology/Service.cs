@@ -65,15 +65,7 @@ namespace OpenHome.Av
                 }
                 catch (AggregateException e)
                 {
-                    e.Handle((x) =>
-                    {
-                        if (x is ProxyError)
-                        {
-                            return true;
-                        }
-
-                        return false;
-                    });
+                    HandleAggregate(e);
                 }
             }
 
@@ -86,6 +78,28 @@ namespace OpenHome.Av
             iNetwork.Schedule(() =>
             {
                 Do.Assert(iRefCount == 0);
+            });
+        }
+
+        private void HandleAggregate(AggregateException aException)
+        {
+            aException.Handle((x) =>
+            {
+                if (x is ProxyError)
+                {
+                    return true;
+                }
+                if (x is TaskCanceledException)
+                {
+                    return true;
+                }
+                if (x is AggregateException)
+                {
+                    // will throw if aggregate contains an unhandled case
+                    HandleAggregate(x as AggregateException);
+                    return true;
+                }
+                return false;
             });
         }
 
