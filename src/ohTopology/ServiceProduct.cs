@@ -322,7 +322,7 @@ namespace OpenHome.Av
             Do.Assert(iSubscribedConfigurationSource == null);
             Do.Assert(iSubscribedVolkanoSource == null);
 
-            TaskCompletionSource<bool> volkano = new TaskCompletionSource<bool>;
+            TaskCompletionSource<bool> volkano = new TaskCompletionSource<bool>();
             iSubscribedSource = new TaskCompletionSource<bool>();
             iSubscribedConfigurationSource = new TaskCompletionSource<bool>();
             iSubscribedVolkanoSource = volkano;
