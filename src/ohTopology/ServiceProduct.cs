@@ -341,7 +341,10 @@ namespace OpenHome.Av
                     }
                     catch (ProxyError e)
                     {
-                        volkano.SetException(e);
+                        if (!volkano.Task.IsCanceled)
+                        {
+                            volkano.SetException(e);
+                        }
                     }
                 });
             }
