@@ -177,6 +177,16 @@ namespace OpenHome.Av
             iDevice = aDevice;
         }
 
+        public void Join(Action aAction)
+        {
+            iDevice.Join(aAction);
+        }
+
+        public void Unjoin(Action aAction)
+        {
+            iDevice.Unjoin(aAction);
+        }
+
         public string Udn
         {
             get
@@ -396,13 +406,11 @@ namespace OpenHome.Av
     {
         private readonly DisposeHandler iDisposeHandler;
         private readonly IInjectorDevice iDevice;
-        private readonly List<Action> iJoiners;
 
         public Device(IInjectorDevice aDevice)
         {
             iDisposeHandler = new DisposeHandler();
             iDevice = aDevice;
-            iJoiners = new List<Action>();
         }
 
         public string Udn
@@ -428,7 +436,7 @@ namespace OpenHome.Av
         {
             using (iDisposeHandler.Lock)
             {
-                iJoiners.Add(aAction);
+                iDevice.Join(aAction);
             }
         }
 
@@ -436,18 +444,13 @@ namespace OpenHome.Av
         {
             using (iDisposeHandler.Lock)
             {
-                iJoiners.Remove(aAction);
+                iDevice.Unjoin(aAction);
             }
         }
 
         public void Dispose()
         {
             iDisposeHandler.Dispose();
-
-            foreach (Action action in iJoiners)
-            {
-                action();
-            }
 
             iDevice.Dispose();
         }

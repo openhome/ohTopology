@@ -15,7 +15,7 @@ namespace OpenHome.Av
         void Create<T>(Action<T> aCallback) where T : IProxy;
     }
 
-    public interface IInjectorDevice : IMockable, IDisposable
+    public interface IInjectorDevice : IJoinable, IMockable, IDisposable
     {
         string Udn { get; }
         void Create<T>(Action<T> aCallback, IDevice aDevice) where T : IProxy;
