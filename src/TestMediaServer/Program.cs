@@ -392,7 +392,7 @@ namespace TestMediaServer
                 var device = DeviceFactory.CreateMediaServer(network, "4c494e4e-0026-0f99-0000-000000000000", path, log);
                 var device2 = new Device(device);
 
-                IProxyMediaEndpoint proxy =null;
+                IProxyMediaEndpoint proxy = null;
 
                 using (var ready = new ManualResetEvent(false))
                 {
