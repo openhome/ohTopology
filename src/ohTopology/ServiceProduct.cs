@@ -322,9 +322,10 @@ namespace OpenHome.Av
             Do.Assert(iSubscribedConfigurationSource == null);
             Do.Assert(iSubscribedVolkanoSource == null);
 
+            TaskCompletionSource<bool> volkano = new TaskCompletionSource<bool>();
             iSubscribedSource = new TaskCompletionSource<bool>();
             iSubscribedConfigurationSource = new TaskCompletionSource<bool>();
-            iSubscribedVolkanoSource = new TaskCompletionSource<bool>();
+            iSubscribedVolkanoSource = volkano;
 
             iService.Subscribe();
             iServiceConfiguration.Subscribe();
@@ -336,17 +337,17 @@ namespace OpenHome.Av
                     try
                     {
                         iServiceVolkano.EndProductId(ptr, out iProductId);
-                        iSubscribedVolkanoSource.SetResult(true);
+                        volkano.SetResult(true);
                     }
                     catch (ProxyError e)
                     {
-                        iSubscribedVolkanoSource.SetException(e);
+                        volkano.SetException(e);
                     }
                 });
             }
             else
             {
-                iSubscribedVolkanoSource.SetResult(true);
+                volkano.SetResult(true);
             }
                 
             return Task.Factory.ContinueWhenAll(
