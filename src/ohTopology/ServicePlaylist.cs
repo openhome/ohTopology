@@ -771,8 +771,11 @@ namespace OpenHome.Av
                 {
                     Network.Schedule(() =>
                     {
-                        IIdCacheEntry entry = t.Result.ElementAt(0);
-                        iInfoNext.Update(new InfoMetadata(entry.Metadata, entry.Uri));
+                        iDisposeHandler.WhenNotDisposed(() =>
+                        {
+                            IIdCacheEntry entry = t.Result.ElementAt(0);
+                            iInfoNext.Update(new InfoMetadata(entry.Metadata, entry.Uri));
+                        });
                     });
                 });
             }

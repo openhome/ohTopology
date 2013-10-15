@@ -331,7 +331,18 @@ namespace OpenHome.Av
 
             if (iServiceVolkano != null)
             {
-                iServiceVolkano.BeginProductId(CallbackProductId);
+                iServiceVolkano.BeginProductId((ptr) =>
+                {
+                    try
+                    {
+                        iServiceVolkano.EndProductId(ptr, out iProductId);
+                        iSubscribedVolkanoSource.SetResult(true);
+                    }
+                    catch (ProxyError e)
+                    {
+                        iSubscribedVolkanoSource.SetException(e);
+                    }
+                });
             }
             else
             {
@@ -340,7 +351,7 @@ namespace OpenHome.Av
                 
             return Task.Factory.ContinueWhenAll(
                 new Task[] { iSubscribedSource.Task, iSubscribedConfigurationSource.Task, iSubscribedVolkanoSource.Task },
-                (t) => { });
+                (tasks) => { Task.WaitAll(tasks); });
         }
 
         protected override void OnCancelSubscribe()
@@ -499,16 +510,6 @@ namespace OpenHome.Av
                 }
             });
             return taskSource.Task.ContinueWith((t) => { });
-        }
-
-        private void CallbackProductId(IntPtr aPtr)
-        {
-            iSubscribedVolkanoSource.SetResult(true);
-
-            iDisposeHandler.WhenNotDisposed(() =>
-            {
-                iServiceVolkano.EndProductId(aPtr, out iProductId);
-            });
         }
 
         private void HandleRoomChanged()
