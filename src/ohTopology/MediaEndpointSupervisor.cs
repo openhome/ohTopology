@@ -445,6 +445,11 @@ namespace OpenHome.Av
 
             iDispose(iId);
         }
+
+        public override string ToString()
+        {
+            return iId;
+        }
     }
 
     // MediaEndpointSupervisor provides all the complicated Task and session handling required by a concrete MediaEndpoint client
