@@ -611,7 +611,7 @@ namespace OpenHome.Av
                         }
 
                         iDevices.Remove(handler.Udn);
-                        iScheduler.Schedule(() =>
+                        Schedule(() =>
                         {
                             handler.Dispose();
                         });
