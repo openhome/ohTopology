@@ -39,10 +39,10 @@ namespace ShowMediaServers
         {
             iSession = aTask.Result;
 
-            if (iSession != null)
+            iNetwork.Schedule(() =>
             {
                 iSession.Browse(null, ContainerCreated);
-            }
+            });
         }
 
         private void ContainerCreated()
@@ -104,7 +104,10 @@ namespace ShowMediaServers
                 iWatcher.Dispose();
             }
 
-            iSession.Dispose();
+            iNetwork.Execute(() =>
+            {
+                iSession.Dispose();
+            });
         }
     }
 
@@ -280,6 +283,7 @@ namespace ShowMediaServers
             try
             {
                 library.Dispose();
+                watchableThread.Dispose();
             }
             catch (Exception e)
             {

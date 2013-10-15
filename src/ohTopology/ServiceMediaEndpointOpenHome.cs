@@ -22,16 +22,15 @@ namespace OpenHome.Av
     public class ServiceMediaEndpointOpenHome : ServiceMediaEndpoint, IMediaEndpointClient
     {
         private readonly string iUri;
-        private readonly Func<string, Action<string, uint>, IDisposable> iSessionHandler;
+        private readonly Action<string, Action<string, uint>> iSessionHandler;
 
         private readonly Encoding iEncoding;
         private readonly MediaEndpointSupervisor iSupervisor;
-        private readonly Dictionary<string, IDisposable> iRefreshHandlers;
 
         public ServiceMediaEndpointOpenHome(INetwork aNetwork, IInjectorDevice aDevice, string aId, string aType, string aName, string aInfo,
             string aUrl, string aArtwork, string aManufacturerName, string aManufacturerInfo, string aManufacturerUrl,
             string aManufacturerArtwork, string aModelName, string aModelInfo, string aModelUrl, string aModelArtwork,
-            DateTime aStarted, IEnumerable<string> aAttributes, string aUri, Func<string, Action<string, uint>, IDisposable> aSessionHandler, ILog aLog)
+            DateTime aStarted, IEnumerable<string> aAttributes, string aUri, Action<string, Action<string, uint>> aSessionHandler, ILog aLog)
             : base (aNetwork, aDevice, aId, aType, aName, aInfo, aUrl, aArtwork, aManufacturerName, aManufacturerInfo,
             aManufacturerUrl, aManufacturerArtwork, aModelName, aModelInfo, aModelUrl, aModelArtwork, aStarted, aAttributes, aLog)
         {
@@ -40,7 +39,6 @@ namespace OpenHome.Av
 
             iEncoding = new UTF8Encoding(false);
             iSupervisor = new MediaEndpointSupervisor(this);
-            iRefreshHandlers = new Dictionary<string, IDisposable>();
         }
 
         public override IProxy OnCreate(IDevice aDevice)
@@ -295,12 +293,10 @@ namespace OpenHome.Av
 
                         var session = json.Value;
 
-                        var refresh = iSessionHandler("me." + iId + "." + session, (id, seq) =>
+                        iSessionHandler("me." + iId + "." + session, (id, seq) =>
                         {
                             iSupervisor.Refresh(session);
                         });
-
-                        iRefreshHandlers.Add(session, refresh);
 
                         tcs.SetResult(session);
                     }
@@ -484,11 +480,6 @@ namespace OpenHome.Av
             base.Dispose();
 
             iSupervisor.Dispose();
-
-            foreach (var entry in iRefreshHandlers)
-            {
-                entry.Value.Dispose();
-            }
         }
     }
 

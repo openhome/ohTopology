@@ -219,6 +219,7 @@ namespace OpenHome.Av
         private readonly ILog iLog;
 
         private Dictionary<string, IInjectorDevice> iEndpoints;
+        private Dictionary<string, List<IDisposable>> iEventHandlers;
 
         private IEventSupervisorSession iEventSession;
         private IDisposable iEventMediaEndpoints;
@@ -235,6 +236,8 @@ namespace OpenHome.Av
             iLog = aLog;
 
             iEndpoints = new Dictionary<string, IInjectorDevice>();
+            iEventHandlers = new Dictionary<string, List<IDisposable>>();
+
 
             iDisposed = false;
 
@@ -393,6 +396,18 @@ namespace OpenHome.Av
                 }
                 else
                 {
+                    List<IDisposable> handlers;
+
+                    if (iEventHandlers.TryGetValue(entry.Key, out handlers))
+                    {
+                        iEventHandlers.Remove(entry.Key);
+
+                        foreach (var handler in handlers)
+                        {
+                            handler.Dispose();
+                        }
+                    }
+
                     iInjector.RemoveDevice(entry.Value);
                 }
             }
@@ -405,15 +420,28 @@ namespace OpenHome.Av
 
                 if (!refresh.TryGetValue(entry.Key, out device))
                 {
+                    iEventHandlers.Add(entry.Key, new List<IDisposable>());
+
                     device = new DeviceMediaEndpointOpenHome(iInjector.Network, iUri, entry.Key, entry.Value, (id, action) =>
                     {
-                        return (iEventSession.Create(id, action));
+                        lock (iEndpoints)
+                        {
+                            List<IDisposable> handlers;
+
+                            if (iEventHandlers.TryGetValue(entry.Key, out handlers))
+                            {
+                                handlers.Add(iEventSession.Create(id, action));
+                            }
+                        }
                     }, iLog);
 
                     refresh.Add(entry.Key, device);
+
                     iInjector.AddDevice(device);
                 }
             }
+
+            Console.WriteLine("{0} has {1} endpoints", iUdn, refresh.Count);
 
             iEndpoints = refresh;
         }
@@ -429,7 +457,24 @@ namespace OpenHome.Av
                 if (iEventSession != null)
                 {
                     iEventMediaEndpoints.Dispose();
+
+                    foreach (var handlers in iEventHandlers.Values)
+                    {
+                        foreach (var entry in handlers)
+                        {
+                            entry.Dispose();
+                        }
+                    }
+
+                    iEventHandlers.Clear();
+
                     iEventSession.Dispose();
+                    
+                    foreach (var entry in iEndpoints)
+                    {
+                        iInjector.RemoveDevice(entry.Value);
+                    }
+
                 }
 
                 iDevice.RemoveRef();

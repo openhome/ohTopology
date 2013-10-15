@@ -28,6 +28,8 @@ namespace BrowseMediaEndpoint
         
         private IMediaEndpointSession iMediaEndpointSession;
 
+        private IEnumerable<IMediaDatum> iData;
+
         private void ReportException(Exception aException)
         {
             Console.WriteLine(aException);
@@ -75,6 +77,9 @@ namespace BrowseMediaEndpoint
                         case "q":
                         case "x":
                             return;
+                        case "b":
+                            Browse(tokens.Skip(1));
+                            break;
                         case "l":
                             List(tokens.Skip(1));
                             break;
@@ -121,8 +126,14 @@ namespace BrowseMediaEndpoint
 
         private void All(IEnumerable<IMediaDatum> aValue)
         {
+            iData = aValue;
+
+            int index = 0;
+
             foreach (var entry in aValue)
             {
+                Console.WriteLine("{0}: {1}", index++, entry.Id);
+
                 All(entry);
             }
         }
@@ -181,6 +192,58 @@ namespace BrowseMediaEndpoint
                         Console.WriteLine("{0}: {1} items", count, iMediaEndpointSession.Snapshot.Total);
                     });
                 }
+            }
+        }
+
+        private void Browse(IEnumerable<string> aTokens)
+        {
+            if (iMediaEndpoint != null)
+            {
+                if (aTokens.Any())
+                {
+                    uint index;
+
+                    if (uint.TryParse(aTokens.First(), out index))
+                    {
+                        if (iData != null)
+                        {
+                            if (iData.Count() > index)
+                            {
+                                iWatchableThread.Schedule(() =>
+                                {
+                                    Browse(iData.ElementAt((int)index));
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void Browse(IMediaDatum aDatum)
+        {
+            try
+            {
+                var sw = new Stopwatch();
+
+                var count = 0;
+
+                sw.Start();
+
+                iMediaEndpointSession.Browse(aDatum, () =>
+                {
+                    if (count++ == 0)
+                    {
+                        sw.Stop();
+                        Console.WriteLine("{0}ms", sw.Milliseconds);
+                    }
+
+                    Console.WriteLine("{0}: {1} items", count, iMediaEndpointSession.Snapshot.Total);
+                });
+            }
+            catch
+            {
+                Console.WriteLine("Operation failed");
             }
         }
 

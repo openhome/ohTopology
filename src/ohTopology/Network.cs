@@ -269,6 +269,7 @@ namespace OpenHome.Av
         {
             iNetwork = aNetwork;
             iResourceRoot = aResourceRoot;
+            iLog = aLog;
             iMockDevices = new Dictionary<string, InjectorDeviceMock>();
         }
 
@@ -574,11 +575,13 @@ namespace OpenHome.Av
                 iScheduler.Schedule(() =>
                 {
                     Device handler = new Device(aDevice);
+
                     if (iDevices.ContainsKey(handler.Udn))
                     {
                         handler.Dispose();
                         return;
                     }
+
                     iDevices.Add(handler.Udn, handler);
 
                     foreach (KeyValuePair<Type, WatchableUnordered<IDevice>> kvp in iDeviceLists)
@@ -611,6 +614,7 @@ namespace OpenHome.Av
                         }
 
                         iDevices.Remove(handler.Udn);
+
                         handler.Dispose();
                     }
                 });

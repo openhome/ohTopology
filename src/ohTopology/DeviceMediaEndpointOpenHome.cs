@@ -32,7 +32,7 @@ namespace OpenHome.Av
         private readonly ServiceMediaEndpointOpenHome iService;
 
         public DeviceMediaEndpointOpenHome(INetwork aNetwork, Uri aUri, string aId, JsonValue aJson,
-            Func<string, Action<string, uint>, IDisposable> aSessionHandler, ILog aLog)
+            Action<string, Action<string, uint>> aSessionHandler, ILog aLog)
             : base(aId)
         {
             var json = aJson as JsonObject;
@@ -93,6 +93,7 @@ namespace OpenHome.Av
         private string ResolveUri(Uri aBaseUri, string aUri)
         {
             Uri absoluteUri;
+
             if (Uri.TryCreate(aUri, UriKind.Absolute, out absoluteUri))
             {
                 if (!absoluteUri.IsFile)
@@ -100,8 +101,10 @@ namespace OpenHome.Av
                     return aUri;
                 }
             }
+
             absoluteUri = new Uri(aBaseUri, aUri);
-            return absoluteUri.ToString();
+
+            return (absoluteUri.ToString());
         }
 
         // IDisposable
