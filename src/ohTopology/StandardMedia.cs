@@ -81,8 +81,11 @@ namespace OpenHome.Av
 
             iNetwork.Schedule(() =>
             {
-                iMediaEndpoints = iNetwork.Create<IProxyMediaEndpoint>();
-                iMediaEndpoints.AddWatcher(this);
+                iDisposeHandler.WhenNotDisposed(() =>
+                {
+                    iMediaEndpoints = iNetwork.Create<IProxyMediaEndpoint>();
+                    iMediaEndpoints.AddWatcher(this);
+                });
             });
         }
 
@@ -92,7 +95,10 @@ namespace OpenHome.Av
 
             iNetwork.Execute(() =>
             {
-                iMediaEndpoints.RemoveWatcher(this);
+                if (iMediaEndpoints != null)
+                {
+                    iMediaEndpoints.RemoveWatcher(this);
+                }
             });
 
             foreach (var kvp in iEndpointLookup)
