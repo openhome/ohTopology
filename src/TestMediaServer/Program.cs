@@ -396,11 +396,14 @@ namespace TestMediaServer
 
                 using (var ready = new ManualResetEvent(false))
                 {
-                    device.Create<IProxyMediaEndpoint>((p) =>
+                    network.Schedule(() =>
                     {
-                        proxy = p;
-                        ready.Set();
-                    }, device2);
+                        device.Create<IProxyMediaEndpoint>((p) =>
+                        {
+                            proxy = p;
+                            ready.Set();
+                        }, device2);
+                    });
 
                     ready.WaitOne();
                 }
