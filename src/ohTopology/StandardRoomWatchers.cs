@@ -8,6 +8,34 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
+    internal class CreateProxy<T> : IDisposable where T : IProxy
+    {
+        private readonly Action<ITopology4Source, T> iAction;
+        private bool iDisposed;
+
+        public CreateProxy(ITopology4Source aSource, Action<ITopology4Source, T> aAction)
+        {
+            iAction = aAction;
+
+            aSource.Device.Create<T>((proxy) =>
+            {
+                if (!iDisposed)
+                {
+                    iAction(aSource, proxy);
+                }
+                else
+                {
+                    proxy.Dispose();
+                }
+            });
+        }
+
+        public void Dispose()
+        {
+            iDisposed = true;
+        }
+    }
+
     public interface IStandardRoomWatcher : IDisposable
     {
         IStandardRoom Room { get; }
@@ -161,6 +189,7 @@ namespace OpenHome.Av
     public class StandardRoomWatcherMusic : StandardRoomWatcher
     {
         private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
+        private CreateProxy<IProxyPlaylist> iCreateProxy;
         private ITopology4Source iSource;
         private IProxyPlaylist iPlaylist;
         private IPlaylistWriter iPlaylistWriter;
@@ -229,21 +258,37 @@ namespace OpenHome.Av
             {
                 if (s.Type == "Playlist")
                 {
-                    s.Device.Create<IProxyPlaylist>((playlist) =>
+                    if (iCreateProxy != null)
                     {
-                        iSource = s;
-                        iPlaylist = playlist;
-                        iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, s, playlist.Snapshot);
-                        iPlaylistWriter = new PlaylistWriter(playlist);
-                        SetEnabled(true);
-                    });
+                        iCreateProxy.Dispose();
+                        iCreateProxy = null;
+                    }
+                    iCreateProxy = new CreateProxy<IProxyPlaylist>(s, CreatedProxy);
                     return;
                 }
             }
         }
 
+        private void CreatedProxy(ITopology4Source aSource, IProxyPlaylist aPlaylist)
+        {
+            iCreateProxy.Dispose();
+            iCreateProxy = null;
+
+            iSource = aSource;
+            iPlaylist = aPlaylist;
+            iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, aSource, aPlaylist.Snapshot);
+            iPlaylistWriter = new PlaylistWriter(aPlaylist);
+            SetEnabled(true);
+        }
+
         private void DeleteProxy()
         {
+            if (iCreateProxy != null)
+            {
+                iCreateProxy.Dispose();
+                iCreateProxy = null;
+            }
+
             if (iPlaylist != null)
             {
                 iWatchableSnapshot.Dispose();
@@ -260,6 +305,7 @@ namespace OpenHome.Av
     public class StandardRoomWatcherRadio : StandardRoomWatcher
     {
         private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
+        private CreateProxy<IProxyRadio> iCreateProxy;
         private ITopology4Source iSource;
         private IProxyRadio iRadio;
 
@@ -314,20 +360,36 @@ namespace OpenHome.Av
             {
                 if (s.Type == "Radio")
                 {
-                    s.Device.Create<IProxyRadio>((radio) =>
+                    if (iCreateProxy != null)
                     {
-                        iSource = s;
-                        iRadio = radio;
-                        iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, s, radio.Snapshot);
-                        SetEnabled(true);
-                    });
+                        iCreateProxy.Dispose();
+                        iCreateProxy = null;
+                    }
+                    iCreateProxy = new CreateProxy<IProxyRadio>(s, CreatedProxy);
                     return;
                 }
             }
         }
 
+        private void CreatedProxy(ITopology4Source aSource, IProxyRadio aRadio)
+        {
+            iCreateProxy.Dispose();
+            iCreateProxy = null;
+
+            iSource = aSource;
+            iRadio = aRadio;
+            iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, aSource, aRadio.Snapshot);
+            SetEnabled(true);
+        }
+
         private void DeleteProxy()
         {
+            if (iCreateProxy != null)
+            {
+                iCreateProxy.Dispose();
+                iCreateProxy = null;
+            }
+
             if (iRadio != null)
             {
                 iWatchableSnapshot.Dispose();
@@ -458,6 +520,7 @@ namespace OpenHome.Av
 
         private IProxyReceiver iReceiver;
         private MediaSupervisor<IMediaPreset> iSupervisor;
+        private CreateProxy<IProxyReceiver> iCreateProxy;
         private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
 
         public StandardRoomWatcherSenders(IStandardHouse aHouse, IStandardRoom aRoom)
@@ -620,19 +683,29 @@ namespace OpenHome.Av
             {
                 if (s.Type == "Receiver")
                 {
-                    s.Device.Create<IProxyReceiver>((receiver) =>
+                    if (iCreateProxy != null)
                     {
-                        iSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new SendersSnapshot(iNetwork, receiver, new List<ISenderMetadata>()));
-                        iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, s, iSupervisor.Snapshot);
-                        iReceiver = receiver;
-                        iSendersMetadataWatcher.Metadata.AddWatcher(this);
-                        SetEnabled(true);
-                    });
+                        iCreateProxy.Dispose();
+                        iCreateProxy = null;
+                    }
+                    iCreateProxy = new CreateProxy<IProxyReceiver>(s, CreatedProxy);
                     return;
                 }
             }
 
             SetEnabled(false);
+        }
+
+        private void CreatedProxy(ITopology4Source aSource, IProxyReceiver aReceiver)
+        {
+            iCreateProxy.Dispose();
+            iCreateProxy = null;
+
+            iSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new SendersSnapshot(iNetwork, aReceiver, new List<ISenderMetadata>()));
+            iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, aSource, iSupervisor.Snapshot);
+            iReceiver = aReceiver;
+            iSendersMetadataWatcher.Metadata.AddWatcher(this);
+            SetEnabled(true);
         }
 
         private void SetEnabled(bool aValue)
@@ -642,6 +715,12 @@ namespace OpenHome.Av
 
         private void DeleteProxy()
         {
+            if (iCreateProxy != null)
+            {
+                iCreateProxy.Dispose();
+                iCreateProxy = null;
+            }
+
             if (iReceiver != null)
             {
                 iWatchableSnapshot.Dispose();
@@ -1154,6 +1233,7 @@ namespace OpenHome.Av
     public class StandardRoomWatcherDisc : StandardRoomWatcher
     {
         private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
+        private CreateProxy<IProxySdp> iCreateProxy;
         private ITopology4Source iSource;
         private IProxySdp iSdp;
 
@@ -1208,20 +1288,36 @@ namespace OpenHome.Av
             {
                 if (s.Type == "Disc")
                 {
-                    s.Device.Create<IProxySdp>((sdp) =>
+                    if(iCreateProxy != null)
                     {
-                        iSource = s;
-                        iSdp = sdp;
-                        iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, s, sdp.Snapshot);
-                        SetEnabled(true);
-                    });
+                        iCreateProxy.Dispose();
+                        iCreateProxy = null;
+                    }
+                    iCreateProxy = new CreateProxy<IProxySdp>(s, CreatedProxy);
                     return;
                 }
             }
         }
 
+        private void CreatedProxy(ITopology4Source aSource, IProxySdp aSdp)
+        {
+            iCreateProxy.Dispose();
+            iCreateProxy = null;
+
+            iSource = aSource;
+            iSdp = aSdp;
+            iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, aSource, aSdp.Snapshot);
+            SetEnabled(true);
+        }
+
         private void DeleteProxy()
         {
+            if (iCreateProxy != null)
+            {
+                iCreateProxy.Dispose();
+                iCreateProxy = null;
+            }
+
             if (iSdp != null)
             {
                 iWatchableSnapshot.Dispose();
