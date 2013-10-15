@@ -23,7 +23,6 @@ namespace OpenHome.Av
         private readonly ManualResetEvent iSubscribed;
         private readonly List<Task> iTasks;
         private uint iRefCount;
-        private object iRefCountLock;
 
         protected readonly DisposeHandler iDisposeHandler;
         protected Task iSubscribeTask;
@@ -38,22 +37,18 @@ namespace OpenHome.Av
             iCancelSubscribe = new CancellationTokenSource();
             iSubscribed = new ManualResetEvent(true);
             iRefCount = 0;
-            iRefCountLock = new object();
             iSubscribeTask = null;
             iTasks = new List<Task>();
         }
 
         public virtual void Dispose()
         {
-            iNetwork.Assert();
+            Assert();
 
             iDisposeHandler.Dispose();
-
-            lock (iCancelSubscribe)
-            {
-                iCancelSubscribe.Cancel();
-                OnCancelSubscribe();
-            }
+            
+            iCancelSubscribe.Cancel();
+            OnCancelSubscribe();
 
             // wait for any inflight subscriptions to complete
 
@@ -127,17 +122,16 @@ namespace OpenHome.Av
 
         public void Create<T>(Action<T> aCallback, IDevice aDevice) where T : IProxy
         {
+            Assert();
+
             using (iDisposeHandler.Lock)
             {
-                lock (iRefCountLock)
+                if (iRefCount == 0)
                 {
-                    if (iRefCount == 0)
-                    {
-                        Do.Assert(iSubscribeTask == null);
-                        iSubscribeTask = OnSubscribe();
-                    }
-                    ++iRefCount;
+                    Do.Assert(iSubscribeTask == null);
+                    iSubscribeTask = OnSubscribe();
                 }
+                ++iRefCount;
 
                 if (iSubscribeTask != null)
                 {
@@ -145,22 +139,13 @@ namespace OpenHome.Av
 
                     iSubscribeTask.ContinueWith((t) =>
                     {
-                        bool cancel = false;
-                        lock (iCancelSubscribe)
+                        iNetwork.Schedule(() =>
                         {
-                            cancel = iCancelSubscribe.IsCancellationRequested;
-                        }
-
-                        if (!cancel && !t.IsFaulted)
-                        {
-                            iNetwork.Schedule(() =>
+                            if (!iCancelSubscribe.IsCancellationRequested && !t.IsFaulted)
                             {
                                 aCallback((T)OnCreate(aDevice));
-                            });
-                        }
-                        else
-                        {
-                            lock (iRefCountLock)
+                            }
+                            else
                             {
                                 --iRefCount;
                                 if (iRefCount == 0)
@@ -168,7 +153,7 @@ namespace OpenHome.Av
                                     iSubscribeTask = null;
                                 }
                             }
-                        }
+                        });
 
                         iSubscribed.Set();
                     });
@@ -191,18 +176,15 @@ namespace OpenHome.Av
 
         public void Unsubscribe()
         {
-            lock (iRefCountLock)
+            if (iRefCount == 0)
             {
-                if (iRefCount == 0)
-                {
-                    throw new Exception("Service not subscribed");
-                }
-                --iRefCount;
-                if (iRefCount == 0)
-                {
-                    OnUnsubscribe();
-                    iSubscribeTask = null;
-                }
+                throw new Exception("Service not subscribed");
+            }
+            --iRefCount;
+            if (iRefCount == 0)
+            {
+                OnUnsubscribe();
+                iSubscribeTask = null;
             }
         }
 
