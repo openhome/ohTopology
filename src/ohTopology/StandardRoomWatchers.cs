@@ -271,9 +271,6 @@ namespace OpenHome.Av
 
         private void CreatedProxy(ITopology4Source aSource, IProxyPlaylist aPlaylist)
         {
-            iCreateProxy.Dispose();
-            iCreateProxy = null;
-
             iSource = aSource;
             iPlaylist = aPlaylist;
             iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, aSource, aPlaylist.Snapshot);
@@ -373,9 +370,6 @@ namespace OpenHome.Av
 
         private void CreatedProxy(ITopology4Source aSource, IProxyRadio aRadio)
         {
-            iCreateProxy.Dispose();
-            iCreateProxy = null;
-
             iSource = aSource;
             iRadio = aRadio;
             iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, aSource, aRadio.Snapshot);
@@ -698,9 +692,6 @@ namespace OpenHome.Av
 
         private void CreatedProxy(ITopology4Source aSource, IProxyReceiver aReceiver)
         {
-            iCreateProxy.Dispose();
-            iCreateProxy = null;
-
             iSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new SendersSnapshot(iNetwork, aReceiver, new List<ISenderMetadata>()));
             iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, aSource, iSupervisor.Snapshot);
             iReceiver = aReceiver;
@@ -1301,9 +1292,6 @@ namespace OpenHome.Av
 
         private void CreatedProxy(ITopology4Source aSource, IProxySdp aSdp)
         {
-            iCreateProxy.Dispose();
-            iCreateProxy = null;
-
             iSource = aSource;
             iSdp = aSdp;
             iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, aSource, aSdp.Snapshot);
