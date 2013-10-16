@@ -21,6 +21,34 @@ namespace OpenHome.Av
         void VolumeDec();
     }
 
+    class StandardVolumeControllerProxyCreator : IDisposable
+    {
+        private readonly Action<IProxyVolume> iAction;
+        private bool iDisposed;
+
+        public StandardVolumeControllerProxyCreator(IDevice aDevice, Action<IProxyVolume> aAction)
+        {
+            iAction = aAction;
+
+            aDevice.Create<IProxyVolume>((proxy) =>
+            {
+                if (!iDisposed)
+                {
+                    iAction(proxy);
+                }
+                else
+                {
+                    proxy.Dispose();
+                }
+            });
+        }
+
+        public void Dispose()
+        {
+            iDisposed = true;
+        }
+    }
+
     class StandardVolumeController : IVolumeController, IWatcher<ITopology4Source>, IWatcher<bool>, IWatcher<uint>
     {
         public StandardVolumeController(IStandardRoom aRoom)
@@ -30,6 +58,7 @@ namespace OpenHome.Av
             iRoom = aRoom;
             iNetwork = aRoom.Network;
             iSource = aRoom.Source;
+            iName = aRoom.Name;
 
             iHasVolume = new Watchable<bool>(iNetwork, "HasVolume", false);
             iMute = new Watchable<bool>(iNetwork, "Mute", false);
@@ -64,7 +93,7 @@ namespace OpenHome.Av
             {
                 using (iDisposeHandler.Lock)
                 {
-                    return iRoom.Name;
+                    return iName;
                 }
             }
         }
@@ -207,28 +236,35 @@ namespace OpenHome.Av
         {
             iDevice = aDevice;
 
-            iDevice.Create<IProxyVolume>((volume) =>
+            if (iCreateProxy != null)
             {
-                if (!iDisposed)
-                {
-                    iVolume = volume;
+                iCreateProxy.Dispose();
+                iCreateProxy = null;
+            }
 
-                    iVolume.Mute.AddWatcher(this);
-                    iVolume.Value.AddWatcher(this);
-                    iVolume.VolumeLimit.AddWatcher(this);
+            iCreateProxy = new StandardVolumeControllerProxyCreator(aDevice, CreatedProxy);
+        }
 
-                    iHasVolume.Update(true);
-                }
-                else
-                {
-                    volume.Dispose();
-                }
-            });
+        private void CreatedProxy(IProxyVolume aProxy)
+        {
+            iVolume = aProxy;
+
+            iVolume.Mute.AddWatcher(this);
+            iVolume.Value.AddWatcher(this);
+            iVolume.VolumeLimit.AddWatcher(this);
+
+            iHasVolume.Update(true);
         }
 
         private void DestroyProxy()
         {
             iHasVolume.Update(false);
+
+            if (iCreateProxy != null)
+            {
+                iCreateProxy.Dispose();
+                iCreateProxy = null;
+            }
 
             if (iVolume != null)
             {
@@ -287,10 +323,12 @@ namespace OpenHome.Av
         private readonly IStandardRoom iRoom;
         private readonly IWatchable<ITopology4Source> iSource;
         private readonly INetwork iNetwork;
+        private readonly string iName;
         
         private bool iDisposed;
         private IProxyVolume iVolume;
         private IDevice iDevice;
+        private StandardVolumeControllerProxyCreator iCreateProxy;
 
         private readonly Watchable<bool> iHasVolume;
         private readonly Watchable<bool> iMute;

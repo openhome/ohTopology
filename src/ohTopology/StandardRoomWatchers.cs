@@ -8,12 +8,12 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    internal class CreateProxy<T> : IDisposable where T : IProxy
+    class StandardRoomWatcherProxyCreator<T> : IDisposable where T : IProxy
     {
         private readonly Action<ITopology4Source, T> iAction;
         private bool iDisposed;
 
-        public CreateProxy(ITopology4Source aSource, Action<ITopology4Source, T> aAction)
+        public StandardRoomWatcherProxyCreator(ITopology4Source aSource, Action<ITopology4Source, T> aAction)
         {
             iAction = aAction;
 
@@ -189,7 +189,7 @@ namespace OpenHome.Av
     public class StandardRoomWatcherMusic : StandardRoomWatcher
     {
         private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
-        private CreateProxy<IProxyPlaylist> iCreateProxy;
+        private StandardRoomWatcherProxyCreator<IProxyPlaylist> iCreateProxy;
         private ITopology4Source iSource;
         private IProxyPlaylist iPlaylist;
         private IPlaylistWriter iPlaylistWriter;
@@ -263,7 +263,7 @@ namespace OpenHome.Av
                         iCreateProxy.Dispose();
                         iCreateProxy = null;
                     }
-                    iCreateProxy = new CreateProxy<IProxyPlaylist>(s, CreatedProxy);
+                    iCreateProxy = new StandardRoomWatcherProxyCreator<IProxyPlaylist>(s, CreatedProxy);
                     return;
                 }
             }
@@ -302,7 +302,7 @@ namespace OpenHome.Av
     public class StandardRoomWatcherRadio : StandardRoomWatcher
     {
         private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
-        private CreateProxy<IProxyRadio> iCreateProxy;
+        private StandardRoomWatcherProxyCreator<IProxyRadio> iCreateProxy;
         private ITopology4Source iSource;
         private IProxyRadio iRadio;
 
@@ -362,7 +362,7 @@ namespace OpenHome.Av
                         iCreateProxy.Dispose();
                         iCreateProxy = null;
                     }
-                    iCreateProxy = new CreateProxy<IProxyRadio>(s, CreatedProxy);
+                    iCreateProxy = new StandardRoomWatcherProxyCreator<IProxyRadio>(s, CreatedProxy);
                     return;
                 }
             }
@@ -514,7 +514,7 @@ namespace OpenHome.Av
 
         private IProxyReceiver iReceiver;
         private MediaSupervisor<IMediaPreset> iSupervisor;
-        private CreateProxy<IProxyReceiver> iCreateProxy;
+        private StandardRoomWatcherProxyCreator<IProxyReceiver> iCreateProxy;
         private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
 
         public StandardRoomWatcherSenders(IStandardHouse aHouse, IStandardRoom aRoom)
@@ -682,7 +682,7 @@ namespace OpenHome.Av
                         iCreateProxy.Dispose();
                         iCreateProxy = null;
                     }
-                    iCreateProxy = new CreateProxy<IProxyReceiver>(s, CreatedProxy);
+                    iCreateProxy = new StandardRoomWatcherProxyCreator<IProxyReceiver>(s, CreatedProxy);
                     return;
                 }
             }
@@ -1224,7 +1224,7 @@ namespace OpenHome.Av
     public class StandardRoomWatcherDisc : StandardRoomWatcher
     {
         private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
-        private CreateProxy<IProxySdp> iCreateProxy;
+        private StandardRoomWatcherProxyCreator<IProxySdp> iCreateProxy;
         private ITopology4Source iSource;
         private IProxySdp iSdp;
 
@@ -1284,7 +1284,7 @@ namespace OpenHome.Av
                         iCreateProxy.Dispose();
                         iCreateProxy = null;
                     }
-                    iCreateProxy = new CreateProxy<IProxySdp>(s, CreatedProxy);
+                    iCreateProxy = new StandardRoomWatcherProxyCreator<IProxySdp>(s, CreatedProxy);
                     return;
                 }
             }
