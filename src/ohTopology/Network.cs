@@ -487,30 +487,33 @@ namespace OpenHome.Av
     {
         IIdCache IdCache { get; }
         ITagManager TagManager { get; }
+        IEventSupervisor EventSupervisor { get; }
         IWatchableUnordered<IDevice> Create<T>() where T : IProxy;
     }
 
     public class Network : INetwork
     {
         private readonly List<Exception> iExceptions;
-        private readonly IWatchableThread iThread;
+        private readonly IWatchableThread iWatchableThread;
         private readonly WatchableScheduler iScheduler;
         private readonly Action iDispose;
         private readonly DisposeHandler iDisposeHandler;
         private readonly IdCache iCache;
         private readonly ITagManager iTagManager;
+        private readonly EventSupervisor iEventSupervisor;
         private readonly Dictionary<string, Device> iDevices;
         private readonly Dictionary<Type, WatchableUnordered<IDevice>> iDeviceLists;
 
         public Network(uint aMaxCacheEntries, ILog aLog)
         {
             iExceptions = new List<Exception>();
-            iThread = new MockThread(ReportException);
-            iScheduler = new WatchableScheduler(iThread);
-            iDispose = () => { (iThread as MockThread).Dispose(); };
+            iWatchableThread = new MockThread(ReportException);
+            iScheduler = new WatchableScheduler(iWatchableThread);
+            iDispose = () => { (iWatchableThread as MockThread).Dispose(); };
             iDisposeHandler = new DisposeHandler();
             iCache = new IdCache(aMaxCacheEntries);
             iTagManager = new TagManager();
+            iEventSupervisor = new EventSupervisor(iWatchableThread);
             iDevices = new Dictionary<string, Device>();
             iDeviceLists = new Dictionary<Type, WatchableUnordered<IDevice>>();
         }
@@ -518,12 +521,13 @@ namespace OpenHome.Av
         public Network(IWatchableThread aWatchableThread, uint aMaxCacheEntries, ILog aLog)
         {
             iExceptions = new List<Exception>();
-            iThread = aWatchableThread;
-            iScheduler = new WatchableScheduler(iThread);
+            iWatchableThread = aWatchableThread;
+            iScheduler = new WatchableScheduler(iWatchableThread);
             iDispose = () => { };
             iDisposeHandler = new DisposeHandler();
             iCache = new IdCache(aMaxCacheEntries);
             iTagManager = new TagManager();
+            iEventSupervisor = new EventSupervisor(iWatchableThread);
             iDevices = new Dictionary<string, Device>();
             iDeviceLists = new Dictionary<Type, WatchableUnordered<IDevice>>();
         }
@@ -542,7 +546,7 @@ namespace OpenHome.Av
 
             iScheduler.Wait();
 
-            iThread.Execute(() =>
+            iWatchableThread.Execute(() =>
             {
                 foreach (var device in iDevices.Values)
                 {
@@ -559,7 +563,7 @@ namespace OpenHome.Av
             {
                 while (!WaitDevices()) ;
 
-                iThread.Execute();
+                iWatchableThread.Execute();
 
                 if (WaitDevices())
                 {
@@ -637,7 +641,7 @@ namespace OpenHome.Av
                 }
                 else
                 {
-                    list = new WatchableUnordered<IDevice>(iThread);
+                    list = new WatchableUnordered<IDevice>(iWatchableThread);
                     iDeviceLists.Add(key, list);
                     foreach (Device d in iDevices.Values)
                     {
@@ -673,21 +677,29 @@ namespace OpenHome.Av
             }
         }
 
+        public IEventSupervisor EventSupervisor
+        {
+            get
+            {
+                return (iEventSupervisor);
+            }
+        }
+
         // IWatchableThread
 
         public void Assert()
         {
-            iThread.Assert();
+            iWatchableThread.Assert();
         }
 
         public void Schedule(Action aAction)
         {
-            iThread.Schedule(aAction);
+            iWatchableThread.Schedule(aAction);
         }
 
         public void Execute(Action aAction)
         {
-            iThread.Execute(aAction);
+            iWatchableThread.Execute(aAction);
         }
 
         // IDisposable
@@ -710,6 +722,8 @@ namespace OpenHome.Av
                     device.Dispose();
                 }
             });
+
+            iEventSupervisor.Dispose();
 
             iDisposeHandler.Dispose();
 
