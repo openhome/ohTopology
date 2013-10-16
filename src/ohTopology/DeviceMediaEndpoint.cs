@@ -35,7 +35,6 @@ namespace OpenHome.Av
         private readonly ILog iLog;
 
         private readonly DisposeHandler iDisposeHandler;
-        private readonly EventSupervisor iEventSupervisor;
         private readonly Dictionary<string, IDisposable> iDevices;
         private readonly CpDeviceListUpnpServiceType iDeviceList;
 
@@ -45,7 +44,6 @@ namespace OpenHome.Av
             iLog = aLog;
 
             iDisposeHandler = new DisposeHandler();
-            iEventSupervisor = new EventSupervisor(iNetwork);
             iDevices = new Dictionary<string, IDisposable>();
             iDeviceList = new CpDeviceListUpnpServiceType("upnp.org", "ContentDirectory", 1, Added, Removed);
         }
@@ -74,7 +72,7 @@ namespace OpenHome.Av
 
         internal IEventSupervisorSession CreateEventSession(string aEndpoint)
         {
-            return (iEventSupervisor.Create(aEndpoint));
+            return (iNetwork.EventSupervisor.Create(aEndpoint));
         }
 
         private string GetDeviceElementValue(IEnumerable<XElement> aElements, string aName)
@@ -185,8 +183,6 @@ namespace OpenHome.Av
                     device.Dispose();
                 }
             }
-
-            iEventSupervisor.Dispose();
         }
     }
 
@@ -237,7 +233,6 @@ namespace OpenHome.Av
 
             iEndpoints = new Dictionary<string, IInjectorDevice>();
             iEventHandlers = new Dictionary<string, List<IDisposable>>();
-
 
             iDisposed = false;
 
@@ -343,13 +338,16 @@ namespace OpenHome.Av
 
                 var endpoints = GetEndpoints();
 
-                lock (iEndpoints)
+                iInjector.Network.Schedule(() =>
                 {
-                    if (!iDisposed)
+                    lock (iEndpoints)
                     {
-                        UpdateEndpointsLocked(endpoints);
+                        if (!iDisposed)
+                        {
+                            UpdateEndpointsLocked(endpoints);
+                        }
                     }
-                }
+                });
             });
         }
 
@@ -454,30 +452,32 @@ namespace OpenHome.Av
             {
                 iDisposed = true;
 
-                if (iEventSession != null)
-                {
-                    iEventMediaEndpoints.Dispose();
+                iDevice.RemoveRef();
 
-                    foreach (var handlers in iEventHandlers.Values)
+                iInjector.Network.Schedule(() =>
+                {
+                    if (iEventSession != null)
                     {
-                        foreach (var entry in handlers)
+                        iEventMediaEndpoints.Dispose();
+
+                        foreach (var handlers in iEventHandlers.Values)
                         {
-                            entry.Dispose();
+                            foreach (var entry in handlers)
+                            {
+                                entry.Dispose();
+                            }
+                        }
+
+                        iEventHandlers.Clear();
+
+                        iEventSession.Dispose();
+
+                        foreach (var entry in iEndpoints)
+                        {
+                            iInjector.RemoveDevice(entry.Value);
                         }
                     }
-
-                    iEventHandlers.Clear();
-
-                    iEventSession.Dispose();
-                    
-                    foreach (var entry in iEndpoints)
-                    {
-                        iInjector.RemoveDevice(entry.Value);
-                    }
-
-                }
-
-                iDevice.RemoveRef();
+                });
             }
         }
     }
