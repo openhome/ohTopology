@@ -253,7 +253,7 @@ namespace OpenHome.Av
                 iTimeWatcher = null;
             }
 
-            Do.Assert(iInfoWatcher == null);
+            Do.Assert(iTimeWatcher == null);
         }
 
         private readonly DisposeHandler iDisposeHandler;
