@@ -223,7 +223,14 @@ namespace OpenHome.Av
                     if (job != null)
                     {
                         job.Start();
-                        job.Wait();
+                        try
+                        {
+                            job.Wait();
+                        }
+                        catch
+                        {
+                            // we just want to ensure task has completed - some other piece of code will handle the exception if required
+                        }
                     }
                     else
                     {
