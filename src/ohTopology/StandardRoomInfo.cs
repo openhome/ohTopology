@@ -262,6 +262,7 @@ namespace OpenHome.Av
 
             if ((!aPrevious.HasInfo && aValue.HasInfo) || (aPrevious.HasInfo && aValue.HasInfo && aPrevious.Device != aValue.Device))
             {
+                Do.Assert(iInfoWatcher == null);
                 iInfoWatcher = new InfoWatcher(iNetwork, aValue.Device, iDetails, iMetadata, iMetatext);
             }
         }
@@ -273,6 +274,8 @@ namespace OpenHome.Av
                 iInfoWatcher.Dispose();
                 iInfoWatcher = null;
             }
+
+            Do.Assert(iInfoWatcher == null);
         }
     }
 }

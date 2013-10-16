@@ -240,6 +240,7 @@ namespace OpenHome.Av
 
             if ((!aPrevious.HasTime && aValue.HasTime) || (aPrevious.HasTime && aValue.HasTime && aPrevious.Device != aValue.Device))
             {
+                Do.Assert(iTimeWatcher == null);
                 iTimeWatcher = new TimeWatcher(iNetwork, aValue.Device, iHasTime, iSeconds, iDuration);
             }
         }
@@ -251,6 +252,8 @@ namespace OpenHome.Av
                 iTimeWatcher.Dispose();
                 iTimeWatcher = null;
             }
+
+            Do.Assert(iInfoWatcher == null);
         }
 
         private readonly DisposeHandler iDisposeHandler;
