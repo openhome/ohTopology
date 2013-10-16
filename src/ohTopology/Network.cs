@@ -11,71 +11,6 @@ using OpenHome.Net.ControlPoint;
 
 namespace OpenHome.Av
 {
-    public class WatchableScheduler : IDisposable
-    {
-        private readonly IWatchableThread iWatchableThread;
-        private readonly DisposeHandler iDisposeHandler;
-        private readonly object iLock;
-        private Task iTask;
-
-        public WatchableScheduler(IWatchableThread aWatchableThread)
-        {
-            iWatchableThread = aWatchableThread;
-            iDisposeHandler = new DisposeHandler();
-            iLock = new object();
-            iTask = Task.Factory.StartNew(() => { });
-        }
-
-        public void Schedule(Action aAction)
-        {
-            using (iDisposeHandler.Lock)
-            {
-                lock (iLock)
-                {
-                    iTask = iTask.ContinueWith((t) =>
-                    {
-                        using (var done = new ManualResetEvent(false))
-                        {
-                            iWatchableThread.Schedule(() =>
-                            {
-                                try
-                                {
-                                    aAction.Invoke();
-                                }
-                                catch
-                                {
-                                }
-
-                                done.Set();
-                            });
-
-                            done.WaitOne();
-                        }
-                    });
-                }
-            }
-        }
-
-        public void Wait()
-        {
-            using (iDisposeHandler.Lock)
-            {
-                lock (iLock)
-                {
-                    iTask.Wait();
-                }
-            }
-        }
-
-        // IDisposable
-
-        public void Dispose()
-        {
-            iDisposeHandler.Dispose();
-            iTask.Wait();
-        }
-    }
-
     public abstract class DeviceInjector : IDisposable
     {
         private readonly Network iNetwork;
@@ -495,7 +430,6 @@ namespace OpenHome.Av
     {
         private readonly List<Exception> iExceptions;
         private readonly IWatchableThread iWatchableThread;
-        private readonly WatchableScheduler iScheduler;
         private readonly Action iDispose;
         private readonly DisposeHandler iDisposeHandler;
         private readonly IdCache iCache;
@@ -508,7 +442,6 @@ namespace OpenHome.Av
         {
             iExceptions = new List<Exception>();
             iWatchableThread = new MockThread(ReportException);
-            iScheduler = new WatchableScheduler(iWatchableThread);
             iDispose = () => { (iWatchableThread as MockThread).Dispose(); };
             iDisposeHandler = new DisposeHandler();
             iCache = new IdCache(aMaxCacheEntries);
@@ -522,7 +455,6 @@ namespace OpenHome.Av
         {
             iExceptions = new List<Exception>();
             iWatchableThread = aWatchableThread;
-            iScheduler = new WatchableScheduler(iWatchableThread);
             iDispose = () => { };
             iDisposeHandler = new DisposeHandler();
             iCache = new IdCache(aMaxCacheEntries);
@@ -543,8 +475,6 @@ namespace OpenHome.Av
         private bool WaitDevices()
         {
             bool complete = true;
-
-            iScheduler.Wait();
 
             iWatchableThread.Execute(() =>
             {
@@ -576,7 +506,7 @@ namespace OpenHome.Av
         {
             using (iDisposeHandler.Lock)
             {
-                iScheduler.Schedule(() =>
+                Schedule(() =>
                 {
                     Device handler = new Device(aDevice);
 
@@ -603,7 +533,7 @@ namespace OpenHome.Av
         {
             using (iDisposeHandler.Lock)
             {
-                iScheduler.Schedule(() =>
+                Schedule(() =>
                 {
                     Device handler;
 
@@ -707,8 +637,6 @@ namespace OpenHome.Av
         public void Dispose()
         {
             Wait();
-
-            iScheduler.Dispose();
 
             foreach (WatchableUnordered<IDevice> list in iDeviceLists.Values)
             {
