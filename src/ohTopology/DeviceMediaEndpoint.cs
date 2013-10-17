@@ -203,6 +203,7 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
+            iInjector.RemoveDevice(iDevice);
         }
     }
 
