@@ -396,7 +396,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iMetadata.Uri;
                 }
@@ -407,7 +407,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iDevice;
                 }

@@ -119,7 +119,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iMusicEndpoints;
                 }
@@ -130,7 +130,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iMusicEndpoint;
                 }
@@ -141,7 +141,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iOtherEndpoints;
                 }

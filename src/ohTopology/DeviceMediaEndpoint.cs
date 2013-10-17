@@ -162,7 +162,7 @@ namespace OpenHome.Av
 
         public void Refresh()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 iDeviceList.Refresh();
             }

@@ -62,7 +62,7 @@ namespace OpenHome.Av
 
         public IIdCacheSession CreateSession(string aId, Func<IEnumerable<uint>, Task<IEnumerable<IIdCacheEntry>>> aFunction)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 Hash hash = Hash.Create(aId);
 
@@ -81,7 +81,7 @@ namespace OpenHome.Av
 
         internal void DestroySession(Hash aSessionId)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 lock (iCache)
                 {
@@ -92,7 +92,7 @@ namespace OpenHome.Av
 
         internal void SetValid(Hash aSessionId, IList<uint> aValid)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 lock (iCache)
                 {
@@ -112,7 +112,7 @@ namespace OpenHome.Av
 
         internal IIdCacheEntry Entry(Hash aSessionId, uint aId)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 lock (iCache)
                 {
@@ -130,7 +130,7 @@ namespace OpenHome.Av
 
         internal IIdCacheEntry AddEntry(Hash aSessionId, uint aId, IIdCacheEntry aEntry)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 IdCacheEntrySession entry;
 
@@ -157,7 +157,7 @@ namespace OpenHome.Av
 
         private void RemoveEntry()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 lock (iCache)
                 {
@@ -256,7 +256,7 @@ namespace OpenHome.Av
 
         public void SetValid(IList<uint> aValid)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 if (aValid.Count > 0)
                 {
@@ -275,7 +275,7 @@ namespace OpenHome.Av
 
         public Task<IEnumerable<IIdCacheEntry>> Entries(IEnumerable<uint> aIds)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 Task<IEnumerable<IIdCacheEntry>> task = Task<IEnumerable<IIdCacheEntry>>.Factory.StartNew(() =>
                 {

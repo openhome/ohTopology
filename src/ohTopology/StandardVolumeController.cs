@@ -91,7 +91,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iName;
                 }
@@ -102,7 +102,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iDevice;
                 }
@@ -113,7 +113,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iHasVolume;
                 }
@@ -124,7 +124,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iMute;
                 }
@@ -135,7 +135,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iValue;
                 }
@@ -146,7 +146,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iVolumeLimit;
                 }
@@ -155,7 +155,7 @@ namespace OpenHome.Av
 
         public void SetMute(bool aValue)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 if (iVolume != null)
                 {
@@ -174,7 +174,7 @@ namespace OpenHome.Av
 
         public void VolumeInc()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 if (iVolume != null)
                 {
@@ -185,7 +185,7 @@ namespace OpenHome.Av
 
         public void VolumeDec()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 if (iVolume != null)
                 {

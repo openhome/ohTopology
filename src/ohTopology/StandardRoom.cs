@@ -260,7 +260,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iEnabled;
                 }
@@ -271,7 +271,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iRoom;
                 }
@@ -282,7 +282,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iDevice;
                 }
@@ -293,7 +293,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iHasListeners;
                 }
@@ -304,7 +304,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iWatchableListeners;
                 }
@@ -313,7 +313,7 @@ namespace OpenHome.Av
 
         public IVolumeController CreateVolumeController()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 return new ZoneVolumeController(this);
             }
@@ -471,7 +471,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iRoom.Name;
                 }
@@ -482,7 +482,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iRoom.Standby;
                 }
@@ -493,7 +493,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iWatchableSource;
                 }
@@ -504,7 +504,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iWatchableSources;
                 }
@@ -513,7 +513,7 @@ namespace OpenHome.Av
 
         public void Join(Action aAction)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 iJoiners.Add(aAction);
             }
@@ -521,7 +521,7 @@ namespace OpenHome.Av
 
         public void Unjoin(Action aAction)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 iJoiners.Remove(aAction);
             }
@@ -529,7 +529,7 @@ namespace OpenHome.Av
 
         public void SetStandby(bool aValue)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 iRoom.SetStandby(aValue);
             }
@@ -539,7 +539,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iSatellites;
                 }
@@ -550,7 +550,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iWatchableZoneSender;
                 }
@@ -561,7 +561,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iWatchableZoneReceiver;
                 }
@@ -572,7 +572,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iSenders;
                 }
@@ -581,7 +581,7 @@ namespace OpenHome.Av
 
         public void ListenTo(IStandardRoom aRoom)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 foreach (ITopology4Source s in iSources)
                 {
@@ -615,7 +615,7 @@ namespace OpenHome.Av
 
         public void Play(string aUri, IMediaMetadata aMetadata)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 foreach (ITopology4Source s in iSources)
                 {
@@ -636,7 +636,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iNetwork;
                 }
@@ -645,7 +645,7 @@ namespace OpenHome.Av
 
         public IStandardRoomInfo CreateInfoController()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 return new StandardRoomInfo(this);
             }
@@ -653,7 +653,7 @@ namespace OpenHome.Av
 
         public IStandardRoomTime CreateTimeController()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 return new StandardRoomTime(this);
             }
@@ -661,7 +661,7 @@ namespace OpenHome.Av
 
         public IStandardRoomController CreateController()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 return new StandardRoomController(this);
             }
@@ -669,7 +669,7 @@ namespace OpenHome.Av
 
         public IVolumeController CreateVolumeController()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 return new StandardVolumeController(this);
             }

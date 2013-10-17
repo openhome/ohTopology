@@ -98,7 +98,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return (iNetwork);
                 }
@@ -109,7 +109,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iDevice;
                 }
@@ -120,7 +120,7 @@ namespace OpenHome.Av
         {
             Assert();
 
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 if (iRefCount == 0)
                 {

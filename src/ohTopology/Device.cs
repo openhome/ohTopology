@@ -59,7 +59,7 @@ namespace OpenHome.Av
 
         public void Join(Action aAction)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 iJoiners.Add(aAction);
             }
@@ -67,7 +67,7 @@ namespace OpenHome.Av
 
         public void Unjoin(Action aAction)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 iJoiners.Remove(aAction);
             }
@@ -77,7 +77,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iUdn;
                 }
@@ -86,7 +86,7 @@ namespace OpenHome.Av
 
         public void Add<T>(Service aService) where T : IProxy
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 iServices.Add(typeof(T), aService);
             }
@@ -94,7 +94,7 @@ namespace OpenHome.Av
 
         public bool HasService(Type aServiceType)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 return iServices.ContainsKey(aServiceType);
             }
@@ -102,7 +102,7 @@ namespace OpenHome.Av
 
         public void Create<T>(Action<T> aCallback, IDevice aDevice) where T : IProxy
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 if (!iServices.ContainsKey(typeof(T)))
                 {

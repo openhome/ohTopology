@@ -335,7 +335,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iWatchableSenders;
                 }
@@ -469,7 +469,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iWatchableRooms;
                 }
@@ -480,7 +480,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iSendersWatcher.Senders;
                 }
@@ -499,7 +499,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iNetwork;
                 }
@@ -602,7 +602,7 @@ namespace OpenHome.Av
 
         public void Execute(IEnumerable<string> aValue)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 iNetwork.Execute(() =>
                 {
