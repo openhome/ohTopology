@@ -53,7 +53,7 @@ namespace OpenHome.Av
 
         protected virtual IInjectorDevice Create(INetwork aNetwork, CpDevice aDevice)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 return (DeviceFactory.Create(aNetwork, aDevice, iLog));
             }
@@ -66,7 +66,7 @@ namespace OpenHome.Av
 
         public void Refresh()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 iDeviceList.Refresh();
             }
@@ -352,7 +352,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iDevice.Udn;
                 }
@@ -361,7 +361,7 @@ namespace OpenHome.Av
 
         public void Create<T>(Action<T> aCallback) where T : IProxy
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 iDevice.Create<T>(aCallback, this);
             }
@@ -369,7 +369,7 @@ namespace OpenHome.Av
 
         public void Join(Action aAction)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 iDevice.Join(aAction);
             }
@@ -377,7 +377,7 @@ namespace OpenHome.Av
 
         public void Unjoin(Action aAction)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 iDevice.Unjoin(aAction);
             }
@@ -394,7 +394,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iDevice;
                 }
@@ -403,7 +403,7 @@ namespace OpenHome.Av
 
         internal bool HasService(Type aServiceType)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 return iDevice.HasService(aServiceType);
             }
@@ -411,7 +411,7 @@ namespace OpenHome.Av
 
         internal bool Wait()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 return iDevice.Wait();
             }
@@ -504,7 +504,7 @@ namespace OpenHome.Av
 
         internal void Add(IInjectorDevice aDevice)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 Schedule(() =>
                 {
@@ -531,7 +531,7 @@ namespace OpenHome.Av
 
         internal void Remove(IInjectorDevice aDevice)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 Schedule(() =>
                 {
@@ -557,7 +557,7 @@ namespace OpenHome.Av
 
         public IWatchableUnordered<IDevice> Create<T>() where T : IProxy
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 Assert();
 
@@ -589,7 +589,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iCache;
                 }
@@ -600,7 +600,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return (iTagManager);
                 }
