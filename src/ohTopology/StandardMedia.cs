@@ -266,6 +266,11 @@ namespace OpenHome.Av
                 if (endpoint.Type == "Music")
                 {
                     iMusicEndpoints.Remove(endpoint);
+
+                    if (iId == endpoint.Id)
+                    {
+                        iMusicEndpoint.Update(new MusicEndpoint());
+                    }
                 }
                 else
                 {
