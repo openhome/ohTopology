@@ -308,6 +308,16 @@ namespace OpenHome.Av
             {
                 token.ThrowIfCancellationRequested();
 
+                try
+                {
+                    t.Wait();
+                }
+                catch
+                {
+                }
+
+                t.Dispose(); // temporary fix for mono bug chaining tasks
+
                 IMediaEndpointClientSnapshot snapshot;
 
                 try
