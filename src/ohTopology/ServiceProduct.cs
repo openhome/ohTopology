@@ -519,7 +519,7 @@ namespace OpenHome.Av
         private void HandleRoomChanged()
         {
             string room = iService.PropertyProductRoom();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -543,7 +543,7 @@ namespace OpenHome.Av
         private void HandleSourceIndexChanged()
         {
             uint sourceIndex = iService.PropertySourceIndex();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -555,7 +555,7 @@ namespace OpenHome.Av
         private void HandleSourceXmlChanged()
         {
             string sourceXml = iService.PropertySourceXml();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -567,7 +567,7 @@ namespace OpenHome.Av
         private void HandleStandbyChanged()
         {
             bool standby = iService.PropertyStandby();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -579,7 +579,7 @@ namespace OpenHome.Av
         private void HandleParameterXmlChanged()
         {
             string paramXml = iServiceConfiguration.PropertyParameterXml();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
