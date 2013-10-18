@@ -162,7 +162,7 @@ namespace OpenHome.Av
 
         public void Refresh()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 iDeviceList.Refresh();
             }
@@ -203,6 +203,7 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
+            iInjector.RemoveDevice(iDevice);
         }
     }
 

@@ -70,7 +70,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iSnapshot;
                 }
@@ -79,7 +79,7 @@ namespace OpenHome.Av
 
         public void Update(IMediaClientSnapshot<T> aClientSnapshot)
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 MediaSnapshot<T> snapshot = iSnapshot.Value as MediaSnapshot<T>;
 
@@ -128,7 +128,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return (iSnapshot.Total);
                 }
@@ -139,7 +139,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return (iSnapshot.Alpha);
                 }
@@ -150,7 +150,7 @@ namespace OpenHome.Av
         {
             Do.Assert(aIndex + aCount <= iSnapshot.Total);
 
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 var task = Task.Factory.StartNew<IWatchableFragment<T>>(() =>
                 {

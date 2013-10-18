@@ -171,7 +171,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iRoom.Name;
                 }
@@ -182,7 +182,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iActive;
                 }
@@ -193,7 +193,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iHasTime;
                 }
@@ -204,7 +204,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iDuration;
                 }
@@ -215,7 +215,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iSeconds;
                 }
@@ -240,6 +240,7 @@ namespace OpenHome.Av
 
             if ((!aPrevious.HasTime && aValue.HasTime) || (aPrevious.HasTime && aValue.HasTime && aPrevious.Device != aValue.Device))
             {
+                Do.Assert(iTimeWatcher == null);
                 iTimeWatcher = new TimeWatcher(iNetwork, aValue.Device, iHasTime, iSeconds, iDuration);
             }
         }
@@ -251,6 +252,8 @@ namespace OpenHome.Av
                 iTimeWatcher.Dispose();
                 iTimeWatcher = null;
             }
+
+            Do.Assert(iTimeWatcher == null);
         }
 
         private readonly DisposeHandler iDisposeHandler;

@@ -100,7 +100,7 @@ namespace OpenHome.Av
 
         public void Cancel()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 Do.Assert(!iCancellationTokenSource.IsCancellationRequested);
                 iCancellationTokenSource.Cancel();
@@ -113,7 +113,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return (iSnapshot.Total);
                 }
@@ -124,7 +124,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return (iSnapshot.Alpha);
                 }
@@ -137,7 +137,7 @@ namespace OpenHome.Av
 
             Do.Assert(aIndex + aCount <= iSnapshot.Total);
 
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 var tcs = new TaskCompletionSource<IWatchableFragment<IMediaDatum>>();
 
@@ -374,7 +374,7 @@ namespace OpenHome.Av
         {
             iClient.Assert(); // must be called on the watchable thread
 
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 UpdateSnapshot((c) => iClient.Browse(c, iId, aDatum), aAction);
             }
@@ -384,7 +384,7 @@ namespace OpenHome.Av
         {
             iClient.Assert(); // must be called on the watchable thread
 
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 UpdateSnapshot((c) => iClient.List(c, iId, aTag), aAction);
             }
@@ -394,7 +394,7 @@ namespace OpenHome.Av
         {
             iClient.Assert(); // must be called on the watchable thread
 
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 UpdateSnapshot((c) => iClient.Link(c, iId, aTag, aValue), aAction);
             }
@@ -404,7 +404,7 @@ namespace OpenHome.Av
         {
             iClient.Assert(); // must be called on the watchable thread
 
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 UpdateSnapshot((c) => iClient.Match(c, iId, aTag, aValue), aAction);
             }
@@ -414,7 +414,7 @@ namespace OpenHome.Av
         {
             iClient.Assert(); // must be called on the watchable thread
 
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 UpdateSnapshot((c) => iClient.Search(c, iId, aValue), aAction);
             }
@@ -482,7 +482,7 @@ namespace OpenHome.Av
         {
             iClient.Assert(); // must be called on the watchable thread
 
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 lock (iSessions)
                 {
@@ -498,7 +498,7 @@ namespace OpenHome.Av
         {
             iClient.Assert(); // must be called on the watchable thread
 
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 lock (iSessions)
                 {
@@ -514,7 +514,7 @@ namespace OpenHome.Av
 
         public void Cancel()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 iCancellationTokenSource.Cancel();
             }
@@ -524,7 +524,7 @@ namespace OpenHome.Av
         {
             iClient.Assert(); // must be called on the watchable thread
 
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 var token = iCancellationTokenSource.Token;
 

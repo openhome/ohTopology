@@ -104,7 +104,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iPreset.Index;
                 }
@@ -115,7 +115,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iPreset.Metadata;
                 }
@@ -126,7 +126,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iPreset.Buffering;
                 }
@@ -137,7 +137,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iPlaying;
                 }
@@ -146,7 +146,7 @@ namespace OpenHome.Av
 
         public void Play()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 iSource.Play();
                 iPreset.Play();
@@ -267,7 +267,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iWatchableSourceSelectorSnapshot;
                 }

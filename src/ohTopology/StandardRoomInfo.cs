@@ -193,7 +193,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iRoom.Name;
                 }
@@ -204,7 +204,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iActive;
                 }
@@ -215,7 +215,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iDetails;
                 }
@@ -226,7 +226,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iMetadata;
                 }
@@ -237,7 +237,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iMetatext;
                 }
@@ -262,6 +262,7 @@ namespace OpenHome.Av
 
             if ((!aPrevious.HasInfo && aValue.HasInfo) || (aPrevious.HasInfo && aValue.HasInfo && aPrevious.Device != aValue.Device))
             {
+                Do.Assert(iInfoWatcher == null);
                 iInfoWatcher = new InfoWatcher(iNetwork, aValue.Device, iDetails, iMetadata, iMetatext);
             }
         }
@@ -273,6 +274,8 @@ namespace OpenHome.Av
                 iInfoWatcher.Dispose();
                 iInfoWatcher = null;
             }
+
+            Do.Assert(iInfoWatcher == null);
         }
     }
 }

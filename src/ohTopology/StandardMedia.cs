@@ -119,7 +119,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iMusicEndpoints;
                 }
@@ -130,7 +130,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iMusicEndpoint;
                 }
@@ -141,7 +141,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iOtherEndpoints;
                 }
@@ -266,6 +266,11 @@ namespace OpenHome.Av
                 if (endpoint.Type == "Music")
                 {
                     iMusicEndpoints.Remove(endpoint);
+
+                    if (iId == endpoint.Id)
+                    {
+                        iMusicEndpoint.Update(new MusicEndpoint());
+                    }
                 }
                 else
                 {

@@ -89,7 +89,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iRoom;
                 }
@@ -100,7 +100,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iActive;
                 }
@@ -111,7 +111,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iEnabled;
                 }
@@ -208,7 +208,7 @@ namespace OpenHome.Av
 
         protected override void OnSetInactive()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 DeleteProxy();
             }
@@ -218,7 +218,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iWatchableSnapshot.Snapshot;
                 }
@@ -229,7 +229,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iPlaylistWriter;
                 }
@@ -320,7 +320,7 @@ namespace OpenHome.Av
 
         protected override void OnSetInactive()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 DeleteProxy();
             }
@@ -330,7 +330,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iWatchableSnapshot.Snapshot;
                 }
@@ -588,7 +588,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iRoom;
                 }
@@ -599,7 +599,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iActive;
                 }
@@ -610,7 +610,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iEnabled;
                 }
@@ -621,7 +621,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iWatchableSnapshot.Snapshot;
                 }
@@ -782,7 +782,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iIndex;
                 }
@@ -793,7 +793,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iMetadata;
                 }
@@ -804,7 +804,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iBuffering;
                 }
@@ -815,7 +815,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iPlaying;
                 }
@@ -824,7 +824,7 @@ namespace OpenHome.Av
 
         public void Play()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 iReceiver.Play(iSenderMetadata);
             }
@@ -1018,7 +1018,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iConfigured.Snapshot;
                 }
@@ -1029,7 +1029,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iUnconfigured.Snapshot;
                 }
@@ -1242,7 +1242,7 @@ namespace OpenHome.Av
 
         protected override void OnSetInactive()
         {
-            using (iDisposeHandler.Lock)
+            using (iDisposeHandler.Lock())
             {
                 DeleteProxy();
             }
@@ -1252,7 +1252,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock)
+                using (iDisposeHandler.Lock())
                 {
                     return iWatchableSnapshot.Snapshot;
                 }
