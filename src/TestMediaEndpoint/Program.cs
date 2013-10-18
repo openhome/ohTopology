@@ -112,16 +112,25 @@ namespace TestMediaEndpoint
         public Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
         {
             Console.WriteLine("Read       : {0} {1} {2} {3}", aSession, aSnapshot.GetHashCode(), aIndex, aCount);
-            
+
             var tcs = new TaskCompletionSource<IEnumerable<IMediaDatum>>();
 
-            if (aCancellationToken.IsCancellationRequested)
+            List<CancellationTokenRegistration> registrations = new List<CancellationTokenRegistration>();
+
+            lock (registrations)
             {
-                tcs.SetCanceled();
-            }
-            else
-            {
-                tcs.SetResult(null);
+                registrations.Add(aCancellationToken.Register(() =>
+                {
+                    lock (registrations)
+                    {
+                        foreach (var registration in registrations)
+                        {
+                            registration.Dispose();
+                        }
+                    }
+
+                    tcs.SetCanceled();
+                }));
             }
 
             return (tcs.Task);
@@ -336,17 +345,13 @@ namespace TestMediaEndpoint
                     {
                         session.Browse(null, () =>
                         {
-                            var tasks = new List<Task<IWatchableFragment<IMediaDatum>>>();
-
                             if (session.Snapshot.Total >= 100)
                             {
                                 for (int j = 0; j < 20; j++)
                                 {
-                                    tasks.Add(session.Snapshot.Read(0, 100));
+                                    session.Snapshot.Read(0, 100);
                                 }
                             }
-
-                            Task.WaitAll(tasks.ToArray());
                         });
                     });
 

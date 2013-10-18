@@ -262,7 +262,7 @@ namespace OpenHome.Av
 
             var token = iCancellationTokenSource.Token;
 
-            iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, iSnapshotFunction(token).Result);
+            iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, null);
 
             iSequence = 0;
         }
@@ -281,13 +281,16 @@ namespace OpenHome.Av
 
             // first cancel current snapshot to prevent further activity on it and begin completing outstanding tasks
             
-            var previous = iSnapshot;
+            var previousSnapshot = iSnapshot;
 
             iSnapshot = null;
 
-            if (previous != null)
+            if (previousSnapshot != null)
             {
-                previous.Cancel();
+                iCancellationTokenSource.Cancel();
+                iCancellationTokenSource.Dispose();
+                iCancellationTokenSource = new CancellationTokenSource();
+                previousSnapshot.Cancel();
             }
 
             try
@@ -326,6 +329,11 @@ namespace OpenHome.Av
 
                 iClient.Schedule(() =>
                 {
+                    if (previousSnapshot != null)
+                    {
+                        previousSnapshot.Dispose();
+                    }
+
                     if (!token.IsCancellationRequested)
                     {
                         if (iSequence != sequence)
@@ -338,11 +346,6 @@ namespace OpenHome.Av
                         iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, snapshot);
 
                         iAction();
-
-                        if (previous != null)
-                        {
-                            previous.Dispose();
-                        }
                     }
                 });
             }, token);
