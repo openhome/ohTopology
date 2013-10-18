@@ -298,14 +298,6 @@ namespace OpenHome.Av
                 previousSnapshot.Cancel();
             }
 
-            try
-            {
-                iTask.Wait();
-            }
-            catch
-            {
-            }
-
             uint sequence;
 
             sequence = ++iSequence;
@@ -334,11 +326,6 @@ namespace OpenHome.Av
 
                 iClient.Schedule(() =>
                 {
-                    if (previousSnapshot != null)
-                    {
-                        previousSnapshot.Dispose();
-                    }
-
                     if (!token.IsCancellationRequested)
                     {
                         if (iSequence != sequence)
@@ -351,6 +338,11 @@ namespace OpenHome.Av
                         iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, snapshot);
 
                         iAction();
+                    }
+
+                    if (previousSnapshot != null)
+                    {
+                        previousSnapshot.Dispose();
                     }
                 });
             }, token);
