@@ -50,8 +50,13 @@ namespace OpenHome.Av
 
             foreach (var token in aTokens)
             {
-                iRegistrations.Add(token.Register(() => iSource.Cancel()));
+                Register(token);
             }
+        }
+
+        private void Register(CancellationToken aToken)
+        {
+            iRegistrations.Add(aToken.Register(() => iSource.Cancel()));
         }
 
         public CancellationToken Token
