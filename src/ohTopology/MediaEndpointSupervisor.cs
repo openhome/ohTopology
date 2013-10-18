@@ -37,7 +37,7 @@ namespace OpenHome.Av
         Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount);
     }
 
-    internal class CancellationTokenLink : IDisposable
+    public class CancellationTokenLink : IDisposable
     {
         private readonly CancellationTokenSource iSource = new CancellationTokenSource();
         private readonly List<CancellationTokenRegistration> iRegistrations;

@@ -206,10 +206,102 @@ namespace TestMediaEndpoint
         static int Main(string[] args)
         {
             //TestLinkedTokenSource();
+            TestTokenSourceLink();
             TestMediaEndpointSupervisorSesssionHandling();
             TestMediaEndpointSupervisorContainerHandling();
             return (0);
         }
+
+        static void TestTokenSourceLink()
+        {
+            var cts1 = new CancellationTokenSource();
+            var cts2 = new CancellationTokenSource();
+            var ctsl = new CancellationTokenLink(cts1.Token, cts2.Token);
+
+            ctsl.Dispose();
+
+            bool throws = false;
+
+            try
+            {
+                cts1.Cancel();
+                cts1.Dispose();
+            }
+            catch
+            {
+                throws = true;
+            }
+
+            try
+            {
+                cts2.Cancel();
+                cts2.Dispose();
+            }
+            catch
+            {
+                throws = true;
+            }
+
+            Do.Assert(!throws);
+
+            var random = new Random();
+
+            try
+            {
+                for (int i = 0; i < 1000; i++)
+                {
+                    var b1 = new CancellationTokenSource();
+                    var b2 = new CancellationTokenSource();
+                    var bl = new CancellationTokenLink(b1.Token, b2.Token);
+
+                    switch (random.Next(5))
+                    {
+                        case 0:
+                            b1.Cancel();
+                            Do.Assert(b1.Token.IsCancellationRequested);
+                            Do.Assert(!b2.Token.IsCancellationRequested);
+                            Do.Assert(bl.Token.IsCancellationRequested);
+                            break;
+                        case 1:
+                            b2.Cancel();
+                            Do.Assert(!b1.Token.IsCancellationRequested);
+                            Do.Assert(b2.Token.IsCancellationRequested);
+                            Do.Assert(bl.Token.IsCancellationRequested);
+                            break;
+                        case 2:
+                            b1.Cancel();
+                            b2.Cancel();
+                            Do.Assert(b1.Token.IsCancellationRequested);
+                            Do.Assert(b2.Token.IsCancellationRequested);
+                            Do.Assert(bl.Token.IsCancellationRequested);
+                            break;
+                        case 3:
+                            bl.Dispose();
+                            b1.Cancel();
+                            Do.Assert(b1.Token.IsCancellationRequested);
+                            Do.Assert(!b2.Token.IsCancellationRequested);
+                            break;
+                        case 4:
+                            bl.Dispose();
+                            b2.Cancel();
+                            Do.Assert(!b1.Token.IsCancellationRequested);
+                            Do.Assert(b2.Token.IsCancellationRequested);
+                            break;
+                    }
+
+                    bl.Dispose();
+                    b1.Dispose();
+                    b2.Dispose();
+                }
+            }
+            catch
+            {
+                throws = true;
+            }
+
+            Do.Assert(!throws);
+       }
+
 
         static void TestLinkedTokenSource()
         {
