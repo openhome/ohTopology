@@ -307,16 +307,12 @@ namespace OpenHome.Av
             {
                 token.ThrowIfCancellationRequested();
 
-                IMediaEndpointClientSnapshot snapshot;
-
-                try
-                {
-                    snapshot = t.Result;
-                }
-                catch
+                if (t.IsCanceled || t.IsCompleted)
                 {
                     return;
                 }
+
+                var snapshot = t.Result;
 
                 if (snapshot == null)
                 {
