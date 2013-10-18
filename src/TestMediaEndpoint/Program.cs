@@ -370,8 +370,10 @@ namespace TestMediaEndpoint
                 supervisor.Dispose();
                 client.Dispose();
             }
-            catch
+            catch (Exception e)
             {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
                 return (false);
             }
 
