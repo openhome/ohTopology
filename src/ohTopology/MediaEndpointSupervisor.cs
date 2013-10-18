@@ -238,6 +238,7 @@ namespace OpenHome.Av
         private Task iTask;
 
         private MediaEndpointSupervisorSnapshot iSnapshot;
+        private MediaEndpointSupervisorSnapshot iPrevious;
 
         private uint iSequence;
 
@@ -285,17 +286,15 @@ namespace OpenHome.Av
             // called on the watchable thread
 
             // first cancel current snapshot to prevent further activity on it and begin completing outstanding tasks
-            
-            var previousSnapshot = iSnapshot;
 
-            iSnapshot = null;
-
-            if (previousSnapshot != null)
+            if (iSnapshot != null)
             {
+                iPrevious = iSnapshot;
+                iSnapshot = null;
                 iCancellationTokenSource.Cancel();
                 iCancellationTokenSource.Dispose();
                 iCancellationTokenSource = new CancellationTokenSource();
-                previousSnapshot.Cancel();
+                iPrevious.Cancel();
             }
 
             uint sequence;
@@ -308,16 +307,6 @@ namespace OpenHome.Av
             {
                 token.ThrowIfCancellationRequested();
 
-                try
-                {
-                    t.Wait();
-                }
-                catch
-                {
-                }
-
-                t.Dispose(); // temporary fix for mono bug chaining tasks
-
                 IMediaEndpointClientSnapshot snapshot;
 
                 try
@@ -326,12 +315,12 @@ namespace OpenHome.Av
                 }
                 catch
                 {
-                    throw new OperationCanceledException(token);
+                    return;
                 }
 
                 if (snapshot == null)
                 {
-                    throw new OperationCanceledException(token);
+                    return;
                 }
 
                 iClient.Schedule(() =>
@@ -348,11 +337,11 @@ namespace OpenHome.Av
                         iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, snapshot);
 
                         iAction();
-                    }
 
-                    if (previousSnapshot != null)
-                    {
-                        previousSnapshot.Dispose();
+                        if (iPrevious != null)
+                        {
+                            iPrevious.Dispose();
+                        }
                     }
                 });
             }, token);
