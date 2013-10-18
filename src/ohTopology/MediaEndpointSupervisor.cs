@@ -307,7 +307,7 @@ namespace OpenHome.Av
             {
                 token.ThrowIfCancellationRequested();
 
-                if (t.IsCanceled || t.IsCompleted)
+                if (t.IsCanceled || t.IsFaulted)
                 {
                     return;
                 }
