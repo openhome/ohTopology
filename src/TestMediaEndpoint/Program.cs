@@ -121,16 +121,18 @@ namespace TestMediaEndpoint
             {
                 registrations.Add(aCancellationToken.Register(() =>
                 {
-                    lock (registrations)
-                    {
-                        foreach (var registration in registrations)
-                        {
-                            registration.Dispose();
-                        }
-                    }
-
                     tcs.SetCanceled();
                 }));
+
+                /*
+                lock (registrations)
+                {
+                    foreach (var registration in registrations)
+                    {
+                        registration.Dispose();
+                    }
+                }
+                */
             }
 
             return (tcs.Task);
@@ -469,6 +471,7 @@ namespace TestMediaEndpoint
                 });
 
                 supervisor.Dispose();
+
                 client.Dispose();
             }
             catch (Exception e)

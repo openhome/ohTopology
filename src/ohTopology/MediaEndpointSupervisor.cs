@@ -596,21 +596,8 @@ namespace OpenHome.Av
             var task = Task.Factory.StartNew(() =>
             {
                 var token = iCancellationTokenSource.Token;
-
                 token.ThrowIfCancellationRequested();
-
-                try
-                {
-                    iClient.Destroy(token, aId);
-                }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
-                catch
-                {
-                    throw (new OperationCanceledException());
-                }
+                iClient.Destroy(token, aId);
             });
 
             Task completion = null;
