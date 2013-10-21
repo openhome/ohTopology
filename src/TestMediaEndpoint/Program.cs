@@ -486,7 +486,7 @@ namespace TestMediaEndpoint
 
         static void TestMediaEndpointSupervisorContainerHandling()
         {
-            Console.WriteLine("TestMediaEndpointSupervisorContainerHandling");
+            //Console.WriteLine("TestMediaEndpointSupervisorContainerHandling");
 
             for (int i = 0; i < 100; i += 10)
             {
