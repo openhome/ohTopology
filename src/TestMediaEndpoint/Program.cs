@@ -115,25 +115,10 @@ namespace TestMediaEndpoint
 
             var tcs = new TaskCompletionSource<IEnumerable<IMediaDatum>>();
 
-            List<CancellationTokenRegistration> registrations = new List<CancellationTokenRegistration>();
-
-            lock (registrations)
+            aCancellationToken.Register(() =>
             {
-                registrations.Add(aCancellationToken.Register(() =>
-                {
-                    tcs.SetCanceled();
-                }));
-
-                /*
-                lock (registrations)
-                {
-                    foreach (var registration in registrations)
-                    {
-                        registration.Dispose();
-                    }
-                }
-                */
-            }
+                tcs.SetCanceled();
+            });
 
             return (tcs.Task);
         }
