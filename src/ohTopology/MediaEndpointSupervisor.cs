@@ -217,13 +217,7 @@ namespace OpenHome.Av
                 tasks = iTasks.ToArray();
             }
 
-            try
-            {
-                Task.WaitAll(tasks);
-            }
-            catch
-            {
-            }
+            Task.WaitAll(tasks);
 
             lock (iTasks)
             {
