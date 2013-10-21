@@ -312,6 +312,8 @@ namespace TestMediaEndpoint
 
         static void TestLinkedTokenSource()
         {
+            Console.WriteLine("TestLinkedTokenSource");
+
             var cts1 = new CancellationTokenSource();
             var cts2 = new CancellationTokenSource();
             var ctsl = CancellationTokenSource.CreateLinkedTokenSource(cts1.Token, cts2.Token);
@@ -416,6 +418,8 @@ namespace TestMediaEndpoint
 
         static void TestMediaEndpointSupervisorSesssionHandling()
         {
+            Console.WriteLine("TestMediaEndpointSupervisorSesssionHandling");
+
             for (int i = 0; i < 100; i += 10)
             {
                 Do.Assert(SessionCreateAndDestroy(i));
@@ -482,6 +486,8 @@ namespace TestMediaEndpoint
 
         static void TestMediaEndpointSupervisorContainerHandling()
         {
+            Console.WriteLine("TestMediaEndpointSupervisorContainerHandling");
+
             for (int i = 0; i < 100; i += 10)
             {
                 Do.Assert(ContainerCreateAndDestroy(i));
