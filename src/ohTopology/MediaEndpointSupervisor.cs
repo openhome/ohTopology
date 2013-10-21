@@ -39,13 +39,14 @@ namespace OpenHome.Av
 
     public class CancellationTokenLink : IDisposable
     {
-        private readonly CancellationTokenSource iSource = new CancellationTokenSource();
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly CancellationTokenSource iSource;
         private readonly List<CancellationTokenRegistration> iRegistrations;
 
         public CancellationTokenLink(params CancellationToken[] aTokens)
         {
+            iDisposeHandler = new DisposeHandler();
             iSource = new CancellationTokenSource();
-
             iRegistrations = new List<CancellationTokenRegistration>();
 
             foreach (var token in aTokens)
@@ -56,14 +57,23 @@ namespace OpenHome.Av
 
         private void Register(CancellationToken aToken)
         {
-            iRegistrations.Add(aToken.Register(() => iSource.Cancel()));
+            iRegistrations.Add(aToken.Register(() => 
+            {
+                using (iDisposeHandler.Lock())
+                {
+                    iSource.Cancel();
+                }
+            }));
         }
 
         public CancellationToken Token
         {
             get
             {
-                return (iSource.Token);
+                using (iDisposeHandler.Lock())
+                {
+                    return (iSource.Token);
+                }
             }
         }
 
@@ -75,6 +85,8 @@ namespace OpenHome.Av
             {
                 registration.Dispose();
             }
+
+            iDisposeHandler.Dispose();
 
             iSource.Dispose();
         }

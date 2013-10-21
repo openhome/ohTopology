@@ -39,10 +39,12 @@ namespace ShowMediaServers
         {
             iSession = aTask.Result;
 
+            /*
             iNetwork.Schedule(() =>
             {
                 iSession.Browse(null, ContainerCreated);
             });
+            */
         }
 
         private void ContainerCreated()
