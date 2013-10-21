@@ -144,7 +144,14 @@ namespace OpenHome.Av
                                 --iRefCount;
                                 if (iRefCount == 0)
                                 {
-                                    iSubscribeTask.Wait();
+                                    try
+                                    {
+                                        iSubscribeTask.Wait();
+                                    }
+                                    catch (AggregateException ex)
+                                    {
+                                        HandleAggregate(ex);
+                                    }
                                     iSubscribeTask = null;
                                 }
                             }
@@ -176,7 +183,14 @@ namespace OpenHome.Av
                 OnUnsubscribe();
                 if (iSubscribeTask != null)
                 {
-                    iSubscribeTask.Wait();
+                    try
+                    {
+                        iSubscribeTask.Wait();
+                    }
+                    catch (AggregateException ex)
+                    {
+                        HandleAggregate(ex);
+                    }
                     iSubscribeTask = null;
                 }
             }
