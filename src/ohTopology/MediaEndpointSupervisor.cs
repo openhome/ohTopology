@@ -37,58 +37,29 @@ namespace OpenHome.Av
         Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount);
     }
 
-    public class CancellationTokenLink : IDisposable
+    public class CancellationTokenLink
     {
-        private readonly DisposeHandler iDisposeHandler;
         private readonly CancellationTokenSource iSource;
-        private readonly List<CancellationTokenRegistration> iRegistrations;
 
         public CancellationTokenLink(params CancellationToken[] aTokens)
         {
-            iDisposeHandler = new DisposeHandler();
             iSource = new CancellationTokenSource();
-            iRegistrations = new List<CancellationTokenRegistration>();
 
             foreach (var token in aTokens)
             {
-                Register(token);
-            }
-        }
-
-        private void Register(CancellationToken aToken)
-        {
-            iRegistrations.Add(aToken.Register(() => 
-            {
-                using (iDisposeHandler.Lock())
+                token.Register(() => 
                 {
                     iSource.Cancel();
-                }
-            }));
+                });
+            }
         }
 
         public CancellationToken Token
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return (iSource.Token);
-                }
+                return (iSource.Token);
             }
-        }
-
-        // IDisposable
-
-        public void Dispose()
-        {
-            foreach (var registration in iRegistrations)
-            {
-                registration.Dispose();
-            }
-
-            iDisposeHandler.Dispose();
-
-            iSource.Dispose();
         }
     }
 
@@ -178,8 +149,6 @@ namespace OpenHome.Av
                 {
                     task = iClient.Read(ctl.Token, iSession.Id, iSnapshot, aIndex, aCount).ContinueWith((t) =>
                     {
-                        ctl.Dispose();
-
                         if (t.IsCanceled || t.IsFaulted)
                         {
                             tcs.SetCanceled();
