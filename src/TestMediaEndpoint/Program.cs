@@ -261,12 +261,18 @@ namespace TestMediaEndpoint
                             Do.Assert(b1.Token.IsCancellationRequested);
                             Do.Assert(!b2.Token.IsCancellationRequested);
                             Do.Assert(bl.Token.IsCancellationRequested);
+                            bl.Dispose();
+                            b1.Dispose();
+                            b2.Dispose();
                             break;
                         case 1:
                             b2.Cancel();
                             Do.Assert(!b1.Token.IsCancellationRequested);
                             Do.Assert(b2.Token.IsCancellationRequested);
                             Do.Assert(bl.Token.IsCancellationRequested);
+                            bl.Dispose();
+                            b1.Dispose();
+                            b2.Dispose();
                             break;
                         case 2:
                             b1.Cancel();
@@ -274,24 +280,27 @@ namespace TestMediaEndpoint
                             Do.Assert(b1.Token.IsCancellationRequested);
                             Do.Assert(b2.Token.IsCancellationRequested);
                             Do.Assert(bl.Token.IsCancellationRequested);
+                            bl.Dispose();
+                            b1.Dispose();
+                            b2.Dispose();
                             break;
                         case 3:
                             bl.Dispose();
                             b1.Cancel();
                             Do.Assert(b1.Token.IsCancellationRequested);
                             Do.Assert(!b2.Token.IsCancellationRequested);
+                            b1.Dispose();
+                            b2.Dispose();
                             break;
                         case 4:
                             bl.Dispose();
                             b2.Cancel();
                             Do.Assert(!b1.Token.IsCancellationRequested);
                             Do.Assert(b2.Token.IsCancellationRequested);
+                            b1.Dispose();
+                            b2.Dispose();
                             break;
                     }
-
-                    bl.Dispose();
-                    b1.Dispose();
-                    b2.Dispose();
                 }
             }
             catch
