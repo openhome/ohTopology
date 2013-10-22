@@ -461,9 +461,9 @@ namespace TestMediaEndpoint
                     Thread.Sleep(aMilliseconds);
                 }
 
-                client.Execute();
-
                 supervisor.Cancel();
+
+                Thread.Sleep(100);
 
                 client.Execute(() =>
                 {
@@ -471,8 +471,6 @@ namespace TestMediaEndpoint
                 });
 
                 supervisor.Dispose();
-
-                Thread.Sleep(100);
 
                 client.Dispose();
             }
