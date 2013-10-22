@@ -442,7 +442,7 @@ namespace TestMediaEndpoint
 
                 var session = sessionTask.Result;
 
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 5; i++)
                 {
                     client.Schedule(() =>
                     {
@@ -472,7 +472,7 @@ namespace TestMediaEndpoint
 
                 supervisor.Dispose();
 
-                Thread.Sleep(20);
+                Thread.Sleep(100);
 
                 client.Dispose();
             }
