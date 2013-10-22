@@ -472,6 +472,8 @@ namespace TestMediaEndpoint
 
                 supervisor.Dispose();
 
+                Thread.Sleep(100);
+
                 client.Dispose();
             }
             catch (Exception e)
