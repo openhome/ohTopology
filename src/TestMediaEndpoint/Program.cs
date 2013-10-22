@@ -472,7 +472,7 @@ namespace TestMediaEndpoint
 
                 supervisor.Dispose();
 
-                Thread.Sleep(100);
+                Thread.Sleep(20);
 
                 client.Dispose();
             }
