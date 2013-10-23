@@ -510,7 +510,7 @@ namespace OpenHome.Av
 
         public IWatchable<bool> HasVolume
         {
-	        get
+            get
             {
                 return iHasVolume;
             }
@@ -518,7 +518,7 @@ namespace OpenHome.Av
 
         public IWatchable<bool> Mute
         {
-	        get
+            get
             {
                 return iMute;
             }
@@ -526,7 +526,7 @@ namespace OpenHome.Av
 
         public IWatchable<uint> Volume
         {
-	        get
+            get
             {
                 return iValue;
             }
@@ -534,7 +534,7 @@ namespace OpenHome.Av
 
         public IWatchable<uint> VolumeLimit
         {
-	        get
+            get
             {
                 return iVolumeLimit;
             }
