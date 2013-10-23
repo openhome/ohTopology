@@ -252,9 +252,7 @@ namespace OpenHome.Av
                     }
                     else if (command == "break")
                     {
-                        // dummy command to allow adding break points - add a VS break point to the line below and add a "break" line
-                        // in the test script
-                        string cmd = command;
+                        Debugger.Break();
                     }
                     else
                     {

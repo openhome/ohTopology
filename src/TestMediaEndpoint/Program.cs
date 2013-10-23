@@ -203,7 +203,7 @@ namespace TestMediaEndpoint
         {
             var a1 = new CancellationTokenSource();
             var a2 = new CancellationTokenSource();
-            var alink = new CancellationTokenLink(a1.Token, a2.Token);
+            /* var alink = */ new CancellationTokenLink(a1.Token, a2.Token);
 
             bool throws = false;
 

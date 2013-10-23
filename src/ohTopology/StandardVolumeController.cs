@@ -54,7 +54,7 @@ namespace OpenHome.Av
         public StandardVolumeController(IStandardRoom aRoom)
         {
             iDisposeHandler = new DisposeHandler();
-            iRoom = aRoom;
+            // iRoom = aRoom;
             iNetwork = aRoom.Network;
             iSource = aRoom.Source;
             iName = aRoom.Name;
@@ -317,7 +317,7 @@ namespace OpenHome.Av
         }
 
         private readonly DisposeHandler iDisposeHandler;
-        private readonly IStandardRoom iRoom;
+        // private readonly IStandardRoom iRoom;
         private readonly IWatchable<ITopology4Source> iSource;
         private readonly INetwork iNetwork;
         private readonly string iName;
