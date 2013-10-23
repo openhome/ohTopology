@@ -14,8 +14,9 @@ class Builder(OpenHomeBuilder):
 
     # Standard rules enforce warnings-as-errors and importing SharedSettings.targets,
     # disallow tabs in C# files and disallow .orig files in the source tree.
-    # We need to fix some stuff before turning this on by default.
-    # source_check_rules = OpenHomeBuilder.standard_source_check_rules
+    source_check_rules = OpenHomeBuilder.standard_source_check_rules + [
+            ['src/ohTopology/Cp*.cs', '-no-tabs'],   # Suppress the no-tabs rule for generated files.
+        ]
 
     managed_package_location = 'build/packages/{packagename}'
     native_package_location = 'buildhudson/{packagename}'
