@@ -21,6 +21,7 @@
     <WarningLevel>4</WarningLevel>
     <Commandlineparameters>Topology2TestScript.txt</Commandlineparameters>
     <OutputPath>..\..\build\TestTopology2\bin\Debug</OutputPath>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,6 +30,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <OutputPath>..\..\build\TestTopology2\bin\Release</OutputPath>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ohOs.App.V1">
