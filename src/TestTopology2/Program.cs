@@ -90,7 +90,7 @@ namespace TestTopology2
 
             try
             {
-            	runner.Run(network.Wait, new StreamReader(args[0]), mocker);
+                runner.Run(network.Wait, new StreamReader(args[0]), mocker);
             }
             catch (MockableScriptRunner.AssertError)
             {

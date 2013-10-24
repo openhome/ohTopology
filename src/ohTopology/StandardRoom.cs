@@ -740,7 +740,7 @@ namespace OpenHome.Av
             iWatchableSources.Dispose();
             iWatchableSources = null;
 
-            iSource = null;
+            // iSource = null;
 
             EvaluateZoneReceiver();
         }
@@ -767,7 +767,7 @@ namespace OpenHome.Av
         {
             ITopology4Source source = iCurrentSources[0];
             iWatchableSource = new Watchable<ITopology4Source>(iNetwork, "Source", source);
-            iSource = source;
+            // iSource = source;
         }
 
         private void SelectSource()
@@ -775,7 +775,7 @@ namespace OpenHome.Av
             ITopology4Source source = iCurrentSources[0];
 
             iWatchableSource.Update(source);
-            iSource = source;
+            // iSource = source;
         }
 
         public void ItemOpen(string aId, IEnumerable<ITopology4Group> aValue)
@@ -923,7 +923,9 @@ namespace OpenHome.Av
 
         private IEnumerable<ITopology4Root> iRoots;
         private readonly List<Action> iJoiners;
-        private ITopology4Source iSource;
+
+        // private ITopology4Source iSource;
+
         private readonly List<ITopology4Source> iCurrentSources;
         private List<ITopology4Source> iSources;
         private readonly List<ITopology4Group> iSenders;

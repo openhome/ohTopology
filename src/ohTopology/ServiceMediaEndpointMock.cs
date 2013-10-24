@@ -17,7 +17,7 @@ namespace OpenHome.Av
     public class ServiceMediaEndpointMock : ServiceMediaEndpoint, IMediaEndpointClient
     {
         private readonly IEnumerable<IMediaMetadata> iMetadata;
-        private readonly IDeviceMediaEndpointMockUriProvider iUriProvider;
+        //private readonly IDeviceMediaEndpointMockUriProvider iUriProvider;
         private readonly MediaEndpointSupervisor iSupervisor;
 
         private readonly IEnumerable<IMediaDatum> iArtists;
@@ -33,7 +33,7 @@ namespace OpenHome.Av
             aManufacturerUrl, aManufacturerArtwork, aModelName, aModelInfo, aModelUrl, aModelArtwork, aStarted, aAttributes, aLog)
         {
             iMetadata = aMetadata;
-            iUriProvider = aUriProvider;
+            //iUriProvider = aUriProvider;
             iSupervisor = new MediaEndpointSupervisor(this);
 
             iArtists = iMetadata.Where(m => m[iNetwork.TagManager.Audio.AlbumArtist] != null)
