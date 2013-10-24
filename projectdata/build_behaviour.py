@@ -48,9 +48,9 @@ class Builder(OpenHomeBuilder):
         solutionfile = solution["sln"]
         self.env["PLATFORM"] = "" # Not sure why - presumably this env var messes up something?
         if mdtool:
-            self.mdtool(solutionfile, target=target)
+            self.mdtool(solutionfile, target=target, configuration=self.configuration)
         else:
-            self.msbuild(solutionfile, target=target)
+            self.msbuild(solutionfile, target=target, configuration=self.configuration)
 
     def test(self):
         self.python("waf", "test")
