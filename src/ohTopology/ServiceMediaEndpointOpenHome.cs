@@ -76,6 +76,10 @@ namespace OpenHome.Av
 
             client.DownloadStringCompleted += (sender, args) =>
             {
+                /*
+                Disposing of registrations doesn't seem to be a good idea, as we cannot really be sure that the
+                underlying CancellationTokenSource hasn't been disposed
+                
                 lock (registrations)
                 {
                     foreach (var registration in registrations)
@@ -83,6 +87,7 @@ namespace OpenHome.Av
                         registration.Dispose();
                     }
                 }
+                */
 
                 client.Dispose();
 
@@ -271,6 +276,11 @@ namespace OpenHome.Av
 
             client.DownloadStringCompleted += (sender, args) =>
             {
+                /*
+                
+                Disposing of registrations doesn't seem to be a good idea, as we cannot really be sure that the
+                underlying CancellationTokenSource hasn't been disposed
+                
                 lock (registrations)
                 {
                     foreach (var registration in registrations)
@@ -278,6 +288,7 @@ namespace OpenHome.Av
                         registration.Dispose();
                     }
                 }
+                */
 
                 client.Dispose();
 
@@ -337,6 +348,10 @@ namespace OpenHome.Av
 
             client.DownloadStringCompleted += (sender, args) =>
             {
+                /*
+                Disposing of registrations doesn't seem to be a good idea, as we cannot really be sure that the
+                underlying CancellationTokenSource hasn't been disposed
+                
                 lock (registrations)
                 {
                     foreach (var registration in registrations)
@@ -344,6 +359,7 @@ namespace OpenHome.Av
                         registration.Dispose();
                     }
                 }
+                */
 
                 client.Dispose();
 
@@ -417,6 +433,10 @@ namespace OpenHome.Av
 
             client.DownloadStringCompleted += (sender, args) =>
             {
+                /*
+                Disposing of registrations doesn't seem to be a good idea, as we cannot really be sure that the
+                underlying CancellationTokenSource hasn't been disposed
+                
                 lock (registrations)
                 {
                     foreach (var registration in registrations)
@@ -424,6 +444,7 @@ namespace OpenHome.Av
                         registration.Dispose();
                     }
                 }
+                */
 
                 client.Dispose();
 
