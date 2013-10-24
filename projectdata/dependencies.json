@@ -27,18 +27,10 @@
     },
     {   "name": "ohOs",
         "type": "openhome",
-        "version": "0.2.662",
+        "version": "0.2.665",
         "platform-specific": false,
         "remote-archive-path": "http://openhome.org/releases/artifacts/ohOs2/ohOs2-${version}-AnyPlatform-Release.tar.gz",
         "dest": "dependencies/AnyPlatform/ohOs",
-        "strip-archive-dirs":1
-    },
-    {   "name": "ohOs.App.V1",
-        "type": "openhome",
-        "version": "0.2.662",
-        "platform-specific": false,
-        "remote-archive-path": "http://openhome.org/releases/artifacts/ohOs.App.V1/ohOs.App.V1-${version}-AnyPlatform-Release.tar.gz",
-        "dest": "dependencies/AnyPlatform/ohOs.App.V1",
         "strip-archive-dirs":1
     },
     {

@@ -2,38 +2,47 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{A73547E2-18CF-4B24-9F5B-4435443CA9D1}</ProjectGuid>
+    <ProjectGuid>{F2A16590-81C4-4060-89A9-E4E3CC6ABD57}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TestIdCache</RootNamespace>
-    <AssemblyName>TestIdCache</AssemblyName>
+    <RootNamespace>StressMediaEndpoint</RootNamespace>
+    <AssemblyName>StressMediaEndpoint</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>True</DebugSymbols>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>False</Optimize>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <OutputPath>..\..\build\TestIdCache\bin\Debug</OutputPath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
-    <Optimize>True</Optimize>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <OutputPath>..\..\build\TestTopology1\bin\Release</OutputPath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ohOs.App.V1, Version=0.2.662.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="ohNet.net">
+      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\ohNet.net.dll</HintPath>
+    </Reference>
+    <Reference Include="ohOs">
+      <HintPath>..\..\dependencies\AnyPlatform\ohOs\ohOs.dll</HintPath>
+    </Reference>
+    <Reference Include="ohOs.App.V1">
       <HintPath>..\..\dependencies\AnyPlatform\ohOs\ohOs.App.V1.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -47,6 +56,11 @@
       <Project>{B6F3BF75-F35B-4A83-A3F9-2812B97ACA28}</Project>
       <Name>ohTopology</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\dependencies\Windows-x86\ohNet-Windows-x86-Release\lib\ohNet.dll">
+      <Link>ohNet.dll</Link>
+    </Content>
   </ItemGroup>
   <Import Project="..\SharedSettings.targets" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

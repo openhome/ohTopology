@@ -74,8 +74,9 @@
     <Reference Include="ohOs">
       <HintPath>..\..\dependencies\AnyPlatform\ohOs\ohOs.dll</HintPath>
     </Reference>
-    <Reference Include="ohOs.App.V1">
-      <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
+    <Reference Include="ohOs.App.V1, Version=0.2.662.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\dependencies\AnyPlatform\ohOs\ohOs.App.V1.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
