@@ -445,8 +445,6 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            iDisposeHandler.Dispose();
-
             iNetwork.Execute(() =>
             {
                 List<Action> linked = new List<Action>(iJoiners);
@@ -454,7 +452,12 @@ namespace OpenHome.Av
                 {
                     a();
                 }
+            });
 
+            iDisposeHandler.Dispose();
+
+            iNetwork.Execute(() =>
+            {
                 iRoom.Roots.RemoveWatcher(this);
                 iDisposed = true;
             });
