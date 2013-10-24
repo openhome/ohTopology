@@ -31,7 +31,7 @@ class Builder(OpenHomeBuilder):
         self.set_nunit_location('dependencies/nuget/NUnit.Runners.2.6.1/tools/nunit-console-x86.exe')
 
     def configure(self):
-        self.python("waf", "configure", self.configure_args)
+        self.python("waf", "configure", *self.configure_args)
 
     def clean(self):
         self.python('waf', 'clean')
@@ -56,9 +56,9 @@ class Builder(OpenHomeBuilder):
         self.python("waf", "test")
 
         substitutions = { 'debugmode' : self.configuration.title() }
-        self.cli(['build/TestIdCache/bin/%(debugmode)s/TestIdCache.exe' % substitutions])
-        self.cli(['build/TestMediaEndpoint/bin/%(debugmode)s/TestMediaEndpoint.exe' % substitutions])
-        self.cli(['build/TestMediaServer/bin/%(debugmode)s/TestMediaServer.exe' % substitutions])
+        self.cli('build/TestIdCache/bin/%(debugmode)s/TestIdCache.exe' % substitutions)
+        self.cli('build/TestMediaEndpoint/bin/%(debugmode)s/TestMediaEndpoint.exe' % substitutions)
+        self.cli('build/TestMediaServer/bin/%(debugmode)s/TestMediaServer.exe' % substitutions)
         def run_test(test):
             prog = 'build/Test%(test)s/bin/%(debugmode)s/Test%(test)s.exe'
             scrp = 'build/Test%(test)s/bin/%(debugmode)s/%(test)sTestScript.txt'
