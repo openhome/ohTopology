@@ -190,7 +190,7 @@ namespace OpenHome.Av
     {
         private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
         private StandardRoomWatcherProxyCreator<IProxyPlaylist> iCreateProxy;
-        private ITopology4Source iSource;
+        // private ITopology4Source iSource;
         private IProxyPlaylist iPlaylist;
         private IPlaylistWriter iPlaylistWriter;
 
@@ -271,7 +271,7 @@ namespace OpenHome.Av
 
         private void CreatedProxy(ITopology4Source aSource, IProxyPlaylist aPlaylist)
         {
-            iSource = aSource;
+            // iSource = aSource;
             iPlaylist = aPlaylist;
             iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, aSource, aPlaylist.Snapshot);
             iPlaylistWriter = new PlaylistWriter(aPlaylist);
@@ -294,7 +294,7 @@ namespace OpenHome.Av
                 iPlaylist.Dispose();
                 iPlaylist = null;
                 iPlaylistWriter = null;
-                iSource = null;
+                // iSource = null;
             }
         }
     }
@@ -303,7 +303,7 @@ namespace OpenHome.Av
     {
         private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
         private StandardRoomWatcherProxyCreator<IProxyRadio> iCreateProxy;
-        private ITopology4Source iSource;
+        // private ITopology4Source iSource;
         private IProxyRadio iRadio;
 
         public StandardRoomWatcherRadio(IStandardRoom aRoom)
@@ -370,7 +370,7 @@ namespace OpenHome.Av
 
         private void CreatedProxy(ITopology4Source aSource, IProxyRadio aRadio)
         {
-            iSource = aSource;
+            // iSource = aSource;
             iRadio = aRadio;
             iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, aSource, aRadio.Snapshot);
             SetEnabled(true);
@@ -391,7 +391,7 @@ namespace OpenHome.Av
 
                 iRadio.Dispose();
                 iRadio = null;
-                iSource = null;
+                // iSource = null;
             }
         }
     }
@@ -731,7 +731,7 @@ namespace OpenHome.Av
         private readonly DisposeHandler iDisposeHandler;
         private readonly INetwork iNetwork;
         private readonly uint iIndex;
-        private readonly uint iId;
+        // private readonly uint iId;
         private readonly IMediaMetadata iMetadata;
         private readonly ISenderMetadata iSenderMetadata;
         private readonly IProxyReceiver iReceiver;
@@ -748,7 +748,7 @@ namespace OpenHome.Av
 
             iNetwork = aNetwork;
             iIndex = aIndex;
-            iId = aId;
+            // iId = aId;
             iMetadata = aMetadata;
             iSenderMetadata = aSenderMetadata;
             iReceiver = aReceiver;
@@ -1225,7 +1225,7 @@ namespace OpenHome.Av
     {
         private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
         private StandardRoomWatcherProxyCreator<IProxySdp> iCreateProxy;
-        private ITopology4Source iSource;
+        // private ITopology4Source iSource;
         private IProxySdp iSdp;
 
         public StandardRoomWatcherDisc(IStandardRoom aRoom)
@@ -1292,7 +1292,7 @@ namespace OpenHome.Av
 
         private void CreatedProxy(ITopology4Source aSource, IProxySdp aSdp)
         {
-            iSource = aSource;
+            // iSource = aSource;
             iSdp = aSdp;
             iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, aSource, aSdp.Snapshot);
             SetEnabled(true);
@@ -1313,7 +1313,7 @@ namespace OpenHome.Av
 
                 iSdp.Dispose();
                 iSdp = null;
-                iSource = null;
+                // iSource = null;
             }
         }
     }

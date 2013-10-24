@@ -155,7 +155,8 @@ namespace OpenHome.Av
                         }
                         else
                         {
-                            tcs.SetResult(new WatchableFragment<IMediaDatum>(aIndex, t.Result));
+                            var fragment = new WatchableFragment<IMediaDatum>(aIndex, t.Result.ToArray());
+                            tcs.SetResult(fragment);
                         }
 
                         lock (iTasks)

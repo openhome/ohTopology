@@ -237,8 +237,8 @@ namespace OpenHome.Av
                             throw;
                         }
                     }
-					else if (command == "empty")
-					{
+                    else if (command == "empty")
+                    {
                         try
                         {
                             aWait();
@@ -248,13 +248,11 @@ namespace OpenHome.Av
                             Console.WriteLine(e);
                         }
 
-						Assert(iResultQueue.Count == 0);
-					}
+                        Assert(iResultQueue.Count == 0);
+                    }
                     else if (command == "break")
                     {
-                        // dummy command to allow adding break points - add a VS break point to the line below and add a "break" line
-                        // in the test script
-                        string cmd = command;
+                        Debugger.Break();
                     }
                     else
                     {

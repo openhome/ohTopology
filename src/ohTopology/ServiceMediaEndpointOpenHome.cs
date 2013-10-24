@@ -464,7 +464,18 @@ namespace OpenHome.Av
                 lock (registrations)
                 {
                     client.DownloadStringAsync(new Uri(uri));
-                    registrations.Add(aCancellationToken.Register(() => client.CancelAsync()));
+
+                    registrations.Add(aCancellationToken.Register(() =>
+                    {
+                        try
+                        {
+                            client.CancelAsync();
+                        }
+                        catch (WebException)
+                        {
+                            // we have wittnessed an undocumented and inexplicable WebException here, so throw those away
+                        }
+                    }));
                 }
             }
 
