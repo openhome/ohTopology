@@ -536,7 +536,7 @@ namespace OpenHome.Av
 
         public MediaEndpointSnapshotMock(IEnumerable<IMediaDatum> aData)
         {
-            iData = aData;
+            iData = aData.ToArray();
             iAlphaMap = null;
         }
 
