@@ -16,16 +16,17 @@ namespace OpenHome.Av
 
     internal class InfoWatcher : IWatcher<IInfoDetails>, IWatcher<IInfoMetadata>, IWatcher<IInfoMetatext>, IDisposable
     {
-        public InfoWatcher(INetwork aNetwork, IDevice aDevice, Watchable<RoomDetails> aDetails, Watchable<RoomMetadata> aMetadata, Watchable<RoomMetatext> aMetatext)
+        public InfoWatcher(INetwork aNetwork, ITopology4Source aSource, Watchable<RoomDetails> aDetails, Watchable<RoomMetadata> aMetadata, Watchable<RoomMetatext> aMetatext)
         {
             iDisposeHandler = new DisposeHandler();
-            iDevice = aDevice;
+            iNetwork = aNetwork;
+            iSource = aSource;
             iDetails = aDetails;
             iMetadata = aMetadata;
             iMetatext = aMetatext;
             iDisposed = false;
 
-            iDevice.Create<IProxyInfo>((info) =>
+            iSource.Device.Create<IProxyInfo>((info) =>
             {
                 if (!iDisposed)
                 {
@@ -74,14 +75,32 @@ namespace OpenHome.Av
             iDetails.Update(new RoomDetails());
         }
 
+        private bool IsExternal(ITopology4Source aSource)
+        {
+            return (aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi");
+        }
+
         public void ItemOpen(string aId, IInfoMetadata aValue)
         {
-            iMetadata.Update(new RoomMetadata(aValue));
+            if (IsExternal(iSource))
+            {
+                MediaMetadata metadata = new MediaMetadata();
+                foreach (var m in aValue.Metadata)
+                {
+                    metadata.Add(m.Key, m.Value);
+                }
+                metadata.Add(iNetwork.TagManager.Audio.Artwork, "external://" + iSource.Name);
+                iMetadata.Update(new RoomMetadata(new InfoMetadata(metadata, string.Empty)));
+            }
+            else
+            {
+                iMetadata.Update(new RoomMetadata(aValue));
+            }
         }
 
         public void ItemUpdate(string aId, IInfoMetadata aValue, IInfoMetadata aPrevious)
         {
-            iMetadata.Update(new RoomMetadata(aValue));
+            ItemOpen(aId, aValue);
         }
 
         public void ItemClose(string aId, IInfoMetadata aValue)
@@ -108,7 +127,8 @@ namespace OpenHome.Av
         private bool iDisposed;
         private IProxyInfo iInfo;
 
-        private readonly IDevice iDevice;
+        private readonly INetwork iNetwork;
+        private readonly ITopology4Source iSource;
         private readonly Watchable<RoomDetails> iDetails;
         private readonly Watchable<RoomMetadata> iMetadata;
         private readonly Watchable<RoomMetatext> iMetatext;
@@ -248,7 +268,7 @@ namespace OpenHome.Av
         {
             if (aValue.HasInfo)
             {
-                iInfoWatcher = new InfoWatcher(iNetwork, aValue.Device, iDetails, iMetadata, iMetatext);
+                iInfoWatcher = new InfoWatcher(iNetwork, aValue, iDetails, iMetadata, iMetatext);
             }
         }
 
@@ -263,7 +283,7 @@ namespace OpenHome.Av
             if ((!aPrevious.HasInfo && aValue.HasInfo) || (aPrevious.HasInfo && aValue.HasInfo && aPrevious.Device != aValue.Device))
             {
                 Do.Assert(iInfoWatcher == null);
-                iInfoWatcher = new InfoWatcher(iNetwork, aValue.Device, iDetails, iMetadata, iMetatext);
+                iInfoWatcher = new InfoWatcher(iNetwork, aValue, iDetails, iMetadata, iMetatext);
             }
         }
 
