@@ -20,7 +20,6 @@ namespace OpenHome.Av
         public InfoWatcher(INetwork aNetwork, IDevice aDevice, Watchable<RoomDetails> aDetails, Watchable<RoomMetadata> aMetadata, Watchable<RoomMetatext> aMetatext)
         {
             iDisposeHandler = new DisposeHandler();
-            iNetwork = aNetwork;
             iDetails = aDetails;
             iMetadata = aMetadata;
             iMetatext = aMetatext;
@@ -136,7 +135,6 @@ namespace OpenHome.Av
         private bool iDisposed;
         private IProxyInfo iInfo;
 
-        private readonly INetwork iNetwork;
         private readonly Watchable<RoomDetails> iDetails;
         private readonly Watchable<RoomMetadata> iMetadata;
         private readonly Watchable<RoomMetatext> iMetatext;
