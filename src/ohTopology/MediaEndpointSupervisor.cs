@@ -242,8 +242,6 @@ namespace OpenHome.Av
 
             iTask = Task.Factory.StartNew(() => { });
 
-            var token = iCancellationTokenSource.Token;
-
             iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, null);
 
             iSequence = 0;

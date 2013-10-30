@@ -9,6 +9,7 @@ namespace OpenHome.Av
     {
         string Name { get; }
         IWatchable<bool> Active { get; }
+        IWatchable<RoomChannel> Channel { get; }
         IWatchable<RoomDetails> Details { get; }
         IWatchable<RoomMetadata> Metadata { get; }
         IWatchable<RoomMetatext> Metatext { get; }
@@ -16,17 +17,16 @@ namespace OpenHome.Av
 
     internal class InfoWatcher : IWatcher<IInfoDetails>, IWatcher<IInfoMetadata>, IWatcher<IInfoMetatext>, IDisposable
     {
-        public InfoWatcher(INetwork aNetwork, ITopology4Source aSource, Watchable<RoomDetails> aDetails, Watchable<RoomMetadata> aMetadata, Watchable<RoomMetatext> aMetatext)
+        public InfoWatcher(INetwork aNetwork, IDevice aDevice, Watchable<RoomDetails> aDetails, Watchable<RoomMetadata> aMetadata, Watchable<RoomMetatext> aMetatext)
         {
             iDisposeHandler = new DisposeHandler();
             iNetwork = aNetwork;
-            iSource = aSource;
             iDetails = aDetails;
             iMetadata = aMetadata;
             iMetatext = aMetatext;
             iDisposed = false;
 
-            aSource.Device.Create<IProxyInfo>((info) =>
+            aDevice.Create<IProxyInfo>((info) =>
             {
                 if (!iDisposed)
                 {
@@ -60,15 +60,6 @@ namespace OpenHome.Av
             iDisposed = true;
         }
 
-        public void UpdateSource(ITopology4Source aSource)
-        {
-            if (iSource != aSource)
-            {
-                iSource = aSource;
-                UpdateMetadata(iInfo.Metadata.Value);
-            }
-        }
-
         public void ItemOpen(string aId, IInfoDetails aValue)
         {
             iDetails.Update(new RoomDetails(aValue));
@@ -84,13 +75,14 @@ namespace OpenHome.Av
             iDetails.Update(new RoomDetails());
         }
 
-        private bool IsExternal(ITopology4Source aSource)
+        /*private bool IsExternal(ITopology4Source aSource)
         {
             return (aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi");
         }
 
         private void UpdateMetadata(IInfoMetadata aMetadata)
         {
+            iMetadata.Update(new RoomMetadata(
             if (IsExternal(iSource))
             {
                 MediaMetadata metadata = new MediaMetadata();
@@ -108,16 +100,16 @@ namespace OpenHome.Av
             {
                 iMetadata.Update(new RoomMetadata(aMetadata));
             }
-        }
+        }*/
 
         public void ItemOpen(string aId, IInfoMetadata aValue)
         {
-            UpdateMetadata(aValue);
+            iMetadata.Update(new RoomMetadata(aValue));
         }
 
         public void ItemUpdate(string aId, IInfoMetadata aValue, IInfoMetadata aPrevious)
         {
-            UpdateMetadata(aValue);
+            iMetadata.Update(new RoomMetadata(aValue));
         }
 
         public void ItemClose(string aId, IInfoMetadata aValue)
@@ -143,7 +135,6 @@ namespace OpenHome.Av
         private readonly DisposeHandler iDisposeHandler;
         private bool iDisposed;
         private IProxyInfo iInfo;
-        private ITopology4Source iSource;
 
         private readonly INetwork iNetwork;
         private readonly Watchable<RoomDetails> iDetails;
@@ -163,6 +154,7 @@ namespace OpenHome.Av
         private readonly Watchable<bool> iActive;
 
         private InfoWatcher iInfoWatcher;
+        private readonly Watchable<RoomChannel> iChannel;
         private readonly Watchable<RoomDetails> iDetails;
         private readonly Watchable<RoomMetadata> iMetadata;
         private readonly Watchable<RoomMetatext> iMetatext;
@@ -178,6 +170,7 @@ namespace OpenHome.Av
             iIsActive = true;
             iActive = new Watchable<bool>(iNetwork, "Active", true);
 
+            iChannel = new Watchable<RoomChannel>(iNetwork, "Channel", new RoomChannel());
             iDetails = new Watchable<RoomDetails>(iNetwork, "Details", new RoomDetails());
             iMetadata = new Watchable<RoomMetadata>(iNetwork, "Metadata", new RoomMetadata());
             iMetatext = new Watchable<RoomMetatext>(iNetwork, "Metatext", new RoomMetatext());
@@ -205,6 +198,7 @@ namespace OpenHome.Av
 
             Do.Assert(iInfoWatcher == null);
 
+            iChannel.Dispose();
             iDetails.Dispose();
             iMetadata.Dispose();
             iMetatext.Dispose();
@@ -248,6 +242,17 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<RoomChannel> Channel
+        {
+            get
+            {
+                using (iDisposeHandler.Lock())
+                {
+                    return iChannel;
+                }
+            }
+        }
+
         public IWatchable<RoomDetails> Details
         {
             get
@@ -285,8 +290,10 @@ namespace OpenHome.Av
         {
             if (aValue.HasInfo)
             {
-                iInfoWatcher = new InfoWatcher(iNetwork, aValue, iDetails, iMetadata, iMetatext);
+                iInfoWatcher = new InfoWatcher(iNetwork, aValue.Device, iDetails, iMetadata, iMetatext);
             }
+
+            iChannel.Update(new RoomChannel(aValue.Name, aValue.Type, string.Empty));
         }
 
         public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
@@ -300,13 +307,10 @@ namespace OpenHome.Av
             if ((!aPrevious.HasInfo && aValue.HasInfo) || (aPrevious.HasInfo && aValue.HasInfo && aPrevious.Device != aValue.Device))
             {
                 Do.Assert(iInfoWatcher == null);
-                iInfoWatcher = new InfoWatcher(iNetwork, aValue, iDetails, iMetadata, iMetatext);
+                iInfoWatcher = new InfoWatcher(iNetwork, aValue.Device, iDetails, iMetadata, iMetatext);
             }
 
-            if (iInfoWatcher != null)
-            {
-                iInfoWatcher.UpdateSource(aValue);
-            }
+            iChannel.Update(new RoomChannel(aValue.Name, aValue.Type, string.Empty));
         }
 
         public void ItemClose(string aId, ITopology4Source aValue)
@@ -318,6 +322,8 @@ namespace OpenHome.Av
             }
 
             Do.Assert(iInfoWatcher == null);
+
+            iChannel.Update(new RoomChannel());
         }
     }
 }

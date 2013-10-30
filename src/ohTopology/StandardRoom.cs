@@ -7,6 +7,59 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
+    public class RoomChannel
+    {
+        private readonly bool iEnabled;
+        private readonly string iName;
+        private readonly string iType;
+        private readonly string iArtworkUri;
+
+        public RoomChannel()
+        {
+            iEnabled = false;
+        }
+
+        public RoomChannel(string aName, string aType, string aArtworkUri)
+        {
+            iEnabled = true;
+            iName = aName;
+            iType = aType;
+            iArtworkUri = aArtworkUri;
+        }
+
+        public bool Enabled
+        {
+            get
+            {
+                return iEnabled;
+            }
+        }
+
+        public string Name
+        {
+            get
+            {
+                return iName;
+            }
+        }
+
+        public string Type
+        {
+            get
+            {
+                return iType;
+            }
+        }
+
+        public string ArtworkUri
+        {
+            get
+            {
+                return iArtworkUri;
+            }
+        }
+    }
+
     public class RoomDetails : IInfoDetails
     {
         public RoomDetails()
