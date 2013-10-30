@@ -241,6 +241,7 @@ namespace OpenHome.Av
         {
             MediaMetadata metadata = new MediaMetadata();
             metadata.Add(iNetwork.TagManager.Audio.Title, iSource.Name);
+            metadata.Add(iNetwork.TagManager.Audio.Artwork, "external://" + iSource.Name);
 
             // get the root group of this group
             Topology4Group group = iGroup;
