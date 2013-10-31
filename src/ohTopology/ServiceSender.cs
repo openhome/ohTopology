@@ -233,7 +233,10 @@ namespace OpenHome.Av
             iAttributes = iService.PropertyAttributes();
             iPresentationUrl = iService.PropertyPresentationUrl();
 
-            iSubscribedSource.SetResult(true);
+            if (!iSubscribedSource.Task.IsCanceled)
+            {
+                iSubscribedSource.SetResult(true);
+            }
         }
 
         protected override void OnUnsubscribe()

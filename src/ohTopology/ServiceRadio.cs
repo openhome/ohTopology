@@ -337,7 +337,10 @@ namespace OpenHome.Av
             iChannelsMax = iService.PropertyChannelsMax();
             iProtocolInfo = iService.PropertyProtocolInfo();
 
-            iSubscribedSource.SetResult(true);
+            if (!iSubscribedSource.Task.IsCanceled)
+            {
+                iSubscribedSource.SetResult(true);
+            }
         }
 
         protected override void OnUnsubscribe()
