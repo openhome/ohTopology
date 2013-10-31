@@ -109,7 +109,10 @@ namespace OpenHome.Av
 
         private void HandleInitialEvent()
         {
-            iSubscribedSource.SetResult(true);
+            if (!iSubscribedSource.Task.IsCanceled)
+            {
+                iSubscribedSource.SetResult(true);
+            }
         }
 
         protected override void OnUnsubscribe()

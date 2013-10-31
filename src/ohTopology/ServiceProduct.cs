@@ -337,7 +337,10 @@ namespace OpenHome.Av
                     try
                     {
                         iServiceVolkano.EndProductId(ptr, out iProductId);
-                        volkano.SetResult(true);
+                        if (!volkano.Task.IsCanceled)
+                        {
+                            volkano.SetResult(true);
+                        }
                     }
                     catch (ProxyError e)
                     {
@@ -350,7 +353,10 @@ namespace OpenHome.Av
             }
             else
             {
-                volkano.SetResult(true);
+                if (!volkano.Task.IsCanceled)
+                {
+                    volkano.SetResult(true);
+                }
             }
                 
             return Task.Factory.ContinueWhenAll(
@@ -389,7 +395,10 @@ namespace OpenHome.Av
             iProductInfo = iService.PropertyProductInfo();
             iProductUrl = iService.PropertyProductUrl();
 
-            iSubscribedSource.SetResult(true);
+            if (!iSubscribedSource.Task.IsCanceled)
+            {
+                iSubscribedSource.SetResult(true);
+            }
         }
 
         private void HandleInitialEventConfiguration()
@@ -403,7 +412,10 @@ namespace OpenHome.Av
                 });
             });
 
-            iSubscribedConfigurationSource.SetResult(true);
+            if (!iSubscribedConfigurationSource.Task.IsCanceled)
+            {
+                iSubscribedConfigurationSource.SetResult(true);
+            }
         }
 
         protected override void OnUnsubscribe()
