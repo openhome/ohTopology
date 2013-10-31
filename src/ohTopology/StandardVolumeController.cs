@@ -207,6 +207,7 @@ namespace OpenHome.Av
                 ITopology4Group group = aValue.Volumes.ElementAt(0);
                 if (iVolume != null)
                 {
+                    // if we have volume and new volume device is NOT the same we need to create a new proxy
                     if (group.Device != iDevice)
                     {
                         DestroyProxy();
@@ -215,11 +216,14 @@ namespace OpenHome.Av
                 }
                 else
                 {
+                    // if we have not volume create new proxy and destroy old proxy
+                    DestroyProxy();
                     CreateProxy(group.Device);
                 }
             }
             else
             {
+                // if no volume required destroy old proxy
                 DestroyProxy();
             }
         }
