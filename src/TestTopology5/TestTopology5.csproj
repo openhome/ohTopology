@@ -36,7 +36,10 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="ohOs.App.V1">
-      <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ohOs.App.V1.dll</HintPath>
+      <HintPath>..\..\dependencies\AnyPlatform\ohOs\ohOs.App.V1.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>..\..\dependencies\nuget\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

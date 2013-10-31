@@ -48,7 +48,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>..\..\dependencies\AnyPlatform\ohOs.App.V1\ICSharpCode.SharpZipLib.dll</HintPath>
+      <HintPath>..\..\dependencies\nuget\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
