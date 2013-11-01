@@ -69,6 +69,8 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
+            iNetwork.Assert();
+
             iDisposeHandler.Dispose();
 
             iNetwork.Execute(() =>
@@ -202,29 +204,32 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
         {
-            if (aValue.Volumes.Count() > 0)
+            using (iDisposeHandler.Lock())
             {
-                ITopology4Group group = aValue.Volumes.ElementAt(0);
-                if (iVolume != null)
+                if (aValue.Volumes.Count() > 0)
                 {
-                    // if we have volume and new volume device is NOT the same we need to create a new proxy
-                    if (group.Device != iDevice)
+                    ITopology4Group group = aValue.Volumes.ElementAt(0);
+                    if (iVolume != null)
                     {
+                        // if we have volume and new volume device is NOT the same we need to create a new proxy
+                        if (group.Device != iDevice)
+                        {
+                            DestroyProxy();
+                            CreateProxy(group.Device);
+                        }
+                    }
+                    else
+                    {
+                        // if we have not volume create new proxy and destroy old proxy
                         DestroyProxy();
                         CreateProxy(group.Device);
                     }
                 }
                 else
                 {
-                    // if we have not volume create new proxy and destroy old proxy
+                    // if no volume required destroy old proxy
                     DestroyProxy();
-                    CreateProxy(group.Device);
                 }
-            }
-            else
-            {
-                // if no volume required destroy old proxy
-                DestroyProxy();
             }
         }
 
@@ -244,6 +249,7 @@ namespace OpenHome.Av
             }
 
             iCreateProxy = new StandardVolumeControllerProxyCreator(aDevice, CreatedProxy);
+
         }
 
         private void CreatedProxy(IProxyVolume aProxy)
