@@ -551,7 +551,6 @@ namespace OpenHome.Av
                     iNetwork.Execute(() =>
                     {
                         iSources.RemoveWatcher(this);
-                        iSendersMetadataWatcher.Metadata.RemoveWatcher(this);
                     });
                     iRoom.Unjoin(SetInactive);
                     iIsActive = false;
@@ -561,8 +560,6 @@ namespace OpenHome.Av
             iEnabled.Dispose();
 
             iSendersMetadataWatcher.Dispose();
-
-            DeleteProxy();
         }
 
         private void SetInactive()
@@ -575,7 +572,6 @@ namespace OpenHome.Av
                     iActive.Update(false);
 
                     iSources.RemoveWatcher(this);
-                    iSendersMetadataWatcher.Metadata.RemoveWatcher(this);
 
                     DeleteProxy();
 
@@ -637,8 +633,6 @@ namespace OpenHome.Av
         {
             SetEnabled(false);
 
-            iSendersMetadataWatcher.Metadata.RemoveWatcher(this);
-
             DeleteProxy();
 
             EvaluateEnabled(aValue);
@@ -647,8 +641,6 @@ namespace OpenHome.Av
         public void ItemClose(string aId, IEnumerable<ITopology4Source> aValue)
         {
             iEnabled.Update(false);
-
-            iSendersMetadataWatcher.Metadata.RemoveWatcher(this);
 
             DeleteProxy();
         }
@@ -714,6 +706,8 @@ namespace OpenHome.Av
 
             if (iReceiver != null)
             {
+                iSendersMetadataWatcher.Metadata.RemoveWatcher(this);
+
                 iWatchableSnapshot.Dispose();
                 iWatchableSnapshot = null;
 
