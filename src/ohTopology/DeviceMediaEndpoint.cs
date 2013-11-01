@@ -72,7 +72,14 @@ namespace OpenHome.Av
 
         internal IEventSupervisorSession CreateEventSession(string aEndpoint)
         {
-            return (iNetwork.EventSupervisor.Create(aEndpoint));
+            IEventSupervisorSession session = null;
+
+            iNetwork.Execute(() =>
+            {
+                session = iNetwork.EventSupervisor.Create(aEndpoint);
+            });
+
+            return (session);
         }
 
         private string GetDeviceElementValue(IEnumerable<XElement> aElements, string aName)
