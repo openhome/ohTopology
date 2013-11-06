@@ -62,11 +62,9 @@ namespace OpenHome.Av
             return (iUri + "/res" + aValue);
         }
 
-        private Task<IMediaEndpointClientSnapshot> GetSnapshot(CancellationToken aCancellationToken, string aFormat, params object[] aArguments)
+        private Task<T> Fetch<T>(CancellationToken aCancellationToken, string aUri, Func<string, T> aJsonParser)
         {
-            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
-
-            var uri = CreateUri(aFormat, aArguments);
+            var tcs = new TaskCompletionSource<T>();
 
             var client = new WebClient();
 
@@ -76,19 +74,6 @@ namespace OpenHome.Av
 
             client.DownloadStringCompleted += (sender, args) =>
             {
-                /*
-                Disposing of registrations doesn't seem to be a good idea, as we cannot really be sure that the
-                underlying CancellationTokenSource hasn't been disposed
-                
-                lock (registrations)
-                {
-                    foreach (var registration in registrations)
-                    {
-                        registration.Dispose();
-                    }
-                }
-                */
-
                 client.Dispose();
 
                 if (aCancellationToken.IsCancellationRequested || args.Error != null)
@@ -99,10 +84,7 @@ namespace OpenHome.Av
                 {
                     try
                     {
-                        var json = JsonParser.Parse(args.Result) as JsonObject;
-                        var total = GetTotal(json["Total"]);
-                        var alpha = GetAlpha(json["Alpha"]);
-                        tcs.SetResult(new MediaEndpointSnapshotOpenHome(total, alpha));
+                        tcs.SetResult(aJsonParser(args.Result));
                     }
                     catch
                     {
@@ -119,7 +101,7 @@ namespace OpenHome.Av
             {
                 lock (registrations)
                 {
-                    client.DownloadStringAsync(new Uri(uri));
+                    client.DownloadStringAsync(new Uri(aUri));
                     registrations.Add(aCancellationToken.Register(() =>
                     {
                         try
@@ -135,6 +117,17 @@ namespace OpenHome.Av
             }
 
             return (tcs.Task);
+        }
+
+        private Task<IMediaEndpointClientSnapshot> GetSnapshot(CancellationToken aCancellationToken, string aFormat, params object[] aArguments)
+        {
+            return (Fetch<IMediaEndpointClientSnapshot>(aCancellationToken, CreateUri(aFormat, aArguments), (value) =>
+            {
+                var json = JsonParser.Parse(value) as JsonObject;
+                var total = GetTotal(json["Total"]);
+                var alpha = GetAlpha(json["Alpha"]);
+                return (new MediaEndpointSnapshotOpenHome(total, alpha));
+            }));
         }
 
         private uint GetTotal(JsonValue aValue)
@@ -274,149 +267,27 @@ namespace OpenHome.Av
 
         public Task<string> Create(CancellationToken aCancellationToken)
         {
-            var tcs = new TaskCompletionSource<string>();
-
-            var uri = CreateUri("create");
-
-            var client = new WebClient();
-
-            client.Encoding = iEncoding;
-
-            var registrations = new List<CancellationTokenRegistration>();
-
-            client.DownloadStringCompleted += (sender, args) =>
+            return (Fetch<string>(aCancellationToken, CreateUri("create"), (value) =>
             {
-                /*
-                
-                Disposing of registrations doesn't seem to be a good idea, as we cannot really be sure that the
-                underlying CancellationTokenSource hasn't been disposed
-                
-                lock (registrations)
+                var json = JsonParser.Parse(value) as JsonString;
+
+                var session = json.Value;
+
+                iSessionHandler("me." + iId + "." + session, (id, seq) =>
                 {
-                    foreach (var registration in registrations)
-                    {
-                        registration.Dispose();
-                    }
-                }
-                */
+                    iSupervisor.Refresh(session);
+                });
 
-                client.Dispose();
-
-                if (aCancellationToken.IsCancellationRequested || args.Error != null)
-                {
-                    tcs.SetCanceled();
-                }
-                else
-                {
-                    try
-                    {
-                        var json = JsonParser.Parse(args.Result) as JsonString;
-
-                        var session = json.Value;
-
-                        iSessionHandler("me." + iId + "." + session, (id, seq) =>
-                        {
-                            iSupervisor.Refresh(session);
-                        });
-
-                        tcs.SetResult(session);
-                    }
-                    catch
-                    {
-                        tcs.SetCanceled();
-                    }
-                }
-            };
-
-            if (aCancellationToken.IsCancellationRequested)
-            {
-                tcs.SetCanceled();
-            }
-            else
-            {
-                lock (registrations)
-                {
-                    client.DownloadStringAsync(new Uri(uri));
-                    registrations.Add(aCancellationToken.Register(() =>
-                    {
-                        try
-                        {
-                            client.CancelAsync();
-                        }
-                        catch (WebException)
-                        {
-                            // we have wittnessed an undocumented and inexplicable WebException here, so throw those away
-                        }
-                    }));
-                }
-            }
-
-            return (tcs.Task);
+                return (session);
+            }));
         }
 
         public Task<string> Destroy(CancellationToken aCancellationToken, string aId)
         {
-            var tcs = new TaskCompletionSource<string>();
-
-            var uri = CreateUri("destroy?session={0}", aId);
-
-            var client = new WebClient();
-
-            client.Encoding = iEncoding;
-
-            var registrations = new List<CancellationTokenRegistration>();
-
-            client.DownloadStringCompleted += (sender, args) =>
+            return (Fetch<string>(aCancellationToken, CreateUri("destroy?session={0}", aId), (value) =>
             {
-                /*
-                Disposing of registrations doesn't seem to be a good idea, as we cannot really be sure that the
-                underlying CancellationTokenSource hasn't been disposed
-                
-                lock (registrations)
-                {
-                    foreach (var registration in registrations)
-                    {
-                        registration.Dispose();
-                    }
-                }
-                */
-
-                client.Dispose();
-
-                if (aCancellationToken.IsCancellationRequested || args.Error != null)
-                {
-                    tcs.SetCanceled();
-                }
-                else
-                {
-                    tcs.SetResult(aId);
-                }
-            };
-
-            if (aCancellationToken.IsCancellationRequested)
-            {
-                tcs.SetCanceled();
-            }
-            else
-            {
-                lock (registrations)
-                {
-                    client.DownloadStringAsync(new Uri(uri));
-                    registrations.Add(aCancellationToken.Register(() =>
-                    {
-                        try
-                        {
-                            client.CancelAsync();
-                        }
-                        catch (WebException)
-                        {
-                            // we have wittnessed an undocumented and inexplicable WebException here, so throw those away
-                        }
-                    }));
-                }
-            }
-
-            return (tcs.Task);
+                return (aId);
+            }));
         }
 
         public Task<IMediaEndpointClientSnapshot> Browse(CancellationToken aCancellationToken, string aSession, IMediaDatum aDatum)
@@ -451,86 +322,11 @@ namespace OpenHome.Av
 
         public Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
         {
-            var tcs = new TaskCompletionSource<IEnumerable<IMediaDatum>>();
-
-            var uri = CreateUri("read?session={0}&index={1}&count={2}", aSession, aIndex, aCount);
-
-            var client = new WebClient();
-
-            client.Encoding = iEncoding;
-
-            var registrations = new List<CancellationTokenRegistration>();
-
-            client.DownloadStringCompleted += (sender, args) =>
+            return (Fetch<IEnumerable<IMediaDatum>>(aCancellationToken, CreateUri("read?session={0}&index={1}&count={2}", aSession, aIndex, aCount), (value) =>
             {
-                /*
-                Disposing of registrations doesn't seem to be a good idea, as we cannot really be sure that the
-                underlying CancellationTokenSource hasn't been disposed
-                
-                lock (registrations)
-                {
-                    foreach (var registration in registrations)
-                    {
-                        registration.Dispose();
-                    }
-                }
-                */
-
-                client.Dispose();
-
-                if (aCancellationToken.IsCancellationRequested || args.Error != null)
-                {
-                    tcs.SetCanceled();
-                }
-                else
-                {
-                    var json = JsonParser.Parse(args.Result);
-
-                    if (aCancellationToken.IsCancellationRequested)
-                    {
-                        tcs.SetCanceled();
-                    }
-                    else
-                    {
-                        var data = GetData(json);
-
-                        if (aCancellationToken.IsCancellationRequested)
-                        {
-                            tcs.SetCanceled();
-                        }
-                        else
-                        {
-                            tcs.SetResult(data);
-                        }
-                    }
-                }
-            };
-
-            if (aCancellationToken.IsCancellationRequested)
-            {
-                tcs.SetCanceled();
-            }
-            else
-            {
-                lock (registrations)
-                {
-                    client.DownloadStringAsync(new Uri(uri));
-
-                    registrations.Add(aCancellationToken.Register(() =>
-                    {
-                        try
-                        {
-                            client.CancelAsync();
-                        }
-                        catch (WebException)
-                        {
-                            // we have wittnessed an undocumented and inexplicable WebException here, so throw those away
-                        }
-                    }));
-                }
-            }
-
-            return (tcs.Task);
+                var json = JsonParser.Parse(value);
+                return (GetData(json));
+            }));
         }
 
         // IDispose
