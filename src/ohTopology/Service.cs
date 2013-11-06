@@ -135,7 +135,7 @@ namespace OpenHome.Av
                     {
                         iNetwork.Schedule(() =>
                         {
-                            if (!iCancelSubscribe.IsCancellationRequested && !t.IsFaulted)
+                            if (t.Exception == null && !iCancelSubscribe.IsCancellationRequested)
                             {
                                 aCallback((T)OnCreate(aDevice));
                             }

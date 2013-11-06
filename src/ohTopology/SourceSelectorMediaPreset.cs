@@ -12,20 +12,27 @@ namespace OpenHome.Av
         class MediaPresetPlaying : IWatcher<bool>, IDisposable
         {
             private readonly DisposeHandler iDisposeHandler;
+            private readonly IWatchableThread iThread;
             private readonly IMediaPreset iPreset;
             private readonly Action iAction;
+
             private bool iPlaying;
+            private bool iWatching;
 
             public MediaPresetPlaying(IWatchableThread aThread, IMediaPreset aPreset, Action aAction)
             {
                 iDisposeHandler = new DisposeHandler();
+
+                iWatching = false;
+                iThread = aThread;
                 iPreset = aPreset;
                 iAction = aAction;
 
-                aThread.Schedule(() =>
+                iThread.Schedule(() =>
                 {
                     iDisposeHandler.WhenNotDisposed(() =>
                     {
+                        iWatching = true;
                         iPreset.Playing.AddWatcher(this);
                     });
                 });
@@ -35,7 +42,13 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.Dispose();
 
-                iPreset.Playing.RemoveWatcher(this);
+                iThread.Execute(() =>
+                {
+                    if (iWatching)
+                    {
+                        iPreset.Playing.RemoveWatcher(this);
+                    }
+                });
             }
 
             public bool Playing
@@ -211,22 +224,22 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<IWatchableFragment<IMediaPreset>> Read(uint aIndex, uint aCount, CancellationToken aCancellationToken)
+        public void Read(uint aIndex, uint aCount, CancellationToken aCancellationToken, Action<IWatchableFragment<IMediaPreset>> aCallback)
         {
             Do.Assert(iSnapshot != null);
 
-            return iSnapshot.Read(aIndex, aCount, aCancellationToken).ContinueWith((t) =>
+            iSnapshot.Read(aIndex, aCount, aCancellationToken, (values) =>
             {
                 List<IMediaPreset> presets = new List<IMediaPreset>();
 
-                foreach (IMediaPreset p in t.Result.Data)
+                foreach (IMediaPreset p in values.Data)
                 {
                     presets.Add(new SourceSelectorMediaPreset(iThread, iSource, p));
                 }
 
                 IWatchableFragment<IMediaPreset> fragment = new WatchableFragment<IMediaPreset>(aIndex, presets);
 
-                return fragment;
+                aCallback(fragment);
             });
         }
     }

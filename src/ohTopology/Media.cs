@@ -30,7 +30,7 @@ namespace OpenHome.Av
     {
         uint Total { get; }
         IEnumerable<uint> Alpha { get; } // null if no alpha map
-        Task<IWatchableFragment<T>> Read(uint aIndex, uint aCount, CancellationToken aCancellationToken);
+        void Read(uint aIndex, uint aCount, CancellationToken aCancellationToken, Action<IWatchableFragment<T>> aCallback);
     }
 
     public interface IWatchableContainer<T>
@@ -38,23 +38,20 @@ namespace OpenHome.Av
         IWatchable<IWatchableSnapshot<T>> Snapshot { get; }
     }
 
+    // all calls into an instance of this class should be called on the watchable thread
     public class MediaSupervisor<T> : IDisposable
     {
-        private readonly DisposeHandler iDisposeHandler;
         private CancellationTokenSource iCancellationTokenSource;
         private Watchable<IWatchableSnapshot<T>> iSnapshot;
 
         public MediaSupervisor(IWatchableThread aThread, IMediaClientSnapshot<T> aClientSnapshot)
         {
-            iDisposeHandler = new DisposeHandler();
             iCancellationTokenSource = new CancellationTokenSource();
             iSnapshot = new Watchable<IWatchableSnapshot<T>>(aThread, "Snapshot", new MediaSnapshot<T>(iCancellationTokenSource.Token, aClientSnapshot));
         }
 
         public void Dispose()
         {
-            iDisposeHandler.Dispose();
-
             iCancellationTokenSource.Cancel();
 
             MediaSnapshot<T> snapshot = iSnapshot.Value as MediaSnapshot<T>;
@@ -70,29 +67,23 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iSnapshot;
-                }
+                return iSnapshot;
             }
         }
 
         public void Update(IMediaClientSnapshot<T> aClientSnapshot)
         {
-            using (iDisposeHandler.Lock())
-            {
-                MediaSnapshot<T> snapshot = iSnapshot.Value as MediaSnapshot<T>;
+            MediaSnapshot<T> snapshot = iSnapshot.Value as MediaSnapshot<T>;
 
-                iCancellationTokenSource.Cancel();
+            iCancellationTokenSource.Cancel();
                 
-                iCancellationTokenSource.Dispose();
+            iCancellationTokenSource.Dispose();
 
-                iCancellationTokenSource = new CancellationTokenSource();
+            iCancellationTokenSource = new CancellationTokenSource();
                 
-                iSnapshot.Update(new MediaSnapshot<T>(iCancellationTokenSource.Token, aClientSnapshot));
+            iSnapshot.Update(new MediaSnapshot<T>(iCancellationTokenSource.Token, aClientSnapshot));
 
-                snapshot.Dispose();
-            }
+            snapshot.Dispose();
         }
     }
 
@@ -100,7 +91,7 @@ namespace OpenHome.Av
     {
         uint Total { get; }
         IEnumerable<uint> Alpha { get; } // null if no alpha map
-        IEnumerable<T> Read(CancellationToken aToken, uint aIndex, uint aCount);
+        void Read(CancellationToken aToken, uint aIndex, uint aCount, Action<IEnumerable<T>> aCallback);
     }
 
     internal class MediaSnapshot<T> : IWatchableSnapshot<T>, IDisposable
@@ -108,16 +99,16 @@ namespace OpenHome.Av
         private readonly CancellationToken iCancellationToken;
         private readonly IMediaClientSnapshot<T> iSnapshot;
 
-        private readonly DisposeHandler iDisposeHandler;
-
         private readonly List<Task> iTasks;
+
+        private bool iDisposed;
 
         public MediaSnapshot(CancellationToken aCancellationToken, IMediaClientSnapshot<T> aSnapshot)
         {
             iCancellationToken = aCancellationToken;
             iSnapshot = aSnapshot;
 
-            iDisposeHandler = new DisposeHandler();
+            iDisposed = false;
 
             iTasks = new List<Task>();
         }
@@ -128,10 +119,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return (iSnapshot.Total);
-                }
+                return (iSnapshot.Total);
             }
         }
 
@@ -139,68 +127,55 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return (iSnapshot.Alpha);
-                }
+                return (iSnapshot.Alpha);
             }
         }
 
-        public Task<IWatchableFragment<T>> Read(uint aIndex, uint aCount, CancellationToken aCancellationToken)
+        public void Read(uint aIndex, uint aCount, CancellationToken aCancellationToken, Action<IWatchableFragment<T>> aCallback)
         {
             Do.Assert(aIndex + aCount <= iSnapshot.Total);
 
-            using (iDisposeHandler.Lock())
+            var task = Task.Factory.StartNew(() =>
             {
-                var task = Task.Factory.StartNew<IWatchableFragment<T>>(() =>
+                iCancellationToken.ThrowIfCancellationRequested();
+
+                if (aCount == 0)
                 {
-                    iCancellationToken.ThrowIfCancellationRequested();
-
-                    if (aCount == 0)
+                    aCallback(new WatchableFragment<T>(aIndex, Enumerable.Empty<T>()));
+                }
+                else
+                {
+                    iSnapshot.Read(iCancellationToken, aIndex, aCount, (values) =>
                     {
-                        return (new WatchableFragment<T>(aIndex, Enumerable.Empty<T>()));
-                    }
+                        if(!iDisposed)
+                        {
+                            aCallback(new WatchableFragment<T>(aIndex, values));
+                        }
+                    });
+                }
+            });
 
-                    IEnumerable<T> data;
+            lock (iTasks)
+            {
+                Task completion = null;
 
+                completion = task.ContinueWith((t) =>
+                {
                     try
                     {
-                        data = iSnapshot.Read(iCancellationToken, aIndex, aCount);
+                        t.Wait();
                     }
                     catch
                     {
-                        throw new OperationCanceledException();
                     }
 
-                    iCancellationToken.ThrowIfCancellationRequested();
-
-                    return (new WatchableFragment<T>(aIndex, data));
+                    lock (iTasks)
+                    {
+                        iTasks.Remove(completion);
+                    }
                 });
 
-                lock (iTasks)
-                {
-                    Task completion = null;
-
-                    completion = task.ContinueWith((t) =>
-                    {
-                        try
-                        {
-                            t.Wait();
-                        }
-                        catch
-                        {
-                        }
-
-                        lock (iTasks)
-                        {
-                            iTasks.Remove(completion);
-                        }
-                    });
-
-                    iTasks.Add(completion);
-                }
-
-                return (task);
+                iTasks.Add(completion);
             }
         }
 
@@ -208,7 +183,7 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            iDisposeHandler.Dispose();
+            iDisposed = true;
 
             Task[] tasks;
 
@@ -422,9 +397,9 @@ namespace OpenHome.Av
             return metadata;
         }
 
-        public static Task<IWatchableFragment<T>> Read<T>(this IWatchableSnapshot<T> aSnapshot, uint aIndex, uint aCount)
+        public static void Read<T>(this IWatchableSnapshot<T> aSnapshot, uint aIndex, uint aCount, Action<IWatchableFragment<T>> aCallback)
         {
-            return (aSnapshot.Read(aIndex, aCount, CancellationToken.None));
+            aSnapshot.Read(aIndex, aCount, CancellationToken.None, aCallback);
         }
     }
 }

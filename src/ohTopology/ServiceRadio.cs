@@ -13,7 +13,6 @@ namespace OpenHome.Av
 {
     class MediaPresetRadio : IMediaPreset, IWatcher<uint>, IWatcher<string>
     {
-        private readonly DisposeHandler iDisposeHandler;
         private readonly INetwork iNetwork;
         private readonly uint iIndex;
         private readonly uint iId;
@@ -22,15 +21,12 @@ namespace OpenHome.Av
         private readonly ServiceRadio iRadio;
         private readonly Watchable<bool> iBuffering;
         private readonly Watchable<bool> iPlaying;
+
         private uint iCurrentId;
         private string iCurrentTransportState;
-        private bool iDisposed;
 
         public MediaPresetRadio(INetwork aNetwork, uint aIndex, uint aId, IMediaMetadata aMetadata, string aUri, ServiceRadio aRadio)
         {
-            iDisposed = false;
-            iDisposeHandler = new DisposeHandler();
-
             iNetwork = aNetwork;
             iIndex = aIndex;
             iId = aId;
@@ -40,25 +36,14 @@ namespace OpenHome.Av
 
             iBuffering = new Watchable<bool>(iNetwork, "Buffering", false);
             iPlaying = new Watchable<bool>(iNetwork, "Playing", false);
-            iNetwork.Schedule(() =>
-            {
-                if (!iDisposed)
-                {
-                    iRadio.Id.AddWatcher(this);
-                    iRadio.TransportState.AddWatcher(this);
-                }
-            });
+            iRadio.Id.AddWatcher(this);
+            iRadio.TransportState.AddWatcher(this);
         }
 
         public void Dispose()
         {
-            iDisposeHandler.Dispose();
-            iNetwork.Execute(() =>
-            {
-                iRadio.Id.RemoveWatcher(this);
-                iRadio.TransportState.RemoveWatcher(this);
-                iDisposed = true;
-            });
+            iRadio.Id.RemoveWatcher(this);
+            iRadio.TransportState.RemoveWatcher(this);
             iBuffering.Dispose();
             iPlaying.Dispose();
         }
@@ -67,10 +52,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iIndex;
-                }
+                return iIndex;
             }
         }
 
@@ -78,10 +60,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iMetadata;
-                }
+                return iMetadata;
             }
         }
 
@@ -89,10 +68,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iBuffering;
-                }
+                return iBuffering;
             }
         }
 
@@ -100,24 +76,18 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iPlaying;
-                }
+                return iPlaying;
             }
         }
 
         public void Play()
         {
-            using (iDisposeHandler.Lock())
+            if (iId > 0)
             {
-                if (iId > 0)
+                iRadio.SetId(iId, iUri).ContinueWith((t) =>
                 {
-                    iRadio.SetId(iId, iUri).ContinueWith((t) =>
-                    {
-                        iRadio.Play();
-                    });
-                }
+                    iRadio.Play();
+                });
             }
         }
 
@@ -627,7 +597,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IEnumerable<IMediaPreset> Read(CancellationToken aCancellationToken, uint aIndex, uint aCount)
+        public void Read(CancellationToken aCancellationToken, uint aIndex, uint aCount, Action<IEnumerable<IMediaPreset>> aCallback)
         {
             Do.Assert(aIndex + aCount <= Total);
 
@@ -638,16 +608,27 @@ namespace OpenHome.Av
             }
 
             List<IMediaPreset> presets = new List<IMediaPreset>();
-            IEnumerable<IIdCacheEntry> entries = iCacheSession.Entries(idList).Result;
-            uint index = aIndex;
-            foreach (IIdCacheEntry e in entries)
+            IEnumerable<IIdCacheEntry> entries = new List<IIdCacheEntry>();
+            try
             {
-                uint id = iIdArray.Where(v => v != 0).ElementAt((int)index);
-                presets.Add(new MediaPresetRadio(iNetwork, (uint)(iIdArray.IndexOf(id) + 1), id, e.Metadata, e.Uri, iRadio));
-                ++index;
+                entries = iCacheSession.Entries(idList).Result;
+            }
+            catch
+            {
             }
 
-            return presets;
+            iNetwork.Schedule(() =>
+            {
+                uint index = aIndex;
+                foreach (IIdCacheEntry e in entries)
+                {
+                    uint id = iIdArray.Where(v => v != 0).ElementAt((int)index);
+                    presets.Add(new MediaPresetRadio(iNetwork, (uint)(iIdArray.IndexOf(id) + 1), id, e.Metadata, e.Uri, iRadio));
+                    ++index;
+                }
+
+                aCallback(presets);
+            });
         }
     }
 
