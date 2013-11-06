@@ -285,7 +285,10 @@ namespace OpenHome.Av
                 {
                     if (iDisposed)
                     {
-                        session.Dispose();
+                        iInjector.Network.Execute(() =>
+                        {
+                            session.Dispose();
+                        });
                     }
                     else
                     {
