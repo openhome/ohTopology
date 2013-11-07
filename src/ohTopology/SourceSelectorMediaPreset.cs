@@ -73,6 +73,7 @@ namespace OpenHome.Av
 
             iSourcePlaying = new MediaPresetPlaying(iThread, iSource, UpdatePlaying);
             iPresetPlaying = new MediaPresetPlaying(iThread, iPreset, UpdatePlaying);
+            UpdatePlaying();
         }
 
         public void Dispose()
