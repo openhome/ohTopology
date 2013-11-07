@@ -722,7 +722,6 @@ namespace OpenHome.Av
 
     class MediaPresetSender : IMediaPreset, IWatcher<string>, IWatcher<IInfoMetadata>
     {
-        private readonly DisposeHandler iDisposeHandler;
         private readonly IWatchableThread iThread;
         private readonly uint iIndex;
         // private readonly uint iId;
@@ -734,13 +733,9 @@ namespace OpenHome.Av
 
         private IInfoMetadata iCurrentMetadata;
         private string iCurrentTransportState;
-        private bool iWatching;
 
         public MediaPresetSender(IWatchableThread aThread, uint aIndex, uint aId, IMediaMetadata aMetadata, ISenderMetadata aSenderMetadata, IProxyReceiver aReceiver)
         {
-            iDisposeHandler = new DisposeHandler();
-
-            iWatching = false;
             iThread = aThread;
             iIndex = aIndex;
             // iId = aId;
@@ -750,28 +745,14 @@ namespace OpenHome.Av
 
             iBuffering = new Watchable<bool>(iThread, "Buffering", false);
             iPlaying = new Watchable<bool>(iThread, "Playing", false);
-            iThread.Schedule(() =>
-            {
-                iDisposeHandler.WhenNotDisposed(() =>
-                {
-                    iWatching = true;
-                    iReceiver.Metadata.AddWatcher(this);
-                    iReceiver.TransportState.AddWatcher(this);
-                });
-            });
+            iReceiver.Metadata.AddWatcher(this);
+            iReceiver.TransportState.AddWatcher(this);
         }
 
         public void Dispose()
         {
-            iDisposeHandler.Dispose();
-            iThread.Execute(() =>
-            {
-                if (iWatching)
-                {
-                    iReceiver.Metadata.RemoveWatcher(this);
-                    iReceiver.TransportState.RemoveWatcher(this);
-                }
-            });
+            iReceiver.Metadata.RemoveWatcher(this);
+            iReceiver.TransportState.RemoveWatcher(this);
             iBuffering.Dispose();
             iPlaying.Dispose();
         }
@@ -780,10 +761,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iIndex;
-                }
+                return iIndex;
             }
         }
 
@@ -791,10 +769,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iMetadata;
-                }
+                return iMetadata;
             }
         }
 
@@ -802,10 +777,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iBuffering;
-                }
+                return iBuffering;
             }
         }
 
@@ -813,19 +785,13 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iPlaying;
-                }
+                return iPlaying;
             }
         }
 
         public void Play()
         {
-            using (iDisposeHandler.Lock())
-            {
-                iReceiver.Play(iSenderMetadata);
-            }
+            iReceiver.Play(iSenderMetadata);
         }
 
         private void EvaluatePlaying()

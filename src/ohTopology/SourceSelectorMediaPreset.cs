@@ -11,44 +11,24 @@ namespace OpenHome.Av
     {
         class MediaPresetPlaying : IWatcher<bool>, IDisposable
         {
-            private readonly DisposeHandler iDisposeHandler;
             private readonly IWatchableThread iThread;
             private readonly IMediaPreset iPreset;
             private readonly Action iAction;
 
             private bool iPlaying;
-            private bool iWatching;
 
             public MediaPresetPlaying(IWatchableThread aThread, IMediaPreset aPreset, Action aAction)
             {
-                iDisposeHandler = new DisposeHandler();
-
-                iWatching = false;
                 iThread = aThread;
                 iPreset = aPreset;
                 iAction = aAction;
 
-                iThread.Schedule(() =>
-                {
-                    iDisposeHandler.WhenNotDisposed(() =>
-                    {
-                        iWatching = true;
-                        iPreset.Playing.AddWatcher(this);
-                    });
-                });
+                iPreset.Playing.AddWatcher(this);
             }
 
             public void Dispose()
             {
-                iDisposeHandler.Dispose();
-
-                iThread.Execute(() =>
-                {
-                    if (iWatching)
-                    {
-                        iPreset.Playing.RemoveWatcher(this);
-                    }
-                });
+                iPreset.Playing.RemoveWatcher(this);
             }
 
             public bool Playing

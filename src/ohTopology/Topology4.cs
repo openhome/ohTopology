@@ -9,7 +9,6 @@ namespace OpenHome.Av
 {
     class MediaPresetExternal : IMediaPreset, IWatcher<ITopology4Source>
     {
-        private readonly DisposeHandler iDisposeHandler;
         private readonly IWatchableThread iThread;
         private readonly uint iIndex;
         private readonly IMediaMetadata iMetadata;
@@ -18,13 +17,8 @@ namespace OpenHome.Av
         private readonly Watchable<bool> iBuffering;
         private readonly Watchable<bool> iPlaying;
 
-        private bool iWatching;
-
         public MediaPresetExternal(IWatchableThread aThread, Topology4Group aGroup, uint aIndex, IMediaMetadata aMetadata, Topology4Source aSource)
         {
-            iDisposeHandler = new DisposeHandler();
-
-            iWatching = false;
             iThread = aThread;
             iIndex = aIndex;
             iMetadata = aMetadata;
@@ -33,26 +27,12 @@ namespace OpenHome.Av
 
             iBuffering = new Watchable<bool>(aThread, "Buffering", false);
             iPlaying = new Watchable<bool>(aThread, "Playing", false);
-            aThread.Schedule(() =>
-            {
-                iDisposeHandler.WhenNotDisposed(() =>
-                {
-                    iWatching = true;
-                    iGroup.Source.AddWatcher(this);
-                });
-            });
+            iGroup.Source.AddWatcher(this);
         }
 
         public void Dispose()
         {
-            iDisposeHandler.Dispose();
-            iThread.Execute(() =>
-            {
-                if (iWatching)
-                {
-                    iGroup.Source.RemoveWatcher(this);
-                }
-            });
+            iGroup.Source.RemoveWatcher(this);
             iBuffering.Dispose();
             iPlaying.Dispose();
         }
@@ -61,10 +41,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iIndex;
-                }
+                return iIndex;
             }
         }
 
@@ -72,10 +49,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iMetadata;
-                }
+                return iMetadata;
             }
         }
 
@@ -83,10 +57,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iBuffering;
-                }
+                return iBuffering;
             }
         }
 
@@ -94,19 +65,13 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iPlaying;
-                }
+                return iPlaying;
             }
         }
 
         public void Play()
         {
-            using (iDisposeHandler.Lock())
-            {
-                iSource.Select();
-            }
+            iSource.Select();
         }
 
         public void ItemOpen(string aId, ITopology4Source aValue)
