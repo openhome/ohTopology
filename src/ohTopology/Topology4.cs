@@ -9,7 +9,6 @@ namespace OpenHome.Av
 {
     class MediaPresetExternal : IMediaPreset, IWatcher<ITopology4Source>
     {
-        private readonly IWatchableThread iThread;
         private readonly uint iIndex;
         private readonly IMediaMetadata iMetadata;
         private readonly Topology4Source iSource;
@@ -19,7 +18,6 @@ namespace OpenHome.Av
 
         public MediaPresetExternal(IWatchableThread aThread, Topology4Group aGroup, uint aIndex, IMediaMetadata aMetadata, Topology4Source aSource)
         {
-            iThread = aThread;
             iIndex = aIndex;
             iMetadata = aMetadata;
             iSource = aSource;

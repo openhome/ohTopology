@@ -14,7 +14,6 @@ namespace OpenHome.Av
 {
     class MediaPresetSdp : IMediaPreset, IWatcher<uint>, IWatcher<string>
     {
-        private readonly INetwork iNetwork;
         private readonly uint iIndex;
         private readonly uint iId;
         private readonly IMediaMetadata iMetadata;
@@ -25,16 +24,15 @@ namespace OpenHome.Av
         private uint iCurrentId;
         private string iCurrentTransportState;
 
-        public MediaPresetSdp(INetwork aNetwork, uint aIndex, uint aId, IMediaMetadata aMetadata, ServiceSdp aSdp)
+        public MediaPresetSdp(IWatchableThread aThread, uint aIndex, uint aId, IMediaMetadata aMetadata, ServiceSdp aSdp)
         {
-            iNetwork = aNetwork;
             iIndex = aIndex;
             iId = aId;
             iMetadata = aMetadata;
             iSdp = aSdp;
 
-            iBuffering = new Watchable<bool>(iNetwork, "Buffering", false);
-            iPlaying = new Watchable<bool>(iNetwork, "Playing", false);
+            iBuffering = new Watchable<bool>(aThread, "Buffering", false);
+            iPlaying = new Watchable<bool>(aThread, "Playing", false);
             iSdp.Id.AddWatcher(this);
             iSdp.TransportState.AddWatcher(this);
         }

@@ -11,7 +11,6 @@ namespace OpenHome.Av
     {
         class MediaPresetPlaying : IWatcher<bool>, IDisposable
         {
-            private readonly IWatchableThread iThread;
             private readonly IMediaPreset iPreset;
             private readonly Action iAction;
 
@@ -19,7 +18,6 @@ namespace OpenHome.Av
 
             public MediaPresetPlaying(IWatchableThread aThread, IMediaPreset aPreset, Action aAction)
             {
-                iThread = aThread;
                 iPreset = aPreset;
                 iAction = aAction;
 

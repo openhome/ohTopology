@@ -14,7 +14,6 @@ namespace OpenHome.Av
 {
     class MediaPresetPlaylist : IMediaPreset, IWatcher<uint>, IWatcher<string>
     {
-        private readonly IWatchableThread iThread;
         private readonly uint iIndex;
         private readonly uint iId;
         private readonly IMediaMetadata iMetadata;
@@ -27,14 +26,13 @@ namespace OpenHome.Av
 
         public MediaPresetPlaylist(IWatchableThread aThread, uint aIndex, uint aId, IMediaMetadata aMetadata, ServicePlaylist aPlaylist)
         {
-            iThread = aThread;
             iIndex = aIndex;
             iId = aId;
             iMetadata = aMetadata;
             iPlaylist = aPlaylist;
 
-            iBuffering = new Watchable<bool>(iThread, "Buffering", false);
-            iPlaying = new Watchable<bool>(iThread, "Playing", false);
+            iBuffering = new Watchable<bool>(aThread, "Buffering", false);
+            iPlaying = new Watchable<bool>(aThread, "Playing", false);
 
             iPlaylist.Id.AddWatcher(this);
             iPlaylist.TransportState.AddWatcher(this);

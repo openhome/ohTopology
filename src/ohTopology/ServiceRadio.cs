@@ -13,7 +13,6 @@ namespace OpenHome.Av
 {
     class MediaPresetRadio : IMediaPreset, IWatcher<uint>, IWatcher<string>
     {
-        private readonly INetwork iNetwork;
         private readonly uint iIndex;
         private readonly uint iId;
         private readonly IMediaMetadata iMetadata;
@@ -25,17 +24,16 @@ namespace OpenHome.Av
         private uint iCurrentId;
         private string iCurrentTransportState;
 
-        public MediaPresetRadio(INetwork aNetwork, uint aIndex, uint aId, IMediaMetadata aMetadata, string aUri, ServiceRadio aRadio)
+        public MediaPresetRadio(IWatchableThread aThread, uint aIndex, uint aId, IMediaMetadata aMetadata, string aUri, ServiceRadio aRadio)
         {
-            iNetwork = aNetwork;
             iIndex = aIndex;
             iId = aId;
             iMetadata = aMetadata;
             iUri = aUri;
             iRadio = aRadio;
 
-            iBuffering = new Watchable<bool>(iNetwork, "Buffering", false);
-            iPlaying = new Watchable<bool>(iNetwork, "Playing", false);
+            iBuffering = new Watchable<bool>(aThread, "Buffering", false);
+            iPlaying = new Watchable<bool>(aThread, "Playing", false);
             iRadio.Id.AddWatcher(this);
             iRadio.TransportState.AddWatcher(this);
         }

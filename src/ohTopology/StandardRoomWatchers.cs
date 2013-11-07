@@ -722,7 +722,6 @@ namespace OpenHome.Av
 
     class MediaPresetSender : IMediaPreset, IWatcher<string>, IWatcher<IInfoMetadata>
     {
-        private readonly IWatchableThread iThread;
         private readonly uint iIndex;
         // private readonly uint iId;
         private readonly IMediaMetadata iMetadata;
@@ -736,15 +735,14 @@ namespace OpenHome.Av
 
         public MediaPresetSender(IWatchableThread aThread, uint aIndex, uint aId, IMediaMetadata aMetadata, ISenderMetadata aSenderMetadata, IProxyReceiver aReceiver)
         {
-            iThread = aThread;
             iIndex = aIndex;
             // iId = aId;
             iMetadata = aMetadata;
             iSenderMetadata = aSenderMetadata;
             iReceiver = aReceiver;
 
-            iBuffering = new Watchable<bool>(iThread, "Buffering", false);
-            iPlaying = new Watchable<bool>(iThread, "Playing", false);
+            iBuffering = new Watchable<bool>(aThread, "Buffering", false);
+            iPlaying = new Watchable<bool>(aThread, "Playing", false);
             iReceiver.Metadata.AddWatcher(this);
             iReceiver.TransportState.AddWatcher(this);
         }
