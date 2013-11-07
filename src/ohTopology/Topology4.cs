@@ -18,10 +18,13 @@ namespace OpenHome.Av
         private readonly Watchable<bool> iBuffering;
         private readonly Watchable<bool> iPlaying;
 
+        private bool iWatching;
+
         public MediaPresetExternal(IWatchableThread aThread, Topology4Group aGroup, uint aIndex, IMediaMetadata aMetadata, Topology4Source aSource)
         {
             iDisposeHandler = new DisposeHandler();
 
+            iWatching = false;
             iThread = aThread;
             iIndex = aIndex;
             iMetadata = aMetadata;
@@ -34,6 +37,7 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
+                    iWatching = true;
                     iGroup.Source.AddWatcher(this);
                 });
             });
@@ -44,7 +48,10 @@ namespace OpenHome.Av
             iDisposeHandler.Dispose();
             iThread.Execute(() =>
             {
-                iGroup.Source.RemoveWatcher(this);
+                if (iWatching)
+                {
+                    iGroup.Source.RemoveWatcher(this);
+                }
             });
             iBuffering.Dispose();
             iPlaying.Dispose();
