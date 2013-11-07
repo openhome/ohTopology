@@ -1185,10 +1185,13 @@ namespace OpenHome.Av
         {
             iNetwork.Schedule(() =>
             {
-                List<IMediaPreset> presets = new List<IMediaPreset>();
-                iSources.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v => presets.Add(v.CreatePreset()));
-                
-                aCallback(presets);
+                if (!aCancellationToken.IsCancellationRequested)
+                {
+                    List<IMediaPreset> presets = new List<IMediaPreset>();
+                    iSources.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v => presets.Add(v.CreatePreset()));
+
+                    aCallback(presets);
+                }
             });
         }
     }
