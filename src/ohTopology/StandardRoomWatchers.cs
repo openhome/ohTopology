@@ -866,26 +866,29 @@ namespace OpenHome.Av
         {
             iNetwork.Schedule(() =>
             {
-                uint index = aIndex;
-                List<IMediaPreset> presets = new List<IMediaPreset>();
-                iSendersMetadata.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v =>
+                if (!aCancellationToken.IsCancellationRequested)
                 {
-                    string room, name;
-                    ParseName(v.Name, out room, out name);
-                    string fullname = string.Format("{0} ({1})", room, name);
-                    if (room == name || string.IsNullOrEmpty(name))
+                    uint index = aIndex;
+                    List<IMediaPreset> presets = new List<IMediaPreset>();
+                    iSendersMetadata.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v =>
                     {
-                        fullname = room;
-                    }
-                    MediaMetadata metadata = new MediaMetadata();
-                    metadata.Add(iNetwork.TagManager.Audio.Title, fullname);
-                    metadata.Add(iNetwork.TagManager.Audio.Artwork, v.ArtworkUri);
-                    metadata.Add(iNetwork.TagManager.Audio.Uri, v.Uri);
-                    presets.Add(new MediaPresetSender(iNetwork, index, index, metadata, v, iReceiver));
-                    ++index;
-                });
-                
-                aCallback(presets);
+                        string room, name;
+                        ParseName(v.Name, out room, out name);
+                        string fullname = string.Format("{0} ({1})", room, name);
+                        if (room == name || string.IsNullOrEmpty(name))
+                        {
+                            fullname = room;
+                        }
+                        MediaMetadata metadata = new MediaMetadata();
+                        metadata.Add(iNetwork.TagManager.Audio.Title, fullname);
+                        metadata.Add(iNetwork.TagManager.Audio.Artwork, v.ArtworkUri);
+                        metadata.Add(iNetwork.TagManager.Audio.Uri, v.Uri);
+                        presets.Add(new MediaPresetSender(iNetwork, index, index, metadata, v, iReceiver));
+                        ++index;
+                    });
+
+                    aCallback(presets);
+                }
             });
         }
 

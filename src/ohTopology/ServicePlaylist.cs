@@ -852,15 +852,18 @@ namespace OpenHome.Av
 
             iNetwork.Schedule(() =>
             {
-                uint index = aIndex;
-                foreach (IIdCacheEntry e in entries)
+                if (!aCancellationToken.IsCancellationRequested)
                 {
-                    uint id = iIdArray.ElementAt((int)index);
-                    tracks.Add(new MediaPresetPlaylist(iNetwork, (uint)(iIdArray.IndexOf(id) + 1), id, e.Metadata, iPlaylist));
-                    ++index;
-                }
+                    uint index = aIndex;
+                    foreach (IIdCacheEntry e in entries)
+                    {
+                        uint id = iIdArray.ElementAt((int)index);
+                        tracks.Add(new MediaPresetPlaylist(iNetwork, (uint)(iIdArray.IndexOf(id) + 1), id, e.Metadata, iPlaylist));
+                        ++index;
+                    }
 
-                aCallback(tracks);
+                    aCallback(tracks);
+                }
             });
         }
     }

@@ -689,15 +689,18 @@ namespace OpenHome.Av
 
             iNetwork.Schedule(() =>
             {
-                List<IMediaPreset> tracks = new List<IMediaPreset>();
-                for (uint i = aIndex; i < aIndex + aCount; ++i)
+                if (!aCancellationToken.IsCancellationRequested)
                 {
-                    MediaMetadata metadata = new MediaMetadata();
-                    metadata.Add(iNetwork.TagManager.Audio.Title, "Track " + (i + 1));
-                    tracks.Add(new MediaPresetSdp(iNetwork, i, (i + 1), metadata, iSdp));
-                }
+                    List<IMediaPreset> tracks = new List<IMediaPreset>();
+                    for (uint i = aIndex; i < aIndex + aCount; ++i)
+                    {
+                        MediaMetadata metadata = new MediaMetadata();
+                        metadata.Add(iNetwork.TagManager.Audio.Title, "Track " + (i + 1));
+                        tracks.Add(new MediaPresetSdp(iNetwork, i, (i + 1), metadata, iSdp));
+                    }
 
-                aCallback(tracks);
+                    aCallback(tracks);
+                }
             });
         }
     }

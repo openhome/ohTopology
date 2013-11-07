@@ -617,15 +617,18 @@ namespace OpenHome.Av
 
             iNetwork.Schedule(() =>
             {
-                uint index = aIndex;
-                foreach (IIdCacheEntry e in entries)
+                if (!aCancellationToken.IsCancellationRequested)
                 {
-                    uint id = iIdArray.Where(v => v != 0).ElementAt((int)index);
-                    presets.Add(new MediaPresetRadio(iNetwork, (uint)(iIdArray.IndexOf(id) + 1), id, e.Metadata, e.Uri, iRadio));
-                    ++index;
-                }
+                    uint index = aIndex;
+                    foreach (IIdCacheEntry e in entries)
+                    {
+                        uint id = iIdArray.Where(v => v != 0).ElementAt((int)index);
+                        presets.Add(new MediaPresetRadio(iNetwork, (uint)(iIdArray.IndexOf(id) + 1), id, e.Metadata, e.Uri, iRadio));
+                        ++index;
+                    }
 
-                aCallback(presets);
+                    aCallback(presets);
+                }
             });
         }
     }
