@@ -216,7 +216,7 @@ namespace TestMediaEndpoint
                         {
                             for (int j = 0; j < 20; j++)
                             {
-                                session.Snapshot.Read(0, 100);
+                                session.Snapshot.Read(0, 100, (f) => { });
                             }
                         }
                     });

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 using OpenHome.Os;
 using OpenHome.Os.App;
@@ -53,11 +54,14 @@ namespace TestMediaServer
             Do.Assert(session.Snapshot.Total == 4);
 
             IWatchableFragment<IMediaDatum> rootFragment = null;
-            
+            TaskCompletionSource<IWatchableFragment<IMediaDatum>> tcs = null;
+
+            tcs = new TaskCompletionSource<IWatchableFragment<IMediaDatum>>();
             iNetwork.Execute(() =>
             {
-                rootFragment = session.Snapshot.Read(0, 4).Result;
+                session.Snapshot.Read(0, 4, (f) => { tcs.SetResult(f); });
             });
+            rootFragment = tcs.Task.Result;
 
             Do.Assert(rootFragment.Index == 0);
             Do.Assert(rootFragment.Data.Count() == 4);
@@ -103,11 +107,13 @@ namespace TestMediaServer
             Do.Assert(session.Snapshot.Total == 650);
 
             IWatchableFragment<IMediaDatum> fragment = null;
-                
+
+            tcs = new TaskCompletionSource<IWatchableFragment<IMediaDatum>>();
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(100, 1).Result;
+                session.Snapshot.Read(100, 1, (f) => { tcs.SetResult(f); });
             });
+            fragment = tcs.Task.Result;
 
             Do.Assert(fragment.Index == 100);
             Do.Assert(fragment.Data.Count() == 1);
@@ -127,10 +133,12 @@ namespace TestMediaServer
             Do.Assert(session.Snapshot.Alpha == null);
             Do.Assert(session.Snapshot.Total == 1);
 
+            tcs = new TaskCompletionSource<IWatchableFragment<IMediaDatum>>();
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(0, 1).Result;
+                session.Snapshot.Read(0, 1, (f) => { tcs.SetResult(f); });
             });
+            fragment = tcs.Task.Result;
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 1);
             Do.Assert(fragment.Data.ElementAt(0).Type.ElementAt(0) == iNetwork.TagManager.Audio.Album);
@@ -149,10 +157,12 @@ namespace TestMediaServer
             Do.Assert(session.Snapshot.Alpha == null);
             Do.Assert(session.Snapshot.Total == 18);
 
+            tcs = new TaskCompletionSource<IWatchableFragment<IMediaDatum>>();
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(0, 1).Result;
+                session.Snapshot.Read(0, 1, (f) => { tcs.SetResult(f); });
             });
+            fragment = tcs.Task.Result;
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Artist].Value == "Cecilia Bartoli");
@@ -173,10 +183,12 @@ namespace TestMediaServer
             Do.Assert(session.Snapshot.Alpha == null);
             Do.Assert(session.Snapshot.Total == 1000);
 
+            tcs = new TaskCompletionSource<IWatchableFragment<IMediaDatum>>();
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(100, 1).Result;
+                session.Snapshot.Read(100, 1, (f) => { tcs.SetResult(f); });
             });
+            fragment = tcs.Task.Result;
 
             Do.Assert(fragment.Index == 100);
             Do.Assert(fragment.Data.Count() == 1);
@@ -195,10 +207,12 @@ namespace TestMediaServer
             Do.Assert(session.Snapshot.Alpha == null);
             Do.Assert(session.Snapshot.Total == 18);
 
+            tcs = new TaskCompletionSource<IWatchableFragment<IMediaDatum>>();
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(0, 1).Result;
+                session.Snapshot.Read(0, 1, (f) => { tcs.SetResult(f); });
             });
+            fragment = tcs.Task.Result;
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Artist].Value == "Blur");
@@ -219,10 +233,12 @@ namespace TestMediaServer
             Do.Assert(session.Snapshot.Alpha == null);
             Do.Assert(session.Snapshot.Total == 124);
 
+            tcs = new TaskCompletionSource<IWatchableFragment<IMediaDatum>>();
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(100, 1).Result;
+                session.Snapshot.Read(100, 1, (f) => { tcs.SetResult(f); });
             });
+            fragment = tcs.Task.Result;
 
             Do.Assert(fragment.Index == 100);
             Do.Assert(fragment.Data.Count() == 1);
@@ -241,10 +257,12 @@ namespace TestMediaServer
             Do.Assert(session.Snapshot.Alpha == null);
             Do.Assert(session.Snapshot.Total == 16);
 
+            tcs = new TaskCompletionSource<IWatchableFragment<IMediaDatum>>();
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(0, 1).Result;
+                session.Snapshot.Read(0, 1, (f) => { tcs.SetResult(f); });
             });
+            fragment = tcs.Task.Result;
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Artist].Value == "House of Pain");
@@ -267,10 +285,12 @@ namespace TestMediaServer
             Do.Assert(session.Snapshot.Alpha == null);
             Do.Assert(session.Snapshot.Total == 2);
 
+            tcs = new TaskCompletionSource<IWatchableFragment<IMediaDatum>>();
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(0, 1).Result;
+                session.Snapshot.Read(0, 1, (f) => { tcs.SetResult(f); });
             });
+            fragment = tcs.Task.Result;
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 1);
             Do.Assert(fragment.Data.ElementAt(0).Type.ElementAt(0) == iNetwork.TagManager.Audio.Album);
@@ -289,10 +309,12 @@ namespace TestMediaServer
             Do.Assert(session.Snapshot.Alpha == null);
             Do.Assert(session.Snapshot.Total == 15);
 
+            tcs = new TaskCompletionSource<IWatchableFragment<IMediaDatum>>();
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(0, 1).Result;
+                session.Snapshot.Read(0, 1, (f) => { tcs.SetResult(f); });
             });
+            fragment = tcs.Task.Result;
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Artist].Value == "Bon Jovi");
@@ -315,10 +337,12 @@ namespace TestMediaServer
             Do.Assert(session.Snapshot.Alpha == null);
             Do.Assert(session.Snapshot.Total == 18);
 
+            tcs = new TaskCompletionSource<IWatchableFragment<IMediaDatum>>();
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(0, 1).Result;
+                session.Snapshot.Read(0, 1, (f) => { tcs.SetResult(f); });
             });
+            fragment = tcs.Task.Result;
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Artist].Value == "Blur");
@@ -341,10 +365,12 @@ namespace TestMediaServer
             Do.Assert(session.Snapshot.Alpha == null);
             Do.Assert(session.Snapshot.Total == 16);
 
+            tcs = new TaskCompletionSource<IWatchableFragment<IMediaDatum>>();
             iNetwork.Execute(() =>
             {
-                fragment = session.Snapshot.Read(0, 1).Result;
+                session.Snapshot.Read(0, 1, (f) => { tcs.SetResult(f); });
             });
+            fragment = tcs.Task.Result;
 
             Do.Assert(fragment.Data.ElementAt(0).Type.Count() == 0);
             Do.Assert(fragment.Data.ElementAt(0)[iNetwork.TagManager.Audio.Artist].Value == "House of Pain");

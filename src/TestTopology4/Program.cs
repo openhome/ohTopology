@@ -15,7 +15,7 @@ namespace TestTopology4
             public RootWatcher(MockableScriptRunner aRunner, ITopology4Root aRoot)
             {
                 iFactory = new ResultWatcherFactory(aRunner);
-                iFactory.Create<ITopology4Source>(aRoot.Name, aRoot.Source, v => 
+                iFactory.Create<ITopology4Source>(aRoot.Name, aRoot.Source, (v, w) => 
                 {
                     string info = "";
                     info += string.Format("Source {0} {1} {2} {3} {4} {5} {6} {7} Volume",
@@ -24,9 +24,9 @@ namespace TestTopology4
                     {
                         info += " " + g.Device.Udn;
                     }
-                    return info;
+                    w(info);
                 });
-                iFactory.Create<IEnumerable<ITopology4Group>>(aRoot.Name, aRoot.Senders, v =>
+                iFactory.Create<IEnumerable<ITopology4Group>>(aRoot.Name, aRoot.Senders, (v, w) =>
                 {
                     string info = "\nSenders begin\n";
                     foreach (var g in v)
@@ -35,7 +35,7 @@ namespace TestTopology4
                         info += "\n";
                     }
                     info += "Senders end";
-                    return info;
+                    w(info);
                 });
             }
 
@@ -125,8 +125,8 @@ namespace TestTopology4
             public void UnorderedAdd(ITopology4Room aItem)
             {
                 iRunner.Result("Room Added " + aItem.Name);
-                iFactory.Create<EStandby>(aItem.Name, aItem.Standby, v => "Standby " + v);
-                iFactory.Create<IEnumerable<ITopology4Source>>(aItem.Name, aItem.Sources, v =>
+                iFactory.Create<EStandby>(aItem.Name, aItem.Standby, (v, w) => w("Standby " + v));
+                iFactory.Create<IEnumerable<ITopology4Source>>(aItem.Name, aItem.Sources, (v, w) =>
                 {
                     string info = "\nSources begin\n";
                     foreach (var s in v)
@@ -140,7 +140,7 @@ namespace TestTopology4
                         info += "\n";
                     }
                     info += "Sources end";
-                    return info;
+                    w(info);
                 });
                 iWatcherLookup.Add(aItem, new RoomWatcher(iRunner, aItem));
             }

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 using OpenHome.Os;
 using OpenHome.Av;
@@ -45,59 +46,63 @@ namespace TestStandardHouse
                 iWatcherMusic = new StandardRoomWatcherMusic(aRoom);
                 iWatcherSenders = new StandardRoomWatcherSenders(aHouse, aRoom);
 
-                iFactory.Create<RoomDetails>(iInfo.Name, iInfo.Details, v => "Details " + v.Enabled + " " + v.BitDepth + " " + v.BitRate + " " + v.CodecName + " " + v.Duration + " " + v.Lossless + " " + v.SampleRate);
-                iFactory.Create<RoomMetadata>(iInfo.Name, iInfo.Metadata, v => "Metadata " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metadata) + " " + v.Uri);
-                iFactory.Create<RoomMetatext>(iInfo.Name, iInfo.Metatext, v => "Metatext " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metatext));
+                iFactory.Create<RoomDetails>(iInfo.Name, iInfo.Details, (v, w) => w("Details " + v.Enabled + " " + v.BitDepth + " " + v.BitRate + " " + v.CodecName + " " + v.Duration + " " + v.Lossless + " " + v.SampleRate));
+                iFactory.Create<RoomMetadata>(iInfo.Name, iInfo.Metadata, (v, w) => w("Metadata " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metadata) + " " + v.Uri));
+                iFactory.Create<RoomMetatext>(iInfo.Name, iInfo.Metatext, (v, w) => w("Metatext " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metatext)));
 
-                iFactory.Create<bool>(iController.Name, iController.Active, v => "Controller Active " + v);
-                iFactory.Create<bool>(iController.Name, iController.HasVolume, v => "HasVolume " + v);
-                iFactory.Create<bool>(iController.Name, iController.HasSourceControl, v => "HasSourceControl " + v);
-                iFactory.Create<bool>(iController.Name, iController.Mute, v => "Mute " + v);
-                iFactory.Create<uint>(iController.Name, iController.Volume, v => "Volume " + v);
-                iFactory.Create<string>(iController.Name, iController.TransportState, v => "TransportState " + v);
+                iFactory.Create<bool>(iController.Name, iController.Active, (v, w) => w("Controller Active " + v));
+                iFactory.Create<bool>(iController.Name, iController.HasVolume, (v, w) => w("HasVolume " + v));
+                iFactory.Create<bool>(iController.Name, iController.HasSourceControl, (v, w) => w("HasSourceControl " + v));
+                iFactory.Create<bool>(iController.Name, iController.Mute, (v, w) => w("Mute " + v));
+                iFactory.Create<uint>(iController.Name, iController.Volume, (v, w) => w("Volume " + v));
+                iFactory.Create<string>(iController.Name, iController.TransportState, (v, w) => w("TransportState " + v));
 
-                iFactory.Create<bool>(iTime.Name, iTime.Active, v => "Time Active " + v);
-                iFactory.Create<bool>(iTime.Name, iTime.HasTime, v => "HasTime " + v);
-                iFactory.Create<uint>(iTime.Name, iTime.Duration, v => "Duration " + v);
-                iFactory.Create<uint>(iTime.Name, iTime.Seconds, v => "Seconds " + v);
+                iFactory.Create<bool>(iTime.Name, iTime.Active, (v, w) => w("Time Active " + v));
+                iFactory.Create<bool>(iTime.Name, iTime.HasTime, (v, w) => w("HasTime " + v));
+                iFactory.Create<uint>(iTime.Name, iTime.Duration, (v, w) => w("Duration " + v));
+                iFactory.Create<uint>(iTime.Name, iTime.Seconds, (v, w) => w("Seconds " + v));
 
-                iFactory.Create<bool>(iWatcherExternal.Room.Name, iWatcherExternal.Enabled, w =>
+                iFactory.Create<bool>(iWatcherExternal.Room.Name, iWatcherExternal.Enabled, (x, y) =>
                 {
-                    if (w)
+                    if (x)
                     {
-                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Unconfigured, v =>
+                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Unconfigured, (v, w) =>
                         {
-                            string info = "\nUnconfigured source begin\n";
-                            IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
-                            foreach (IMediaPreset p in fragment.Data)
+                            v.Read(0, v.Total, (f) =>
                             {
-                                info += p.Metadata[iTagManager.Audio.Title].Value + "\n";
-                                p.Dispose();
-                            }
-                            info += "Unconfigured source end";
-                            return info;
+                                string info = "\nUnconfigured source begin\n";
+                                foreach (IMediaPreset p in f.Data)
+                                {
+                                    info += p.Metadata[iTagManager.Audio.Title].Value + "\n";
+                                    p.Dispose();
+                                }
+                                info += "Unconfigured source end";
+                                w(info);
+                            });
                         });
-                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Configured, v =>
+                        iFactory.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherExternal.Room.Name, iWatcherExternal.Configured, (v, w) =>
                         {
-                            string info = "\nConfigured source begin\n";
-                            IWatchableFragment<IMediaPreset> fragment = v.Read(0, v.Total).Result;
-                            foreach (IMediaPreset p in fragment.Data)
+                            v.Read(0, v.Total, (f) =>
                             {
-                                info += p.Metadata[iTagManager.Audio.Title].Value + "\n";
-                                p.Dispose();
-                            }
-                            info += "Configured source end";
-                            return info;
+                                string info = "\nConfigured source begin\n";
+                                foreach (IMediaPreset p in f.Data)
+                                {
+                                    info += p.Metadata[iTagManager.Audio.Title].Value + "\n";
+                                    p.Dispose();
+                                }
+                                info += "Configured source end";
+                                w(info);
+                            });
                         });
                     }
-                    return "External Enabled " + w;
+                    y("External Enabled " + x);
                 });
 
-                iFactory.Create<bool>(iWatcherRadio.Room.Name, iWatcherRadio.Enabled, v =>
+                iFactory.Create<bool>(iWatcherRadio.Room.Name, iWatcherRadio.Enabled, (x, y) =>
                 {
-                    if (v)
+                    if (x)
                     {
-                        iFactoryRadioPresets.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherRadio.Room.Name, iWatcherRadio.Snapshot, w =>
+                        iFactoryRadioPresets.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherRadio.Room.Name, iWatcherRadio.Snapshot, (v, w) =>
                         {
                             if (iRadioPresets != null)
                             {
@@ -109,20 +114,22 @@ namespace TestStandardHouse
                                 iRadioPresets = null;
                             }
 
-                            string info = "\nPresets begin\n";
-                            IWatchableFragment<IMediaPreset> fragment = w.Read(0, w.Total).Result;
-                            iRadioPresets = fragment;
-                            foreach (IMediaPreset p in fragment.Data)
+                            v.Read(0, v.Total, (f) =>
                             {
-                                CreateResultWatcherPreset(iFactoryRadioPresetsPlaying, p);
-                                
-                                info += p.Index + " ";
-                                string didl = iTagManager.ToDidlLite(p.Metadata);
-                                info += didl;
-                                info += "\n";
-                            }
-                            info += "Presets end";
-                            return info;
+                                string info = "\nPresets begin\n";
+                                iRadioPresets = f;
+                                foreach (IMediaPreset p in f.Data)
+                                {
+                                    CreateResultWatcherPreset(iFactoryRadioPresetsPlaying, p);
+
+                                    info += p.Index + " ";
+                                    string didl = iTagManager.ToDidlLite(p.Metadata);
+                                    info += didl;
+                                    info += "\n";
+                                }
+                                info += "Presets end";
+                                w(info);
+                            });
                         });
                     }
                     else
@@ -139,20 +146,20 @@ namespace TestStandardHouse
                         }
                     }
 
-                    return "Presets Enabled " + v;
+                    y("Presets Enabled " + x);
                 });
 
-                iFactory.Create<bool>(iWatcherMusic.Room.Name, iWatcherMusic.Enabled, v =>
+                iFactory.Create<bool>(iWatcherMusic.Room.Name, iWatcherMusic.Enabled, (v, w) =>
                 {
-                    return "Music Enabled " + v;
+                    w("Music Enabled " + v);
                 });
 
-                iFactory.Create<bool>(iWatcherSenders.Room.Name, iWatcherSenders.Enabled, v =>
+                iFactory.Create<bool>(iWatcherSenders.Room.Name, iWatcherSenders.Enabled, (x, y) =>
                 {
-                    /*if (v)
+                    /*if (x)
                     {
                         IWatchableContainer<IMediaPreset> container = iWatcherSenders.Container.Result;
-                        iFactorySendersPresets.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherSenders.Room.Name, container.Snapshot, w =>
+                        iFactorySendersPresets.Create<IWatchableSnapshot<IMediaPreset>>(iWatcherSenders.Room.Name, container.Snapshot, (v, w) =>
                         {
                             if (iSendersPresets != null)
                             {
@@ -193,15 +200,15 @@ namespace TestStandardHouse
                             iFactorySendersPresets.Destroy(iWatcherSenders.Room.Name);
                         }
                     }*/
-                    return "Senders Enabled " + v;
+                    y("Senders Enabled " + x);
                 });
             }
 
             private void CreateResultWatcherPreset(ResultWatcherFactory aFactory, IMediaPreset aPreset)
             {
-                aFactory.Create<bool>(iWatcherRadio.Room.Name, aPreset.Playing, x =>
+                aFactory.Create<bool>(iWatcherRadio.Room.Name, aPreset.Playing, (v, w) =>
                 {
-                    return "Playing " + aPreset.Index + " " + x;
+                    w("Playing " + aPreset.Index + " " + v);
                 });
             }
 
@@ -274,8 +281,8 @@ namespace TestStandardHouse
             public void OrderedAdd(IStandardRoom aItem, uint aIndex)
             {
                 iRunner.Result(string.Format("Room Added: {0} at {1}", aItem.Name, aIndex));
-                iFactory.Create<EStandby>(aItem.Name, aItem.Standby, v => "Standby " + v);
-                iFactory.Create<IZoneSender>(aItem.Name, aItem.ZoneSender, v => "Zone " + v.Enabled + " " + ((v.Sender == null) ? "" : v.Sender.Udn));
+                iFactory.Create<EStandby>(aItem.Name, aItem.Standby, (v, w) => w("Standby " + v));
+                iFactory.Create<IZoneSender>(aItem.Name, aItem.ZoneSender, (v, w) => w("Zone " + v.Enabled + " " + ((v.Sender == null) ? "" : v.Sender.Udn)));
 
                 iWatcherLookup.Add(aItem, new RoomControllerWatcher(iTagManager, iRunner, iHouse, aItem));
             }

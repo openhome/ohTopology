@@ -99,8 +99,6 @@ namespace OpenHome.Av
         private readonly CancellationToken iCancellationToken;
         private readonly IMediaClientSnapshot<T> iSnapshot;
 
-        private readonly List<Task> iTasks;
-
         private bool iDisposed;
 
         public MediaSnapshot(CancellationToken aCancellationToken, IMediaClientSnapshot<T> aSnapshot)
@@ -109,8 +107,6 @@ namespace OpenHome.Av
             iSnapshot = aSnapshot;
 
             iDisposed = false;
-
-            iTasks = new List<Task>();
         }
 
         // IWatchableSnapshot<IMediaPreset>
@@ -133,50 +129,15 @@ namespace OpenHome.Av
 
         public void Read(uint aIndex, uint aCount, CancellationToken aCancellationToken, Action<IWatchableFragment<T>> aCallback)
         {
-            Do.Assert(aIndex + aCount <= iSnapshot.Total);
+            CancellationTokenLink ct = new CancellationTokenLink(iCancellationToken, aCancellationToken);
 
-            var task = Task.Factory.StartNew(() =>
+            iSnapshot.Read(ct.Token, aIndex, aCount, (values) =>
             {
-                iCancellationToken.ThrowIfCancellationRequested();
-
-                if (aCount == 0)
+                if(!iDisposed)
                 {
-                    aCallback(new WatchableFragment<T>(aIndex, Enumerable.Empty<T>()));
-                }
-                else
-                {
-                    iSnapshot.Read(iCancellationToken, aIndex, aCount, (values) =>
-                    {
-                        if(!iDisposed)
-                        {
-                            aCallback(new WatchableFragment<T>(aIndex, values));
-                        }
-                    });
+                    aCallback(new WatchableFragment<T>(aIndex, values));
                 }
             });
-
-            lock (iTasks)
-            {
-                Task completion = null;
-
-                completion = task.ContinueWith((t) =>
-                {
-                    try
-                    {
-                        t.Wait();
-                    }
-                    catch
-                    {
-                    }
-
-                    lock (iTasks)
-                    {
-                        iTasks.Remove(completion);
-                    }
-                });
-
-                iTasks.Add(completion);
-            }
         }
 
         // IDisposable
@@ -184,26 +145,6 @@ namespace OpenHome.Av
         public void Dispose()
         {
             iDisposed = true;
-
-            Task[] tasks;
-
-            lock (iTasks)
-            {
-                tasks = iTasks.ToArray();
-            }
-
-            try
-            {
-                Task.WaitAll(tasks);
-            }
-            catch
-            {
-            }
-
-            lock (iTasks)
-            {
-                Do.Assert(iTasks.Count == 0);
-            }
         }
     }
 

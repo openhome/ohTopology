@@ -38,14 +38,16 @@ namespace TestTopology3
             public void UnorderedAdd(ITopologymGroup aItem)
             {
                 iRunner.Result(aItem.Device.Udn + " Group Added");
-                iFactory.Create<ITopologymSender>(aItem.Device.Udn, aItem.Sender, v => 
+                iFactory.Create<ITopologymSender>(aItem.Device.Udn, aItem.Sender, (v, w) => 
                 {
                     if (v.Enabled)
                     {
-                        return "Sender " + v.Enabled + " " + v.Device.Udn;
+                        w("Sender " + v.Enabled + " " + v.Device.Udn);
                     }
-
-                    return "Sender " + v.Enabled;
+                    else
+                    {
+                        w("Sender " + v.Enabled);
+                    }
                 });
             }
 

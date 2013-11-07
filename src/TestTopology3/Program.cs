@@ -38,7 +38,7 @@ namespace TestTopology3
             public void UnorderedAdd(ITopology3Room aItem)
             {
                 iRunner.Result("Room Added " + aItem.Name);
-                iFactory.Create<ITopologymGroup>(aItem.Name, aItem.Groups, v => v.Id);
+                iFactory.Create<ITopologymGroup>(aItem.Name, aItem.Groups, (v, w) => w(v.Id));
             }
 
             public void UnorderedRemove(ITopology3Room aItem)
