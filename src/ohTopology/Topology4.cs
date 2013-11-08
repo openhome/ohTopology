@@ -69,21 +69,25 @@ namespace OpenHome.Av
 
         public void Play()
         {
+            iBuffering.Update(true);
             iSource.Select();
         }
 
         public void ItemOpen(string aId, ITopology4Source aValue)
         {
+            iBuffering.Update(false);
             iPlaying.Update(aValue == iSource);
         }
 
         public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
         {
+            iBuffering.Update(false);
             iPlaying.Update(aValue == iSource);
         }
 
         public void ItemClose(string aId, ITopology4Source aValue)
         {
+            iBuffering.Update(false);
             iPlaying.Update(false);
         }
     }
