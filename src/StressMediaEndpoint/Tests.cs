@@ -19,6 +19,7 @@ namespace StressMediaEndpoint
         protected readonly INetwork iNetwork;
         protected readonly IProxyMediaEndpoint iMediaEndpoint;
 
+        private Task<IMediaEndpointSession> iTask;
         protected IMediaEndpointSession iSession;
 
         protected Test(IWatchableThread aWatchableThread, INetwork aNetwork, IProxyMediaEndpoint aMediaEndpoint)
@@ -29,11 +30,17 @@ namespace StressMediaEndpoint
 
             iWatchableThread.Execute(() =>
             {
-                iSession = iMediaEndpoint.CreateSession().Result;
+                iTask = iMediaEndpoint.CreateSession();
             });
         }
 
-        public abstract void Run();
+        public void Run()
+        {
+            iSession = iTask.Result;
+            DoRun();
+        }
+
+        public abstract void DoRun();
 
         // IDisposable
 
@@ -59,7 +66,7 @@ namespace StressMediaEndpoint
             Console.WriteLine("Test Rapid Browsing");
         }
 
-        public override void Run()
+        public override void DoRun()
         {
             iTimer.FireIn(0);
             iDone.WaitOne();
@@ -100,7 +107,7 @@ namespace StressMediaEndpoint
             iIndex = aIndex;
         }
 
-        public override void Run()
+        public override void DoRun()
         {
             iQueue.Enqueue(null);
             Schedule(null);
@@ -110,6 +117,13 @@ namespace StressMediaEndpoint
 
         private void Browse(IMediaDatum aValue)
         {
+            var title = aValue[iNetwork.TagManager.Container.Title];
+
+            if (title != null)
+            {
+                Console.WriteLine("Browse {0}", title.Value);
+            }
+
             Console.WriteLine("Browse {0}", aValue.Id);
 
             lock (iQueue)
@@ -193,7 +207,7 @@ namespace StressMediaEndpoint
             iCallback = aCallback;
         }
 
-        public override void Run()
+        public override void DoRun()
         {
             Begin();
             iDone.WaitOne();
