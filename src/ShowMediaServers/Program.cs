@@ -23,8 +23,6 @@ namespace ShowMediaServers
 
         private IMediaEndpointSession iSession;
 
-        private IDisposable iWatcher;
-
         public TestMediaEndpointSession(INetwork aNetwork, IProxyMediaEndpoint aProxy)
         {
             iNetwork = aNetwork;
@@ -49,19 +47,14 @@ namespace ShowMediaServers
 
         private void ContainerCreated()
         {
-            iWatcher = iSession.Snapshot.Read(0, iSession.Snapshot.Total).ContinueWith(FragmentCreated);
+            iSession.Snapshot.Read(0, iSession.Snapshot.Total, FragmentCreated);
         }
 
-        private void FragmentCreated(Task<IWatchableFragment<IMediaDatum>> aTask)
+        private void FragmentCreated(IWatchableFragment<IMediaDatum> aFragment)
         {
-            var fragment = aTask.Result;
-
-            if (fragment != null)
+            foreach (var entry in aFragment.Data.ToArray())
             {
-                foreach (var entry in fragment.Data.ToArray())
-                {
-                    ReportDatum(entry);
-                }
+                ReportDatum(entry);
             }
         }
 
@@ -99,11 +92,6 @@ namespace ShowMediaServers
             lock (iTasks)
             {
                 Task.WaitAll(iTasks.ToArray());
-            }
-
-            if (iWatcher != null)
-            {
-                iWatcher.Dispose();
             }
 
             iNetwork.Execute(() =>

@@ -112,13 +112,13 @@ namespace BrowseMediaEndpoint
                 {
                     if (iMediaEndpointSession.Snapshot != null)
                     {
-                        iMediaEndpointSession.Snapshot.Read(0, iMediaEndpointSession.Snapshot.Total).ContinueWith((t) =>
+                        iMediaEndpointSession.Snapshot.Read(0, iMediaEndpointSession.Snapshot.Total, (fragment) =>
                         {
                             iNetwork.Schedule(() =>
                             {
-                                All(t.Result.Data);
+                                All(fragment.Data);
                             });
-                        }, TaskContinuationOptions.OnlyOnRanToCompletion);
+                        });
                     }
                 });
             }

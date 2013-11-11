@@ -138,7 +138,7 @@ namespace StressMediaEndpoint
             {
                 iSession.Browse(aValue, () =>
                 {
-                    iSession.Snapshot.Read(0, iSession.Snapshot.Total).ContinueWith(ReadComplete);
+                    iSession.Snapshot.Read(0, iSession.Snapshot.Total, ReadComplete);
                 });
             });
         }
@@ -152,10 +152,8 @@ namespace StressMediaEndpoint
             });
         }
 
-        private void ReadComplete(Task<IWatchableFragment<IMediaDatum>> aTask)
+        private void ReadComplete(IWatchableFragment<IMediaDatum> aFragment)
         {
-            var fragment = aTask.Result;
-
             IMediaDatum container;
 
             lock (iQueue)
@@ -165,11 +163,11 @@ namespace StressMediaEndpoint
 
             if (container == null)
             {
-                Browse(fragment.Data.ElementAt(iIndex));
+                Browse(aFragment.Data.ElementAt(iIndex));
             }
             else
             {
-                foreach (var entry in fragment.Data)
+                foreach (var entry in aFragment.Data)
                 {
                     if (entry.Type.Count() > 0)
                     {
@@ -239,7 +237,7 @@ namespace StressMediaEndpoint
             {
                 iCallback(iSession, () =>
                 {
-                    iSession.Snapshot.Read(0, iSession.Snapshot.Total).ContinueWith(ReadComplete);
+                    iSession.Snapshot.Read(0, iSession.Snapshot.Total, ReadComplete);
                 });
             });
         }
@@ -250,7 +248,7 @@ namespace StressMediaEndpoint
             {
                 iSession.Browse(aValue, () =>
                 {
-                    iSession.Snapshot.Read(0, iSession.Snapshot.Total).ContinueWith(ReadComplete);
+                    iSession.Snapshot.Read(0, iSession.Snapshot.Total, ReadComplete);
                 });
             });
         }
@@ -264,11 +262,9 @@ namespace StressMediaEndpoint
             });
         }
 
-        private void ReadComplete(Task<IWatchableFragment<IMediaDatum>> aTask)
+        private void ReadComplete(IWatchableFragment<IMediaDatum> aFragment)
         {
-            var fragment = aTask.Result;
-
-            foreach (var entry in fragment.Data)
+            foreach (var entry in aFragment.Data)
             {
                 if (entry.Type.Count() > 0)
                 {
