@@ -549,6 +549,8 @@ namespace OpenHome.Av
 
                         iDevices.Remove(handler.Udn);
 
+                        iCache.Remove(handler.Udn);
+
                         handler.Dispose();
                     }
                 });

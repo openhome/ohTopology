@@ -165,6 +165,8 @@ namespace OpenHome.Av
 
     public abstract class ServicePlaylist : Service
     {
+        public const string kCacheIdFormat = "Playlist({0})";
+
         protected ServicePlaylist(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
             : base(aNetwork, aDevice, aLog)
         {
@@ -329,7 +331,7 @@ namespace OpenHome.Av
 
             iSubscribedSource = new TaskCompletionSource<bool>();
 
-            iCacheSession = Network.IdCache.CreateSession(string.Format("Playlist({0})", Device.Udn), ReadList);
+            iCacheSession = Network.IdCache.CreateSession(string.Format(ServicePlaylist.kCacheIdFormat, Device.Udn), ReadList);
 
             iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new PlaylistSnapshot(iNetwork, iCacheSession, new List<uint>(), this));
 

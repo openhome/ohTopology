@@ -79,6 +79,26 @@ namespace OpenHome.Av
             }
         }
 
+        internal void Remove(string aUdn)
+        {
+            using (iDisposeHandler.Lock())
+            {
+                lock (iCache)
+                {
+                    Hash playlistHash = Hash.Create(string.Format(ServicePlaylist.kCacheIdFormat, aUdn));
+                    Hash radioHash = Hash.Create(string.Format(ServicePlaylist.kCacheIdFormat, aUdn));
+                    List<Hash> keys = new List<Hash>(iCache.Keys);
+                    foreach(Hash h in keys)
+                    {
+                        if (h == playlistHash || h == radioHash)
+                        {
+                            iCache.Remove(h);
+                        }
+                    }
+                }
+            }
+        }
+
         internal void DestroySession(Hash aSessionId)
         {
             using (iDisposeHandler.Lock())
