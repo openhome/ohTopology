@@ -35,7 +35,7 @@ namespace TestRegistration
 
             network.Schedule(() =>
             {
-                factory.Create<IEnumerable<ITopology4Registration>>("House", house.Registrations, (v) =>
+                factory.Create<IEnumerable<ITopology4Registration>>("House", house.Registrations, (v, w) =>
                 {
                     string info = "\nRegistrations begin\n";
                     foreach (ITopology4Registration r in v)
@@ -43,7 +43,7 @@ namespace TestRegistration
                         info += r.ManufacturerName + " " + r.ProductId + "\n";
                     }
                     info += "Registrations end";
-                    return info;
+                    w(info);
                 });
             });
 

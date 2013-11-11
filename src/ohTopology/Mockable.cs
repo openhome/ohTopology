@@ -308,7 +308,7 @@ namespace OpenHome.Av
             iWatchers = new Dictionary<string, List<IDisposable>>();
         }
 
-        public void Create<T>(string aId, IWatchable<T> aWatchable, Func<T, string> aFunction)
+        public void Create<T>(string aId, IWatchable<T> aWatchable, Action<T, Action<string>> aAction)
         {
             List<IDisposable> watchers;
 
@@ -318,10 +318,10 @@ namespace OpenHome.Av
                 iWatchers.Add(aId, watchers);
             }
 
-            watchers.Add(new ResultWatcher<T>(iRunner, aId, aWatchable, aFunction));
+            watchers.Add(new ResultWatcher<T>(iRunner, aId, aWatchable, aAction));
         }
 
-        public void Create<T>(string aId, IWatchableUnordered<T> aWatchable, Func<T, string> aFunction)
+        public void Create<T>(string aId, IWatchableUnordered<T> aWatchable, Action<T, Action<string>> aAction)
         {
             List<IDisposable> watchers;
 
@@ -331,10 +331,10 @@ namespace OpenHome.Av
                 iWatchers.Add(aId, watchers);
             }
 
-            watchers.Add(new ResultUnorderedWatcher<T>(iRunner, aId, aWatchable, aFunction));
+            watchers.Add(new ResultUnorderedWatcher<T>(iRunner, aId, aWatchable, aAction));
         }
 
-        public void Create<T>(string aId, IWatchableOrdered<T> aWatchable, Func<T, string> aFunction)
+        public void Create<T>(string aId, IWatchableOrdered<T> aWatchable, Action<T, Action<string>> aAction)
         {
             List<IDisposable> watchers;
 
@@ -344,7 +344,7 @@ namespace OpenHome.Av
                 iWatchers.Add(aId, watchers);
             }
 
-            watchers.Add(new ResultOrderedWatcher<T>(iRunner, aId, aWatchable, aFunction));
+            watchers.Add(new ResultOrderedWatcher<T>(iRunner, aId, aWatchable, aAction));
         }
 
         public void Destroy(string aId)
@@ -369,14 +369,14 @@ namespace OpenHome.Av
         private readonly MockableScriptRunner iRunner;
         private readonly string iId;
         private IWatchable<T> iWatchable;
-        private readonly Func<T, string> iFunction;
+        private readonly Action<T, Action<string>> iAction;
 
-        public ResultWatcher(MockableScriptRunner aRunner, string aId, IWatchable<T> aWatchable, Func<T, string> aFunction)
+        public ResultWatcher(MockableScriptRunner aRunner, string aId, IWatchable<T> aWatchable, Action<T, Action<string>> aAction)
         {
             iRunner = aRunner;
             iId = aId;
             iWatchable = aWatchable;
-            iFunction = aFunction;
+            iAction = aAction;
 
             iWatchable.AddWatcher(this);
         }
@@ -385,17 +385,26 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, T aValue)
         {
-            iRunner.Result(iId + " open " + iFunction(aValue));
+            iAction(aValue, (s) =>
+            {
+                iRunner.Result(iId + " open " + s);
+            });
         }
 
         public void ItemUpdate(string aId, T aValue, T aPrevious)
         {
-            iRunner.Result(iId + " update " + iFunction(aValue));
+            iAction(aValue, (s) =>
+            {
+                iRunner.Result(iId + " update " + s);
+            });
         }
 
         public void ItemClose(string aId, T aValue)
         {
-            //iRunner.Result(iUdn + " " + iFunction(aValue, "close"));
+            /*iAction(aValue, (s) =>
+            {
+                iRunner.Result(iId + " close " + s);
+            });*/
         }
 
         // IDisposable
@@ -411,14 +420,14 @@ namespace OpenHome.Av
         private readonly MockableScriptRunner iRunner;
         private readonly string iId;
         private IWatchableUnordered<T> iWatchable;
-        private readonly Func<T, string> iFunction;
+        private readonly Action<T, Action<string>> iAction;
 
-        public ResultUnorderedWatcher(MockableScriptRunner aRunner, string aId, IWatchableUnordered<T> aWatchable, Func<T, string> aFunction)
+        public ResultUnorderedWatcher(MockableScriptRunner aRunner, string aId, IWatchableUnordered<T> aWatchable, Action<T, Action<string>> aAction)
         {
             iRunner = aRunner;
             iId = aId;
             iWatchable = aWatchable;
-            iFunction = aFunction;
+            iAction = aAction;
 
             iWatchable.AddWatcher(this);
         }
@@ -435,12 +444,18 @@ namespace OpenHome.Av
 
         public void UnorderedAdd(T aItem)
         {
-            iRunner.Result(iId + " add " + iFunction(aItem));
+            iAction(aItem, (s) =>
+            {
+                iRunner.Result(iId + " add " + s);
+            });
         }
 
         public void UnorderedRemove(T aItem)
         {
-            iRunner.Result(iId + " remove " + iFunction(aItem));
+            iAction(aItem, (s) =>
+            {
+                iRunner.Result(iId + " remove " + s);
+            });
         }
 
         public void UnorderedClose()
@@ -460,14 +475,14 @@ namespace OpenHome.Av
         private readonly MockableScriptRunner iRunner;
         private readonly string iId;
         private IWatchableOrdered<T> iWatchable;
-        private readonly Func<T, string> iFunction;
+        private readonly Action<T, Action<string>> iAction;
 
-        public ResultOrderedWatcher(MockableScriptRunner aRunner, string aId, IWatchableOrdered<T> aWatchable, Func<T, string> aFunction)
+        public ResultOrderedWatcher(MockableScriptRunner aRunner, string aId, IWatchableOrdered<T> aWatchable, Action<T, Action<string>> aAction)
         {
             iRunner = aRunner;
             iId = aId;
             iWatchable = aWatchable;
-            iFunction = aFunction;
+            iAction = aAction;
 
             iWatchable.AddWatcher(this);
         }
@@ -484,17 +499,26 @@ namespace OpenHome.Av
 
         public void OrderedAdd(T aItem, uint aIndex)
         {
-            iRunner.Result(iId + " add " + iFunction(aItem));
+            iAction(aItem, (s) =>
+            {
+                iRunner.Result(iId + " add " + s);
+            });
         }
 
         public void OrderedMove(T aItem, uint aFrom, uint aTo)
         {
-            iRunner.Result(iId + " moved from " + aFrom + " to " + aTo + " " + iFunction(aItem));
+            iAction(aItem, (s) =>
+            {
+                iRunner.Result(iId + " moved from " + aFrom + " to " + aTo + " " + s);
+            });
         }
 
         public void OrderedRemove(T aItem, uint aIndex)
         {
-            iRunner.Result(iId + " remove " + iFunction(aItem));
+            iAction(aItem, (s) =>
+            {
+                iRunner.Result(iId + " remove " + s);
+            });
         }
 
         public void OrderedClose()

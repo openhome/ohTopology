@@ -14,47 +14,33 @@ namespace OpenHome.Av
 {
     class MediaPresetSdp : IMediaPreset, IWatcher<uint>, IWatcher<string>
     {
-        private readonly DisposeHandler iDisposeHandler;
-        private readonly INetwork iNetwork;
         private readonly uint iIndex;
         private readonly uint iId;
         private readonly IMediaMetadata iMetadata;
         private readonly ServiceSdp iSdp;
         private readonly Watchable<bool> iBuffering;
         private readonly Watchable<bool> iPlaying;
+
         private uint iCurrentId;
         private string iCurrentTransportState;
 
-        public MediaPresetSdp(INetwork aNetwork, uint aIndex, uint aId, IMediaMetadata aMetadata, ServiceSdp aSdp)
+        public MediaPresetSdp(IWatchableThread aThread, uint aIndex, uint aId, IMediaMetadata aMetadata, ServiceSdp aSdp)
         {
-            iDisposeHandler = new DisposeHandler();
-
-            iNetwork = aNetwork;
             iIndex = aIndex;
             iId = aId;
             iMetadata = aMetadata;
             iSdp = aSdp;
 
-            iBuffering = new Watchable<bool>(iNetwork, "Buffering", false);
-            iPlaying = new Watchable<bool>(iNetwork, "Playing", false);
-            iNetwork.Schedule(() =>
-            {
-                iDisposeHandler.WhenNotDisposed(() =>
-                {
-                    iSdp.Id.AddWatcher(this);
-                    iSdp.TransportState.AddWatcher(this);
-                });
-            });
+            iBuffering = new Watchable<bool>(aThread, "Buffering", false);
+            iPlaying = new Watchable<bool>(aThread, "Playing", false);
+            iSdp.Id.AddWatcher(this);
+            iSdp.TransportState.AddWatcher(this);
         }
 
         public void Dispose()
         {
-            iDisposeHandler.Dispose();
-            iNetwork.Execute(() =>
-            {
-                iSdp.Id.RemoveWatcher(this);
-                iSdp.TransportState.RemoveWatcher(this);
-            });
+            iSdp.Id.RemoveWatcher(this);
+            iSdp.TransportState.RemoveWatcher(this);
             iBuffering.Dispose();
             iPlaying.Dispose();
         }
@@ -63,10 +49,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iIndex;
-                }
+                return iIndex;
             }
         }
 
@@ -74,10 +57,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iId;
-                }
+                return iId;
             }
         }
 
@@ -85,10 +65,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iMetadata;
-                }
+                return iMetadata;
             }
         }
 
@@ -96,10 +73,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iBuffering;
-                }
+                return iBuffering;
             }
         }
 
@@ -107,19 +81,13 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iPlaying;
-                }
+                return iPlaying;
             }
         }
 
         public void Play()
         {
-            using (iDisposeHandler.Lock())
-            {
-                iSdp.SeekId(iId);
-            }
+            iSdp.SeekId(iId);
         }
 
         private void EvaluatePlaying()
@@ -715,19 +683,25 @@ namespace OpenHome.Av
             }
         }
 
-        public IEnumerable<IMediaPreset> Read(CancellationToken aCancellationToken, uint aIndex, uint aCount)
+        public void Read(CancellationToken aCancellationToken, uint aIndex, uint aCount, Action<IEnumerable<IMediaPreset>> aCallback)
         {
             Do.Assert(aIndex + aCount <= Total);
 
-            List<IMediaPreset> tracks = new List<IMediaPreset>();
-            for (uint i = aIndex; i < aIndex + aCount; ++i)
+            iNetwork.Schedule(() =>
             {
-                MediaMetadata metadata = new MediaMetadata();
-                metadata.Add(iNetwork.TagManager.Audio.Title, "Track " + (i + 1));
-                tracks.Add(new MediaPresetSdp(iNetwork, i, (i + 1), metadata, iSdp));
-            }
+                if (!aCancellationToken.IsCancellationRequested)
+                {
+                    List<IMediaPreset> tracks = new List<IMediaPreset>();
+                    for (uint i = aIndex; i < aIndex + aCount; ++i)
+                    {
+                        MediaMetadata metadata = new MediaMetadata();
+                        metadata.Add(iNetwork.TagManager.Audio.Title, "Track " + (i + 1));
+                        tracks.Add(new MediaPresetSdp(iNetwork, i, (i + 1), metadata, iSdp));
+                    }
 
-            return tracks;
+                    aCallback(tracks);
+                }
+            });
         }
     }
 

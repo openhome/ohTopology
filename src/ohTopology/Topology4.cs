@@ -9,8 +9,6 @@ namespace OpenHome.Av
 {
     class MediaPresetExternal : IMediaPreset, IWatcher<ITopology4Source>
     {
-        private readonly DisposeHandler iDisposeHandler;
-        private readonly IWatchableThread iThread;
         private readonly uint iIndex;
         private readonly IMediaMetadata iMetadata;
         private readonly Topology4Source iSource;
@@ -20,9 +18,6 @@ namespace OpenHome.Av
 
         public MediaPresetExternal(IWatchableThread aThread, Topology4Group aGroup, uint aIndex, IMediaMetadata aMetadata, Topology4Source aSource)
         {
-            iDisposeHandler = new DisposeHandler();
-
-            iThread = aThread;
             iIndex = aIndex;
             iMetadata = aMetadata;
             iSource = aSource;
@@ -30,22 +25,12 @@ namespace OpenHome.Av
 
             iBuffering = new Watchable<bool>(aThread, "Buffering", false);
             iPlaying = new Watchable<bool>(aThread, "Playing", false);
-            aThread.Schedule(() =>
-            {
-                iDisposeHandler.WhenNotDisposed(() =>
-                {
-                    iGroup.Source.AddWatcher(this);
-                });
-            });
+            iGroup.Source.AddWatcher(this);
         }
 
         public void Dispose()
         {
-            iDisposeHandler.Dispose();
-            iThread.Execute(() =>
-            {
-                iGroup.Source.RemoveWatcher(this);
-            });
+            iGroup.Source.RemoveWatcher(this);
             iBuffering.Dispose();
             iPlaying.Dispose();
         }
@@ -54,10 +39,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iIndex;
-                }
+                return iIndex;
             }
         }
 
@@ -65,10 +47,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iMetadata;
-                }
+                return iMetadata;
             }
         }
 
@@ -76,10 +55,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iBuffering;
-                }
+                return iBuffering;
             }
         }
 
@@ -87,33 +63,31 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iPlaying;
-                }
+                return iPlaying;
             }
         }
 
         public void Play()
         {
-            using (iDisposeHandler.Lock())
-            {
-                iSource.Select();
-            }
+            iBuffering.Update(true);
+            iSource.Select();
         }
 
         public void ItemOpen(string aId, ITopology4Source aValue)
         {
+            iBuffering.Update(false);
             iPlaying.Update(aValue == iSource);
         }
 
         public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
         {
+            iBuffering.Update(false);
             iPlaying.Update(aValue == iSource);
         }
 
         public void ItemClose(string aId, ITopology4Source aValue)
         {
+            iBuffering.Update(false);
             iPlaying.Update(false);
         }
     }

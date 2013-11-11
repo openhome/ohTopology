@@ -119,7 +119,7 @@ namespace OpenHome.Av
             }
         }
 
-        public Task<IWatchableFragment<IMediaDatum>> Read(uint aIndex, uint aCount, CancellationToken aCancellationToken)
+        public void Read(uint aIndex, uint aCount, CancellationToken aCancellationToken, Action<IWatchableFragment<IMediaDatum>> aCallback)
         {
             iClient.Assert(); // Must be called on the watchable thread;
 
@@ -127,47 +127,45 @@ namespace OpenHome.Av
 
             using (iDisposeHandler.Lock())
             {
-                var tcs = new TaskCompletionSource<IWatchableFragment<IMediaDatum>>();
-
                 if (iCancellationTokenSource.IsCancellationRequested)
                 {
-                    tcs.SetCanceled();
-                    return (tcs.Task);
+                    return;
                 }
 
                 if (aCount == 0)
                 {
-                    tcs.SetResult(new WatchableFragment<IMediaDatum>(aIndex, Enumerable.Empty<IMediaDatum>()));
-                    return (tcs.Task);
+                    aCallback(new WatchableFragment<IMediaDatum>(aIndex, Enumerable.Empty<IMediaDatum>()));
                 }
-
-                Task task = null;
-
-                var ctl = new CancellationTokenLink(iCancellationTokenSource.Token, aCancellationToken);
-
-                lock (iTasks)
+                else
                 {
-                    task = iClient.Read(ctl.Token, iSession.Id, iSnapshot, aIndex, aCount).ContinueWith((t) =>
+
+                    Task task = null;
+
+                    var ctl = new CancellationTokenLink(iCancellationTokenSource.Token, aCancellationToken);
+
+                    lock (iTasks)
                     {
-                        if (t.IsCanceled || t.IsFaulted)
+                        task = iClient.Read(ctl.Token, iSession.Id, iSnapshot, aIndex, aCount).ContinueWith((t) =>
                         {
-                            tcs.SetCanceled();
-                        }
-                        else
-                        {
-                            var fragment = new WatchableFragment<IMediaDatum>(aIndex, t.Result.ToArray());
-                            tcs.SetResult(fragment);
-                        }
+                            if (t.Status == TaskStatus.RanToCompletion)
+                            {
+                                iClient.Schedule(() =>
+                                {
+                                    iDisposeHandler.WhenNotDisposed(() =>
+                                    {
+                                        aCallback(new WatchableFragment<IMediaDatum>(aIndex, t.Result.ToArray()));
+                                    });
+                                });
+                            }
 
-                        lock (iTasks)
-                        {
-                            iTasks.Remove(task);
-                        }
-                    });
+                            lock (iTasks)
+                            {
+                                iTasks.Remove(task);
+                            }
+                        });
 
-                    iTasks.Add(task);
-
-                    return (tcs.Task);
+                        iTasks.Add(task);
+                    }
                 }
             }
         }

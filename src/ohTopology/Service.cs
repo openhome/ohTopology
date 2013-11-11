@@ -135,7 +135,8 @@ namespace OpenHome.Av
                     {
                         iNetwork.Schedule(() =>
                         {
-                            if (!iCancelSubscribe.IsCancellationRequested && !t.IsFaulted)
+                            // we must access t.Exception property to supress finalized task exceptions
+                            if (t.Exception == null && !iCancelSubscribe.IsCancellationRequested)
                             {
                                 aCallback((T)OnCreate(aDevice));
                             }
@@ -144,14 +145,6 @@ namespace OpenHome.Av
                                 --iRefCount;
                                 if (iRefCount == 0)
                                 {
-                                    try
-                                    {
-                                        iSubscribeTask.Wait();
-                                    }
-                                    catch (AggregateException ex)
-                                    {
-                                        HandleAggregate(ex);
-                                    }
                                     iSubscribeTask = null;
                                 }
                             }

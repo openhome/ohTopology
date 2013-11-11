@@ -33,21 +33,21 @@ namespace TestZone
 
             private void CreateController(IZoneSender aZone)
             {
-                iFactory.Create<bool>(iRoom.Name, aZone.HasListeners, (v) =>
+                iFactory.Create<bool>(iRoom.Name, aZone.HasListeners, (v, w) =>
                 {
-                    return "HasListeners " + v;
+                    w("HasListeners " + v);
                 });
 
-                iFactory.Create<IStandardRoom>(iRoom.Name, aZone.Listeners, (v) =>
+                iFactory.Create<IStandardRoom>(iRoom.Name, aZone.Listeners, (v, w) =>
                 {
-                    return "Listener " + v.Name;
+                    w("Listener " + v.Name);
                 });
 
 
                 iController = aZone.CreateVolumeController();
-                iFactory.Create<bool>(iRoom.Name, iController.HasVolume, v => "Zone HasVolume " + v);
-                iFactory.Create<bool>(iRoom.Name, iController.Mute, v => "Zone Mute " + v);
-                iFactory.Create<uint>(iRoom.Name, iController.Volume, v => "Zone Volume " + v);
+                iFactory.Create<bool>(iRoom.Name, iController.HasVolume, (v, w) => w("Zone HasVolume " + v));
+                iFactory.Create<bool>(iRoom.Name, iController.Mute, (v, w) => w("Zone Mute " + v));
+                iFactory.Create<uint>(iRoom.Name, iController.Volume, (v, w) => w("Zone Volume " + v));
             }
 
             private void DestroyController()
@@ -122,17 +122,17 @@ namespace TestZone
             {
                 iRunner.Result(string.Format("Room Added: {0} at {1}", aItem.Name, aIndex));
 
-                iFactory.Create<IZoneSender>(aItem.Name, aItem.ZoneSender, (v) =>
+                iFactory.Create<IZoneSender>(aItem.Name, aItem.ZoneSender, (v, w) =>
                 {
-                    return "ZoneSender " + v.Enabled + " " + (v.Enabled ? v.Sender.Udn : "") + " " + v.Room.Name;
+                    w("ZoneSender " + v.Enabled + " " + (v.Enabled ? v.Sender.Udn : "") + " " + v.Room.Name);
                 });
-                iFactory.Create<IZoneReceiver>(aItem.Name, aItem.ZoneReceiver, (v) =>
+                iFactory.Create<IZoneReceiver>(aItem.Name, aItem.ZoneReceiver, (v, w) =>
                 {
-                    return "ZoneReceiver " + v.Enabled + " " + (v.ZoneSender != null ? v.ZoneSender.Room.Name : "");
+                    w("ZoneReceiver " + v.Enabled + " " + (v.ZoneSender != null ? v.ZoneSender.Room.Name : ""));
                 });
-                iFactory.Create<IStandardRoom>(aItem.Name, aItem.Satellites, (v) =>
+                iFactory.Create<IStandardRoom>(aItem.Name, aItem.Satellites, (v, w) =>
                 {
-                    return "Satellite " + v.Name;
+                    w("Satellite " + v.Name);
                 });
 
                 iWatcherLookup.Add(aItem, new RoomControllerWatcher(iTagManager, iRunner, aItem));

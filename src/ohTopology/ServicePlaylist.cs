@@ -14,47 +14,34 @@ namespace OpenHome.Av
 {
     class MediaPresetPlaylist : IMediaPreset, IWatcher<uint>, IWatcher<string>
     {
-        private readonly DisposeHandler iDisposeHandler;
-        private readonly IWatchableThread iThread;
         private readonly uint iIndex;
         private readonly uint iId;
         private readonly IMediaMetadata iMetadata;
         private readonly ServicePlaylist iPlaylist;
         private readonly Watchable<bool> iBuffering;
         private readonly Watchable<bool> iPlaying;
+
         private uint iCurrentId;
         private string iCurrentTransportState;
 
         public MediaPresetPlaylist(IWatchableThread aThread, uint aIndex, uint aId, IMediaMetadata aMetadata, ServicePlaylist aPlaylist)
         {
-            iDisposeHandler = new DisposeHandler();
-
-            iThread = aThread;
             iIndex = aIndex;
             iId = aId;
             iMetadata = aMetadata;
             iPlaylist = aPlaylist;
 
-            iBuffering = new Watchable<bool>(iThread, "Buffering", false);
-            iPlaying = new Watchable<bool>(iThread, "Playing", false);
-            iThread.Schedule(() =>
-            {
-                iDisposeHandler.WhenNotDisposed(() =>
-                {
-                    iPlaylist.Id.AddWatcher(this);
-                    iPlaylist.TransportState.AddWatcher(this);
-                });
-            });
+            iBuffering = new Watchable<bool>(aThread, "Buffering", false);
+            iPlaying = new Watchable<bool>(aThread, "Playing", false);
+
+            iPlaylist.Id.AddWatcher(this);
+            iPlaylist.TransportState.AddWatcher(this);
         }
 
         public void Dispose()
         {
-            iDisposeHandler.Dispose();
-            iThread.Execute(() =>
-            {
-                iPlaylist.Id.RemoveWatcher(this);
-                iPlaylist.TransportState.RemoveWatcher(this);
-            });
+            iPlaylist.Id.RemoveWatcher(this);
+            iPlaylist.TransportState.RemoveWatcher(this);
             iBuffering.Dispose();
             iPlaying.Dispose();
         }
@@ -63,10 +50,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iIndex;
-                }
+                return iIndex;
             }
         }
 
@@ -74,10 +58,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iId;
-                }
+                return iId;
             }
         }
 
@@ -85,10 +66,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iMetadata;
-                }
+                return iMetadata;
             }
         }
 
@@ -96,10 +74,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iBuffering;
-                }
+                return iBuffering;
             }
         }
 
@@ -107,19 +82,13 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iPlaying;
-                }
+                return iPlaying;
             }
         }
 
         public void Play()
         {
-            using (iDisposeHandler.Lock())
-            {
-                iPlaylist.SeekId(iId);
-            }
+            iPlaylist.SeekId(iId);
         }
 
         private void EvaluatePlaying()
@@ -861,7 +830,7 @@ namespace OpenHome.Av
             }
         }
 
-        public IEnumerable<IMediaPreset> Read(CancellationToken aCancellationToken, uint aIndex, uint aCount)
+        public void Read(CancellationToken aCancellationToken, uint aIndex, uint aCount, Action<IEnumerable<IMediaPreset>> aCallback)
         {
             Do.Assert(aIndex + aCount <= Total);
 
@@ -872,16 +841,30 @@ namespace OpenHome.Av
             }
 
             List<IMediaPreset> tracks = new List<IMediaPreset>();
-            IEnumerable<IIdCacheEntry> entries = iCacheSession.Entries(idList).Result;
-            uint index = aIndex;
-            foreach (IIdCacheEntry e in entries)
+            IEnumerable<IIdCacheEntry> entries = new List<IIdCacheEntry>();
+            try
             {
-                uint id = iIdArray.ElementAt((int)index);
-                tracks.Add(new MediaPresetPlaylist(iNetwork, (uint)(iIdArray.IndexOf(id) + 1), id, e.Metadata, iPlaylist));
-                ++index;
+                entries = iCacheSession.Entries(idList).Result;
+            }
+            catch
+            {
             }
 
-            return tracks;
+            iNetwork.Schedule(() =>
+            {
+                if (!aCancellationToken.IsCancellationRequested)
+                {
+                    uint index = aIndex;
+                    foreach (IIdCacheEntry e in entries)
+                    {
+                        uint id = iIdArray.ElementAt((int)index);
+                        tracks.Add(new MediaPresetPlaylist(iNetwork, (uint)(iIdArray.IndexOf(id) + 1), id, e.Metadata, iPlaylist));
+                        ++index;
+                    }
+
+                    aCallback(tracks);
+                }
+            });
         }
     }
 

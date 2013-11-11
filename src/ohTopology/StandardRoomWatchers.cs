@@ -722,8 +722,6 @@ namespace OpenHome.Av
 
     class MediaPresetSender : IMediaPreset, IWatcher<string>, IWatcher<IInfoMetadata>
     {
-        private readonly DisposeHandler iDisposeHandler;
-        private readonly INetwork iNetwork;
         private readonly uint iIndex;
         // private readonly uint iId;
         private readonly IMediaMetadata iMetadata;
@@ -731,43 +729,28 @@ namespace OpenHome.Av
         private readonly IProxyReceiver iReceiver;
         private readonly Watchable<bool> iBuffering;
         private readonly Watchable<bool> iPlaying;
+
         private IInfoMetadata iCurrentMetadata;
         private string iCurrentTransportState;
-        private bool iDisposed;
 
-        public MediaPresetSender(INetwork aNetwork, uint aIndex, uint aId, IMediaMetadata aMetadata, ISenderMetadata aSenderMetadata, IProxyReceiver aReceiver)
+        public MediaPresetSender(IWatchableThread aThread, uint aIndex, uint aId, IMediaMetadata aMetadata, ISenderMetadata aSenderMetadata, IProxyReceiver aReceiver)
         {
-            iDisposed = false;
-            iDisposeHandler = new DisposeHandler();
-
-            iNetwork = aNetwork;
             iIndex = aIndex;
             // iId = aId;
             iMetadata = aMetadata;
             iSenderMetadata = aSenderMetadata;
             iReceiver = aReceiver;
 
-            iBuffering = new Watchable<bool>(iNetwork, "Buffering", false);
-            iPlaying = new Watchable<bool>(iNetwork, "Playing", false);
-            iNetwork.Schedule(() =>
-            {
-                if (!iDisposed)
-                {
-                    iReceiver.Metadata.AddWatcher(this);
-                    iReceiver.TransportState.AddWatcher(this);
-                }
-            });
+            iBuffering = new Watchable<bool>(aThread, "Buffering", false);
+            iPlaying = new Watchable<bool>(aThread, "Playing", false);
+            iReceiver.Metadata.AddWatcher(this);
+            iReceiver.TransportState.AddWatcher(this);
         }
 
         public void Dispose()
         {
-            iDisposeHandler.Dispose();
-            iNetwork.Execute(() =>
-            {
-                iReceiver.Metadata.RemoveWatcher(this);
-                iReceiver.TransportState.RemoveWatcher(this);
-                iDisposed = true;
-            });
+            iReceiver.Metadata.RemoveWatcher(this);
+            iReceiver.TransportState.RemoveWatcher(this);
             iBuffering.Dispose();
             iPlaying.Dispose();
         }
@@ -776,10 +759,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iIndex;
-                }
+                return iIndex;
             }
         }
 
@@ -787,10 +767,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iMetadata;
-                }
+                return iMetadata;
             }
         }
 
@@ -798,10 +775,7 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iBuffering;
-                }
+                return iBuffering;
             }
         }
 
@@ -809,19 +783,13 @@ namespace OpenHome.Av
         {
             get
             {
-                using (iDisposeHandler.Lock())
-                {
-                    return iPlaying;
-                }
+                return iPlaying;
             }
         }
 
         public void Play()
         {
-            using (iDisposeHandler.Lock())
-            {
-                iReceiver.Play(iSenderMetadata);
-            }
+            iReceiver.Play(iSenderMetadata);
         }
 
         private void EvaluatePlaying()
@@ -894,27 +862,34 @@ namespace OpenHome.Av
             }
         }
 
-        public IEnumerable<IMediaPreset> Read(CancellationToken aCancellationToken, uint aIndex, uint aCount)
+        public void Read(CancellationToken aCancellationToken, uint aIndex, uint aCount, Action<IEnumerable<IMediaPreset>> aCallback)
         {
-            uint index = aIndex;
-            List<IMediaPreset> presets = new List<IMediaPreset>();
-            iSendersMetadata.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v =>
+            iNetwork.Schedule(() =>
             {
-                string room, name;
-                ParseName(v.Name, out room, out name);
-                string fullname = string.Format("{0} ({1})", room, name);
-                if (room == name || string.IsNullOrEmpty(name))
+                if (!aCancellationToken.IsCancellationRequested)
                 {
-                    fullname = room;
+                    uint index = aIndex;
+                    List<IMediaPreset> presets = new List<IMediaPreset>();
+                    iSendersMetadata.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v =>
+                    {
+                        string room, name;
+                        ParseName(v.Name, out room, out name);
+                        string fullname = string.Format("{0} ({1})", room, name);
+                        if (room == name || string.IsNullOrEmpty(name))
+                        {
+                            fullname = room;
+                        }
+                        MediaMetadata metadata = new MediaMetadata();
+                        metadata.Add(iNetwork.TagManager.Audio.Title, fullname);
+                        metadata.Add(iNetwork.TagManager.Audio.Artwork, v.ArtworkUri);
+                        metadata.Add(iNetwork.TagManager.Audio.Uri, v.Uri);
+                        presets.Add(new MediaPresetSender(iNetwork, index, index, metadata, v, iReceiver));
+                        ++index;
+                    });
+
+                    aCallback(presets);
                 }
-                MediaMetadata metadata = new MediaMetadata();
-                metadata.Add(iNetwork.TagManager.Audio.Title, fullname);
-                metadata.Add(iNetwork.TagManager.Audio.Artwork, v.ArtworkUri);
-                metadata.Add(iNetwork.TagManager.Audio.Uri, v.Uri);
-                presets.Add(new MediaPresetSender(iNetwork, index, index, metadata, v, iReceiver));
-                ++index;
             });
-            return presets;
         }
 
         private static bool ParseBrackets(string aMetadata, out string aRoom, out string aName, char aOpen, char aClose)
@@ -1032,8 +1007,8 @@ namespace OpenHome.Av
 
         protected override void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue)
         {
-            iConfigured = new MediaSupervisor<IMediaPreset>(iNetwork, new ExternalSnapshot(new List<ITopology4Source>()));
-            iUnconfigured = new MediaSupervisor<IMediaPreset>(iNetwork, new ExternalSnapshot(new List<ITopology4Source>()));
+            iConfigured = new MediaSupervisor<IMediaPreset>(iNetwork, new ExternalSnapshot(iNetwork, new List<ITopology4Source>()));
+            iUnconfigured = new MediaSupervisor<IMediaPreset>(iNetwork, new ExternalSnapshot(iNetwork, new List<ITopology4Source>()));
             EvaluateEnabled(aValue);
         }
 
@@ -1072,8 +1047,8 @@ namespace OpenHome.Av
                 }
             }
 
-            iUnconfigured.Update(new ExternalSnapshot(unconfigured));
-            iConfigured.Update(new ExternalSnapshot(configured));
+            iUnconfigured.Update(new ExternalSnapshot(iNetwork, unconfigured));
+            iConfigured.Update(new ExternalSnapshot(iNetwork, configured));
 
             return hasExternal;
         }
@@ -1184,10 +1159,12 @@ namespace OpenHome.Av
 
     class ExternalSnapshot : IMediaClientSnapshot<IMediaPreset>
     {
+        private readonly INetwork iNetwork;
         private readonly IList<ITopology4Source> iSources;
 
-        public ExternalSnapshot(IList<ITopology4Source> aSources)
+        public ExternalSnapshot(INetwork aNetwork, IList<ITopology4Source> aSources)
         {
+            iNetwork = aNetwork;
             iSources = aSources;
         }
 
@@ -1207,11 +1184,18 @@ namespace OpenHome.Av
             }
         }
 
-        public IEnumerable<IMediaPreset> Read(CancellationToken aCancellationToken, uint aIndex, uint aCount)
+        public void Read(CancellationToken aCancellationToken, uint aIndex, uint aCount, Action<IEnumerable<IMediaPreset>> aCallback)
         {
-            List<IMediaPreset> presets = new List<IMediaPreset>();
-            iSources.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v => presets.Add(v.CreatePreset()));
-            return presets;
+            iNetwork.Schedule(() =>
+            {
+                if (!aCancellationToken.IsCancellationRequested)
+                {
+                    List<IMediaPreset> presets = new List<IMediaPreset>();
+                    iSources.Skip((int)aIndex).Take((int)aCount).ToList().ForEach(v => presets.Add(v.CreatePreset()));
+
+                    aCallback(presets);
+                }
+            });
         }
     }
 
