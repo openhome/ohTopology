@@ -10,6 +10,7 @@ using System.Xml.Linq;
 using System.Text;
 
 using System.Net;
+using System.Web;
 
 using OpenHome.Os.App;
 
@@ -66,57 +67,125 @@ namespace OpenHome.Av
         {
             var tcs = new TaskCompletionSource<T>();
 
-            var client = new WebClient();
+            //Console.WriteLine("REQUEST   : {0}", aUri);
 
-            client.Encoding = iEncoding;
-
-            var registrations = new List<CancellationTokenRegistration>();
-
-            client.DownloadStringCompleted += (sender, args) =>
+            Task.Factory.StartNew(() =>
             {
-                client.Dispose();
+                try
+                {
+                    var request = (HttpWebRequest)WebRequest.Create(aUri);
 
-                if (aCancellationToken.IsCancellationRequested || args.Error != null)
-                {
-                    tcs.SetCanceled();
-                }
-                else
-                {
-                    try
-                    {
-                        tcs.SetResult(aJsonParser(args.Result));
-                    }
-                    catch
-                    {
-                        tcs.SetCanceled();
-                    }
-                }
-            };
+                    // Use a default WebProxy to avoid proxy authentication errors
+                    request.Proxy = new WebProxy();
+                    request.KeepAlive = false;
+                    request.Timeout = 5000; // milliseconds
+                    request.ReadWriteTimeout = 5000;
 
-            if (aCancellationToken.IsCancellationRequested)
-            {
-                tcs.SetCanceled();
-            }
-            else
-            {
-                lock (registrations)
-                {
-                    client.DownloadStringAsync(new Uri(aUri));
-                    registrations.Add(aCancellationToken.Register(() =>
+                    request.BeginGetResponse((result) =>
                     {
                         try
                         {
-                            client.CancelAsync();
+                            var response = request.EndGetResponse(result);
+
+                            if (aCancellationToken.IsCancellationRequested)
+                            {
+                                response.Close();
+                                tcs.SetCanceled();
+                            }
+                            else
+                            {
+                                var count = int.Parse(response.Headers["Content-Length"]);
+
+                                if (count >= 0)
+                                {
+                                    var buffer = new byte[count];
+
+                                    var stream = response.GetResponseStream();
+
+                                    Fetch(stream, aCancellationToken, buffer, 0, count, () =>
+                                    {
+                                        try
+                                        {
+                                            var value = iEncoding.GetString(buffer);
+                                            var json = aJsonParser(value);
+                                            response.Close();
+                                            tcs.SetResult(json);
+                                        }
+                                        catch
+                                        {
+                                            response.Close();
+                                            tcs.SetCanceled();
+                                        }
+                                    },
+                                    () =>
+                                    {
+                                        response.Close();
+                                        tcs.SetCanceled();
+                                    });
+                                }
+                                else
+                                {
+                                    response.Close();
+                                    tcs.SetCanceled();
+                                }
+                            }
                         }
-                        catch (WebException)
+                        catch
                         {
-                            // we have wittnessed an undocumented and inexplicable WebException here, so throw those away
+                            tcs.SetCanceled();
                         }
-                    }));
+
+                    }, null);
                 }
-            }
+                catch (Exception)
+                {
+                    tcs.SetCanceled();
+                }
+            });
 
             return (tcs.Task);
+        }
+
+        private void Fetch(Stream aStream, CancellationToken aCancellationToken, byte[] aBuffer, int aOffset, int aCount, Action aSuccess, Action aFail)
+        {
+            try
+            {
+                aStream.BeginRead(aBuffer, aOffset, aCount, (result) =>
+                {
+                    try
+                    {
+                        if (aCancellationToken.IsCancellationRequested)
+                        {
+                            aFail();
+                        }
+                        else
+                        {
+                            var count = aStream.EndRead(result);
+
+                            if (count == aCount)
+                            {
+                                aSuccess();
+                            }
+                            else if (aCount == 0)
+                            {
+                                aFail();
+                            }
+                            else
+                            {
+                                Fetch(aStream, aCancellationToken, aBuffer, aOffset + count, aCount - count, aSuccess, aFail);
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        aFail();
+                    }
+                }, null);
+            }
+            catch
+            {
+                aFail();
+            }
         }
 
         private Task<IMediaEndpointClientSnapshot> GetSnapshot(CancellationToken aCancellationToken, string aFormat, params object[] aArguments)
@@ -273,10 +342,12 @@ namespace OpenHome.Av
 
                 var session = json.Value;
 
+                /*
                 iSessionHandler("me." + iId + "." + session, (id, seq) =>
                 {
                     iSupervisor.Refresh(session);
                 });
+                */
 
                 return (session);
             }));
