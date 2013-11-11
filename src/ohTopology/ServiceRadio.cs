@@ -154,6 +154,8 @@ namespace OpenHome.Av
 
     public abstract class ServiceRadio : Service
     {
+        public const string kCacheIdFormat = "Radio({0})";
+
         protected ServiceRadio(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
             : base(aNetwork, aDevice, aLog)
         {
@@ -283,7 +285,7 @@ namespace OpenHome.Av
 
             iSubscribedSource = new TaskCompletionSource<bool>();
 
-            iCacheSession = Network.IdCache.CreateSession(string.Format("Radio({0})", Device.Udn), ReadList);
+            iCacheSession = Network.IdCache.CreateSession(string.Format(ServiceRadio.kCacheIdFormat, Device.Udn), ReadList);
 
             iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new RadioSnapshot(iNetwork, iCacheSession, new List<uint>(), this));
 
