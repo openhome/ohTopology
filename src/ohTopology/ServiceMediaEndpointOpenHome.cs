@@ -69,123 +69,28 @@ namespace OpenHome.Av
 
             //Console.WriteLine("REQUEST   : {0}", aUri);
 
-            Task.Factory.StartNew(() =>
+            var client = new HttpClient(iNetwork);
+
+            client.Read(aUri, aCancellationToken, (buffer) =>
             {
-                try
-                {
-                    var request = (HttpWebRequest)WebRequest.Create(aUri);
-
-                    // Use a default WebProxy to avoid proxy authentication errors
-                    request.Proxy = new WebProxy();
-                    request.KeepAlive = false;
-                    request.Timeout = 5000; // milliseconds
-                    request.ReadWriteTimeout = 5000;
-
-                    request.BeginGetResponse((result) =>
-                    {
-                        try
-                        {
-                            var response = request.EndGetResponse(result);
-
-                            if (aCancellationToken.IsCancellationRequested)
-                            {
-                                response.Close();
-                                tcs.SetCanceled();
-                            }
-                            else
-                            {
-                                var count = int.Parse(response.Headers["Content-Length"]);
-
-                                if (count >= 0)
-                                {
-                                    var buffer = new byte[count];
-
-                                    var stream = response.GetResponseStream();
-
-                                    Fetch(stream, aCancellationToken, buffer, 0, count, () =>
-                                    {
-                                        try
-                                        {
-                                            var value = iEncoding.GetString(buffer);
-                                            var json = aJsonParser(value);
-                                            response.Close();
-                                            tcs.SetResult(json);
-                                        }
-                                        catch
-                                        {
-                                            response.Close();
-                                            tcs.SetCanceled();
-                                        }
-                                    },
-                                    () =>
-                                    {
-                                        response.Close();
-                                        tcs.SetCanceled();
-                                    });
-                                }
-                                else
-                                {
-                                    response.Close();
-                                    tcs.SetCanceled();
-                                }
-                            }
-                        }
-                        catch
-                        {
-                            tcs.SetCanceled();
-                        }
-
-                    }, null);
-                }
-                catch (Exception)
-                {
-                    tcs.SetCanceled();
-                }
-            });
-
-            return (tcs.Task);
-        }
-
-        private void Fetch(Stream aStream, CancellationToken aCancellationToken, byte[] aBuffer, int aOffset, int aCount, Action aSuccess, Action aFail)
-        {
-            try
-            {
-                aStream.BeginRead(aBuffer, aOffset, aCount, (result) =>
+                if (buffer != null)
                 {
                     try
                     {
-                        if (aCancellationToken.IsCancellationRequested)
-                        {
-                            aFail();
-                        }
-                        else
-                        {
-                            var count = aStream.EndRead(result);
-
-                            if (count == aCount)
-                            {
-                                aSuccess();
-                            }
-                            else if (aCount == 0)
-                            {
-                                aFail();
-                            }
-                            else
-                            {
-                                Fetch(aStream, aCancellationToken, aBuffer, aOffset + count, aCount - count, aSuccess, aFail);
-                            }
-                        }
+                        var value = iEncoding.GetString(buffer);
+                        var json = aJsonParser(value);
+                        tcs.SetResult(json);
+                        return;
                     }
                     catch
                     {
-                        aFail();
                     }
-                }, null);
-            }
-            catch
-            {
-                aFail();
-            }
+                }
+
+                tcs.SetCanceled();
+            });
+
+            return (tcs.Task);
         }
 
         private Task<IMediaEndpointClientSnapshot> GetSnapshot(CancellationToken aCancellationToken, string aFormat, params object[] aArguments)

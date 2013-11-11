@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
 using System.Text;
@@ -222,6 +223,8 @@ namespace OpenHome.Av
         private readonly CpDevice iDevice;
         private readonly ILog iLog;
 
+        private readonly Encoding iEncoding;
+
         private Dictionary<string, IInjectorDevice> iEndpoints;
         private Dictionary<string, List<IDisposable>> iEventHandlers;
 
@@ -238,6 +241,8 @@ namespace OpenHome.Av
             iDevice = aDevice;
             iDevice.AddRef();
             iLog = aLog;
+
+            iEncoding = new UTF8Encoding(false);
 
             iEndpoints = new Dictionary<string, IInjectorDevice>();
             iEventHandlers = new Dictionary<string, List<IDisposable>>();
@@ -335,58 +340,37 @@ namespace OpenHome.Av
             return (address + ":" + port);
         }
 
-        private void Update(string aId, uint aSequence)
-        {
-            Task.Factory.StartNew(() =>
-            {
-                lock (iEndpoints)
-                {
-                    if (iDisposed)
-                    {
-                        return;
-                    }
-                }
-
-                var endpoints = GetEndpoints();
-
-                iInjector.Network.Schedule(() =>
-                {
-                    lock (iEndpoints)
-                    {
-                        if (!iDisposed)
-                        {
-                            UpdateEndpointsLocked(endpoints);
-                        }
-                    }
-                });
-            });
-        }
-
         // Update the network with the current list of endpoints for this device
         // Add and remove devices from the network as necessary. Schedule this
         // every time the list of endpoints changes.
 
-        private JsonObject GetEndpoints()
+        private void Update(string aId, uint aSequence)
         {
-            using (var client = new WebClient())
+            var client = new HttpClient(iInjector.Network);
+
+            client.Read(iUri + "/me", CancellationToken.None, (buffer) =>
             {
-                try
+                if (buffer != null)
                 {
-                    var me = client.DownloadString(iUri + "/me");
-
-                    var json = JsonParser.Parse(me) as JsonObject;
-
-                    if (json != null)
+                    try
                     {
-                        return (json);
+                        var value = iEncoding.GetString(buffer);
+
+                        var json = JsonParser.Parse(value) as JsonObject;
+                        
+                        lock (iEndpoints)
+                        {
+                            if (!iDisposed)
+                            {
+                                UpdateEndpointsLocked(json);
+                            }
+                        }
+                    }
+                    catch
+                    {
                     }
                 }
-                catch
-                {
-                }
-            }
-
-            return (new JsonObject());
+            });
         }
 
         private void UpdateEndpointsLocked(JsonObject aEndpoints)
