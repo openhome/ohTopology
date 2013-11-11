@@ -342,12 +342,10 @@ namespace OpenHome.Av
 
                 var session = json.Value;
 
-                /*
                 iSessionHandler("me." + iId + "." + session, (id, seq) =>
                 {
                     iSupervisor.Refresh(session);
                 });
-                */
 
                 return (session);
             }));
