@@ -73,14 +73,8 @@ namespace OpenHome.Av
 
         internal IEventSupervisorSession CreateEventSession(string aEndpoint)
         {
-            IEventSupervisorSession session = null;
-
-            iNetwork.Execute(() =>
-            {
-                session = iNetwork.EventSupervisor.Create(aEndpoint);
-            });
-
-            return (session);
+            iNetwork.Assert();
+            return (iNetwork.EventSupervisor.Create(aEndpoint));
         }
 
         private string GetDeviceElementValue(IEnumerable<XElement> aElements, string aName)
@@ -228,6 +222,8 @@ namespace OpenHome.Av
         private Dictionary<string, IInjectorDevice> iEndpoints;
         private Dictionary<string, List<IDisposable>> iEventHandlers;
 
+        private CancellationTokenSource iCancellationTokenSource;
+
         private IEventSupervisorSession iEventSession;
         private IDisposable iEventMediaEndpoints;
 
@@ -247,58 +243,32 @@ namespace OpenHome.Av
             iEndpoints = new Dictionary<string, IInjectorDevice>();
             iEventHandlers = new Dictionary<string, List<IDisposable>>();
 
+            iCancellationTokenSource = new CancellationTokenSource();
+
             iDisposed = false;
 
-            Task.Factory.StartNew(() =>
+            var client = new HttpClient(iInjector.Network);
+
+            client.Read(iUri + "/es", iCancellationTokenSource.Token, (buffer) =>
             {
-                lock (iEndpoints)
+                if (!iDisposed && buffer != null)
                 {
-                    if (iDisposed)
-                    {
-                        return;
-                    }
-                }
+                    var value = iEncoding.GetString(buffer);
 
-                string endpoint;
-
-                using (var client = new WebClient())
-                {
                     try
                     {
-                        var es = client.DownloadString(iUri + "/es");
+                        var json = JsonParser.Parse(value) as JsonString;
 
-                        var json = JsonParser.Parse(es) as JsonString;
+                        var resolved = ResolveEndpoint(json.Value);
 
-                        endpoint = json.Value;
+                        if (resolved != null)
+                        {
+                            iEventSession = iInjector.CreateEventSession(resolved);
+                            iEventMediaEndpoints = iEventSession.Create("ps.me", Update);
+                        }
                     }
                     catch
                     {
-                        return;
-                    }
-                }
-
-                var resolved = ResolveEndpoint(endpoint);
-
-                if (resolved == null)
-                {
-                    return;
-                }
-
-                var session = iInjector.CreateEventSession(resolved);
-
-                lock (iEndpoints)
-                {
-                    if (iDisposed)
-                    {
-                        iInjector.Network.Execute(() =>
-                        {
-                            session.Dispose();
-                        });
-                    }
-                    else
-                    {
-                        iEventSession = session;
-                        iEventMediaEndpoints = iEventSession.Create("ps.me", Update);
                     }
                 }
             });
@@ -350,21 +320,14 @@ namespace OpenHome.Av
 
             client.Read(iUri + "/me", CancellationToken.None, (buffer) =>
             {
-                if (buffer != null)
+                if (!iDisposed && buffer != null)
                 {
+                    var value = iEncoding.GetString(buffer);
+
                     try
                     {
-                        var value = iEncoding.GetString(buffer);
-
                         var json = JsonParser.Parse(value) as JsonObject;
-                        
-                        lock (iEndpoints)
-                        {
-                            if (!iDisposed)
-                            {
-                                UpdateEndpointsLocked(json);
-                            }
-                        }
+                        UpdateEndpoints(json);
                     }
                     catch
                     {
@@ -373,7 +336,7 @@ namespace OpenHome.Av
             });
         }
 
-        private void UpdateEndpointsLocked(JsonObject aEndpoints)
+        private void UpdateEndpoints(JsonObject aEndpoints)
         {
             var refresh = new Dictionary<string, IInjectorDevice>();
 
@@ -417,14 +380,11 @@ namespace OpenHome.Av
 
                     device = new DeviceMediaEndpointOpenHome(iInjector.Network, iUri, entry.Key, entry.Value, (id, action) =>
                     {
-                        lock (iEndpoints)
-                        {
-                            List<IDisposable> handlers;
+                        List<IDisposable> handlers;
 
-                            if (iEventHandlers.TryGetValue(entry.Key, out handlers))
-                            {
-                                handlers.Add(iEventSession.Create(id, action));
-                            }
+                        if (iEventHandlers.TryGetValue(entry.Key, out handlers))
+                        {
+                            handlers.Add(iEventSession.Create(id, action));
                         }
                     }, iLog);
 
@@ -443,37 +403,36 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            lock (iEndpoints)
+            iCancellationTokenSource.Cancel();
+
+            iInjector.Network.Schedule(() =>
             {
                 iDisposed = true;
 
                 iDevice.RemoveRef();
 
-                iInjector.Network.Schedule(() =>
+                if (iEventSession != null)
                 {
-                    if (iEventSession != null)
+                    iEventMediaEndpoints.Dispose();
+
+                    foreach (var handlers in iEventHandlers.Values)
                     {
-                        iEventMediaEndpoints.Dispose();
-
-                        foreach (var handlers in iEventHandlers.Values)
+                        foreach (var entry in handlers)
                         {
-                            foreach (var entry in handlers)
-                            {
-                                entry.Dispose();
-                            }
-                        }
-
-                        iEventHandlers.Clear();
-
-                        iEventSession.Dispose();
-
-                        foreach (var entry in iEndpoints)
-                        {
-                            iInjector.RemoveDevice(entry.Value);
+                            entry.Dispose();
                         }
                     }
-                });
-            }
+
+                    iEventHandlers.Clear();
+
+                    iEventSession.Dispose();
+
+                    foreach (var entry in iEndpoints)
+                    {
+                        iInjector.RemoveDevice(entry.Value);
+                    }
+                }
+            });
         }
     }
 }

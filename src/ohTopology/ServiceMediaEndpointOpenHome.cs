@@ -75,11 +75,11 @@ namespace OpenHome.Av
             {
                 if (buffer != null)
                 {
+                    var value = iEncoding.GetString(buffer);
+
                     try
                     {
-                        var value = iEncoding.GetString(buffer);
-                        var json = aJsonParser(value);
-                        tcs.SetResult(json);
+                        tcs.SetResult(aJsonParser(value));
                         return;
                     }
                     catch
