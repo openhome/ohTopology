@@ -75,11 +75,11 @@ namespace OpenHome.Av
             {
                 if (buffer != null)
                 {
+                    var value = iEncoding.GetString(buffer);
+
                     try
                     {
-                        var value = iEncoding.GetString(buffer);
-                        var json = aJsonParser(value);
-                        tcs.SetResult(json);
+                        tcs.SetResult(aJsonParser(value));
                         return;
                     }
                     catch
@@ -114,7 +114,17 @@ namespace OpenHome.Av
         {
             var value = aValue as JsonArray;
 
-            foreach (var entry in value)
+            if (value != null)
+            {
+                return GetAlpha(value);
+            }
+
+            return (null);
+        }
+
+        private IEnumerable<uint> GetAlpha(JsonArray aValue)
+        {
+            foreach (var entry in aValue)
             {
                 yield return (GetAlphaElement(entry));
             }
@@ -318,12 +328,16 @@ namespace OpenHome.Av
     internal class MediaEndpointSnapshotOpenHome : IMediaEndpointClientSnapshot
     {
         private readonly uint iTotal;
-        private readonly IEnumerable<uint> iAlpha;
+        private readonly uint[] iAlpha;
 
         public MediaEndpointSnapshotOpenHome(uint aTotal, IEnumerable<uint> aAlpha)
         {
             iTotal = aTotal;
-            iAlpha = aAlpha;
+
+            if (aAlpha != null)
+            {
+                iAlpha = aAlpha.ToArray();
+            }
         }
 
         // IMediaEndpointClientSnapshot
