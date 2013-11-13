@@ -25,7 +25,7 @@ namespace OpenHome.Av
 
                     aHasInfoNext.Update(false);
                     aHasContainer.Update(false);
-                    iCanPause.Update(true);
+                    iCanPause.Update(false);
                     aCanSkip.Update(false);
                     aCanSeek.Update(false);
                     aHasPlayMode.Update(false);
