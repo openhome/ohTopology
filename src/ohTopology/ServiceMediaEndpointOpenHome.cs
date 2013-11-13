@@ -333,7 +333,11 @@ namespace OpenHome.Av
         public MediaEndpointSnapshotOpenHome(uint aTotal, IEnumerable<uint> aAlpha)
         {
             iTotal = aTotal;
-            iAlpha = aAlpha.ToArray();
+
+            if (aAlpha != null)
+            {
+                iAlpha = aAlpha.ToArray();
+            }
         }
 
         // IMediaEndpointClientSnapshot
