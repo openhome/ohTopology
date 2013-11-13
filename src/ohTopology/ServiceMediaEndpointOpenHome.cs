@@ -318,12 +318,12 @@ namespace OpenHome.Av
     internal class MediaEndpointSnapshotOpenHome : IMediaEndpointClientSnapshot
     {
         private readonly uint iTotal;
-        private readonly IEnumerable<uint> iAlpha;
+        private readonly uint[] iAlpha;
 
         public MediaEndpointSnapshotOpenHome(uint aTotal, IEnumerable<uint> aAlpha)
         {
             iTotal = aTotal;
-            iAlpha = aAlpha;
+            iAlpha = aAlpha.ToArray();
         }
 
         // IMediaEndpointClientSnapshot
