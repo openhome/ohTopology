@@ -114,7 +114,17 @@ namespace OpenHome.Av
         {
             var value = aValue as JsonArray;
 
-            foreach (var entry in value)
+            if (value != null)
+            {
+                return GetAlpha(value);
+            }
+
+            return (null);
+        }
+
+        private IEnumerable<uint> GetAlpha(JsonArray aValue)
+        {
+            foreach (var entry in aValue)
             {
                 yield return (GetAlphaElement(entry));
             }
