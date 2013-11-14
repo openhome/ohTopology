@@ -180,7 +180,7 @@ namespace OpenHome.Av
             if (aId == "Shuffle")
             {
                 iShuffle.Update(aValue);
-                iHasInfoNext.Update(HasInfoNext);
+                iHasInfoNext.Update(HasInfoNext());
             }
             if (aId == "Repeat")
             {
@@ -193,7 +193,7 @@ namespace OpenHome.Av
             if (aId == "Shuffle")
             {
                 iShuffle.Update(aValue);
-                iHasInfoNext.Update(HasInfoNext);
+                iHasInfoNext.Update(HasInfoNext());
             }
             if (aId == "Repeat")
             {
@@ -223,13 +223,13 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, IInfoMetadata aValue)
         {
-            iHasInfoNext.Update(HasInfoNext);
+            iHasInfoNext.Update(HasInfoNext());
             iInfoNext.Update(aValue);
         }
 
         public void ItemUpdate(string aId, IInfoMetadata aValue, IInfoMetadata aPrevious)
         {
-            iHasInfoNext.Update(HasInfoNext);
+            iHasInfoNext.Update(HasInfoNext());
             iInfoNext.Update(aValue);
         }
 
@@ -239,12 +239,9 @@ namespace OpenHome.Av
             iInfoNext.Update(InfoMetadata.Empty);
         }
 
-        private bool HasInfoNext
+        private bool HasInfoNext()
         {
-            get
-            {
-                return !(iPlaylist.Shuffle.Value || iPlaylist.InfoNext.Value == InfoMetadata.Empty);
-            }
+            return !(iPlaylist.Shuffle.Value || iPlaylist.InfoNext.Value == InfoMetadata.Empty);
         }
 
         private bool iDisposed;
