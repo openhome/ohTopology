@@ -40,12 +40,11 @@ namespace TestMediaServer
 
             iNetwork.Execute(() =>
             {
-                session = iProxy.CreateSession().Result;
-            });
-
-            iNetwork.Execute(() =>
-            {
-                session.Browse(null,  () => iReady.Set());
+                iProxy.CreateSession((s) =>
+                {
+                    session = s;
+                    session.Browse(null, () => iReady.Set());
+                });
             });
 
             iReady.WaitOne();

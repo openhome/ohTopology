@@ -94,9 +94,9 @@ namespace OpenHome.Av
             return (new ProxyMediaEndpoint(this, aDevice));
         }
 
-        public override Task<IMediaEndpointSession> CreateSession()
+        public override void CreateSession(Action<IMediaEndpointSession> aCallback)
         {
-            return (iSupervisor.CreateSession());
+            iSupervisor.CreateSession(aCallback);
         }
 
         private IMediaDatum GetRootContainerTracks()
@@ -376,28 +376,34 @@ namespace OpenHome.Av
 
         // IMediaEndpointClient
 
-        public Task<string> Create(CancellationToken aCancellationToken)
+        public void Create(CancellationToken aCancellationToken, Action<string> aCallback)
         {
-            var tcs = new TaskCompletionSource<string>();
-            tcs.SetResult(Guid.NewGuid().ToString());
-            return (tcs.Task);
+            iNetwork.Schedule(() =>
+            {
+                aCallback(Guid.NewGuid().ToString());
+            });
         }
 
-        public Task<string> Destroy(CancellationToken aCancellationToken, string aId)
+        public void Destroy(CancellationToken aCancellationToken, Action<string> aCallback, string aId)
         {
-            var tcs = new TaskCompletionSource<string>();
-            tcs.SetResult(aId);
-            return (tcs.Task);
+            iNetwork.Schedule(() =>
+            {
+                aCallback(aId);
+            });
         }
 
-        public Task<IMediaEndpointClientSnapshot> Browse(CancellationToken aCancellationToken, string aSession, IMediaDatum aDatum)
+        public void Browse(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aSession, IMediaDatum aDatum)
         {
             var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
 
             if (aDatum == null)
             {
-                tcs.SetResult(new MediaEndpointSnapshotMock(iRoot));
-                return (tcs.Task);
+                iNetwork.Schedule(() =>
+                {
+                    aCallback(new MediaEndpointSnapshotMock(iRoot));
+                });
+
+                return;
             }
 
             Do.Assert(aDatum.Type.Any());
@@ -412,27 +418,43 @@ namespace OpenHome.Av
 
                     if (tag == iNetwork.TagManager.Audio.Artist)
                     {
-                        tcs.SetResult(BrowseRootArtists());
-                        return (tcs.Task);
-                    }
+                        iNetwork.Schedule(() =>
+                        {
+                            aCallback(BrowseRootArtists());
+                        });
 
+                        return;
+                    }
+                    
                     if (tag == iNetwork.TagManager.Audio.Album)
                     {
-                        tcs.SetResult(BrowseRootAlbums());
-                        return (tcs.Task);
+                        iNetwork.Schedule(() =>
+                        {
+                            aCallback(BrowseRootAlbums());
+                        });
+
+                        return;
                     }
 
                     if (tag == iNetwork.TagManager.Audio.Genre)
                     {
-                        tcs.SetResult(BrowseRootGenres());
-                        return (tcs.Task);
+                        iNetwork.Schedule(() =>
+                        {
+                            aCallback(BrowseRootGenres());
+                        });
+
+                        return;
                     }
 
                     Do.Assert(false);
                 }
 
-                tcs.SetResult(BrowseRootTracks());
-                return (tcs.Task);
+                iNetwork.Schedule(() =>
+                {
+                    aCallback(BrowseRootTracks());
+                });
+
+                return;
             }
 
             if (aDatum.Type.First() == iNetwork.TagManager.Audio.AlbumArtist)
@@ -440,8 +462,15 @@ namespace OpenHome.Av
                 // Artist/Album
 
                 var artist = aDatum[iNetwork.TagManager.Audio.AlbumArtist].Value;
-                tcs.SetResult(BrowseArtistAlbums(artist));
-                return (tcs.Task);
+                
+                var snapshot = BrowseArtistAlbums(artist);
+
+                iNetwork.Schedule(() =>
+                {
+                    aCallback(snapshot);
+                });
+
+                return;
             }
 
             if (aDatum.Type.First() == iNetwork.TagManager.Audio.Album)
@@ -449,8 +478,15 @@ namespace OpenHome.Av
                 // Artist/Album
 
                 var album = aDatum[iNetwork.TagManager.Audio.Album].Value;
-                tcs.SetResult(BrowseAlbumTracks(album));
-                return (tcs.Task);
+
+                var snapshot = BrowseAlbumTracks(album);
+
+                iNetwork.Schedule(() =>
+                {
+                    aCallback(snapshot);
+                });
+
+                return;
             }
 
             Do.Assert(aDatum.Type.First() == iNetwork.TagManager.Audio.Genre);
@@ -458,63 +494,98 @@ namespace OpenHome.Av
             // Genre/Tracks
 
             var genre = aDatum[iNetwork.TagManager.Audio.Genre].Value;
-            tcs.SetResult(BrowseGenreTracks(genre));
-            return (tcs.Task);
+
+            var snapshot2 = BrowseGenreTracks(genre);
+
+            iNetwork.Schedule(() =>
+            {
+                aCallback(snapshot2);
+            });
+
+            return;
         }
 
-        public Task<IMediaEndpointClientSnapshot> List(CancellationToken aCancellationToken, string aSession, ITag aTag)
+        public void List(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aSession, ITag aTag)
         {
-            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
-            tcs.SetException(new InvalidOperationException());
-            return (tcs.Task);
+            throw new InvalidOperationException();
         }
 
-        public Task<IMediaEndpointClientSnapshot> Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
+        public void Link(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aSession, ITag aTag, string aValue)
         {
-            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
-
             if (aTag == iNetwork.TagManager.Audio.Artist)
             {
-                tcs.SetResult(BrowseArtistAlbums(aValue));
-                return (tcs.Task);
+                var snapshot = BrowseArtistAlbums(aValue);
+
+                iNetwork.Schedule(() =>
+                {
+                    aCallback(snapshot);
+                });
+
+                return;
             }
 
             if (aTag == iNetwork.TagManager.Audio.Album)
             {
-                tcs.SetResult(BrowseAlbumTracks(aValue));
-                return (tcs.Task);
+                var snapshot = BrowseAlbumTracks(aValue);
+
+                iNetwork.Schedule(() =>
+                {
+                    aCallback(snapshot);
+                });
+
+                return;
             }
 
             if (aTag == iNetwork.TagManager.Audio.Genre)
             {
-                tcs.SetResult(BrowseGenreTracks(aValue));
-                return (tcs.Task);
+                var snapshot = BrowseGenreTracks(aValue);
+
+                iNetwork.Schedule(() =>
+                {
+                    aCallback(snapshot);
+                });
+
+                return;
             }
 
-            tcs.SetException(new InvalidOperationException());
-
-            return (tcs.Task);
+            throw new InvalidOperationException();
         }
 
-        public Task<IMediaEndpointClientSnapshot> Match(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
+        public void Match(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aSession, ITag aTag, string aValue)
         {
-            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
-            tcs.SetResult(new MediaEndpointSnapshotMock(MatchMetadata(aTag, aValue)));
-            return (tcs.Task);
+            var snapshot = new MediaEndpointSnapshotMock(MatchMetadata(aTag, aValue));
+
+            iNetwork.Schedule(() =>
+            {
+                aCallback(snapshot);
+            });
         }
 
-        public Task<IMediaEndpointClientSnapshot> Search(CancellationToken aCancellationToken, string aSession, string aValue)
+        public void Search(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aSession, string aValue)
         {
-            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
-            tcs.SetResult(new MediaEndpointSnapshotMock(SearchMetadata(aValue)));
-            return (tcs.Task);
+            var snapshot = new MediaEndpointSnapshotMock(SearchMetadata(aValue));
+
+            iNetwork.Schedule(() =>
+            {
+                aCallback(snapshot);
+            });
         }
 
-        public Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
+        public void Read(CancellationToken aCancellationToken, Action<IWatchableFragment<IMediaDatum>> aCallback, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
         {
             var snapshot = aSnapshot as MediaEndpointSnapshotMock;
 
-            return snapshot.Read(aIndex, aCount);
+            if (snapshot == null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            var fragment = new WatchableFragment<IMediaDatum>(aIndex, snapshot.Read(aIndex, aCount));
+
+            iNetwork.Schedule(() =>
+            {
+                aCallback(fragment);
+            });
         }
 
         // IDispose
@@ -540,11 +611,9 @@ namespace OpenHome.Av
             iAlphaMap = null;
         }
 
-        public Task<IEnumerable<IMediaDatum>> Read(uint aIndex, uint aCount)
+        public IEnumerable<IMediaDatum> Read(uint aIndex, uint aCount)
         {
-            var tcs = new TaskCompletionSource<IEnumerable<IMediaDatum>>();
-            tcs.SetResult(iData.Skip((int)aIndex).Take((int)aCount));
-            return (tcs.Task);
+            return (iData.Skip((int)aIndex).Take((int)aCount));
         }
 
         // IMediaEndpointClientSnapshot

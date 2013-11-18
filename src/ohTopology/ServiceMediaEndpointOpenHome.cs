@@ -47,9 +47,9 @@ namespace OpenHome.Av
             return (new ProxyMediaEndpoint(this, aDevice));
         }
 
-        public override Task<IMediaEndpointSession> CreateSession()
+        public override void CreateSession(Action<IMediaEndpointSession> aCallback)
         {
-            return (iSupervisor.CreateSession());
+            iSupervisor.CreateSession(aCallback);
         }
 
         internal string CreateUri(string aFormat, params object[] aArguments)
@@ -63,10 +63,8 @@ namespace OpenHome.Av
             return (iUri + "/res" + aValue);
         }
 
-        private Task<T> Fetch<T>(CancellationToken aCancellationToken, string aUri, Func<string, T> aJsonParser)
+        private void Fetch(CancellationToken aCancellationToken, string aUri, Action<string> aJsonParser)
         {
-            var tcs = new TaskCompletionSource<T>();
-
             //Console.WriteLine("REQUEST   : {0}", aUri);
 
             var client = new HttpClient(iNetwork);
@@ -79,29 +77,35 @@ namespace OpenHome.Av
 
                     try
                     {
-                        tcs.SetResult(aJsonParser(value));
-                        return;
+                        aJsonParser(value);
                     }
                     catch
                     {
                     }
                 }
-
-                tcs.SetCanceled();
             });
-
-            return (tcs.Task);
         }
 
-        private Task<IMediaEndpointClientSnapshot> GetSnapshot(CancellationToken aCancellationToken, string aFormat, params object[] aArguments)
+        private void GetSnapshot(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aFormat, params object[] aArguments)
         {
-            return (Fetch<IMediaEndpointClientSnapshot>(aCancellationToken, CreateUri(aFormat, aArguments), (value) =>
+            Fetch(aCancellationToken, CreateUri(aFormat, aArguments), (value) =>
             {
-                var json = JsonParser.Parse(value) as JsonObject;
-                var total = GetTotal(json["Total"]);
-                var alpha = GetAlpha(json["Alpha"]);
-                return (new MediaEndpointSnapshotOpenHome(total, alpha));
-            }));
+                Task.Factory.StartNew(() =>
+                {
+                    var json = JsonParser.Parse(value) as JsonObject;
+                    var total = GetTotal(json["Total"]);
+                    var alpha = GetAlpha(json["Alpha"]);
+                    var snapshot = new MediaEndpointSnapshotOpenHome(total, alpha);
+
+                    iNetwork.Schedule(() =>
+                    {
+                        if (!aCancellationToken.IsCancellationRequested)
+                        {
+                            aCallback(snapshot);
+                        }
+                    });
+                });
+            });
         }
 
         private uint GetTotal(JsonValue aValue)
@@ -249,68 +253,91 @@ namespace OpenHome.Av
 
         // IMediaEndpointClient
 
-        public Task<string> Create(CancellationToken aCancellationToken)
+        public void Create(CancellationToken aCancellationToken, Action<string> aCallback)
         {
-            return (Fetch<string>(aCancellationToken, CreateUri("create"), (value) =>
+            Fetch(aCancellationToken, CreateUri("create"), (value) =>
             {
-                var json = JsonParser.Parse(value) as JsonString;
-
-                var session = json.Value;
-
-                iSessionHandler("me." + iId + "." + session, (id, seq) =>
+                Task.Factory.StartNew(() =>
                 {
-                    iSupervisor.Refresh(session);
+                    var json = JsonParser.Parse(value) as JsonString;
+
+                    var session = json.Value;
+
+                    iNetwork.Schedule(() =>
+                    {
+                        if (!aCancellationToken.IsCancellationRequested)
+                        {
+                            iSessionHandler("me." + iId + "." + session, (id, seq) =>
+                            {
+                                iSupervisor.Refresh(session);
+                            });
+
+                            aCallback(session);
+                        }
+                    });
                 });
-
-                return (session);
-            }));
+            });
         }
 
-        public Task<string> Destroy(CancellationToken aCancellationToken, string aId)
+        public void Destroy(CancellationToken aCancellationToken, Action<string> aCallback, string aId)
         {
-            return (Fetch<string>(aCancellationToken, CreateUri("destroy?session={0}", aId), (value) =>
+            Fetch(aCancellationToken, CreateUri("destroy?session={0}", aId), (value) =>
             {
-                return (aId);
-            }));
+                aCallback(aId);
+            });
         }
 
-        public Task<IMediaEndpointClientSnapshot> Browse(CancellationToken aCancellationToken, string aSession, IMediaDatum aDatum)
+        public void Browse(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aSession, IMediaDatum aDatum)
         {
             if (aDatum == null)
             {
-                return (GetSnapshot(aCancellationToken, "browse?session={0}&id={1}", aSession, "0"));
+                GetSnapshot(aCancellationToken, aCallback, "browse?session={0}&id={1}", aSession, "0");
             }
-
-            return (GetSnapshot(aCancellationToken, "browse?session={0}&id={1}", aSession, aDatum.Id));
-        }
-
-        public Task<IMediaEndpointClientSnapshot> List(CancellationToken aCancellationToken, string aSession, ITag aTag)
-        {
-            return (GetSnapshot(aCancellationToken, "list?session={0}&tag={1}", aSession, aTag.Id));
-        }
-
-        public Task<IMediaEndpointClientSnapshot> Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
-        {
-            return (GetSnapshot(aCancellationToken, "link?session={0}&tag={1}&val={2}", aSession, aTag.Id, Encode(aValue)));
-        }
-
-        public Task<IMediaEndpointClientSnapshot> Match(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
-        {
-            return (GetSnapshot(aCancellationToken, "match?session={0}&tag={1}&val={2}", aSession, aTag.Id, Encode(aValue)));
-        }
-
-        public Task<IMediaEndpointClientSnapshot> Search(CancellationToken aCancellationToken, string aSession, string aValue)
-        {
-            return (GetSnapshot(aCancellationToken, "search?session={0}&val={1}", aSession, Encode(aValue)));
-        }
-
-        public Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
-        {
-            return (Fetch<IEnumerable<IMediaDatum>>(aCancellationToken, CreateUri("read?session={0}&index={1}&count={2}", aSession, aIndex, aCount), (value) =>
+            else
             {
-                var json = JsonParser.Parse(value);
-                return (GetData(json));
-            }));
+                GetSnapshot(aCancellationToken, aCallback, "browse?session={0}&id={1}", aSession, aDatum.Id);
+            }
+        }
+
+        public void List(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aSession, ITag aTag)
+        {
+            GetSnapshot(aCancellationToken, aCallback, "list?session={0}&tag={1}", aSession, aTag.Id);
+        }
+
+        public void Link(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aSession, ITag aTag, string aValue)
+        {
+            GetSnapshot(aCancellationToken, aCallback, "link?session={0}&tag={1}&val={2}", aSession, aTag.Id, Encode(aValue));
+        }
+
+        public void Match(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aSession, ITag aTag, string aValue)
+        {
+            GetSnapshot(aCancellationToken, aCallback, "match?session={0}&tag={1}&val={2}", aSession, aTag.Id, Encode(aValue));
+        }
+
+        public void Search(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aSession, string aValue)
+        {
+            GetSnapshot(aCancellationToken, aCallback, "search?session={0}&val={1}", aSession, Encode(aValue));
+        }
+
+        public void Read(CancellationToken aCancellationToken, Action<IWatchableFragment<IMediaDatum>> aCallback, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
+        {
+            Fetch(aCancellationToken, CreateUri("read?session={0}&index={1}&count={2}", aSession, aIndex, aCount), (value) =>
+            {
+                Task.Factory.StartNew(() =>
+                {
+                    var json = JsonParser.Parse(value);
+
+                    var fragment = new WatchableFragment<IMediaDatum>(aIndex, GetData(json));
+
+                    iNetwork.Schedule(() =>
+                    {
+                        if (!aCancellationToken.IsCancellationRequested)
+                        {
+                            aCallback(fragment);
+                        }
+                    });
+                });
+            });
         }
 
         // IDispose
