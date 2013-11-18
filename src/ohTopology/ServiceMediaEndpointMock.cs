@@ -394,8 +394,6 @@ namespace OpenHome.Av
 
         public void Browse(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aSession, IMediaDatum aDatum)
         {
-            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
-
             if (aDatum == null)
             {
                 iNetwork.Schedule(() =>
