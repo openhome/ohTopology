@@ -128,8 +128,6 @@ namespace TestMediaEndpoint
 
             var supervisor = new MediaEndpointSupervisor(client);
 
-            var random = new Random();
-
             client.Execute(() =>
             {
                 for (int i = 0; i < 100; i++)
@@ -137,8 +135,6 @@ namespace TestMediaEndpoint
                     supervisor.CreateSession((session) => { });
                 }
             });
-
-            var remaining = new List<Task<IMediaEndpointSession>>();
 
             Thread.Sleep(aMilliseconds);
 
