@@ -60,7 +60,7 @@ namespace OpenHome.Av
 
             //iNetwork.Schedule(() =>
             //{
-                iSources.AddWatcher(this);
+            iSources.AddWatcher(this);
             //});
             iRoom.Join(SetInactive);
         }
@@ -146,7 +146,7 @@ namespace OpenHome.Av
         protected abstract void EvaluateEnabledOpen(IEnumerable<ITopology4Source> aValue);
         protected abstract void EvaluateEnabledUpdate(IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious);
         protected virtual void EvaluateEnabledClose(IEnumerable<ITopology4Source> aValue) { }
-        
+
         protected void SetEnabled(bool aValue)
         {
             iEnabled.Update(aValue);
@@ -1060,99 +1060,52 @@ namespace OpenHome.Av
 
         private bool IsConfigured(ITopology4Source aSource)
         {
-            if (aSource.Name.StartsWith("HDMI") || aSource.Name.StartsWith("Hdmi"))
-            {
-                try
-                {
-                    if (aSource.Name.Length == 4)
-                    {
-                        return false;
-                    }
-                    uint.Parse(aSource.Name.Substring(4));
-                    return false;
-                }
-                catch (FormatException)
-                {
-                    return true;
-                }
-            }
-            if (aSource.Name.StartsWith("Analog"))
-            {
-                try
-                {
-                    if (aSource.Name.Length == 6)
-                    {
-                        return false;
-                    }
-                    uint.Parse(aSource.Name.Substring(6));
-                    return false;
-                }
-                catch (FormatException)
-                {
-                    if (aSource.Name == "Analog Knekt")
-                    {
-                        return false;
-                    }
-                    return true;
-                }
-            }
-            if (aSource.Name.StartsWith("SPDIF") || aSource.Name.StartsWith("Spdif"))
-            {
-                try
-                {
-                    if (aSource.Name.Length == 5)
-                    {
-                        return false;
-                    }
-                    uint.Parse(aSource.Name.Substring(5));
-                    return false;
-                }
-                catch (FormatException)
-                {
-                    return true;
-                }
-            }
-            if (aSource.Name.StartsWith("TOSLINK") || aSource.Name.StartsWith("Toslink"))
-            {
-                try
-                {
-                    if (aSource.Name.Length == 7)
-                    {
-                        return false;
-                    }
-                    uint.Parse(aSource.Name.Substring(7));
-                    return false;
-                }
-                catch (FormatException)
-                {
-                    return true;
-                }
-            }
-            if (aSource.Name.StartsWith("Balanced"))
-            {
-                try
-                {
-                    if (aSource.Name.Length == 8)
-                    {
-                        return false;
-                    }
-                    uint.Parse(aSource.Name.Substring(8));
-                    return false;
-                }
-                catch (FormatException)
-                {
-                    return true;
-                }
-            }
-            if (aSource.Name == "Phono")
+            string name = aSource.Name.ToUpperInvariant();
+            if (name == "PHONO" || name == "FRONT AUX" || name == "ANALOG AUX" || name == "ANALOG KNEKT")
             {
                 return false;
             }
-            if (aSource.Name == "Front Aux" || aSource.Name == "Analog Aux")
+            uint result;
+            if (name.StartsWith("HDMI"))
             {
-                return false;
+                if (name.Length == 4)
+                {
+                    return false;
+                }
+                return !(uint.TryParse(name.Substring(4), out result));
             }
-
+            if (name.StartsWith("ANALOG"))
+            {
+                if (name.Length == 6)
+                {
+                    return false;
+                }
+                return !(uint.TryParse(name.Substring(6), out result));
+            }
+            if (name.StartsWith("SPDIF"))
+            {
+                if (name.Length == 5)
+                {
+                    return false;
+                }
+                return !(uint.TryParse(name.Substring(5), out result));
+            }
+            if (name.StartsWith("TOSLINK"))
+            {
+                if (name.Length == 7)
+                {
+                    return false;
+                }
+                return !(uint.TryParse(name.Substring(7), out result));
+            }
+            if (name.StartsWith("BALANCED"))
+            {
+                if (name.Length == 8)
+                {
+                    return false;
+                }
+                return !(uint.TryParse(name.Substring(8), out result));
+            }
             return true;
         }
     }
@@ -1257,7 +1210,7 @@ namespace OpenHome.Av
             {
                 if (s.Type == "Disc")
                 {
-                    if(iCreateProxy != null)
+                    if (iCreateProxy != null)
                     {
                         iCreateProxy.Dispose();
                         iCreateProxy = null;
