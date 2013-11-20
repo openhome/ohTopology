@@ -162,7 +162,8 @@ namespace OpenHome.Av
                     taskSource.SetException(e);
                 }
             });
-            return taskSource.Task.ContinueWith((t) => { });
+            taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+            return taskSource.Task;
         }
 
         public override Task Play(ISenderMetadata aMetadata)
@@ -191,7 +192,8 @@ namespace OpenHome.Av
                     taskSource.SetException(e);
                 }
             });
-            return taskSource.Task.ContinueWith((t) => { });
+            taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+            return taskSource.Task;
         }
 
         public override Task Stop()
@@ -209,7 +211,8 @@ namespace OpenHome.Av
                     taskSource.SetException(e);
                 }
             });
-            return taskSource.Task.ContinueWith((t) => { });
+            taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+            return taskSource.Task;
         }
 
         private void HandleMetadataChanged()

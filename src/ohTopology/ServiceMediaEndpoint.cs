@@ -45,7 +45,7 @@ namespace OpenHome.Av
 
     public interface IProxyMediaEndpoint : IProxyMediaEndpointV1, IProxy
     {
-        Task<IMediaEndpointSession> CreateSession();
+        void CreateSession(Action<IMediaEndpointSession> aCallback);
     }
 
     internal class ProxyMediaEndpointV1 : Proxy<ServiceMediaEndpoint>, IProxyMediaEndpoint
@@ -137,9 +137,9 @@ namespace OpenHome.Av
             get { return (iService.Attributes); }
         }
 
-        public Task<IMediaEndpointSession> CreateSession()
+        public void CreateSession(Action<IMediaEndpointSession> aCallback)
         {
-            return (iService.CreateSession());
+            iService.CreateSession(aCallback);
         }
     }
 
@@ -232,9 +232,9 @@ namespace OpenHome.Av
             get { return (iService.Attributes); }
         }
 
-        public Task<IMediaEndpointSession> CreateSession()
+        public void CreateSession(Action<IMediaEndpointSession> aCallback)
         {
-            return (iService.CreateSession());
+            iService.CreateSession(aCallback);
         }
     }
 
@@ -363,7 +363,7 @@ namespace OpenHome.Av
             get { return (iAttributes); }
         }
 
-        public abstract Task<IMediaEndpointSession> CreateSession();
+        public abstract void CreateSession(Action<IMediaEndpointSession> aCallback);
     }
 
     public static class ServiceMediaEndpointExtensions

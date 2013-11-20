@@ -21,7 +21,6 @@ using OpenHome.Http.Owin;
 using OpenHome.Net.ControlPoint;
 using OpenHome.Net.ControlPoint.Proxies;
 
-
 namespace OpenHome.Av
 {
     internal class DeviceMediaEndpointOpenHome : InjectorDevice

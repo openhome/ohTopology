@@ -44,9 +44,9 @@ namespace OpenHome.Av
             return (new ProxyMediaEndpoint(this, aDevice));
         }
 
-        public override Task<IMediaEndpointSession> CreateSession()
+        public override void CreateSession(Action<IMediaEndpointSession> aCallback)
         {
-            return (iSupervisor.CreateSession());
+            iSupervisor.CreateSession(aCallback);
         }
 
         internal void Refresh()
@@ -208,24 +208,24 @@ namespace OpenHome.Av
 
         // IMediaEndpointClient
 
-        public Task<string> Create(CancellationToken aCancellationToken)
+        public void Create(CancellationToken aCancellationToken, Action<string> aCallback)
         {
-            var tcs = new TaskCompletionSource<string>();
-            tcs.SetResult(Guid.NewGuid().ToString());
-            return (tcs.Task);
+            iNetwork.Schedule(() =>
+            {
+                aCallback(Guid.NewGuid().ToString());
+            });
         }
 
-        public Task<string> Destroy(CancellationToken aCancellationToken, string aId)
+        public void Destroy(CancellationToken aCancellationToken, Action<string> aCallback, string aId)
         {
-            var tcs = new TaskCompletionSource<string>();
-            tcs.SetResult(aId);
-            return (tcs.Task);
+            iNetwork.Schedule(() =>
+            {
+                aCallback(aId);
+            });
         }
 
-        public Task<IMediaEndpointClientSnapshot> Browse(CancellationToken aCancellationToken, string aSession, IMediaDatum aDatum)
+        public void Browse(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aSession, IMediaDatum aDatum)
         {
-            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
-
             string id = "0";
 
             if (aDatum != null)
@@ -244,55 +244,44 @@ namespace OpenHome.Av
                 {
                     iProxy.EndBrowse(r, out result, out returned, out total, out update);
 
-                    if (aCancellationToken.IsCancellationRequested)
-                    {
-                        tcs.SetCanceled();
-                        return;
-                    }
+                    var snapshot = new MediaEndpointSnapshotContentDirectory(id, total);
 
-                    tcs.SetResult(new MediaEndpointSnapshotContentDirectory(id, total));
+                    iNetwork.Schedule(() =>
+                    {
+                        if (!aCancellationToken.IsCancellationRequested)
+                        {
+                            aCallback(snapshot);
+                        }
+                    });
                 }
                 catch
                 {
-                    tcs.SetCanceled();
                 }
             });
-
-            return (tcs.Task);
         }
 
-        public Task<IMediaEndpointClientSnapshot> List(CancellationToken aCancellationToken, string aSession, ITag aTag)
+        public void List(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aSession, ITag aTag)
         {
-            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
-            tcs.SetException(new InvalidOperationException());
-            return (tcs.Task);
+            throw new InvalidOperationException();
         }
 
-        public Task<IMediaEndpointClientSnapshot> Link(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
+        public void Link(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aSession, ITag aTag, string aValue)
         {
-            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
-            tcs.SetException(new InvalidOperationException());
-            return (tcs.Task);
+            throw new InvalidOperationException();
         }
 
-        public Task<IMediaEndpointClientSnapshot> Match(CancellationToken aCancellationToken, string aSession, ITag aTag, string aValue)
+        public void Match(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aSession, ITag aTag, string aValue)
         {
-            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
-            tcs.SetException(new InvalidOperationException());
-            return (tcs.Task);
+            throw new InvalidOperationException();
         }
 
-        public Task<IMediaEndpointClientSnapshot> Search(CancellationToken aCancellationToken, string aSession, string aValue)
+        public void Search(CancellationToken aCancellationToken, Action<IMediaEndpointClientSnapshot> aCallback, string aSession, string aValue)
         {
-            var tcs = new TaskCompletionSource<IMediaEndpointClientSnapshot>();
-            tcs.SetException(new InvalidOperationException());
-            return (tcs.Task);
+            throw new InvalidOperationException();
         }
 
-        public Task<IEnumerable<IMediaDatum>> Read(CancellationToken aCancellationToken, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
+        public void Read(CancellationToken aCancellationToken, Action<IWatchableFragment<IMediaDatum>> aCallback, string aSession, IMediaEndpointClientSnapshot aSnapshot, uint aIndex, uint aCount)
         {
-            var tcs = new TaskCompletionSource<IEnumerable<IMediaDatum>>();
-
             var snapshot = aSnapshot as MediaEndpointSnapshotContentDirectory;
 
             iProxy.BeginBrowse(snapshot.Id, "BrowseDirectChildren", "", aIndex, aCount, "", (r) =>
@@ -306,21 +295,20 @@ namespace OpenHome.Av
                 {
                     iProxy.EndBrowse(r, out result, out returned, out total, out update);
 
-                    if (aCancellationToken.IsCancellationRequested)
-                    {
-                        tcs.SetCanceled();
-                        return;
-                    }
+                    var fragment = new WatchableFragment<IMediaDatum>(aIndex, Parse(result));
 
-                    tcs.SetResult(Parse(result));
+                    iNetwork.Schedule(() =>
+                    {
+                        if (!aCancellationToken.IsCancellationRequested)
+                        {
+                            aCallback(fragment);
+                        }
+                    });
                 }
                 catch
                 {
-                    tcs.SetCanceled();
                 }
             });
-
-            return (tcs.Task);
         }
 
         // IDispose
