@@ -39,14 +39,14 @@ namespace OpenHome.Av
         protected ServiceVolume(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
             : base(aNetwork, aDevice, aLog)
         {
-            iBalance = new Watchable<int>(Network, "Balance", 0);
-            iFade = new Watchable<int>(Network, "Fade", 0);
-            iMute = new Watchable<bool>(Network, "Mute", false);
-            iValue = new Watchable<uint>(Network, "Value", 0);
-            iVolumeLimit = new Watchable<uint>(Network, "VolumeLimit", 0);
-            iVolumeMilliDbPerStep = new Watchable<uint>(Network, "VolumeMilliDbPerStep", 0);
-            iVolumeSteps = new Watchable<uint>(Network, "VolumeSteps", 0);
-            iVolumeUnity = new Watchable<uint>(Network, "VolumeUnity", 0);
+            iBalance = new Watchable<int>(aNetwork, "Balance", 0);
+            iFade = new Watchable<int>(aNetwork, "Fade", 0);
+            iMute = new Watchable<bool>(aNetwork, "Mute", false);
+            iValue = new Watchable<uint>(aNetwork, "Value", 0);
+            iVolumeLimit = new Watchable<uint>(aNetwork, "VolumeLimit", 0);
+            iVolumeMilliDbPerStep = new Watchable<uint>(aNetwork, "VolumeMilliDbPerStep", 0);
+            iVolumeSteps = new Watchable<uint>(aNetwork, "VolumeSteps", 0);
+            iVolumeUnity = new Watchable<uint>(aNetwork, "VolumeUnity", 0);
         }
 
         public override void Dispose()
@@ -372,7 +372,7 @@ namespace OpenHome.Av
         private void HandleVolumeUnityChanged()
         {
             uint unity = iService.PropertyVolumeUnity();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -384,7 +384,7 @@ namespace OpenHome.Av
         private void HandleVolumeStepsChanged()
         {
             uint steps = iService.PropertyVolumeSteps();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -396,7 +396,7 @@ namespace OpenHome.Av
         private void HandleVolumeMilliDbPerStepChanged()
         {
             uint step = iService.PropertyVolumeMilliDbPerStep();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -408,7 +408,7 @@ namespace OpenHome.Av
         private void HandleVolumeLimitChanged()
         {
             uint limit = iService.PropertyVolumeLimit();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -420,7 +420,7 @@ namespace OpenHome.Av
         private void HandleVolumeChanged()
         {
             uint volume = iService.PropertyVolume();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -433,7 +433,7 @@ namespace OpenHome.Av
         private void HandleMuteChanged()
         {
             bool mute = iService.PropertyMute();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -445,7 +445,7 @@ namespace OpenHome.Av
         private void HandleFadeChanged()
         {
             int fade = iService.PropertyFade();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -457,7 +457,7 @@ namespace OpenHome.Av
         private void HandleBalanceChanged()
         {
             int balance = iService.PropertyBalance();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -505,7 +505,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iBalance.Update(aValue);
                 });
@@ -517,7 +517,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iFade.Update(aValue);
                 });
@@ -529,7 +529,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iMute.Update(aValue);
                 });
@@ -550,7 +550,7 @@ namespace OpenHome.Av
                 if (value != iCurrentVolume)
                 {
                     iCurrentVolume = value;
-                    Network.Schedule(() =>
+                    iNetwork.Schedule(() =>
                     {
                         iValue.Update(aValue);
                     });
@@ -566,7 +566,7 @@ namespace OpenHome.Av
                 if (iCurrentVolume > 0)
                 {
                     --iCurrentVolume;
-                    Network.Schedule(() =>
+                    iNetwork.Schedule(() =>
                     {
                         iValue.Update(iCurrentVolume);
                     });
@@ -582,7 +582,7 @@ namespace OpenHome.Av
                 if (iCurrentVolume < iCurrentVolumeLimit)
                 {
                     ++iCurrentVolume;
-                    Network.Schedule(() =>
+                    iNetwork.Schedule(() =>
                     {
                         iValue.Update(iCurrentVolume);
                     });

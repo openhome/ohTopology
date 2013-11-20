@@ -94,17 +94,6 @@ namespace OpenHome.Av
             });
         }
 
-        public INetwork Network
-        {
-            get
-            {
-                using (iDisposeHandler.Lock())
-                {
-                    return (iNetwork);
-                }
-            }
-        }
-
         public IInjectorDevice Device
         {
             get

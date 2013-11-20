@@ -22,8 +22,8 @@ namespace OpenHome.Av
         protected ServiceTime(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
             : base(aNetwork, aDevice, aLog)
         {
-            iDuration = new Watchable<uint>(Network, "Duration", 0);
-            iSeconds = new Watchable<uint>(Network, "Seconds", 0);
+            iDuration = new Watchable<uint>(aNetwork, "Duration", 0);
+            iSeconds = new Watchable<uint>(aNetwork, "Seconds", 0);
         }
 
         public override void Dispose()
@@ -128,7 +128,7 @@ namespace OpenHome.Av
         private void HandleDurationChanged()
         {
             uint duration = iService.PropertyDuration();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -140,7 +140,7 @@ namespace OpenHome.Av
         private void HandleSecondsChanged()
         {
             uint seconds = iService.PropertySeconds();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {

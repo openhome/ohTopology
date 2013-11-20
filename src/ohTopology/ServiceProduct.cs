@@ -46,12 +46,12 @@ namespace OpenHome.Av
         protected ServiceProduct(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
             : base(aNetwork, aDevice, aLog)
         {
-            iRoom = new Watchable<string>(Network, "Room", string.Empty);
-            iName = new Watchable<string>(Network, "Name", string.Empty);
-            iSourceIndex = new Watchable<uint>(Network, "SourceIndex", 0);
-            iSourceXml = new Watchable<string>(Network, "SourceXml", string.Empty);
-            iStandby = new Watchable<bool>(Network, "Standby", false);
-            iRegistration = new Watchable<string>(Network, "Registration", string.Empty);
+            iRoom = new Watchable<string>(aNetwork, "Room", string.Empty);
+            iName = new Watchable<string>(aNetwork, "Name", string.Empty);
+            iSourceIndex = new Watchable<uint>(aNetwork, "SourceIndex", 0);
+            iSourceXml = new Watchable<string>(aNetwork, "SourceXml", string.Empty);
+            iStandby = new Watchable<bool>(aNetwork, "Standby", false);
+            iRegistration = new Watchable<string>(aNetwork, "Registration", string.Empty);
         }
 
         public override void Dispose()
@@ -404,7 +404,7 @@ namespace OpenHome.Av
         private void HandleInitialEventConfiguration()
         {
             string propertyXml = iServiceConfiguration.PropertyParameterXml();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -543,7 +543,7 @@ namespace OpenHome.Av
         private void HandleNameChanged()
         {
             string name = iService.PropertyProductName();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -901,7 +901,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iSourceIndex.Update(aValue);
                 });
@@ -918,7 +918,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iStandby.Update(aValue);
                 });
@@ -930,7 +930,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iRegistration.Update(aValue);
                 });

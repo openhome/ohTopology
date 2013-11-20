@@ -285,7 +285,7 @@ namespace OpenHome.Av
 
             iSubscribedSource = new TaskCompletionSource<bool>();
 
-            iCacheSession = Network.IdCache.CreateSession(string.Format(ServiceRadio.kCacheIdFormat, Device.Udn), ReadList);
+            iCacheSession = iNetwork.IdCache.CreateSession(string.Format(ServiceRadio.kCacheIdFormat, Device.Udn), ReadList);
 
             iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new RadioSnapshot(iNetwork, iCacheSession, new List<uint>(), this));
 
@@ -509,7 +509,7 @@ namespace OpenHome.Av
         private void HandleIdChanged()
         {
             uint id = iService.PropertyId();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -521,12 +521,12 @@ namespace OpenHome.Av
         private void HandleIdArrayChanged()
         {
             IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
                     iCacheSession.SetValid(idArray.Where(v => v != 0).ToList());
-                    iMediaSupervisor.Update(new RadioSnapshot(Network, iCacheSession, idArray, this));
+                    iMediaSupervisor.Update(new RadioSnapshot(iNetwork, iCacheSession, idArray, this));
                 });
             });
         }
@@ -535,7 +535,7 @@ namespace OpenHome.Av
         {
             IMediaMetadata metadata = iNetwork.TagManager.FromDidlLite(iService.PropertyMetadata());
             string uri = iService.PropertyUri();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -551,7 +551,7 @@ namespace OpenHome.Av
         private void HandleTransportStateChanged()
         {
             string transportState = iService.PropertyTransportState();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -688,7 +688,7 @@ namespace OpenHome.Av
 
         protected override Task OnSubscribe()
         {
-            iCacheSession = Network.IdCache.CreateSession(string.Format("Radio({0})", Device.Udn), ReadList);
+            iCacheSession = iNetwork.IdCache.CreateSession(string.Format("Radio({0})", Device.Udn), ReadList);
             iCacheSession.SetValid(iIdArray.Where(v => v != 0).ToList());
 
             iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new RadioSnapshot(iNetwork, iCacheSession, iIdArray, this));
@@ -717,7 +717,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iTransportState.Update("Playing");
                 });
@@ -729,7 +729,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iTransportState.Update("Paused");
                 });
@@ -741,7 +741,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iTransportState.Update("Stopped");
                 });
@@ -769,7 +769,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iId.Update(aId);
                 });
@@ -781,7 +781,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iMetadata.Update(new InfoMetadata(aMetadata, aUri));
                 });
@@ -799,7 +799,7 @@ namespace OpenHome.Av
                     foreach (uint id in aIdList)
                     {
                         IMediaMetadata metadata = iPresets[iIdArray.IndexOf(id)];
-                        entries.Add(new IdCacheEntry(metadata, metadata[Network.TagManager.Audio.Uri].Value)); 
+                        entries.Add(new IdCacheEntry(metadata, metadata[iNetwork.TagManager.Audio.Uri].Value)); 
                     }
                 }
                 return entries;
@@ -864,7 +864,7 @@ namespace OpenHome.Av
 
                 document.AppendChild(didl);*/
 
-                IInfoMetadata metadata = new InfoMetadata(Network.TagManager.FromDidlLite(value.ElementAt(0)), value.ElementAt(1));
+                IInfoMetadata metadata = new InfoMetadata(iNetwork.TagManager.FromDidlLite(value.ElementAt(0)), value.ElementAt(1));
                 iMetadata.Update(metadata);
             }
             else if (command == "transportstate")

@@ -170,11 +170,11 @@ namespace OpenHome.Av
         protected ServicePlaylist(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
             : base(aNetwork, aDevice, aLog)
         {
-            iId = new Watchable<uint>(Network, "Id", 0);
-            iInfoNext = new Watchable<IInfoMetadata>(Network, "InfoNext", InfoMetadata.Empty);
-            iTransportState = new Watchable<string>(Network, "TransportState", string.Empty);
-            iRepeat = new Watchable<bool>(Network, "Repeat", false);
-            iShuffle = new Watchable<bool>(Network, "Shuffle", true);
+            iId = new Watchable<uint>(aNetwork, "Id", 0);
+            iInfoNext = new Watchable<IInfoMetadata>(aNetwork, "InfoNext", InfoMetadata.Empty);
+            iTransportState = new Watchable<string>(aNetwork, "TransportState", string.Empty);
+            iRepeat = new Watchable<bool>(aNetwork, "Repeat", false);
+            iShuffle = new Watchable<bool>(aNetwork, "Shuffle", true);
         }
 
         public override void Dispose()
@@ -331,7 +331,7 @@ namespace OpenHome.Av
 
             iSubscribedSource = new TaskCompletionSource<bool>();
 
-            iCacheSession = Network.IdCache.CreateSession(string.Format(ServicePlaylist.kCacheIdFormat, Device.Udn), ReadList);
+            iCacheSession = iNetwork.IdCache.CreateSession(string.Format(ServicePlaylist.kCacheIdFormat, Device.Udn), ReadList);
 
             iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new PlaylistSnapshot(iNetwork, iCacheSession, new List<uint>(), this));
 
@@ -692,7 +692,7 @@ namespace OpenHome.Av
                     XmlNodeList list = document.SelectNodes("/TrackList/Entry");
                     foreach (XmlNode n in list)
                     {
-                        IMediaMetadata metadata = Network.TagManager.FromDidlLite(n["Metadata"].InnerText);
+                        IMediaMetadata metadata = iNetwork.TagManager.FromDidlLite(n["Metadata"].InnerText);
                         string uri = n["Uri"].InnerText;
                         entries.Add(new IdCacheEntry(metadata, uri));
                     }
@@ -712,7 +712,7 @@ namespace OpenHome.Av
         {
             IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
             uint id = iService.PropertyId();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -725,12 +725,12 @@ namespace OpenHome.Av
         private void HandleIdArrayChanged()
         {
             IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
                     iCacheSession.SetValid(idArray);
-                    iMediaSupervisor.Update(new PlaylistSnapshot(Network, iCacheSession, idArray, this));
+                    iMediaSupervisor.Update(new PlaylistSnapshot(iNetwork, iCacheSession, idArray, this));
                     EvaluateInfoNext(iId.Value, idArray);
                 });
             });
@@ -743,7 +743,7 @@ namespace OpenHome.Av
             {
                 iCacheSession.Entries(new uint[] { aIdArray.ElementAt(index + 1) }).ContinueWith((t) =>
                 {
-                    Network.Schedule(() =>
+                    iNetwork.Schedule(() =>
                     {
                         iDisposeHandler.WhenNotDisposed(() =>
                         {
@@ -762,7 +762,7 @@ namespace OpenHome.Av
         private void HandleTransportStateChanged()
         {
             string transportState = iService.PropertyTransportState();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -774,7 +774,7 @@ namespace OpenHome.Av
         private void HandleRepeatChanged()
         {
             bool repeat = iService.PropertyRepeat();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -786,7 +786,7 @@ namespace OpenHome.Av
         private void HandleShuffleChanged()
         {
             bool shuffle = iService.PropertyShuffle();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -919,7 +919,7 @@ namespace OpenHome.Av
             foreach (IMediaMetadata m in aTracks)
             {
                 iIdArray.Add(iIdFactory);
-                iTracks.Add(new TrackMock(m[Network.TagManager.Audio.Uri].Value, m));
+                iTracks.Add(new TrackMock(m[iNetwork.TagManager.Audio.Uri].Value, m));
                 ++iIdFactory;
             }
 
@@ -948,7 +948,7 @@ namespace OpenHome.Av
 
         protected override Task OnSubscribe()
         {
-            iCacheSession = Network.IdCache.CreateSession(string.Format("Playlist({0})", Device.Udn), ReadList);
+            iCacheSession = iNetwork.IdCache.CreateSession(string.Format("Playlist({0})", Device.Udn), ReadList);
             iCacheSession.SetValid(iIdArray);
 
             iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new PlaylistSnapshot(iNetwork, iCacheSession, iIdArray, this));
@@ -977,7 +977,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iTransportState.Update("Playing");
                 });
@@ -989,7 +989,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iTransportState.Update("Paused");
                 });
@@ -1001,7 +1001,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iTransportState.Update("Stopped");
                 });
@@ -1013,7 +1013,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     int index = iIdArray.IndexOf(iId.Value);
                     if (index > 0)
@@ -1029,7 +1029,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     int index = iIdArray.IndexOf(iId.Value);
                     if (index < iIdArray.Count - 1)
@@ -1045,7 +1045,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iId.Update(aValue);
                 });
@@ -1057,7 +1057,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                 });
             });
@@ -1068,7 +1068,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                 });
             });
@@ -1080,7 +1080,7 @@ namespace OpenHome.Av
             Task<uint> task = Task<uint>.Factory.StartNew(() =>
             {
                 uint newId = 0;
-                Network.Execute(() =>
+                iNetwork.Execute(() =>
                 {
                     int index = iIdArray.IndexOf(aAfterId);
                     if (index == -1)
@@ -1092,7 +1092,7 @@ namespace OpenHome.Av
                     iTracks.Insert(index + 1, new TrackMock(aUri, aMetadata));
                     ++iIdFactory;
 
-                    iMediaSupervisor = new MediaSupervisor<IMediaPreset>(Network, new PlaylistSnapshot(Network, iCacheSession, iIdArray, this));
+                    iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new PlaylistSnapshot(iNetwork, iCacheSession, iIdArray, this));
                 });
                 return newId;
             });
@@ -1104,7 +1104,7 @@ namespace OpenHome.Av
             Task<uint> task = Task<uint>.Factory.StartNew(() =>
             {
                 uint newId = 0;
-                Network.Execute(() =>
+                iNetwork.Execute(() =>
                 {
                     int index = iIdArray.IndexOf(iId.Value);
                     if (index == -1)
@@ -1116,7 +1116,7 @@ namespace OpenHome.Av
                     iTracks.Insert(index + 1, new TrackMock(aUri, aMetadata));
                     ++iIdFactory;
 
-                    iMediaSupervisor = new MediaSupervisor<IMediaPreset>(Network, new PlaylistSnapshot(Network, iCacheSession, iIdArray, this));
+                    iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new PlaylistSnapshot(iNetwork, iCacheSession, iIdArray, this));
                 });
                 return newId;
             });
@@ -1128,7 +1128,7 @@ namespace OpenHome.Av
             Task<uint> task = Task<uint>.Factory.StartNew(() =>
             {
                 uint newId = 0;
-                Network.Execute(() =>
+                iNetwork.Execute(() =>
                 {
                     int index = iIdArray.Count - 1;
                     if (index == -1)
@@ -1140,7 +1140,7 @@ namespace OpenHome.Av
                     iTracks.Insert(index + 1, new TrackMock(aUri, aMetadata));
                     ++iIdFactory;
 
-                    iMediaSupervisor = new MediaSupervisor<IMediaPreset>(Network, new PlaylistSnapshot(Network, iCacheSession, iIdArray, this));
+                    iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new PlaylistSnapshot(iNetwork, iCacheSession, iIdArray, this));
                 });
                 return newId;
             });
@@ -1152,7 +1152,7 @@ namespace OpenHome.Av
             uint id = (aValue as MediaPresetPlaylist).Id;
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     int index = iIdArray.IndexOf(id);
                     iIdArray.Remove(id);
@@ -1161,7 +1161,7 @@ namespace OpenHome.Av
                         iId.Update(iIdArray.ElementAt(index));
                     }
 
-                    iMediaSupervisor = new MediaSupervisor<IMediaPreset>(Network, new PlaylistSnapshot(Network, iCacheSession, iIdArray, this));
+                    iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new PlaylistSnapshot(iNetwork, iCacheSession, iIdArray, this));
                 });
             });
             return task;
@@ -1171,12 +1171,12 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iIdArray.Clear();
                     iId.Update(0);
 
-                    iMediaSupervisor = new MediaSupervisor<IMediaPreset>(Network, new PlaylistSnapshot(Network, iCacheSession, iIdArray, this));
+                    iMediaSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new PlaylistSnapshot(iNetwork, iCacheSession, iIdArray, this));
                 });
             });
             return task;
@@ -1186,7 +1186,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iRepeat.Update(aValue);
                 });
@@ -1198,7 +1198,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iShuffle.Update(aValue);
                 });

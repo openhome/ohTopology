@@ -182,9 +182,9 @@ namespace OpenHome.Av
         protected ServiceInfo(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
             : base(aNetwork, aDevice, aLog)
         {
-            iDetails = new Watchable<IInfoDetails>(Network, "Details", new InfoDetails());
-            iMetadata = new Watchable<IInfoMetadata>(Network, "Metadata", InfoMetadata.Empty);
-            iMetatext = new Watchable<IInfoMetatext>(Network, "Metatext", new InfoMetatext());
+            iDetails = new Watchable<IInfoDetails>(aNetwork, "Details", new InfoDetails());
+            iMetadata = new Watchable<IInfoMetadata>(aNetwork, "Metadata", InfoMetadata.Empty);
+            iMetatext = new Watchable<IInfoMetatext>(aNetwork, "Metatext", new InfoMetatext());
         }
 
         public override void Dispose()
@@ -307,7 +307,7 @@ namespace OpenHome.Av
             uint duration = iService.PropertyDuration();
             bool lossless = iService.PropertyLossless();
             uint sampleRate = iService.PropertySampleRate();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -328,7 +328,7 @@ namespace OpenHome.Av
         {
             IMediaMetadata metadata = iNetwork.TagManager.FromDidlLite(iService.PropertyMetadata());
             string uri = iService.PropertyUri();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -344,7 +344,7 @@ namespace OpenHome.Av
         private void HandleMetatextChanged()
         {
             IMediaMetadata metadata = iNetwork.TagManager.FromDidlLite(iService.PropertyMetatext());
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -422,7 +422,7 @@ namespace OpenHome.Av
 
                 document.AppendChild(didl);*/
 
-                IInfoMetadata metadata = new InfoMetadata(Network.TagManager.FromDidlLite(value.ElementAt(0)), value.ElementAt(1));
+                IInfoMetadata metadata = new InfoMetadata(iNetwork.TagManager.FromDidlLite(value.ElementAt(0)), value.ElementAt(1));
                 iMetadata.Update(metadata);
             }
             else if (command == "metatext")
@@ -432,7 +432,7 @@ namespace OpenHome.Av
                 {
                     throw new NotSupportedException();
                 }
-                IInfoMetatext metatext = new InfoMetatext(Network.TagManager.FromDidlLite(value.ElementAt(0)));
+                IInfoMetatext metatext = new InfoMetatext(iNetwork.TagManager.FromDidlLite(value.ElementAt(0)));
                 iMetatext.Update(metatext);
             }
             else
