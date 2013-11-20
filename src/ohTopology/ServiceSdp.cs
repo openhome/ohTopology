@@ -355,9 +355,15 @@ namespace OpenHome.Av
                 {
                     taskSource.SetException(e);
                 }
+<<<<<<< HEAD
             });
             taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
             return taskSource.Task;
+=======
+            });
+            taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+            return taskSource.Task;
+>>>>>>> 0b88ea6fb682532cdeea5bc1c238079ba6e0c37f
         }
 
         public override Task Stop()
@@ -374,9 +380,15 @@ namespace OpenHome.Av
                 {
                     taskSource.SetException(e);
                 }
+<<<<<<< HEAD
             });
             taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
             return taskSource.Task;
+=======
+            });
+            taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+            return taskSource.Task;
+>>>>>>> 0b88ea6fb682532cdeea5bc1c238079ba6e0c37f
         }
 
         public override Task Previous()
@@ -393,9 +405,15 @@ namespace OpenHome.Av
                 {
                     taskSource.SetException(e);
                 }
+<<<<<<< HEAD
             });
             taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
             return taskSource.Task;
+=======
+            });
+            taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+            return taskSource.Task;
+>>>>>>> 0b88ea6fb682532cdeea5bc1c238079ba6e0c37f
         }
 
         public override Task Next()
@@ -412,9 +430,15 @@ namespace OpenHome.Av
                 {
                     taskSource.SetException(e);
                 }
+<<<<<<< HEAD
             });
             taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
             return taskSource.Task;
+=======
+            });
+            taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+            return taskSource.Task;
+>>>>>>> 0b88ea6fb682532cdeea5bc1c238079ba6e0c37f
         }
 
         public override Task Eject()
@@ -449,9 +473,15 @@ namespace OpenHome.Av
                         taskSource.SetException(e);
                     }
                 });
+<<<<<<< HEAD
             }
             taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
             return taskSource.Task;
+=======
+            }
+            taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+            return taskSource.Task;
+>>>>>>> 0b88ea6fb682532cdeea5bc1c238079ba6e0c37f
         }
 
         public override Task SeekId(uint aValue)
@@ -479,9 +509,15 @@ namespace OpenHome.Av
                 {
                     taskSource.SetException(e);
                 }
+<<<<<<< HEAD
             });
             taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
             return taskSource.Task;
+=======
+            });
+            taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+            return taskSource.Task;
+>>>>>>> 0b88ea6fb682532cdeea5bc1c238079ba6e0c37f
         }
 
         public override Task SeekSecondAbsolute(uint aValue)
@@ -498,9 +534,15 @@ namespace OpenHome.Av
                 {
                     taskSource.SetException(e);
                 }
+<<<<<<< HEAD
             });
             taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
             return taskSource.Task;
+=======
+            });
+            taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+            return taskSource.Task;
+>>>>>>> 0b88ea6fb682532cdeea5bc1c238079ba6e0c37f
         }
 
         public override Task SeekSecondRelative(int aValue)
@@ -540,9 +582,15 @@ namespace OpenHome.Av
                         taskSource.SetException(e);
                     }
                 });
+<<<<<<< HEAD
             }
             taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
             return taskSource.Task;
+=======
+            }
+            taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+            return taskSource.Task;
+>>>>>>> 0b88ea6fb682532cdeea5bc1c238079ba6e0c37f
         }
 
         public override Task SetShuffle(bool aValue)
@@ -577,9 +625,15 @@ namespace OpenHome.Av
                         taskSource.SetException(e);
                     }
                 });
+<<<<<<< HEAD
             }
             taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
             return taskSource.Task;
+=======
+            }
+            taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+            return taskSource.Task;
+>>>>>>> 0b88ea6fb682532cdeea5bc1c238079ba6e0c37f
         }
 
         private void HandleIdChanged()
