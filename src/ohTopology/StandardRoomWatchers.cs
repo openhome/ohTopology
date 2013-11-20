@@ -845,7 +845,17 @@ namespace OpenHome.Av
             iNetwork = aNetwork;
             iRoom = aRoom;
             iReceiver = aReceiver;
-            iSendersMetadata = aSendersMetadata;
+            List<ISenderMetadata> list = new List<ISenderMetadata>();
+            aSendersMetadata.ToList().ForEach(v =>
+            {
+                string room, name;
+                ParseName(v.Name, out room, out name);
+                if (room != iRoom)
+                {
+                    list.Add(v);
+                }
+            });
+            iSendersMetadata = list;
         }
 
         public uint Total
@@ -887,7 +897,7 @@ namespace OpenHome.Av
                             metadata.Add(iNetwork.TagManager.Audio.Title, fullname);
                             metadata.Add(iNetwork.TagManager.Audio.Artwork, v.ArtworkUri);
                             metadata.Add(iNetwork.TagManager.Audio.Uri, v.Uri);
-                            presets.Add(new MediaPresetSender(iNetwork, index, index, metadata, v, iReceiver));
+                            presets.Add(new MediaPresetSender(iNetwork, index + 1, index, metadata, v, iReceiver));
                             ++index;
                         }
                     });
