@@ -647,12 +647,12 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, IEnumerable<ISenderMetadata> aValue)
         {
-            iSupervisor.Update(new SendersSnapshot(iNetwork, iReceiver, aValue));
+            iSupervisor.Update(new SendersSnapshot(iNetwork, iRoom.Name, iReceiver, aValue));
         }
 
         public void ItemUpdate(string aId, IEnumerable<ISenderMetadata> aValue, IEnumerable<ISenderMetadata> aPrevious)
         {
-            iSupervisor.Update(new SendersSnapshot(iNetwork, iReceiver, aValue));
+            iSupervisor.Update(new SendersSnapshot(iNetwork, iRoom.Name, iReceiver, aValue));
         }
 
         public void ItemClose(string aId, IEnumerable<ISenderMetadata> aValue)
@@ -663,7 +663,7 @@ namespace OpenHome.Av
         {
             if (iSupervisor != null)
             {
-                Console.WriteLine("here");
+                Do.Assert(false);
             }
             foreach (ITopology4Source s in aValue)
             {
@@ -684,7 +684,7 @@ namespace OpenHome.Av
 
         private void CreatedProxy(ITopology4Source aSource, IProxyReceiver aReceiver)
         {
-            iSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new SendersSnapshot(iNetwork, aReceiver, new List<ISenderMetadata>()));
+            iSupervisor = new MediaSupervisor<IMediaPreset>(iNetwork, new SendersSnapshot(iNetwork, iRoom.Name, aReceiver, new List<ISenderMetadata>()));
             iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, aSource, iSupervisor.Snapshot);
             iReceiver = aReceiver;
             iSendersMetadataWatcher.Metadata.AddWatcher(this);
@@ -836,12 +836,14 @@ namespace OpenHome.Av
     class SendersSnapshot : IMediaClientSnapshot<IMediaPreset>
     {
         private readonly IEnumerable<ISenderMetadata> iSendersMetadata;
+        private readonly string iRoom;
         private readonly IProxyReceiver iReceiver;
         private readonly INetwork iNetwork;
 
-        public SendersSnapshot(INetwork aNetwork, IProxyReceiver aReceiver, IEnumerable<ISenderMetadata> aSendersMetadata)
+        public SendersSnapshot(INetwork aNetwork, string aRoom, IProxyReceiver aReceiver, IEnumerable<ISenderMetadata> aSendersMetadata)
         {
             iNetwork = aNetwork;
+            iRoom = aRoom;
             iReceiver = aReceiver;
             iSendersMetadata = aSendersMetadata;
         }
@@ -874,17 +876,20 @@ namespace OpenHome.Av
                     {
                         string room, name;
                         ParseName(v.Name, out room, out name);
-                        string fullname = string.Format("{0} ({1})", room, name);
-                        if (room == name || string.IsNullOrEmpty(name))
+                        if (room != iRoom)
                         {
-                            fullname = room;
+                            string fullname = string.Format("{0} ({1})", room, name);
+                            if (room == name || string.IsNullOrEmpty(name))
+                            {
+                                fullname = room;
+                            }
+                            MediaMetadata metadata = new MediaMetadata();
+                            metadata.Add(iNetwork.TagManager.Audio.Title, fullname);
+                            metadata.Add(iNetwork.TagManager.Audio.Artwork, v.ArtworkUri);
+                            metadata.Add(iNetwork.TagManager.Audio.Uri, v.Uri);
+                            presets.Add(new MediaPresetSender(iNetwork, index, index, metadata, v, iReceiver));
+                            ++index;
                         }
-                        MediaMetadata metadata = new MediaMetadata();
-                        metadata.Add(iNetwork.TagManager.Audio.Title, fullname);
-                        metadata.Add(iNetwork.TagManager.Audio.Artwork, v.ArtworkUri);
-                        metadata.Add(iNetwork.TagManager.Audio.Uri, v.Uri);
-                        presets.Add(new MediaPresetSender(iNetwork, index, index, metadata, v, iReceiver));
-                        ++index;
                     });
 
                     aCallback(presets);
