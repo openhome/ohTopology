@@ -718,17 +718,10 @@ namespace OpenHome.Av
                 {
                     taskSource.SetException(e);
                 }
-<<<<<<< HEAD
             });
 
             taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
             return taskSource.Task;
-=======
-            });
-
-            taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
-            return taskSource.Task;
->>>>>>> 0b88ea6fb682532cdeea5bc1c238079ba6e0c37f
         }
 
         private void HandleIdChanged()
