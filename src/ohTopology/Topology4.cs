@@ -15,6 +15,7 @@ namespace OpenHome.Av
         private readonly Topology4Group iGroup;
         private readonly Watchable<bool> iBuffering;
         private readonly Watchable<bool> iPlaying;
+        private readonly Watchable<bool> iSelected;
 
         public MediaPresetExternal(IWatchableThread aThread, Topology4Group aGroup, uint aIndex, IMediaMetadata aMetadata, Topology4Source aSource)
         {
@@ -25,6 +26,7 @@ namespace OpenHome.Av
 
             iBuffering = new Watchable<bool>(aThread, "Buffering", false);
             iPlaying = new Watchable<bool>(aThread, "Playing", false);
+            iSelected = new Watchable<bool>(aThread, "Selected", false);
             iGroup.Source.AddWatcher(this);
         }
 
@@ -33,6 +35,7 @@ namespace OpenHome.Av
             iGroup.Source.RemoveWatcher(this);
             iBuffering.Dispose();
             iPlaying.Dispose();
+            iSelected.Dispose();
         }
 
         public uint Index
@@ -67,6 +70,12 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<bool> Selected {
+            get {
+                return iSelected;
+            }
+        }
+
         public void Play()
         {
             iBuffering.Update(true);
@@ -77,18 +86,21 @@ namespace OpenHome.Av
         {
             iBuffering.Update(false);
             iPlaying.Update(aValue == iSource);
+            iSelected.Update(aValue == iSource);
         }
 
         public void ItemUpdate(string aId, ITopology4Source aValue, ITopology4Source aPrevious)
         {
             iBuffering.Update(false);
             iPlaying.Update(aValue == iSource);
+            iSelected.Update(aValue == iSource);
         }
 
         public void ItemClose(string aId, ITopology4Source aValue)
         {
             iBuffering.Update(false);
             iPlaying.Update(false);
+            iSelected.Update(false);
         }
     }
 

@@ -20,6 +20,7 @@ namespace OpenHome.Av
         private readonly ServicePlaylist iPlaylist;
         private readonly Watchable<bool> iBuffering;
         private readonly Watchable<bool> iPlaying;
+        private readonly Watchable<bool> iSelected;
 
         private uint iCurrentId;
         private string iCurrentTransportState;
@@ -33,6 +34,7 @@ namespace OpenHome.Av
 
             iBuffering = new Watchable<bool>(aThread, "Buffering", false);
             iPlaying = new Watchable<bool>(aThread, "Playing", false);
+            iSelected = new Watchable<bool>(aThread, "Selected", false);
 
             iPlaylist.Id.AddWatcher(this);
             iPlaylist.TransportState.AddWatcher(this);
@@ -44,6 +46,7 @@ namespace OpenHome.Av
             iPlaylist.TransportState.RemoveWatcher(this);
             iBuffering.Dispose();
             iPlaying.Dispose();
+            iSelected.Dispose();
         }
 
         public uint Index
@@ -86,6 +89,12 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<bool> Selected {
+            get {
+                return iSelected;
+            }
+        }
+
         public void Play()
         {
             iPlaylist.SeekId(iId);
@@ -95,6 +104,7 @@ namespace OpenHome.Av
         {
             iBuffering.Update(iCurrentId == iId && iCurrentTransportState == "Buffering");
             iPlaying.Update(iCurrentId == iId && iCurrentTransportState == "Playing");
+            iSelected.Update(iCurrentId == iId);
         }
 
         public void ItemOpen(string aId, uint aValue)
