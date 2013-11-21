@@ -134,7 +134,16 @@ namespace OpenHome.Av
             }
         }
 
-        public void RoomRemoved(StandardRoom aRoom) { }
+        public void RoomRemoved(StandardRoom aRoom)
+        {
+            if (aRoom.Name == iMasterRoom)
+            {
+                if (iHouse.RemoveSatellite(iMasterRoom, iRoom))
+                {
+                    iHouse.AddRoom(iRoom);
+                }
+            }
+        }
     }
 
     class RoomWatcher : IWatcher<ITopology4Source>, IWatcher<ITopologymSender>, IWatcher<IZoneSender>, IDisposable
