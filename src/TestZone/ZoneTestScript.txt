@@ -223,3 +223,61 @@ expect Kitchen update Zone Volume 100
 expect Bedroom update HasListeners False
 expect Dining Room update ZoneReceiver True 
 empty
+
+mock network update 4c494e4e-0026-0f99-1114-ef000004013f receiver transportstate Playing
+expect Bedroom add Listener Dining Room
+expect Bedroom update Zone Mute False
+expect Bedroom update Zone Volume 75
+expect Kitchen add Listener Dining Room
+expect Kitchen update Zone Mute False
+expect Kitchen update Zone Volume 83
+expect Bedroom update HasListeners True
+expect Dining Room update ZoneReceiver True Bedroom
+empty
+
+// test cyclic
+mock network update 4c494e4e-0026-0f99-1114-ef000004013f product room DiningRoom
+expect Bedroom remove Listener Dining Room
+expect Bedroom update Zone Mute True
+expect Bedroom update Zone Volume 100
+expect Kitchen remove Listener Dining Room
+expect Kitchen update Zone Mute True
+expect Kitchen update Zone Volume 100
+expect Bedroom update HasListeners False
+expect Dining Room update ZoneReceiver True 
+expect Dining Room remove Satellite Sitting Room
+expect Room Added: Sitting Room at 4
+expect Sitting Room open ZoneSender True 4c494e4e-0026-0f99-1112-ef000004013f Sitting Room
+expect Sitting Room open ZoneReceiver True 
+expect Sitting Room open HasListeners False
+expect Sitting Room open Zone HasVolume True
+expect Sitting Room open Zone Mute False
+expect Sitting Room open Zone Volume 50
+expect Room Removed: Dining Room at 1
+expect Room Added: DiningRoom at 1
+expect DiningRoom open ZoneSender True 4c494e4e-0026-0f99-1114-ef000004013f DiningRoom
+expect DiningRoom open ZoneReceiver True 
+expect DiningRoom open HasListeners False
+expect DiningRoom open Zone HasVolume True
+expect DiningRoom open Zone Mute False
+expect DiningRoom open Zone Volume 50
+expect Bedroom add Listener DiningRoom
+expect Bedroom update Zone Mute False
+expect Bedroom update Zone Volume 75
+expect Kitchen add Listener DiningRoom
+expect Kitchen update Zone Mute False
+expect Kitchen update Zone Volume 83
+expect Bedroom update HasListeners True
+expect DiningRoom update ZoneReceiver True Bedroom
+empty
+
+mock house zone DiningRoom add Kitchen
+expect DiningRoom add Listener Bedroom
+expect DiningRoom update Zone Volume 75
+expect DiningRoom update HasListeners True
+expect DiningRoom add Listener Kitchen
+expect DiningRoom update Zone Volume 83
+expect Bedroom add Listener Kitchen
+expect Bedroom update Zone Volume 83
+expect Kitchen update ZoneReceiver True DiningRoom
+empty
