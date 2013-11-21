@@ -626,7 +626,7 @@ namespace OpenHome.Av
                                 {
                                     value = value.Skip(1);
 
-                                    name = value.First();
+                                    name = string.Join(" ", value);
 
                                     foreach (StandardRoom r2 in iRoomLookup.Values)
                                     {
@@ -681,7 +681,7 @@ namespace OpenHome.Av
         {
             foreach (StandardRoom r in iRoomLookup.Values)
             {
-                if (r.RemoveFromZone(aDevice, aRoom))
+                if (r != aRoom && r.RemoveFromZone(aDevice, aRoom))
                 {
                     break;
                 }

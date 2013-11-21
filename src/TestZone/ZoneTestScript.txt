@@ -197,3 +197,29 @@ expect Main Room open Zone Mute False
 expect Main Room open Zone Volume 50
 empty
 
+// test chaining of rooms
+mock house zone Bedroom add Dining Room
+expect Kitchen remove Listener Dining Room
+expect Kitchen update Zone Mute True
+expect Kitchen update Zone Volume 100
+expect Dining Room update ZoneReceiver True 
+expect Bedroom add Listener Dining Room
+expect Bedroom update Zone Mute False
+expect Bedroom update Zone Volume 75
+expect Kitchen add Listener Dining Room
+expect Kitchen update Zone Mute False
+expect Kitchen update Zone Volume 83
+expect Bedroom update HasListeners True
+expect Dining Room update ZoneReceiver True Bedroom
+empty
+
+mock network update 4c494e4e-0026-0f99-1114-ef000004013f receiver transportstate Stopped
+expect Bedroom remove Listener Dining Room
+expect Bedroom update Zone Mute True
+expect Bedroom update Zone Volume 100
+expect Kitchen remove Listener Dining Room
+expect Kitchen update Zone Mute True
+expect Kitchen update Zone Volume 100
+expect Bedroom update HasListeners False
+expect Dining Room update ZoneReceiver True 
+empty
