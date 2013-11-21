@@ -729,6 +729,7 @@ namespace OpenHome.Av
         private readonly IProxyReceiver iReceiver;
         private readonly Watchable<bool> iBuffering;
         private readonly Watchable<bool> iPlaying;
+        private readonly Watchable<bool> iSelected;
 
         private IInfoMetadata iCurrentMetadata;
         private string iCurrentTransportState;
@@ -743,6 +744,7 @@ namespace OpenHome.Av
 
             iBuffering = new Watchable<bool>(aThread, "Buffering", false);
             iPlaying = new Watchable<bool>(aThread, "Playing", false);
+            iSelected = new Watchable<bool>(aThread, "Selected", false);
             iReceiver.Metadata.AddWatcher(this);
             iReceiver.TransportState.AddWatcher(this);
         }
@@ -753,6 +755,7 @@ namespace OpenHome.Av
             iReceiver.TransportState.RemoveWatcher(this);
             iBuffering.Dispose();
             iPlaying.Dispose();
+            iSelected.Dispose();
         }
 
         public uint Index
@@ -787,6 +790,12 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<bool> Selected {
+            get {
+                return iSelected;
+            }
+        }
+
         public void Play()
         {
             iReceiver.Play(iSenderMetadata);
@@ -796,6 +805,7 @@ namespace OpenHome.Av
         {
             iBuffering.Update(iCurrentMetadata.Uri == iSenderMetadata.Uri && iCurrentTransportState == "Buffering");
             iPlaying.Update(iCurrentMetadata.Uri == iSenderMetadata.Uri && iCurrentTransportState == "Playing");
+            iSelected.Update(iCurrentMetadata.Uri == iSenderMetadata.Uri);
         }
 
         public void ItemOpen(string aId, string aValue)
@@ -845,7 +855,17 @@ namespace OpenHome.Av
             iNetwork = aNetwork;
             iRoom = aRoom;
             iReceiver = aReceiver;
-            iSendersMetadata = aSendersMetadata;
+            List<ISenderMetadata> list = new List<ISenderMetadata>();
+            aSendersMetadata.ToList().ForEach(v =>
+            {
+                string room, name;
+                ParseName(v.Name, out room, out name);
+                if (room != iRoom)
+                {
+                    list.Add(v);
+                }
+            });
+            iSendersMetadata = list;
         }
 
         public uint Total
@@ -887,7 +907,7 @@ namespace OpenHome.Av
                             metadata.Add(iNetwork.TagManager.Audio.Title, fullname);
                             metadata.Add(iNetwork.TagManager.Audio.Artwork, v.ArtworkUri);
                             metadata.Add(iNetwork.TagManager.Audio.Uri, v.Uri);
-                            presets.Add(new MediaPresetSender(iNetwork, index, index, metadata, v, iReceiver));
+                            presets.Add(new MediaPresetSender(iNetwork, index + 1, index, metadata, v, iReceiver));
                             ++index;
                         }
                     });

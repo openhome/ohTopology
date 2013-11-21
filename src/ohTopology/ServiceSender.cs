@@ -110,9 +110,9 @@ namespace OpenHome.Av
         protected ServiceSender(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
             : base(aNetwork, aDevice, aLog)
         {
-            iAudio = new Watchable<bool>(Network, "Audio", false);
-            iMetadata = new Watchable<ISenderMetadata>(Network, "Metadata", SenderMetadata.Empty);
-            iStatus = new Watchable<string>(Network, "Status", string.Empty);
+            iAudio = new Watchable<bool>(aNetwork, "Audio", false);
+            iMetadata = new Watchable<ISenderMetadata>(aNetwork, "Metadata", SenderMetadata.Empty);
+            iStatus = new Watchable<string>(aNetwork, "Status", string.Empty);
         }
 
         public override void Dispose()
@@ -252,7 +252,7 @@ namespace OpenHome.Av
         private void HandleAudioChanged()
         {
             bool audio = iService.PropertyAudio();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -264,7 +264,7 @@ namespace OpenHome.Av
         private void HandleMetadataChanged()
         {
             string metadata = iService.PropertyMetadata();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -276,7 +276,7 @@ namespace OpenHome.Av
         private void HandleStatusChanged()
         {
             string status = iService.PropertyStatus();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {

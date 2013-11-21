@@ -20,6 +20,7 @@ namespace OpenHome.Av
         private readonly ServiceSdp iSdp;
         private readonly Watchable<bool> iBuffering;
         private readonly Watchable<bool> iPlaying;
+        private readonly Watchable<bool> iSelected;
 
         private uint iCurrentId;
         private string iCurrentTransportState;
@@ -33,6 +34,7 @@ namespace OpenHome.Av
 
             iBuffering = new Watchable<bool>(aThread, "Buffering", false);
             iPlaying = new Watchable<bool>(aThread, "Playing", false);
+            iSelected = new Watchable<bool>(aThread, "Selected", false);
             iSdp.Id.AddWatcher(this);
             iSdp.TransportState.AddWatcher(this);
         }
@@ -43,6 +45,7 @@ namespace OpenHome.Av
             iSdp.TransportState.RemoveWatcher(this);
             iBuffering.Dispose();
             iPlaying.Dispose();
+            iSelected.Dispose();
         }
 
         public uint Index
@@ -85,6 +88,12 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<bool> Selected {
+            get {
+                return iSelected;
+            }
+        }
+
         public void Play()
         {
             iSdp.SeekId(iId);
@@ -94,6 +103,7 @@ namespace OpenHome.Av
         {
             iBuffering.Update(iCurrentId == iId && iCurrentTransportState == "Buffering");
             iPlaying.Update(iCurrentId == iId && iCurrentTransportState == "Playing");
+            iSelected.Update(iCurrentId == iId);
         }
 
         public void ItemOpen(string aId, uint aValue)
@@ -159,10 +169,10 @@ namespace OpenHome.Av
         protected ServiceSdp(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
             : base(aNetwork, aDevice, aLog)
         {
-            iId = new Watchable<uint>(Network, "Id", 0);
-            iTransportState = new Watchable<string>(Network, "TransportState", string.Empty);
-            iRepeat = new Watchable<bool>(Network, "Repeat", false);
-            iShuffle = new Watchable<bool>(Network, "Shuffle", true);
+            iId = new Watchable<uint>(aNetwork, "Id", 0);
+            iTransportState = new Watchable<string>(aNetwork, "TransportState", string.Empty);
+            iRepeat = new Watchable<bool>(aNetwork, "Repeat", false);
+            iShuffle = new Watchable<bool>(aNetwork, "Shuffle", true);
         }
 
         public override void Dispose()
@@ -765,7 +775,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iTransportState.Update("Playing");
                 });
@@ -777,7 +787,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iTransportState.Update("Paused");
                 });
@@ -789,7 +799,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iTransportState.Update("Stopped");
                 });
@@ -801,7 +811,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     int index = (int)iId.Value;
                     if (index > 0)
@@ -817,7 +827,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     int index = (int)iId.Value;
                     if (index < iTrackCount - 1)
@@ -841,7 +851,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iId.Update(aValue);
                 });
@@ -853,7 +863,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                 });
             });
@@ -869,7 +879,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iRepeat.Update(aValue);
                 });
@@ -881,7 +891,7 @@ namespace OpenHome.Av
         {
             Task task = Task.Factory.StartNew(() =>
             {
-                Network.Schedule(() =>
+                iNetwork.Schedule(() =>
                 {
                     iShuffle.Update(aValue);
                 });
@@ -901,7 +911,7 @@ namespace OpenHome.Av
             {
                 IEnumerable<string> value = aValue.Skip(1);
                 iTrackCount = uint.Parse(value.First());
-                iMediaSupervisor.Update(new SdpSnapshot(Network, iTrackCount, this));
+                iMediaSupervisor.Update(new SdpSnapshot(iNetwork, iTrackCount, this));
 
             }
             else if (command == "transportstate")

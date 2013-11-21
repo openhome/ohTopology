@@ -28,8 +28,8 @@ namespace OpenHome.Av
         protected ServiceReceiver(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
             : base(aNetwork, aDevice, aLog)
         {
-            iMetadata = new Watchable<IInfoMetadata>(Network, "Metadata", InfoMetadata.Empty);
-            iTransportState = new Watchable<string>(Network, "TransportState", string.Empty);
+            iMetadata = new Watchable<IInfoMetadata>(aNetwork, "Metadata", InfoMetadata.Empty);
+            iTransportState = new Watchable<string>(aNetwork, "TransportState", string.Empty);
         }
 
         public override void Dispose()
@@ -219,7 +219,7 @@ namespace OpenHome.Av
         {
             IMediaMetadata metadata = iNetwork.TagManager.FromDidlLite(iService.PropertyMetadata());
             string uri = iService.PropertyUri();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -231,7 +231,7 @@ namespace OpenHome.Av
         private void HandleTransportStateChanged()
         {
             string transportState = iService.PropertyTransportState();
-            Network.Schedule(() =>
+            iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
@@ -269,7 +269,7 @@ namespace OpenHome.Av
         {
             return Start(() =>
             {
-                iMetadata.Update(new InfoMetadata(Network.TagManager.FromDidlLite(aMetadata.ToString()), aMetadata.Uri));
+                iMetadata.Update(new InfoMetadata(iNetwork.TagManager.FromDidlLite(aMetadata.ToString()), aMetadata.Uri));
                 iTransportState.Update("Playing");
             });
         }
@@ -297,7 +297,7 @@ namespace OpenHome.Av
                 {
                     throw new NotSupportedException();
                 }
-                IInfoMetadata metadata = new InfoMetadata(Network.TagManager.FromDidlLite(string.Join(" ", value.Take(value.Count() - 1))), value.Last());
+                IInfoMetadata metadata = new InfoMetadata(iNetwork.TagManager.FromDidlLite(string.Join(" ", value.Take(value.Count() - 1))), value.Last());
                 iMetadata.Update(metadata);
             }
             else if (command == "transportstate")

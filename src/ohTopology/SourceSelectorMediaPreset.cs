@@ -136,6 +136,14 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<bool> Selected {
+            get {
+                using (iDisposeHandler.Lock()) {
+                    return iPreset.Selected;
+                }
+            }
+        }
+
         public void Play()
         {
             using (iDisposeHandler.Lock())
