@@ -297,13 +297,13 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            iDisposeHandler.Dispose();
-
             foreach (StandardRoom r in iListeners)
             {
                 r.RemovedFromZone(this);
             }
             iListeners.Clear();
+
+            iDisposeHandler.Dispose();
 
             iHasListeners.Dispose();
             iWatchableListeners.Dispose();
@@ -907,7 +907,7 @@ namespace OpenHome.Av
             {
                 if (s.Type == "Receiver")
                 {
-                    iWatchableZoneReceiver.Update(new ZoneReceiver(true));
+                    iWatchableZoneReceiver.Update(new ZoneReceiver(iWatchableZoneReceiver.Value.ZoneSender));
                     return;
                 }
             }
