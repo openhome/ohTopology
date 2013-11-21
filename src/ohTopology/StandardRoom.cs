@@ -434,8 +434,11 @@ namespace OpenHome.Av
 
         public void OrderedAdd(IStandardRoom aItem, uint aIndex)
         {
-            iWatchableListeners.Add(aItem, GetInsertIndex(aItem));
-            iHasListeners.Update(iWatchableListeners.Values.Count() > 0);
+            if (aItem != iRoom)
+            {
+                iWatchableListeners.Add(aItem, GetInsertIndex(aItem));
+                iHasListeners.Update(iWatchableListeners.Values.Count() > 0);
+            }
         }
 
         public void OrderedMove(IStandardRoom aItem, uint aFrom, uint aTo)
@@ -444,8 +447,11 @@ namespace OpenHome.Av
 
         public void OrderedRemove(IStandardRoom aItem, uint aIndex)
         {
-            iWatchableListeners.Remove(aItem);
-            iHasListeners.Update(iWatchableListeners.Values.Count() > 0);
+            if (aItem != iRoom)
+            {
+                iWatchableListeners.Remove(aItem);
+                iHasListeners.Update(iWatchableListeners.Values.Count() > 0);
+            }
         }
 
         public void ItemOpen(string aId, IZoneSender aValue)
@@ -455,14 +461,12 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, IZoneSender aValue, IZoneSender aPrevious)
         {
-            // NOTE: we need to remove all old listeners from our listeners list
             aPrevious.Listeners.RemoveWatcher(this);
             aValue.Listeners.AddWatcher(this);
         }
 
         public void ItemClose(string aId, IZoneSender aValue)
         {
-            // NOTE: we need to remove all old listeners from our listeners list 
             aValue.Listeners.RemoveWatcher(this);
         }
     }
