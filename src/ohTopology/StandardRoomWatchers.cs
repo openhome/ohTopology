@@ -190,7 +190,6 @@ namespace OpenHome.Av
     {
         private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
         private StandardRoomWatcherProxyCreator<IProxyPlaylist> iCreateProxy;
-        // private ITopology4Source iSource;
         private IProxyPlaylist iPlaylist;
         private IPlaylistWriter iPlaylistWriter;
 
@@ -221,6 +220,17 @@ namespace OpenHome.Av
                 using (iDisposeHandler.Lock())
                 {
                     return iWatchableSnapshot.Snapshot;
+                }
+            }
+        }
+
+        public IWatchable<IWatchableSnapshot<IMediaPreset>> SnapshotWriter
+        {
+            get
+            {
+                using (iDisposeHandler.Lock())
+                {
+                    return iPlaylist.Snapshot;
                 }
             }
         }

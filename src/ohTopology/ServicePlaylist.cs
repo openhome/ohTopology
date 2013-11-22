@@ -615,6 +615,7 @@ namespace OpenHome.Av
 
         public override Task Delete(IMediaPreset aValue)
         {
+            Do.Assert(aValue is MediaPresetPlaylist);
             uint id = (aValue as MediaPresetPlaylist).Id;
 
             TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
