@@ -464,7 +464,10 @@ namespace OpenHome.Av
             aPrevious.Listeners.RemoveWatcher(this);
             foreach (var r in aPrevious.Listeners.Values)
             {
-                iWatchableListeners.Remove(r);
+                if (r != iRoom)
+                {
+                    iWatchableListeners.Remove(r);
+                }
             }
 
             aValue.Listeners.AddWatcher(this);
@@ -474,7 +477,10 @@ namespace OpenHome.Av
         {
             foreach (var r in aValue.Listeners.Values)
             {
-                iWatchableListeners.Remove(r);
+                if (r != iRoom)
+                {
+                    iWatchableListeners.Remove(r);
+                }
             }
             aValue.Listeners.RemoveWatcher(this);
         }
