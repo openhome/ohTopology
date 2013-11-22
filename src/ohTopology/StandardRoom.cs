@@ -402,7 +402,7 @@ namespace OpenHome.Av
             int index = 0;
             foreach (IStandardRoom r in iWatchableListeners.Values)
             {
-                if (r.Name.CompareTo(aRoom.Name) < 0)
+                if (aRoom.Name.CompareTo(r.Name) < 0)
                 {
                     break;
                 }
@@ -462,11 +462,20 @@ namespace OpenHome.Av
         public void ItemUpdate(string aId, IZoneSender aValue, IZoneSender aPrevious)
         {
             aPrevious.Listeners.RemoveWatcher(this);
+            foreach (var r in aPrevious.Listeners.Values)
+            {
+                iWatchableListeners.Remove(r);
+            }
+
             aValue.Listeners.AddWatcher(this);
         }
 
         public void ItemClose(string aId, IZoneSender aValue)
         {
+            foreach (var r in aValue.Listeners.Values)
+            {
+                iWatchableListeners.Remove(r);
+            }
             aValue.Listeners.RemoveWatcher(this);
         }
     }
