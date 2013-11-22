@@ -361,7 +361,10 @@ namespace OpenHome.Av
                 iSender.Status.RemoveWatcher(this);
                 iSender.Dispose();
                 iSender = null;
+                iHasSender = false;
             }
+
+            iSenders.Dispose();
 
             iDisposed = true;
         }
