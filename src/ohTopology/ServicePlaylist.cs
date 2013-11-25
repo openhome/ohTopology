@@ -97,6 +97,7 @@ namespace OpenHome.Av
 
         public void Play()
         {
+            iBuffering.Update(iCurrentTransportState == "Buffering");
             iPlaylist.SeekId(iId);
         }
 
