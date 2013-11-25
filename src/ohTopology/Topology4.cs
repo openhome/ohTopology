@@ -78,7 +78,10 @@ namespace OpenHome.Av
 
         public void Play()
         {
-            iBuffering.Update(true);
+            if (!iPlaying.Value)
+            {
+                iBuffering.Update(true);
+            }
             iSource.Select();
         }
 
