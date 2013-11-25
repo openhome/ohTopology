@@ -808,6 +808,7 @@ namespace OpenHome.Av
 
         public void Play()
         {
+            iBuffering.Update(iCurrentTransportState == "Buffering");
             iReceiver.Play(iSenderMetadata);
         }
 
