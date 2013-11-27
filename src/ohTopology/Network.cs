@@ -30,6 +30,7 @@ namespace OpenHome.Av
 
         protected void Added(CpDeviceList aList, CpDevice aDevice)
         {
+            iLog.Write("+DeviceInjector {0}\n", aDevice.Udn());
             if (!FilterOut(aDevice))
             {
                 IInjectorDevice device = Create(iNetwork, aDevice);
@@ -40,6 +41,7 @@ namespace OpenHome.Av
 
         protected void Removed(CpDeviceList aList, CpDevice aDevice)
         {
+            iLog.Write("-DeviceInjector {0}\n", aDevice.Udn());
             IInjectorDevice device;
 
             string udn = aDevice.Udn();
