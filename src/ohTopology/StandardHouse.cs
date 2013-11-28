@@ -57,6 +57,9 @@ namespace OpenHome.Av
         public void ItemUpdate(string aId, IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
         {
             string oldMaster = iMasterRoom;
+            // set iMasterRoom to be empty here to cater for the case that 
+            // we get a byebye from a DS before the byebye from its proxied device 
+            iMasterRoom = string.Empty;
             bool isSatellite = false;
             foreach (ITopology4Source s in aValue)
             {
@@ -89,6 +92,10 @@ namespace OpenHome.Av
                     {
                         add = true;
                     }
+                }
+                else
+                {
+                    add = true;
                 }
 
                 if (remove != add)
