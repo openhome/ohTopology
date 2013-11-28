@@ -815,7 +815,7 @@ namespace OpenHome.Av
         private void EvaluatePlaying()
         {
             iBuffering.Update(iCurrentMetadata.Uri == iSenderMetadata.Uri && iCurrentTransportState == "Buffering");
-            iPlaying.Update(iCurrentMetadata.Uri == iSenderMetadata.Uri && iCurrentTransportState == "Playing");
+            iPlaying.Update(iCurrentMetadata.Uri == iSenderMetadata.Uri && (iCurrentTransportState == "Playing" || iCurrentTransportState == "Waiting"));
             iSelected.Update(iCurrentMetadata.Uri == iSenderMetadata.Uri);
         }
 
