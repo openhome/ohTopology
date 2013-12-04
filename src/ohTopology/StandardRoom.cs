@@ -720,6 +720,7 @@ namespace OpenHome.Av
                     {
                         s.Device.Create<IProxyReceiver>((receiver) =>
                         {
+                            Do.Assert(aRoom.ZoneSender.Value.Sender != null);
                             aRoom.ZoneSender.Value.Sender.Create<IProxySender>((sender) =>
                             {
                                 if (!iDisposed)

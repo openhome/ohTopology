@@ -281,3 +281,75 @@ expect Bedroom add Listener Kitchen
 expect Bedroom update Zone Volume 83
 expect Kitchen update ZoneReceiver True DiningRoom
 empty
+
+// test adding a satellite room
+mock network create ds 60
+mock network update 60 product room test1
+mock network update 60 product source 3 name test2
+mock network add 60
+expect Room Added: test1 at 5
+expect test1 open ZoneSender True 60 test1
+expect test1 open ZoneReceiver True 
+expect test1 open HasListeners False
+expect test1 open Zone HasVolume True
+expect test1 open Zone Mute False
+expect test1 open Zone Volume 50
+empty
+
+mock network create ds 62
+mock network update 62 product room test2
+mock network add 62
+expect Room Removed: test1 at 5
+expect Room Added: test2 at 5
+expect test2 open ZoneSender True 62 test2
+expect test2 open ZoneReceiver True 
+expect test2 add Satellite test1
+expect test2 open HasListeners False
+expect test2 open Zone HasVolume True
+expect test2 open Zone Mute False
+expect test2 open Zone Volume 50
+empty
+
+// test adding master satellite without a sender
+mock network remove 62
+expect test2 remove Satellite test1
+expect Room Added: test1 at 5
+expect test1 open ZoneSender True 60 test1
+expect test1 open ZoneReceiver True 
+expect test1 open HasListeners False
+expect test1 open Zone HasVolume True
+expect test1 open Zone Mute False
+expect test1 open Zone Volume 50
+expect Room Removed: test2 at 6
+empty
+
+mock network update 62 sender status Disabled
+mock network add 62
+expect Room Added: test2 at 6
+expect test2 open ZoneSender False  test2
+expect test2 open ZoneReceiver True 
+empty
+
+// enable the sender
+mock network update 62 sender status Enabled
+expect test2 add Satellite test1
+expect Room Removed: test1 at 5
+expect test2 update ZoneSender True 62 test2
+expect test2 open HasListeners False
+expect test2 open Zone HasVolume True
+expect test2 open Zone Mute False
+expect test2 open Zone Volume 50
+empty
+
+// disable the sender
+mock network update 62 sender status Disabled
+expect test2 remove Satellite test1
+expect Room Added: test1 at 5
+expect test1 open ZoneSender True 60 test1
+expect test1 open ZoneReceiver True 
+expect test1 open HasListeners False
+expect test1 open Zone HasVolume True
+expect test1 open Zone Mute False
+expect test1 open Zone Volume 50
+expect test2 update ZoneSender False  test2
+empty

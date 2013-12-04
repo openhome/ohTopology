@@ -7,19 +7,24 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
-    class SatelliteWatcher : IWatcher<IEnumerable<ITopology4Source>>, IDisposable
+    class SatelliteWatcher : IWatcher<IEnumerable<ITopology4Source>>, IWatcher<IZoneSender>, IDisposable
     {
         private readonly DisposeHandler iDisposeHandler;
         private readonly StandardHouse iHouse;
         private readonly StandardRoom iRoom;
+        private readonly List<StandardRoom> iRooms;
         private string iMasterRoom;
+        private bool iIsSatellite;
 
         public SatelliteWatcher(StandardHouse aHouse, StandardRoom aRoom, IEnumerable<StandardRoom> aRooms)
         {
             iDisposeHandler = new DisposeHandler();
             iHouse = aHouse;
             iRoom = aRoom;
+
             iMasterRoom = string.Empty;
+            iIsSatellite = false;
+            iRooms = new List<StandardRoom>();
 
             foreach (StandardRoom r in aRooms)
             {
@@ -34,21 +39,27 @@ namespace OpenHome.Av
             iDisposeHandler.Dispose();
 
             iRoom.Sources.RemoveWatcher(this);
+
+            List<StandardRoom> list = new List<StandardRoom>(iRooms);
+            foreach (StandardRoom r in list)
+            {
+                RoomRemoved(r);
+            }
+            Do.Assert(iRooms.Count == 0);
         }
 
         public void ItemOpen(string aId, IEnumerable<ITopology4Source> aValue)
         {
-            bool isSatellite = false;
             foreach (ITopology4Source s in aValue)
             {
                 if (s.Type == "Receiver")
                 {
                     iMasterRoom = s.Name;
-                    isSatellite = iHouse.AddSatellite(s.Name, iRoom);
+                    iIsSatellite = iHouse.AddSatellite(s.Name, iRoom);
                     break;
                 }
             }
-            if (!isSatellite)
+            if (!iIsSatellite)
             {
                 iHouse.AddRoom(iRoom);
             }
@@ -56,11 +67,11 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
         {
+            bool wasSatellite = false;
             string oldMaster = iMasterRoom;
             // set iMasterRoom to be empty here to cater for the case that 
             // we get a byebye from a DS before the byebye from its proxied device 
             iMasterRoom = string.Empty;
-            bool isSatellite = false;
             foreach (ITopology4Source s in aValue)
             {
                 if (s.Type == "Receiver")
@@ -69,14 +80,15 @@ namespace OpenHome.Av
                     break;
                 }
             }
+
             if (oldMaster != iMasterRoom)
             {
                 bool remove = false;
                 bool add = false;
                 if (!string.IsNullOrEmpty(oldMaster))
                 {
-                    isSatellite = iHouse.RemoveSatellite(oldMaster, iRoom);
-                    if (!isSatellite)
+                    wasSatellite = iHouse.RemoveSatellite(oldMaster, iRoom);
+                    if (!wasSatellite)
                     {
                         remove = true;
                     }
@@ -85,10 +97,13 @@ namespace OpenHome.Av
                 {
                     remove = true;
                 }
+
+                iIsSatellite = false;
+                
                 if (!string.IsNullOrEmpty(iMasterRoom))
                 {
-                    isSatellite = iHouse.AddSatellite(iMasterRoom, iRoom);
-                    if (!isSatellite)
+                    iIsSatellite = iHouse.AddSatellite(iMasterRoom, iRoom);
+                    if (!iIsSatellite)
                     {
                         add = true;
                     }
@@ -114,40 +129,83 @@ namespace OpenHome.Av
 
         public void ItemClose(string aId, IEnumerable<ITopology4Source> aValue)
         {
-            bool isSatellite = false;
+            bool wasSatellite = false;
             foreach (ITopology4Source s in aValue)
             {
                 if (s.Type == "Receiver")
                 {
-                    iMasterRoom = string.Empty;
-                    isSatellite = iHouse.RemoveSatellite(s.Name, iRoom);
+                    //iMasterRoom = string.Empty;
+                    wasSatellite = iHouse.RemoveSatellite(s.Name, iRoom);
                     break;
                 }
             }
-            if (!isSatellite)
+            if (!wasSatellite)
             {
                 iHouse.RemoveRoom(iRoom);
             }
+            iIsSatellite = false;
         }
 
         public void RoomAdded(StandardRoom aRoom)
         {
-            if (aRoom.Name == iMasterRoom)
-            {
-                if (iHouse.AddSatellite(iMasterRoom, iRoom))
-                {
-                    iHouse.RemoveRoom(iRoom);
-                }
-            }
+            iRooms.Add(aRoom);
+            aRoom.ZoneSender.AddWatcher(this);
         }
 
         public void RoomRemoved(StandardRoom aRoom)
         {
-            if (aRoom.Name == iMasterRoom)
+            aRoom.ZoneSender.RemoveWatcher(this);
+            iRooms.Remove(aRoom);
+        }
+
+        public void ItemOpen(string aId, IZoneSender aValue)
+        {
+            if (aValue.Enabled && aValue.Room.Name == iMasterRoom)
             {
-                if (iHouse.RemoveSatellite(iMasterRoom, iRoom))
+                if (iHouse.AddSatellite(iMasterRoom, iRoom))
                 {
-                    iHouse.AddRoom(iRoom);
+                    iHouse.RemoveRoom(iRoom);
+                    iIsSatellite = true;
+                }
+            }
+        }
+
+        public void ItemUpdate(string aId, IZoneSender aValue, IZoneSender aPrevious)
+        {
+            if (aPrevious.Enabled && aValue.Room.Name == iMasterRoom)
+            {
+                foreach (var r in iRooms)
+                {
+                    if (r.Name == iMasterRoom)
+                    {
+                        r.RemoveSatellite(iRoom);
+                        iHouse.AddRoom(iRoom);
+                        iIsSatellite = false;
+                    }
+                }
+            }
+            if (aValue.Enabled && aValue.Room.Name == iMasterRoom)
+            {
+                if (iHouse.AddSatellite(iMasterRoom, iRoom))
+                {
+                    iHouse.RemoveRoom(iRoom);
+                    iIsSatellite = true;
+                }
+            }
+        }
+
+        public void ItemClose(string aId, IZoneSender aValue)
+        {
+            if (aValue.Enabled && aValue.Room.Name == iMasterRoom)
+            {
+                foreach (var r in iRooms)
+                {
+                    if (r.Name == iMasterRoom && iIsSatellite)
+                    {
+                        r.RemoveSatellite(iRoom);
+                        iHouse.AddRoom(iRoom);
+                        iIsSatellite = false;
+                    }
                 }
             }
         }
@@ -708,7 +766,7 @@ namespace OpenHome.Av
         {
             foreach (StandardRoom r in iRoomLookup.Values)
             {
-                if (r.Name == aName)
+                if (r.ZoneSender.Value.Enabled && r.Name == aName)
                 {
                     r.AddSatellite(aRoom);
                     return true;
@@ -722,7 +780,7 @@ namespace OpenHome.Av
         {
             foreach (StandardRoom r in iRoomLookup.Values)
             {
-                if (r.Name == aName)
+                if (r.ZoneSender.Value.Enabled && r.Name == aName)
                 {
                     r.RemoveSatellite(aRoom);
                     return true;
