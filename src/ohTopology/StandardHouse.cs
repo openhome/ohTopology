@@ -362,7 +362,7 @@ namespace OpenHome.Av
         public void ItemClose(string aId, IZoneSender aValue) { }
     }
 
-    class SendersWatcher : IUnorderedWatcher<IDevice>, IDisposable
+    class SendersList : IUnorderedWatcher<IDevice>, IDisposable
     {
         private readonly DisposeHandler iDisposeHandler;
         private readonly INetwork iNetwork;
@@ -371,7 +371,7 @@ namespace OpenHome.Av
         private readonly Dictionary<IDevice, IProxySender> iSenderLookup;
         private bool iDisposed;
 
-        public SendersWatcher(INetwork aNetwork)
+        public SendersList(INetwork aNetwork)
         {
             iDisposeHandler = new DisposeHandler();
             iNetwork = aNetwork;
@@ -491,7 +491,7 @@ namespace OpenHome.Av
             iRegistrations = new Watchable<IEnumerable<ITopology4Registration>>(iNetwork, "Registrations", new List<ITopology4Registration>());
             iSatelliteWatchers = new Dictionary<ITopology4Room, SatelliteWatcher>();
 
-            iSendersWatcher = new SendersWatcher(aNetwork);
+            iSendersList = new SendersList(aNetwork);
 
             iNetwork.Schedule(() =>
             {
@@ -524,7 +524,7 @@ namespace OpenHome.Av
                     kvp.Value.Dispose();
                 }
 
-                iSendersWatcher.Dispose();
+                iSendersList.Dispose();
             });
             iWatchableRooms.Dispose();
             iRoomLookup.Clear();
@@ -556,7 +556,7 @@ namespace OpenHome.Av
             {
                 using (iDisposeHandler.Lock())
                 {
-                    return iSendersWatcher.Senders;
+                    return iSendersList.Senders;
                 }
             }
         }
@@ -801,7 +801,7 @@ namespace OpenHome.Av
         private readonly WatchableOrdered<IStandardRoom> iWatchableRooms;
         private readonly Dictionary<ITopology4Room, StandardRoom> iRoomLookup;
 
-        private readonly SendersWatcher iSendersWatcher;
+        private readonly SendersList iSendersList;
         private readonly Watchable<IEnumerable<ITopology4Registration>> iRegistrations;
 
         private readonly Dictionary<ITopology4Room, RoomWatcher> iRoomWatchers;
