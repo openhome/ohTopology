@@ -799,6 +799,7 @@ namespace OpenHome.Av
         IWatchable<IEnumerable<ITopology4Root>> Roots { get; }
         IWatchable<IEnumerable<ITopology4Source>> Sources { get; }
         IWatchable<IEnumerable<ITopology4Registration>> Registrations { get; }
+        IWatchable<IEnumerable<ITopology4Group>> Groups { get; }
 
         void SetStandby(bool aValue);
     }
@@ -820,6 +821,7 @@ namespace OpenHome.Av
             iWatchableRoots = new Watchable<IEnumerable<ITopology4Root>>(iNetwork, "roots", new List<ITopology4Root>());
             iWatchableSources = new Watchable<IEnumerable<ITopology4Source>>(iNetwork, "sources", new List<ITopology4Source>());
             iWatchableRegistrations = new Watchable<IEnumerable<ITopology4Registration>>(iNetwork, "registration", new List<ITopology4Registration>());
+            iWatchableGroups = new Watchable<IEnumerable<ITopology4Group>>(iNetwork, "groups", new List<ITopology4Group>());
 
             iGroupLookup = new Dictionary<ITopologymGroup, Topology4GroupWatcher>();
             iGroup4s = new List<Topology4Group>();
@@ -858,6 +860,9 @@ namespace OpenHome.Av
 
             iWatchableRegistrations.Dispose();
             iWatchableRegistrations = null;
+
+            iWatchableGroups.Dispose();
+            iWatchableGroups = null;
 
             iRoots = null;
         }
@@ -902,6 +907,14 @@ namespace OpenHome.Av
             }
         }
 
+        public IWatchable<IEnumerable<ITopology4Group>> Groups
+        {
+            get
+            {
+                return iWatchableGroups;
+            }
+        }
+
         public void SetStandby(bool aValue)
         {
             iRoom.SetStandby(aValue);
@@ -941,6 +954,7 @@ namespace OpenHome.Av
         internal void CreateTree()
         {
             List<ITopology4Registration> registrations = new List<ITopology4Registration>();
+            List<Topology4Group> groups = new List<Topology4Group>();
             List<Topology4Group> oldGroups = new List<Topology4Group>(iGroup4s);
 
             iGroup4s.Clear();
@@ -953,6 +967,7 @@ namespace OpenHome.Av
                 if (!string.IsNullOrEmpty(group.ProductId))
                 {
                     registrations.Add(group);
+                    groups.Add(group);
                 }
             }
 
@@ -969,6 +984,7 @@ namespace OpenHome.Av
             iWatchableRoots.Update(roots);
             iWatchableSources.Update(sources);
             iWatchableRegistrations.Update(registrations);
+            iWatchableGroups.Update(groups);
 
             foreach (Topology4Group g in oldGroups)
             {
@@ -1088,6 +1104,7 @@ namespace OpenHome.Av
         private Watchable<IEnumerable<ITopology4Root>> iWatchableRoots;
         private Watchable<IEnumerable<ITopology4Source>> iWatchableSources;
         private Watchable<IEnumerable<ITopology4Registration>> iWatchableRegistrations;
+        private Watchable<IEnumerable<ITopology4Group>> iWatchableGroups;
 
         private Dictionary<ITopologymGroup, Topology4GroupWatcher> iGroupLookup;
         private List<Topology4Group> iGroup4s;

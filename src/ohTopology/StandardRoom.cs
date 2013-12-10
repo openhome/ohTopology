@@ -459,6 +459,7 @@ namespace OpenHome.Av
 
         IWatchable<ITopology4Source> Source { get; }
         IWatchable<IEnumerable<ITopology4Source>> Sources { get; }
+        IWatchable<IEnumerable<ITopology4Group>> Groups { get; }
         IEnumerable<ITopology4Group> Senders { get; }
 
         void SetStandby(bool aValue);
@@ -563,6 +564,15 @@ namespace OpenHome.Av
                 using (iDisposeHandler.Lock())
                 {
                     return iWatchableSources;
+                }
+            }
+        }
+
+        public IWatchable<IEnumerable<ITopology4Group>> Groups {
+            get {
+                using (iDisposeHandler.Lock())
+                {
+                    return iRoom.Groups;
                 }
             }
         }

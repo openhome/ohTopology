@@ -80,6 +80,11 @@ namespace OpenHome.Av
                     device.Add<IProxySdp>(new ServiceSdpNetwork(aNetwork, device, aDevice, aLog));
                 }
             }
+            if (aDevice.GetAttribute("Upnp.Service.linn-co-uk.Volkano", out value)) {
+                if (uint.Parse(value) == 1) {
+                    device.Add<IProxyVolkano>(new ServiceVolkanoNetwork(aNetwork, device, aDevice, aLog));
+                }
+            }
             return device;
         }
 
@@ -137,6 +142,9 @@ namespace OpenHome.Av
             // playlist service
             List<IMediaMetadata> tracks = new List<IMediaMetadata>();
             device.Add<IProxyPlaylist>(new ServicePlaylistMock(aNetwork, device, 0, tracks, false, false, "Stopped", string.Empty, 1000, aLog));
+
+            // volkano service
+            device.Add<IProxyVolkano>(new ServiceVolkanoMock(aNetwork, device, "1234567", "00:26:0f:21:ff:89", "4.14.545", true, "4.14.549", aLog));
 
             return device;
         }
@@ -202,6 +210,9 @@ namespace OpenHome.Av
             // playlist service
             List<IMediaMetadata> tracks = new List<IMediaMetadata>();
             device.Add<IProxyPlaylist>(new ServicePlaylistMock(aNetwork, device, 0, tracks, false, false, "Stopped", string.Empty, 1000, aLog));
+
+            // volkano service
+            device.Add<IProxyVolkano>(new ServiceVolkanoMock(aNetwork, device, "1234567", "00:26:0f:21:ff:89", "4.14.545", true, "4.14.549", aLog));
             
             return device;
         }
