@@ -134,9 +134,13 @@ namespace OpenHome.Av
 
             iSnapshot.Read(ct.Token, aIndex, aCount, (values) =>
             {
-                if(!iDisposed)
+                if (!iDisposed)
                 {
                     aCallback(new WatchableFragment<T>(aIndex, values));
+                }
+                else
+                {
+                    Do.Assert(false);
                 }
             });
         }

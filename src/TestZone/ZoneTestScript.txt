@@ -197,3 +197,159 @@ expect Main Room open Zone Mute False
 expect Main Room open Zone Volume 50
 empty
 
+// test chaining of rooms
+mock house zone Bedroom add Dining Room
+expect Kitchen remove Listener Dining Room
+expect Kitchen update Zone Mute True
+expect Kitchen update Zone Volume 100
+expect Dining Room update ZoneReceiver True 
+expect Bedroom add Listener Dining Room
+expect Bedroom update Zone Mute False
+expect Bedroom update Zone Volume 75
+expect Kitchen add Listener Dining Room
+expect Kitchen update Zone Mute False
+expect Kitchen update Zone Volume 83
+expect Bedroom update HasListeners True
+expect Dining Room update ZoneReceiver True Bedroom
+empty
+
+mock network update 4c494e4e-0026-0f99-1114-ef000004013f receiver transportstate Stopped
+expect Bedroom remove Listener Dining Room
+expect Bedroom update Zone Mute True
+expect Bedroom update Zone Volume 100
+expect Kitchen remove Listener Dining Room
+expect Kitchen update Zone Mute True
+expect Kitchen update Zone Volume 100
+expect Bedroom update HasListeners False
+expect Dining Room update ZoneReceiver True 
+empty
+
+mock network update 4c494e4e-0026-0f99-1114-ef000004013f receiver transportstate Playing
+expect Bedroom add Listener Dining Room
+expect Bedroom update Zone Mute False
+expect Bedroom update Zone Volume 75
+expect Kitchen add Listener Dining Room
+expect Kitchen update Zone Mute False
+expect Kitchen update Zone Volume 83
+expect Bedroom update HasListeners True
+expect Dining Room update ZoneReceiver True Bedroom
+empty
+
+// test cyclic
+mock network update 4c494e4e-0026-0f99-1114-ef000004013f product room DiningRoom
+expect Bedroom remove Listener Dining Room
+expect Bedroom update Zone Mute True
+expect Bedroom update Zone Volume 100
+expect Kitchen remove Listener Dining Room
+expect Kitchen update Zone Mute True
+expect Kitchen update Zone Volume 100
+expect Bedroom update HasListeners False
+expect Dining Room update ZoneReceiver True 
+expect Dining Room remove Satellite Sitting Room
+expect Room Added: Sitting Room at 4
+expect Sitting Room open ZoneSender True 4c494e4e-0026-0f99-1112-ef000004013f Sitting Room
+expect Sitting Room open ZoneReceiver True 
+expect Sitting Room open HasListeners False
+expect Sitting Room open Zone HasVolume True
+expect Sitting Room open Zone Mute False
+expect Sitting Room open Zone Volume 50
+expect Room Removed: Dining Room at 1
+expect Room Added: DiningRoom at 1
+expect DiningRoom open ZoneSender True 4c494e4e-0026-0f99-1114-ef000004013f DiningRoom
+expect DiningRoom open ZoneReceiver True 
+expect DiningRoom open HasListeners False
+expect DiningRoom open Zone HasVolume True
+expect DiningRoom open Zone Mute False
+expect DiningRoom open Zone Volume 50
+expect Bedroom add Listener DiningRoom
+expect Bedroom update Zone Mute False
+expect Bedroom update Zone Volume 75
+expect Kitchen add Listener DiningRoom
+expect Kitchen update Zone Mute False
+expect Kitchen update Zone Volume 83
+expect Bedroom update HasListeners True
+expect DiningRoom update ZoneReceiver True Bedroom
+empty
+
+mock house zone DiningRoom add Kitchen
+expect DiningRoom add Listener Bedroom
+expect DiningRoom update Zone Volume 75
+expect DiningRoom update HasListeners True
+expect DiningRoom add Listener Kitchen
+expect DiningRoom update Zone Volume 83
+expect Bedroom add Listener Kitchen
+expect Bedroom update Zone Volume 83
+expect Kitchen update ZoneReceiver True DiningRoom
+empty
+
+// test adding a satellite room
+mock network create ds 60
+mock network update 60 product room test1
+mock network update 60 product source 3 name test2
+mock network add 60
+expect Room Added: test1 at 5
+expect test1 open ZoneSender True 60 test1
+expect test1 open ZoneReceiver True 
+expect test1 open HasListeners False
+expect test1 open Zone HasVolume True
+expect test1 open Zone Mute False
+expect test1 open Zone Volume 50
+empty
+
+mock network create ds 62
+mock network update 62 product room test2
+mock network add 62
+expect Room Removed: test1 at 5
+expect Room Added: test2 at 5
+expect test2 open ZoneSender True 62 test2
+expect test2 open ZoneReceiver True 
+expect test2 add Satellite test1
+expect test2 open HasListeners False
+expect test2 open Zone HasVolume True
+expect test2 open Zone Mute False
+expect test2 open Zone Volume 50
+empty
+
+// test adding master satellite without a sender
+mock network remove 62
+expect test2 remove Satellite test1
+expect Room Added: test1 at 5
+expect test1 open ZoneSender True 60 test1
+expect test1 open ZoneReceiver True 
+expect test1 open HasListeners False
+expect test1 open Zone HasVolume True
+expect test1 open Zone Mute False
+expect test1 open Zone Volume 50
+expect Room Removed: test2 at 6
+empty
+
+mock network update 62 sender status Disabled
+mock network add 62
+expect Room Added: test2 at 6
+expect test2 open ZoneSender False  test2
+expect test2 open ZoneReceiver True 
+empty
+
+// enable the sender
+mock network update 62 sender status Enabled
+expect test2 add Satellite test1
+expect Room Removed: test1 at 5
+expect test2 update ZoneSender True 62 test2
+expect test2 open HasListeners False
+expect test2 open Zone HasVolume True
+expect test2 open Zone Mute False
+expect test2 open Zone Volume 50
+empty
+
+// disable the sender
+mock network update 62 sender status Disabled
+expect test2 remove Satellite test1
+expect Room Added: test1 at 5
+expect test1 open ZoneSender True 60 test1
+expect test1 open ZoneReceiver True 
+expect test1 open HasListeners False
+expect test1 open Zone HasVolume True
+expect test1 open Zone Mute False
+expect test1 open Zone Volume 50
+expect test2 update ZoneSender False  test2
+empty

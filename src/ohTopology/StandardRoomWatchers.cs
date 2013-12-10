@@ -190,7 +190,6 @@ namespace OpenHome.Av
     {
         private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
         private StandardRoomWatcherProxyCreator<IProxyPlaylist> iCreateProxy;
-        // private ITopology4Source iSource;
         private IProxyPlaylist iPlaylist;
         private IPlaylistWriter iPlaylistWriter;
 
@@ -221,6 +220,17 @@ namespace OpenHome.Av
                 using (iDisposeHandler.Lock())
                 {
                     return iWatchableSnapshot.Snapshot;
+                }
+            }
+        }
+
+        public IWatchable<IWatchableSnapshot<IMediaPreset>> SnapshotWriter
+        {
+            get
+            {
+                using (iDisposeHandler.Lock())
+                {
+                    return iPlaylist.Snapshot;
                 }
             }
         }
@@ -798,13 +808,14 @@ namespace OpenHome.Av
 
         public void Play()
         {
+            iBuffering.Update(iCurrentTransportState == "Buffering");
             iReceiver.Play(iSenderMetadata);
         }
 
         private void EvaluatePlaying()
         {
             iBuffering.Update(iCurrentMetadata.Uri == iSenderMetadata.Uri && iCurrentTransportState == "Buffering");
-            iPlaying.Update(iCurrentMetadata.Uri == iSenderMetadata.Uri && iCurrentTransportState == "Playing");
+            iPlaying.Update(iCurrentMetadata.Uri == iSenderMetadata.Uri && (iCurrentTransportState == "Playing" || iCurrentTransportState == "Waiting"));
             iSelected.Update(iCurrentMetadata.Uri == iSenderMetadata.Uri);
         }
 

@@ -97,6 +97,7 @@ namespace OpenHome.Av
 
         public void Play()
         {
+            iBuffering.Update(iCurrentTransportState == "Buffering");
             iPlaylist.SeekId(iId);
         }
 
@@ -615,6 +616,7 @@ namespace OpenHome.Av
 
         public override Task Delete(IMediaPreset aValue)
         {
+            Do.Assert(aValue is MediaPresetPlaylist);
             uint id = (aValue as MediaPresetPlaylist).Id;
 
             TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();

@@ -18,18 +18,21 @@ namespace OpenHome.Av
         private readonly Dictionary<string, IInjectorDevice> iDeviceLookup;
         protected readonly DisposeHandler iDisposeHandler;
         protected readonly CpDeviceListUpnpServiceType iDeviceList;
+        private string iType;
 
         protected DeviceInjector(Network aNetwork, string aDomain, string aType, uint aVersion, ILog aLog)
         {
             iDisposeHandler = new DisposeHandler();
             iNetwork = aNetwork;
             iLog = aLog;
+            iType = aType;
             iDeviceList = new CpDeviceListUpnpServiceType(aDomain, aType, aVersion, Added, Removed);
             iDeviceLookup = new Dictionary<string,IInjectorDevice>();
         }
 
         protected void Added(CpDeviceList aList, CpDevice aDevice)
         {
+            iLog.Write("+DeviceInjector ({0}) {1}\n", iType, aDevice.Udn());
             if (!FilterOut(aDevice))
             {
                 IInjectorDevice device = Create(iNetwork, aDevice);
@@ -40,6 +43,7 @@ namespace OpenHome.Av
 
         protected void Removed(CpDeviceList aList, CpDevice aDevice)
         {
+            iLog.Write("-DeviceInjector ({0}) {1}\n", iType, aDevice.Udn());
             IInjectorDevice device;
 
             string udn = aDevice.Udn();

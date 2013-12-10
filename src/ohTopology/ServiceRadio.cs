@@ -89,6 +89,7 @@ namespace OpenHome.Av
 
         public void Play()
         {
+            iBuffering.Update(iCurrentTransportState == "Buffering");
             if (iId > 0)
             {
                 iRadio.SetId(iId, iUri).ContinueWith((t) =>
@@ -113,7 +114,6 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, uint aValue, uint aPrevious)
         {
-            iCurrentTransportState = string.Empty;
             iCurrentId = aValue;
             EvaluatePlaying();
         }

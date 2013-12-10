@@ -105,6 +105,8 @@ namespace OpenHome.Av
         {
             var udn = aDevice.Udn();
 
+            iLog.Write("+DeviceInjectorMediaEndpoint {0}\n", udn);
+
             string deviceXml;
 
             aDevice.GetAttribute("Upnp.DeviceXml", out deviceXml);
@@ -149,6 +151,8 @@ namespace OpenHome.Av
         private void Removed(CpDeviceList aList, CpDevice aDevice)
         {
             var udn = aDevice.Udn();
+
+            iLog.Write("-DeviceInjectorMediaEndpoint {0}\n", udn);
 
             lock (iDevices)
             {

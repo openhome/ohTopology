@@ -78,7 +78,10 @@ namespace OpenHome.Av
 
         public void Play()
         {
-            iBuffering.Update(true);
+            if (!iPlaying.Value)
+            {
+                iBuffering.Update(true);
+            }
             iSource.Select();
         }
 
@@ -361,7 +364,10 @@ namespace OpenHome.Av
                 iSender.Status.RemoveWatcher(this);
                 iSender.Dispose();
                 iSender = null;
+                iHasSender = false;
             }
+
+            iSenders.Dispose();
 
             iDisposed = true;
         }

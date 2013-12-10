@@ -271,7 +271,7 @@ namespace OpenHome.Av
         IVolumeController CreateVolumeController();
     }
 
-    class ZoneSender : IZoneSender, IDisposable
+    class ZoneSender : IZoneSender, IDisposable, IWatcher<IZoneSender>, IOrderedWatcher<IStandardRoom>
     {
         public ZoneSender(StandardRoom aRoom)
             : this(false, aRoom, null)
@@ -297,13 +297,14 @@ namespace OpenHome.Av
 
         public void Dispose()
         {
-            iDisposeHandler.Dispose();
-
             foreach (StandardRoom r in iListeners)
             {
+                r.ZoneSender.RemoveWatcher(this);
                 r.RemovedFromZone(this);
             }
             iListeners.Clear();
+
+            iDisposeHandler.Dispose();
 
             iHasListeners.Dispose();
             iWatchableListeners.Dispose();
@@ -376,30 +377,39 @@ namespace OpenHome.Av
         {
             iListeners.Add(aRoom);
 
-            // calculate where to insert the sender
-            int index = 0;
-            foreach (IStandardRoom r in iWatchableListeners.Values)
-            {
-                if (r.Name.CompareTo(r.Name) < 0)
-                {
-                    break;
-                }
-                ++index;
-            }
+            aRoom.ZoneSender.AddWatcher(this);
 
             // insert the room
-            iWatchableListeners.Add(aRoom, (uint)index);
+            iWatchableListeners.Add(aRoom, GetInsertIndex(aRoom));
             iHasListeners.Update(iWatchableListeners.Values.Count() > 0);
             aRoom.AddedToZone(this);
         }
 
         internal void RemoveFromZone(StandardRoom aRoom)
         {
+            aRoom.ZoneSender.RemoveWatcher(this);
+
             iListeners.Remove(aRoom);
 
             iWatchableListeners.Remove(aRoom);
             iHasListeners.Update(iWatchableListeners.Values.Count() > 0);
             aRoom.RemovedFromZone(this);
+        }
+
+        private uint GetInsertIndex(IStandardRoom aRoom)
+        {
+            // calculate where to insert the sender
+            int index = 0;
+            foreach (IStandardRoom r in iWatchableListeners.Values)
+            {
+                if (aRoom.Name.CompareTo(r.Name) < 0)
+                {
+                    break;
+                }
+                ++index;
+            }
+
+            return ((uint)index);
         }
 
         private readonly DisposeHandler iDisposeHandler;
@@ -409,6 +419,71 @@ namespace OpenHome.Av
         private readonly Watchable<bool> iHasListeners;
         private readonly List<StandardRoom> iListeners;
         private readonly WatchableOrdered<IStandardRoom> iWatchableListeners;
+
+        public void OrderedOpen()
+        {
+        }
+
+        public void OrderedInitialised()
+        {
+        }
+
+        public void OrderedClose()
+        {
+        }
+
+        public void OrderedAdd(IStandardRoom aItem, uint aIndex)
+        {
+            if (aItem != iRoom)
+            {
+                iWatchableListeners.Add(aItem, GetInsertIndex(aItem));
+                iHasListeners.Update(iWatchableListeners.Values.Count() > 0);
+            }
+        }
+
+        public void OrderedMove(IStandardRoom aItem, uint aFrom, uint aTo)
+        {
+        }
+
+        public void OrderedRemove(IStandardRoom aItem, uint aIndex)
+        {
+            if (aItem != iRoom)
+            {
+                iWatchableListeners.Remove(aItem);
+                iHasListeners.Update(iWatchableListeners.Values.Count() > 0);
+            }
+        }
+
+        public void ItemOpen(string aId, IZoneSender aValue)
+        {
+            aValue.Listeners.AddWatcher(this);
+        }
+
+        public void ItemUpdate(string aId, IZoneSender aValue, IZoneSender aPrevious)
+        {
+            aPrevious.Listeners.RemoveWatcher(this);
+            foreach (var r in aPrevious.Listeners.Values)
+            {
+                if (r != iRoom)
+                {
+                    iWatchableListeners.Remove(r);
+                }
+            }
+
+            aValue.Listeners.AddWatcher(this);
+        }
+
+        public void ItemClose(string aId, IZoneSender aValue)
+        {
+            foreach (var r in aValue.Listeners.Values)
+            {
+                if (r != iRoom)
+                {
+                    iWatchableListeners.Remove(r);
+                }
+            }
+            aValue.Listeners.RemoveWatcher(this);
+        }
     }
 
     public interface IZoneReceiver
@@ -655,6 +730,7 @@ namespace OpenHome.Av
                     {
                         s.Device.Create<IProxyReceiver>((receiver) =>
                         {
+                            Do.Assert(aRoom.ZoneSender.Value.Sender != null);
                             aRoom.ZoneSender.Value.Sender.Create<IProxySender>((sender) =>
                             {
                                 if (!iDisposed)
@@ -917,7 +993,7 @@ namespace OpenHome.Av
             {
                 if (s.Type == "Receiver")
                 {
-                    iWatchableZoneReceiver.Update(new ZoneReceiver(true));
+                    iWatchableZoneReceiver.Update(new ZoneReceiver(iWatchableZoneReceiver.Value.ZoneSender));
                     return;
                 }
             }
