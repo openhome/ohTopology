@@ -478,6 +478,7 @@ namespace OpenHome.Av
         {
             iDisposeHandler = new DisposeHandler();
             iNetwork = aNetwork;
+            iLog = aLog;
 
             iTopology1 = new Topology1(aNetwork, aLog);
             iTopology2 = new Topology2(iTopology1, aLog);
@@ -596,6 +597,8 @@ namespace OpenHome.Av
 
         public void UnorderedAdd(ITopology4Room aRoom)
         {
+            iLog.Write("+StandardRoom {0}\n", aRoom.Name);
+
             aRoom.Registrations.AddWatcher(this);
 
             StandardRoom room = new StandardRoom(iNetwork, aRoom);
@@ -620,6 +623,8 @@ namespace OpenHome.Av
 
         public void UnorderedRemove(ITopology4Room aRoom)
         {
+            iLog.Write("-StandardRoom {0}\n", aRoom.Name);
+
             aRoom.Registrations.RemoveWatcher(this);
 
             // remove the corresponding Room from the watchable collection
@@ -792,6 +797,7 @@ namespace OpenHome.Av
 
         private readonly DisposeHandler iDisposeHandler;
         private readonly INetwork iNetwork;
+        private readonly ILog iLog;
         private readonly Topology1 iTopology1;
         private readonly Topology2 iTopology2;
         private readonly Topologym iTopologym;
