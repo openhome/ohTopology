@@ -197,14 +197,14 @@ namespace OpenHome.Av
         }
     }
 
-    public class DeviceInjectorMock : IMockable, IDisposable
+    public class InjectorMock : IMockable, IDisposable
     {
         private readonly Network iNetwork;
         private readonly ILog iLog;
         private readonly string iResourceRoot;
         private readonly Dictionary<string, InjectorDeviceMock> iMockDevices;
 
-        public DeviceInjectorMock(Network aNetwork, string aResourceRoot, ILog aLog)
+        public InjectorMock(Network aNetwork, string aResourceRoot, ILog aLog)
         {
             iNetwork = aNetwork;
             iResourceRoot = aResourceRoot;
