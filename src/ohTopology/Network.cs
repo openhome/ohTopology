@@ -11,7 +11,7 @@ using OpenHome.Net.ControlPoint;
 
 namespace OpenHome.Av
 {
-    public abstract class DeviceInjector : IDisposable
+    public abstract class Injector : IDisposable
     {
         private readonly Network iNetwork;
         private readonly ILog iLog;
@@ -20,7 +20,7 @@ namespace OpenHome.Av
         protected readonly CpDeviceListUpnpServiceType iDeviceList;
         private string iType;
 
-        protected DeviceInjector(Network aNetwork, string aDomain, string aType, uint aVersion, ILog aLog)
+        protected Injector(Network aNetwork, string aDomain, string aType, uint aVersion, ILog aLog)
         {
             iDisposeHandler = new DisposeHandler();
             iNetwork = aNetwork;
@@ -85,17 +85,17 @@ namespace OpenHome.Av
         }
     }
 
-    public class DeviceInjectorProduct : DeviceInjector
+    public class InjectorProduct : Injector
     {
-        public DeviceInjectorProduct(Network aNetwork, ILog aLog)
+        public InjectorProduct(Network aNetwork, ILog aLog)
             : base(aNetwork, "av.openhome.org", "Product", 1, aLog)
         {
         }
     }
 
-    public class DeviceInjectorSender : DeviceInjector
+    public class InjectorSender : Injector
     {
-        public DeviceInjectorSender(Network aNetwork, ILog aLog)
+        public InjectorSender(Network aNetwork, ILog aLog)
             : base(aNetwork, "av.openhome.org", "Sender", 1, aLog)
         {
         }
