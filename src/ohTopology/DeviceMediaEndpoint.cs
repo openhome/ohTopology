@@ -30,7 +30,7 @@ namespace OpenHome.Av
     //   * create a single media endpoint wrapper around a traditional upnp media server
     //   * identify it as an openhome device and enumerate its media endpoints accordingly
 
-    public class DeviceInjectorMediaEndpoint : IDisposable
+    public class InjectorMediaEndpoint : IDisposable
     {
         private readonly Network iNetwork;
         private readonly ILog iLog;
@@ -39,7 +39,7 @@ namespace OpenHome.Av
         private readonly Dictionary<string, IDisposable> iDevices;
         private readonly CpDeviceListUpnpServiceType iDeviceList;
 
-        public DeviceInjectorMediaEndpoint(Network aNetwork, ILog aLog)
+        public InjectorMediaEndpoint(Network aNetwork, ILog aLog)
         {
             iNetwork = aNetwork;
             iLog = aLog;
@@ -133,7 +133,7 @@ namespace OpenHome.Av
 
                     lock (iDevices)
                     {
-                        var device = new DeviceInjectorDeviceOpenHome(this, udn, uri, aDevice, iLog);
+                        var device = new InjectorDeviceOpenHome(this, udn, uri, aDevice, iLog);
                         iDevices.Add(udn, device);
                     }
                 }
@@ -142,7 +142,7 @@ namespace OpenHome.Av
             {
                 lock (iDevices)
                 {
-                    var device = new DeviceInjectorDeviceContentDirectory(this, udn, aDevice, xml, iLog);
+                    var device = new InjectorDeviceContentDirectory(this, udn, aDevice, xml, iLog);
                     iDevices.Add(udn, device);
                 }
             }
@@ -192,13 +192,13 @@ namespace OpenHome.Av
         }
     }
 
-    internal class DeviceInjectorDeviceContentDirectory : IDisposable
+    internal class InjectorDeviceContentDirectory : IDisposable
     {
-        private readonly DeviceInjectorMediaEndpoint iInjector;
+        private readonly InjectorMediaEndpoint iInjector;
 
         private readonly DeviceMediaEndpointContentDirectory iDevice;
 
-        public DeviceInjectorDeviceContentDirectory(DeviceInjectorMediaEndpoint aInjector, string aUdn, CpDevice aDevice, XDocument aXml, ILog aLog)
+        public InjectorDeviceContentDirectory(InjectorMediaEndpoint aInjector, string aUdn, CpDevice aDevice, XDocument aXml, ILog aLog)
         {
             iInjector = aInjector;
             iDevice = new DeviceMediaEndpointContentDirectory(iInjector.Network, aUdn, aDevice, aXml, aLog);
@@ -213,9 +213,9 @@ namespace OpenHome.Av
         }
     }
 
-    internal class DeviceInjectorDeviceOpenHome : IDisposable
+    internal class InjectorDeviceOpenHome : IDisposable
     {
-        private readonly DeviceInjectorMediaEndpoint iInjector;
+        private readonly InjectorMediaEndpoint iInjector;
         private readonly string iUdn;
         private readonly Uri iUri;
         private readonly CpDevice iDevice;
@@ -233,7 +233,7 @@ namespace OpenHome.Av
 
         private bool iDisposed;
 
-        public DeviceInjectorDeviceOpenHome(DeviceInjectorMediaEndpoint aInjector, string aUdn, Uri aUri, CpDevice aDevice, ILog aLog)
+        public InjectorDeviceOpenHome(InjectorMediaEndpoint aInjector, string aUdn, Uri aUri, CpDevice aDevice, ILog aLog)
         {
             iInjector = aInjector;
             iUdn = aUdn;
