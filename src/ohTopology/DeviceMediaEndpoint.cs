@@ -223,6 +223,8 @@ namespace OpenHome.Av
 
         private readonly Encoding iEncoding;
 
+        private readonly HttpClient iClient;
+
         private Dictionary<string, IInjectorDevice> iEndpoints;
         private Dictionary<string, List<IDisposable>> iEventHandlers;
 
@@ -230,8 +232,6 @@ namespace OpenHome.Av
 
         private IEventSupervisorSession iEventSession;
         private IDisposable iEventMediaEndpoints;
-
-        private bool iDisposed;
 
         public InjectorDeviceOpenHome(InjectorMediaEndpoint aInjector, string aUdn, Uri aUri, CpDevice aDevice, ILog aLog)
         {
@@ -244,18 +244,16 @@ namespace OpenHome.Av
 
             iEncoding = new UTF8Encoding(false);
 
+            iClient = new HttpClient(iInjector.Network);
+
             iEndpoints = new Dictionary<string, IInjectorDevice>();
             iEventHandlers = new Dictionary<string, List<IDisposable>>();
 
             iCancellationTokenSource = new CancellationTokenSource();
 
-            iDisposed = false;
-
-            var client = new HttpClient(iInjector.Network);
-
-            client.Read(iUri + "/es", iCancellationTokenSource.Token, (buffer) =>
+            iClient.Read(iUri + "/es", iCancellationTokenSource.Token, (buffer) =>
             {
-                if (!iDisposed && buffer != null)
+                if (buffer != null)
                 {
                     var value = iEncoding.GetString(buffer);
 
@@ -320,11 +318,9 @@ namespace OpenHome.Av
 
         private void Update(string aId, uint aSequence)
         {
-            var client = new HttpClient(iInjector.Network);
-
-            client.Read(iUri + "/me", CancellationToken.None, (buffer) =>
+            iClient.Read(iUri + "/me", CancellationToken.None, (buffer) =>
             {
-                if (!iDisposed && buffer != null)
+                if (buffer != null)
                 {
                     var value = iEncoding.GetString(buffer);
 
@@ -411,7 +407,7 @@ namespace OpenHome.Av
 
             iInjector.Network.Schedule(() =>
             {
-                iDisposed = true;
+                iClient.Dispose();
 
                 iDevice.RemoveRef();
 
