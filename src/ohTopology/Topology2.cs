@@ -291,6 +291,10 @@ namespace OpenHome.Av
                     }
                 }
 
+                if (type == "Disc")
+                {
+                    name = iProduct.Name.Value;
+                }
                 ITopology2Source source = new Topology2Source(index, name, type, visible);
 
                 if (aInitial)

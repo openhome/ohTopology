@@ -1089,7 +1089,7 @@ namespace OpenHome.Av
             return hasExternal;
         }
 
-        private bool IsExternal(ITopology4Source aSource)
+        protected virtual bool IsExternal(ITopology4Source aSource)
         {
             return (aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi");
         }
@@ -1143,6 +1143,19 @@ namespace OpenHome.Av
                 return !(uint.TryParse(name.Substring(8), out result));
             }
             return true;
+        }
+    }
+
+    public class StandardRoomWatcherExternalWithDisc : StandardRoomWatcherExternal
+    {
+        public StandardRoomWatcherExternalWithDisc(IStandardRoom aRoom)
+            : base(aRoom)
+        {
+        }
+
+        protected override bool IsExternal(ITopology4Source aSource)
+        {
+            return (aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi" || aSource.Type == "Disc");
         }
     }
 
