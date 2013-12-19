@@ -946,43 +946,59 @@ namespace OpenHome.Av
 
         private void EvaluateZoneSender(IEnumerable<ITopology4Group> aValue)
         {
-            if (iRoots.Count() == 1 && aValue.Count() > 0)
+            if (aValue.Count() > 0)
             {
-                ITopology4Root root = iRoots.First();
-                foreach (ITopology4Group g in aValue)
+                // select root sender if available
+                if (iRoots.Count() == 1)
                 {
-                    if (root == g)
+                    ITopology4Root root = iRoots.First();
+                    foreach (ITopology4Group g in aValue)
                     {
-                        if (!iWatchableZoneSender.Value.Enabled)
+                        if (root == g)
                         {
-                            ZoneSender s = iZoneSender;
-                            iZoneSender = new ZoneSender(this, root.Device);
-                            iWatchableZoneSender.Update(iZoneSender);
-                            s.Dispose();
+                            if (!iWatchableZoneSender.Value.Enabled)
+                            {
+                                ZoneSender z = iZoneSender;
+                                iZoneSender = new ZoneSender(this, g.Device);
+                                iWatchableZoneSender.Update(iZoneSender);
+                                z.Dispose();
+                            }
+                            return;
                         }
-                        break;
                     }
-                    /*else if (aValue.Count() == 1)
+                }
+
+                // select sender associated with the selected playlist
+                foreach (ITopology4Source s in iSources)
+                {
+                    if (s.Type == "Playlist")
                     {
-                        if (!iWatchableZoneSender.Value.Enabled)
+                        foreach (ITopology4Group g in aValue)
                         {
-                            ZoneSender s = iZoneSender;
-                            iZoneSender = new ZoneSender(this, g.Device);
-                            iWatchableZoneSender.Update(iZoneSender);
-                            s.Dispose();
+                            if (s.Group == g)
+                            {
+                                if (!iWatchableZoneSender.Value.Enabled)
+                                {
+                                    ZoneSender z = iZoneSender;
+                                    iZoneSender = new ZoneSender(this, g.Device);
+                                    iWatchableZoneSender.Update(iZoneSender);
+                                    z.Dispose();
+                                }
+                                return;
+                            }
                         }
-                        break;
-                    }*/
+                        return;
+                    }
                 }
             }
             else
             {
                 if (iWatchableZoneSender.Value.Enabled)
                 {
-                    ZoneSender s = iZoneSender;
+                    ZoneSender z = iZoneSender;
                     iZoneSender = new ZoneSender(this);
                     iWatchableZoneSender.Update(iZoneSender);
-                    s.Dispose();
+                    z.Dispose();
                 }
             }
         }
