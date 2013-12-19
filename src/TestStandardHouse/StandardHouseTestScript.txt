@@ -264,7 +264,6 @@ empty
 // add another ds to Main Room
 mock network create ds 68
 mock network add 68
-expect Main Room update Zone False 
 expect Main Room update Presets Enabled False
 expect Main Room update Presets Enabled True
 expect Main Room update Music Enabled False
@@ -319,7 +318,6 @@ Presets begin
 Presets end
 empty
 mock network update 68 product name Test
-expect Main Room update Zone True 67
 expect Main Room update Presets Enabled False
 expect Main Room update Presets Enabled True
 expect Main Room update Music Enabled False
@@ -389,7 +387,6 @@ empty
 
 mock network create dsm 50
 mock network add 50
-expect Main Room update Zone False 
 expect Main Room update External Enabled True
 expect Main Room update Presets Enabled False
 expect Main Room update Presets Enabled True
@@ -428,7 +425,6 @@ Presets end
 empty
 
 mock network update 50 product room Test Room
-expect Main Room update Zone True 67
 expect Main Room update External Enabled False
 expect Main Room update Presets Enabled False
 expect Main Room update Presets Enabled True
