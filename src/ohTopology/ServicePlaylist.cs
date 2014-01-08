@@ -833,7 +833,6 @@ namespace OpenHome.Av
         private void HandleRepeatChanged()
         {
             IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
-            uint id = iService.PropertyId();
             bool repeat = iService.PropertyRepeat();
             iNetwork.Schedule(() =>
             {
