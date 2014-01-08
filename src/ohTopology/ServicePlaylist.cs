@@ -790,7 +790,31 @@ namespace OpenHome.Av
             }
             else
             {
-                iInfoNext.Update(InfoMetadata.Empty);
+                if (iRepeat.Value && index == aIdArray.Count - 1)
+                {
+                    iCacheSession.Entries(new uint[] { aIdArray.ElementAt((uint)0) }).ContinueWith((t) =>
+                    {
+                        iNetwork.Schedule(() =>
+                        {
+                            iDisposeHandler.WhenNotDisposed(() =>
+                            {
+                                try
+                                {
+                                    IIdCacheEntry entry = t.Result.ElementAt(0);
+                                    iInfoNext.Update(new InfoMetadata(entry.Metadata, entry.Uri));
+                                }
+                                catch
+                                {
+                                    iInfoNext.Update(InfoMetadata.Empty);
+                                }
+                            });
+                        });
+                    });
+                }
+                else
+                {
+                    iInfoNext.Update(InfoMetadata.Empty);
+                }
             }
         }
 
@@ -808,12 +832,15 @@ namespace OpenHome.Av
 
         private void HandleRepeatChanged()
         {
+            IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
+            uint id = iService.PropertyId();
             bool repeat = iService.PropertyRepeat();
             iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
                     iRepeat.Update(repeat);
+                    EvaluateInfoNext(iId.Value, idArray);
                 });
             });
         }
