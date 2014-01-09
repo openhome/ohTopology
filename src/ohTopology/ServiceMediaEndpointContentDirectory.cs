@@ -284,7 +284,7 @@ namespace OpenHome.Av
         {
             var snapshot = aSnapshot as MediaEndpointSnapshotContentDirectory;
 
-            iProxy.BeginBrowse(snapshot.Id, "BrowseDirectChildren", "", aIndex, aCount, "", (r) =>
+            iProxy.BeginBrowse(snapshot.Id, "BrowseDirectChildren", "*", aIndex, aCount, "", (r) =>
             {
                 string result;
                 uint returned;
