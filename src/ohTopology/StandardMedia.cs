@@ -59,6 +59,7 @@ namespace OpenHome.Av
     {
         private readonly DisposeHandler iDisposeHandler;
         private readonly INetwork iNetwork;
+        private readonly ILog iLog;
         private IWatchableUnordered<IDevice> iMediaEndpoints;
         private readonly Dictionary<IDevice, IProxyMediaEndpoint> iEndpointLookup;
         private readonly Dictionary<string, List<IProxyMediaEndpoint>> iOtherEndpointLookup;
@@ -68,10 +69,11 @@ namespace OpenHome.Av
         private string iId;
         private bool iDisposed;
 
-        public StandardMedia(INetwork aNetwork)
+        public StandardMedia(INetwork aNetwork, ILog aLog)
         {
             iDisposeHandler = new DisposeHandler();
             iNetwork = aNetwork;
+            iLog = aLog;
             iDisposed = false;
             iMusicEndpoint = new Watchable<IMusicEndpoint>(iNetwork, "MusicEndpoint", new MusicEndpoint());
             iOtherEndpoints = new WatchableUnordered<IProxyMediaEndpoint>(iNetwork);
@@ -174,6 +176,8 @@ namespace OpenHome.Av
         {
             aItem.Create<IProxyMediaEndpoint>((endpoint) =>
             {
+                iLog.Write("+StandardMedia {0} with {1}\n", endpoint.Name, string.Join(", ", endpoint.Attributes));
+
                 if (!iDisposed)
                 {
                     if (endpoint.Type == "Music")
@@ -262,6 +266,8 @@ namespace OpenHome.Av
 
             if (iEndpointLookup.TryGetValue(aItem, out endpoint))
             {
+                iLog.Write("-StandardMedia {0}\n", endpoint.Name);
+
                 // remove the corresponding endpoint from the watchable collections
                 if (endpoint.Type == "Music")
                 {
