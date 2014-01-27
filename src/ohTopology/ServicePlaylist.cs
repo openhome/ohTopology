@@ -767,7 +767,7 @@ namespace OpenHome.Av
         private void EvaluateInfoNext(uint aId, IList<uint> aIdArray)
         {
             int index = aIdArray.IndexOf(aId);
-            if ((index > -1) && (index < aIdArray.Count - 1) && (aIdArray.Count > 1))
+            if (!iShuffle.Value && (index > -1) && (index < aIdArray.Count - 1) && (aIdArray.Count > 1))
             {
                 iCacheSession.Entries(new uint[] { aIdArray.ElementAt(index + 1) }).ContinueWith((t) =>
                 {
@@ -790,7 +790,7 @@ namespace OpenHome.Av
             }
             else
             {
-                if (iRepeat.Value && index == aIdArray.Count - 1)
+                if (!iShuffle.Value && iRepeat.Value && (index > -1) && index == aIdArray.Count - 1)
                 {
                     iCacheSession.Entries(new uint[] { aIdArray.ElementAt((uint)0) }).ContinueWith((t) =>
                     {
