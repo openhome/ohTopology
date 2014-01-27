@@ -269,9 +269,8 @@ namespace OpenHome.Av
                             iEventMediaEndpoints = iEventSession.Create("ps.me", Update);
                         }
                     }
-                    catch(Exception e)
+                    catch
                     {
-                        Console.WriteLine("Exception caught resolving endpoint session" + e);
                     }
                 }
             });
@@ -330,9 +329,8 @@ namespace OpenHome.Av
                         var json = JsonParser.Parse(value) as JsonObject;
                         UpdateEndpoints(json);
                     }
-                    catch (Exception e)
+                    catch
                     {
-                        Console.WriteLine("Exception caught in update endpoint session" + e);
                     }
                 }
             });
