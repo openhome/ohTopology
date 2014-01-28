@@ -440,7 +440,9 @@ namespace OpenHome.Av
 
                 iClient.Create(iCancellationTokenSource.Token, (session) =>
                 {
-                    aCallback(new MediaEndpointSupervisorSession(iClient, session, DestroySession));
+                    var newSession = new MediaEndpointSupervisorSession(iClient, session, DestroySession);
+                    iSessions.Add(session, newSession);
+                    aCallback(newSession);
                 });
             }
         }
