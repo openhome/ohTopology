@@ -128,15 +128,24 @@ namespace TestMediaEndpoint
 
             var supervisor = new MediaEndpointSupervisor(client);
 
+            var sessions = new List<IMediaEndpointSession>();
             client.Execute(() =>
             {
                 for (int i = 0; i < 100; i++)
                 {
-                    supervisor.CreateSession((session) => { });
+                    supervisor.CreateSession((session) => { sessions.Add(session); });
                 }
             });
 
             Thread.Sleep(aMilliseconds);
+
+            client.Execute(() =>
+            {
+                foreach (IDisposable session in sessions)
+                {
+                    session.Dispose();
+                }
+            });
 
             supervisor.Cancel();
 
