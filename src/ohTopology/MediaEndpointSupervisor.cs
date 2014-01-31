@@ -394,12 +394,9 @@ namespace OpenHome.Av
 
             using (iDisposeHandler.Lock())
             {
-                lock (iSessions)
+                foreach (var session in iSessions)
                 {
-                    foreach (var session in iSessions)
-                    {
-                        session.Value.Refresh();
-                    }
+                    session.Value.Refresh();
                 }
             }
         }
@@ -410,14 +407,11 @@ namespace OpenHome.Av
 
             using (iDisposeHandler.Lock())
             {
-                lock (iSessions)
-                {
-                    MediaEndpointSupervisorSession session;
+                MediaEndpointSupervisorSession session;
 
-                    if (iSessions.TryGetValue(aSession, out session))
-                    {
-                        session.Refresh();
-                    }
+                if (iSessions.TryGetValue(aSession, out session))
+                {
+                    session.Refresh();
                 }
             }
         }
@@ -449,12 +443,12 @@ namespace OpenHome.Av
 
         private void DestroySession(string aId)
         {
-            // called on the watchable thread
+            // already guaranteed to be on the watchable thread because it
+            // is only called from Session the dispose method
 
-            lock (iSessions)
-            {
-                iSessions.Remove(aId);
-            }
+            iSessions.Remove(aId);
+
+            iClient.Destroy(iCancellationTokenSource.Token, (session) => {}, aId);
         }
 
         // IDispose
@@ -468,10 +462,10 @@ namespace OpenHome.Av
 
             Do.Assert(iCancellationTokenSource.IsCancellationRequested);
 
-            lock (iSessions)
+            iClient.Schedule(() =>
             {
                 Do.Assert(iSessions.Count == 0);
-            }
+            });
 
             iCancellationTokenSource.Dispose();
         }
