@@ -108,7 +108,10 @@ namespace OpenHome.Av
             iRooms = aHouse.Rooms;
             iHasMultiroom = aHasMultiroom;
 
-            iRooms.AddWatcher(this);
+            aHouse.Network.Schedule(() =>
+            {
+                iRooms.AddWatcher(this);
+            });
         }
 
         public void Dispose()
