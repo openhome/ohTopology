@@ -337,25 +337,34 @@ namespace OpenHome.Av
                     try
                     {
                         iServiceVolkano.EndProductId(ptr, out iProductId);
-                        if (!volkano.Task.IsCanceled)
+                        lock (volkano)
                         {
-                            volkano.SetResult(true);
+                            if (!volkano.Task.IsCanceled)
+                            {
+                                volkano.SetResult(true);
+                            }
                         }
                     }
                     catch (ProxyError e)
                     {
-                        if (!volkano.Task.IsCanceled)
+                        lock (volkano)
                         {
-                            volkano.SetException(e);
+                            if (!volkano.Task.IsCanceled)
+                            {
+                                volkano.SetException(e);
+                            }
                         }
                     }
                 });
             }
             else
             {
-                if (!volkano.Task.IsCanceled)
+                lock (volkano)
                 {
-                    volkano.SetResult(true);
+                    if (!volkano.Task.IsCanceled)
+                    {
+                        volkano.SetResult(true);
+                    }
                 }
             }
                 
@@ -376,7 +385,10 @@ namespace OpenHome.Av
             }
             if (iSubscribedVolkanoSource != null)
             {
-                iSubscribedVolkanoSource.TrySetCanceled();
+                lock (iSubscribedVolkanoSource)
+                {
+                    iSubscribedVolkanoSource.TrySetCanceled();
+                }
             }
         }
 
