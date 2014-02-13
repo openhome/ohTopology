@@ -73,9 +73,11 @@ namespace OpenHome.Av
         private readonly CancellationTokenSource iCancellationTokenSource;
 
         private readonly List<Task> iTasks;
+        private ILog iLog;
 
-        public MediaEndpointSupervisorSnapshot(IMediaEndpointClient aClient, MediaEndpointSupervisorSession aSession, IMediaEndpointClientSnapshot aSnapshot)
+        public MediaEndpointSupervisorSnapshot(IMediaEndpointClient aClient, MediaEndpointSupervisorSession aSession, IMediaEndpointClientSnapshot aSnapshot, ILog aLog)
         {
+            iLog = aLog;
             iClient = aClient;
             iSession = aSession;
             iSnapshot = aSnapshot;
@@ -122,7 +124,8 @@ namespace OpenHome.Av
         public void Read(uint aIndex, uint aCount, CancellationToken aCancellationToken, Action<IWatchableFragment<IMediaDatum>> aCallback)
         {
             iClient.Assert(); // Must be called on the watchable thread;
-
+            var s = new Stopwatch();
+            s.Start();
             Do.Assert(aIndex + aCount <= iSnapshot.Total);
 
             using (iDisposeHandler.Lock())
@@ -140,7 +143,12 @@ namespace OpenHome.Av
                 {
                     var ctl = new CancellationTokenLink(iCancellationTokenSource.Token, aCancellationToken);
 
-                    iClient.Read(ctl.Token, aCallback, iSession.Id, iSnapshot, aIndex, aCount);
+                    iClient.Read(ctl.Token, (fragment) =>
+                    {
+                        s.Stop();
+                        iLog.Write("Snapshot Read ({0}) took {1} milliseconds\n", iSession.Id, s.Milliseconds);
+                        aCallback(fragment);
+                    }, iSession.Id, iSnapshot, aIndex, aCount);
                 }
             }
         }
@@ -191,8 +199,11 @@ namespace OpenHome.Av
 
         private uint iSequence;
 
-        public MediaEndpointSupervisorSession(IMediaEndpointClient aClient, string aId, Action<string> aDispose)
+        private ILog iLog;
+
+        public MediaEndpointSupervisorSession(IMediaEndpointClient aClient, string aId, Action<string> aDispose, ILog aLog)
         {
+            iLog = aLog;
             iClient = aClient;
             iId = aId;
             iDispose = aDispose;
@@ -212,7 +223,7 @@ namespace OpenHome.Av
 
             iTask = Task.Factory.StartNew(() => { });
 
-            iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, null);
+            iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, null, iLog);
 
             iSequence = 0;
         }
@@ -254,7 +265,7 @@ namespace OpenHome.Av
 
                 Do.Assert(iSnapshot == null);
 
-                iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, snapshot);
+                iSnapshot = new MediaEndpointSupervisorSnapshot(iClient, this, snapshot, iLog);
 
                 iAction();
 
@@ -288,9 +299,16 @@ namespace OpenHome.Av
         {
             iClient.Assert(); // must be called on the watchable thread
 
+            var s = new Stopwatch();
+            s.Start();
             using (iDisposeHandler.Lock())
             {
-                UpdateSnapshot((token, callback) => iClient.Browse(token, callback, iId, aDatum), aAction);
+                UpdateSnapshot((token, callback) => iClient.Browse(token, callback, iId, aDatum), () =>
+                {
+                    s.Stop();
+                    iLog.Write("Browse ({0}) took {1} milliseconds\n", this.Id, s.Milliseconds);
+                    aAction();
+                });
             }
         }
 
@@ -298,9 +316,16 @@ namespace OpenHome.Av
         {
             iClient.Assert(); // must be called on the watchable thread
 
+            var s = new Stopwatch();
+            s.Start();
             using (iDisposeHandler.Lock())
             {
-                UpdateSnapshot((token, callback) => iClient.List(token, callback, iId, aTag), aAction);
+                UpdateSnapshot((token, callback) => iClient.List(token, callback, iId, aTag), () =>
+                {
+                    s.Stop();
+                    iLog.Write("List ({0}) took {1} milliseconds\n", this.Id, s.Milliseconds);
+                    aAction();
+                });
             }
         }
 
@@ -308,9 +333,16 @@ namespace OpenHome.Av
         {
             iClient.Assert(); // must be called on the watchable thread
 
+            var s = new Stopwatch();
+            s.Start();
             using (iDisposeHandler.Lock())
             {
-                UpdateSnapshot((token, callback) => iClient.Link(token, callback, iId, aTag, aValue), aAction);
+                UpdateSnapshot((token, callback) => iClient.Link(token, callback, iId, aTag, aValue), () =>
+                {
+                    s.Stop();
+                    iLog.Write("Link ({0}) took {1} milliseconds\n", this.Id, s.Milliseconds);
+                    aAction();
+                });
             }
         }
 
@@ -318,19 +350,31 @@ namespace OpenHome.Av
         {
             iClient.Assert(); // must be called on the watchable thread
 
+            var s = new Stopwatch();
+            s.Start();
             using (iDisposeHandler.Lock())
             {
-                UpdateSnapshot((token, callback) => iClient.Match(token, callback, iId, aTag, aValue), aAction);
+                UpdateSnapshot((token, callback) => iClient.Match(token, callback, iId, aTag, aValue), () =>
+                {
+                    s.Stop();
+                    iLog.Write("Match ({0}) took {1} milliseconds\n", this.Id, s.Milliseconds);
+                    aAction();
+                });
             }
         }
 
         public void Search(string aValue, Action aAction)
         {
             iClient.Assert(); // must be called on the watchable thread
-
+            var s = new Stopwatch();
+            s.Start();
             using (iDisposeHandler.Lock())
             {
-                UpdateSnapshot((token, callback) => iClient.Search(token, callback, iId, aValue), aAction);
+                UpdateSnapshot((token, callback) => iClient.Search(token, callback, iId, aValue), () => {                    
+                    s.Stop();
+                    iLog.Write("Search ({0}) took {1} milliseconds\n", this.Id, s.Milliseconds);
+                    aAction();
+                });
             }
         }
 
@@ -379,10 +423,12 @@ namespace OpenHome.Av
         private readonly DisposeHandler iDisposeHandler;
         private readonly CancellationTokenSource iCancellationTokenSource;
         private readonly Dictionary<string, MediaEndpointSupervisorSession> iSessions;
+        private ILog iLog;
 
-        public MediaEndpointSupervisor(IMediaEndpointClient aClient)
+        public MediaEndpointSupervisor(IMediaEndpointClient aClient, ILog aLog)
         {
             iClient = aClient;
+            iLog = aLog;
             iDisposeHandler = new DisposeHandler();
             iCancellationTokenSource = new CancellationTokenSource();
             iSessions = new Dictionary<string, MediaEndpointSupervisorSession>();
@@ -427,15 +473,18 @@ namespace OpenHome.Av
         public void CreateSession(Action<IMediaEndpointSession> aCallback)
         {
             iClient.Assert(); // must be called on the watchable thread
-
+            Stopwatch s = new Stopwatch();
+            s.Start();
             using (iDisposeHandler.Lock())
             {
                 var token = iCancellationTokenSource.Token;
 
                 iClient.Create(iCancellationTokenSource.Token, (session) =>
                 {
-                    var newSession = new MediaEndpointSupervisorSession(iClient, session, DestroySession);
+                    var newSession = new MediaEndpointSupervisorSession(iClient, session, DestroySession, iLog);
                     iSessions.Add(session, newSession);
+                    s.Stop();
+                    iLog.Write("CreateSession ({0}) took {1} milliseconds\n", session, s.Milliseconds);
                     aCallback(newSession);
                 });
             }

@@ -39,7 +39,7 @@ namespace OpenHome.Av
             iSessionHandler = aSessionHandler;
 
             iEncoding = new UTF8Encoding(false);
-            iSupervisor = new MediaEndpointSupervisor(this);
+            iSupervisor = new MediaEndpointSupervisor(this, aLog);
         }
 
         public override IProxy OnCreate(IDevice aDevice)

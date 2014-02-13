@@ -34,7 +34,7 @@ namespace OpenHome.Av
         {
             iMetadata = aMetadata;
             //iUriProvider = aUriProvider;
-            iSupervisor = new MediaEndpointSupervisor(this);
+            iSupervisor = new MediaEndpointSupervisor(this, aLog);
 
             iArtists = iMetadata.Where(m => m[iNetwork.TagManager.Audio.AlbumArtist] != null)
                 .SelectMany(m => m[iNetwork.TagManager.Audio.AlbumArtist].Values)
