@@ -846,12 +846,14 @@ namespace OpenHome.Av
 
         private void HandleShuffleChanged()
         {
+            IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
             bool shuffle = iService.PropertyShuffle();
             iNetwork.Schedule(() =>
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
                     iShuffle.Update(shuffle);
+                    EvaluateInfoNext(iId.Value, idArray);
                 });
             });
         }
