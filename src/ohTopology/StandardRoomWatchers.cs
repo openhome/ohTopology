@@ -198,6 +198,32 @@ namespace OpenHome.Av
         {
         }
 
+        public IWatchable<bool> Repeat
+        {
+            get
+            {
+                return iPlaylist.Repeat;
+            }
+        }
+
+        public IWatchable<bool> Shuffle 
+        { 
+            get
+            {
+                return iPlaylist.Shuffle;
+            }
+        }
+
+        public void SetRepeat(bool aValue)
+        {
+            iPlaylist.SetRepeat(aValue);
+        }
+
+        public void SetShuffle(bool aValue)
+        {
+            iPlaylist.SetShuffle(aValue);
+        }
+
         public override void Dispose()
         {
             base.Dispose();
