@@ -217,6 +217,8 @@ namespace OpenHome.Av
 
             iService.Subscribe();
 
+            iSubscribed = true;
+
             return iSubscribedSource.Task.ContinueWith((t) => { });
         }
 
@@ -247,6 +249,8 @@ namespace OpenHome.Av
             }
 
             iSubscribedSource = null;
+
+            iSubscribed = false;
         }
 
         private void HandleAudioChanged()
@@ -256,7 +260,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iAudio.Update(audio);
+                    if (iSubscribed)
+                    {
+                        iAudio.Update(audio);
+                    }
                 });
             });
         }
@@ -268,7 +275,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iMetadata.Update(new SenderMetadata(metadata));
+                    if (iSubscribed)
+                    {
+                        iMetadata.Update(new SenderMetadata(metadata));
+                    }
                 });
             });
         }
@@ -280,12 +290,16 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iStatus.Update(status);
+                    if (iSubscribed)
+                    {
+                        iStatus.Update(status);
+                    }
                 });
             });
         }
 
         private readonly CpDevice iCpDevice;
+        private bool iSubscribed;
         private TaskCompletionSource<bool> iSubscribedSource;
         private CpProxyAvOpenhomeOrgSender1 iService;
     }

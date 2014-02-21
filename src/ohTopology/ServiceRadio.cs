@@ -301,6 +301,8 @@ namespace OpenHome.Av
 
             iService.Subscribe();
 
+            iSubscribed = true;
+
             return iSubscribedSource.Task.ContinueWith((t) => { });
         }
 
@@ -343,6 +345,8 @@ namespace OpenHome.Av
             }
 
             iSubscribedSource = null;
+
+            iSubscribed = false;
         }
 
         public override Task Play()
@@ -531,7 +535,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iId.Update(id);
+                    if (iSubscribed)
+                    {
+                        iId.Update(id);
+                    }
                 });
             });
         }
@@ -543,8 +550,11 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iCacheSession.SetValid(idArray.Where(v => v != 0).ToList());
-                    iMediaSupervisor.Update(new RadioSnapshot(iNetwork, iCacheSession, idArray, this));
+                    if (iSubscribed)
+                    {
+                        iCacheSession.SetValid(idArray.Where(v => v != 0).ToList());
+                        iMediaSupervisor.Update(new RadioSnapshot(iNetwork, iCacheSession, idArray, this));
+                    }
                 });
             });
         }
@@ -557,11 +567,14 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iMetadata.Update(
-                        new InfoMetadata(
-                            metadata,
-                            uri
-                        ));
+                    if (iSubscribed)
+                    {
+                        iMetadata.Update(
+                            new InfoMetadata(
+                                metadata,
+                                uri
+                            ));
+                    }
                 });
             });
         }
@@ -573,12 +586,16 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iTransportState.Update(transportState);
+                    if (iSubscribed)
+                    {
+                        iTransportState.Update(transportState);
+                    }
                 });
             });
         }
 
         private readonly CpDevice iCpDevice;
+        private bool iSubscribed;
         private TaskCompletionSource<bool> iSubscribedSource;
         private CpProxyAvOpenhomeOrgRadio1 iService;
         private IIdCacheSession iCacheSession;

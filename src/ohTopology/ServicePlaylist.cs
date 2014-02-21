@@ -348,6 +348,8 @@ namespace OpenHome.Av
 
             iService.Subscribe();
 
+            iSubscribed = true;
+
             return iSubscribedSource.Task.ContinueWith((t) => { });
         }
 
@@ -390,6 +392,8 @@ namespace OpenHome.Av
             }
 
             iSubscribedSource = null;
+
+            iSubscribed = false;
         }
 
         public override Task Play()
@@ -744,8 +748,11 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iId.Update(id);
-                    EvaluateInfoNext(id, idArray);
+                    if (iSubscribed)
+                    {
+                        iId.Update(id);
+                        EvaluateInfoNext(id, idArray);
+                    }
                 });
             });
         }
@@ -757,9 +764,12 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iCacheSession.SetValid(idArray);
-                    iMediaSupervisor.Update(new PlaylistSnapshot(iNetwork, iCacheSession, idArray, this));
-                    EvaluateInfoNext(iId.Value, idArray);
+                    if (iSubscribed)
+                    {
+                        iCacheSession.SetValid(idArray);
+                        iMediaSupervisor.Update(new PlaylistSnapshot(iNetwork, iCacheSession, idArray, this));
+                        EvaluateInfoNext(iId.Value, idArray);
+                    }
                 });
             });
         }
@@ -825,7 +835,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iTransportState.Update(transportState);
+                    if (iSubscribed)
+                    {
+                        iTransportState.Update(transportState);
+                    }
                 });
             });
         }
@@ -838,8 +851,11 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iRepeat.Update(repeat);
-                    EvaluateInfoNext(iId.Value, idArray);
+                    if (iSubscribed)
+                    {
+                        iRepeat.Update(repeat);
+                        EvaluateInfoNext(iId.Value, idArray);
+                    }
                 });
             });
         }
@@ -852,13 +868,17 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iShuffle.Update(shuffle);
-                    EvaluateInfoNext(iId.Value, idArray);
+                    if (iSubscribed)
+                    {
+                        iShuffle.Update(shuffle);
+                        EvaluateInfoNext(iId.Value, idArray);
+                    }
                 });
             });
         }
 
         private readonly CpDevice iCpDevice;
+        private bool iSubscribed;
         private TaskCompletionSource<bool> iSubscribedSource;
         private CpProxyAvOpenhomeOrgPlaylist1 iService;
         private IIdCacheSession iCacheSession;

@@ -232,6 +232,8 @@ namespace OpenHome.Av
 
             iService.Subscribe();
 
+            iSubscribed = true;
+
             return iSubscribedSource.Task.ContinueWith((t) => { });
         }
 
@@ -259,6 +261,8 @@ namespace OpenHome.Av
             }
 
             iSubscribedSource = null;
+
+            iSubscribed = false;
         }
 
         public override Task SetBalance(int aValue)
@@ -382,7 +386,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iVolumeUnity.Update(unity);
+                    if (iSubscribed)
+                    {
+                        iVolumeUnity.Update(unity);
+                    }
                 });
             });
         }
@@ -394,7 +401,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iVolumeSteps.Update(steps);
+                    if (iSubscribed)
+                    {
+                        iVolumeSteps.Update(steps);
+                    }
                 });
             });
         }
@@ -406,7 +416,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iVolumeMilliDbPerStep.Update(step);
+                    if (iSubscribed)
+                    {
+                        iVolumeMilliDbPerStep.Update(step);
+                    }
                 });
             });
         }
@@ -418,7 +431,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iVolumeLimit.Update(limit);
+                    if (iSubscribed)
+                    {
+                        iVolumeLimit.Update(limit);
+                    }
                 });
             });
         }
@@ -430,8 +446,11 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    Console.WriteLine("VolumeChanged: " + Device.Udn + " " + iService.PropertyVolume());
-                    iValue.Update(volume);
+                    if (iSubscribed)
+                    {
+                        Console.WriteLine("VolumeChanged: " + Device.Udn + " " + iService.PropertyVolume());
+                        iValue.Update(volume);
+                    }
                 });
             });
         }
@@ -443,7 +462,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iMute.Update(mute);
+                    if (iSubscribed)
+                    {
+                        iMute.Update(mute);
+                    }
                 });
             });
         }
@@ -455,7 +477,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iFade.Update(fade);
+                    if (iSubscribed)
+                    {
+                        iFade.Update(fade);
+                    }
                 });
             });
         }
@@ -467,12 +492,16 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iBalance.Update(balance);
+                    if (iSubscribed)
+                    {
+                        iBalance.Update(balance);
+                    }
                 });
             });
         }
 
         private readonly CpDevice iCpDevice;
+        private bool iSubscribed;
         private TaskCompletionSource<bool> iSubscribedSource;
         private CpProxyAvOpenhomeOrgVolume1 iService;
     }
