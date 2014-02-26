@@ -510,9 +510,12 @@ namespace OpenHome.Av
                         if (id > 0)
                         {
                             XmlNode n = document.SelectSingleNode(string.Format("/ChannelList/Entry[Id={0}]/Metadata", id));
-                            IMediaMetadata metadata = iNetwork.TagManager.FromDidlLite(n.InnerText);
-                            string uri = metadata[iNetwork.TagManager.Audio.Uri].Value;
-                            entries.Add(new IdCacheEntry(metadata, uri));
+                            if (n != null)
+                            {
+                                IMediaMetadata metadata = iNetwork.TagManager.FromDidlLite(n.InnerText);
+                                string uri = metadata[iNetwork.TagManager.Audio.Uri].Value;
+                                entries.Add(new IdCacheEntry(metadata, uri));
+                            }
                         }
                     }
 
