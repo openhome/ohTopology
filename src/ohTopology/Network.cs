@@ -17,7 +17,7 @@ namespace OpenHome.Av
         private readonly ILog iLog;
         private readonly Dictionary<string, IInjectorDevice> iDeviceLookup;
         protected readonly DisposeHandler iDisposeHandler;
-        protected readonly CpDeviceListUpnpServiceType iDeviceList;
+        protected readonly ICpDeviceList iDeviceList;
         private string iType;
 
         protected Injector(Network aNetwork, string aDomain, string aType, uint aVersion, ILog aLog)
@@ -26,7 +26,7 @@ namespace OpenHome.Av
             iNetwork = aNetwork;
             iLog = aLog;
             iType = aType;
-            iDeviceList = new CpDeviceListUpnpServiceType(aDomain, aType, aVersion, Added, Removed);
+            iDeviceList = new ModeratedCpDeviceList(aDomain, aType, aVersion, Added, Removed);
             iDeviceLookup = new Dictionary<string,IInjectorDevice>();
         }
 

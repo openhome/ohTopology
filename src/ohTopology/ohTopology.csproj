@@ -84,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ByteArray.cs" />
+    <Compile Include="ModeratedCpDeviceList.cs" />
     <Compile Include="ServiceVolkano.cs" />
     <Compile Include="SourceControllerDisc.cs" />
     <Compile Include="CpLinnCoUkSdp1.cs" />
