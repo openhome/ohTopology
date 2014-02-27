@@ -41,7 +41,8 @@ namespace OpenHome.Av
             iSessionHandler = aSessionHandler;
 
             iEncoding = new UTF8Encoding(false);
-            iSupervisor = new MediaEndpointSupervisor(this);
+
+            iSupervisor = new MediaEndpointSupervisor(this, aLog);
 
             iClient = new HttpClient(iNetwork);
         }

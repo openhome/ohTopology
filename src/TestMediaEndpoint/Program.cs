@@ -12,6 +12,14 @@ using OpenHome.Av;
 
 namespace TestMediaEndpoint
 {
+    class DummyLog : ILog
+    {
+        public void Write(string aFormat, params object[] aArgs)
+        {
+            Console.WriteLine(aFormat, aArgs);
+        }
+    }
+
     class Program
     {
         static int Main(string[] args)
@@ -125,8 +133,7 @@ namespace TestMediaEndpoint
         static void SessionCreateAndDestroy(int aMilliseconds)
         {
             var client = new TestMediaEndpointClient();
-
-            var supervisor = new MediaEndpointSupervisor(client);
+            var supervisor = new MediaEndpointSupervisor(client, new DummyLog());
 
             var sessions = new List<IMediaEndpointSession>();
             client.Execute(() =>
@@ -169,7 +176,7 @@ namespace TestMediaEndpoint
         static void ContainerCreateAndDestroy(int aMilliseconds)
         {
             var client = new TestMediaEndpointClient();
-            var supervisor = new MediaEndpointSupervisor(client);
+            var supervisor = new MediaEndpointSupervisor(client, new DummyLog());
 
             var done = new ManualResetEvent(false);
 

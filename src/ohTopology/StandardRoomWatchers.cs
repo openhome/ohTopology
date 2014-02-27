@@ -198,6 +198,32 @@ namespace OpenHome.Av
         {
         }
 
+        public IWatchable<bool> Repeat
+        {
+            get
+            {
+                return iPlaylist.Repeat;
+            }
+        }
+
+        public IWatchable<bool> Shuffle 
+        { 
+            get
+            {
+                return iPlaylist.Shuffle;
+            }
+        }
+
+        public void SetRepeat(bool aValue)
+        {
+            iPlaylist.SetRepeat(aValue);
+        }
+
+        public void SetShuffle(bool aValue)
+        {
+            iPlaylist.SetShuffle(aValue);
+        }
+
         public override void Dispose()
         {
             base.Dispose();
@@ -1015,8 +1041,15 @@ namespace OpenHome.Av
         {
             base.Dispose();
 
-            iConfigured.Dispose();
-            iUnconfigured.Dispose();
+            if (iConfigured != null)
+            {
+                iConfigured.Dispose();
+            }
+
+            if (iUnconfigured != null)
+            {
+                iUnconfigured.Dispose();
+            }
         }
 
         public IWatchable<IWatchableSnapshot<IMediaPreset>> Configured

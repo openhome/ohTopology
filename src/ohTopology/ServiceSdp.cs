@@ -297,6 +297,8 @@ namespace OpenHome.Av
 
             iService.Subscribe();
 
+            iSubscribed = true;
+
             return iSubscribedSource.Task.ContinueWith((t) => { });
         }
 
@@ -330,6 +332,8 @@ namespace OpenHome.Av
             }
 
             iSubscribedSource = null;
+
+            iSubscribed = false;
         }
 
         public override Task Play()
@@ -603,7 +607,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iId.Update((uint)id);
+                    if (iSubscribed)
+                    {
+                        iId.Update((uint)id);
+                    }
                 });
             });
         }
@@ -615,7 +622,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iTransportState.Update(transportState);
+                    if (iSubscribed)
+                    {
+                        iTransportState.Update(transportState);
+                    }
                 });
             });
         }
@@ -627,7 +637,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iRepeat.Update(repeat != "Off");
+                    if (iSubscribed)
+                    {
+                        iRepeat.Update(repeat != "Off");
+                    }
                 });
             });
         }
@@ -639,7 +652,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iShuffle.Update(shuffle == "Shuffle");
+                    if (iSubscribed)
+                    {
+                        iShuffle.Update(shuffle == "Shuffle");
+                    }
                 });
             });
         }
@@ -651,7 +667,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iMediaSupervisor.Update(new SdpSnapshot(iNetwork, (uint)tracks, this));
+                    if (iSubscribed)
+                    {
+                        iMediaSupervisor.Update(new SdpSnapshot(iNetwork, (uint)tracks, this));
+                    }
                 });
             });
         }
@@ -663,12 +682,16 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iTrayState = trayState;
+                    if (iSubscribed)
+                    {
+                        iTrayState = trayState;
+                    }
                 });
             });
         }
 
         private readonly CpDevice iCpDevice;
+        private bool iSubscribed;
         private TaskCompletionSource<bool> iSubscribedSource;
         private CpProxyLinnCoUkSdp1 iService;
         private string iTrayState;

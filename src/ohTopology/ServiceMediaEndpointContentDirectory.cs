@@ -36,7 +36,7 @@ namespace OpenHome.Av
         {
             iProxy = aProxy;
 
-            iSupervisor = new MediaEndpointSupervisor(this);
+            iSupervisor = new MediaEndpointSupervisor(this, aLog);
         }
 
         public override IProxy OnCreate(IDevice aDevice)

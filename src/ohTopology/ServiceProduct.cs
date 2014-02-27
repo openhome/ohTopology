@@ -337,27 +337,38 @@ namespace OpenHome.Av
                     try
                     {
                         iServiceVolkano.EndProductId(ptr, out iProductId);
-                        if (!volkano.Task.IsCanceled)
+                        lock (volkano)
                         {
-                            volkano.SetResult(true);
+                            if (!volkano.Task.IsCanceled)
+                            {
+                                volkano.SetResult(true);
+                            }
                         }
                     }
                     catch (ProxyError e)
                     {
-                        if (!volkano.Task.IsCanceled)
+                        lock (volkano)
                         {
-                            volkano.SetException(e);
+                            if (!volkano.Task.IsCanceled)
+                            {
+                                volkano.SetException(e);
+                            }
                         }
                     }
                 });
             }
             else
             {
-                if (!volkano.Task.IsCanceled)
+                lock (volkano)
                 {
-                    volkano.SetResult(true);
+                    if (!volkano.Task.IsCanceled)
+                    {
+                        volkano.SetResult(true);
+                    }
                 }
             }
+
+            iSubscribed = true;
                 
             return Task.Factory.ContinueWhenAll(
                 new Task[] { iSubscribedSource.Task, iSubscribedConfigurationSource.Task, iSubscribedVolkanoSource.Task },
@@ -376,7 +387,10 @@ namespace OpenHome.Av
             }
             if (iSubscribedVolkanoSource != null)
             {
-                iSubscribedVolkanoSource.TrySetCanceled();
+                lock (iSubscribedVolkanoSource)
+                {
+                    iSubscribedVolkanoSource.TrySetCanceled();
+                }
             }
         }
 
@@ -432,6 +446,8 @@ namespace OpenHome.Av
             iSubscribedSource = null;
             iSubscribedConfigurationSource = null;
             iSubscribedVolkanoSource = null;
+
+            iSubscribed = false;
         }
 
         public override Task SetSourceIndex(uint aValue)
@@ -539,7 +555,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iRoom.Update(room);
+                    if (iSubscribed)
+                    {
+                        iRoom.Update(room);
+                    }
                 });
             });
         }
@@ -551,7 +570,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iName.Update(name);
+                    if (iSubscribed)
+                    {
+                        iName.Update(name);
+                    }
                 });
             });
         }
@@ -563,7 +585,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iSourceIndex.Update(sourceIndex);
+                    if (iSubscribed)
+                    {
+                        iSourceIndex.Update(sourceIndex);
+                    }
                 });
             });
         }
@@ -575,7 +600,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iSourceXml.Update(sourceXml);
+                    if (iSubscribed)
+                    {
+                        iSourceXml.Update(sourceXml);
+                    }
                 });
             });
         }
@@ -587,7 +615,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    iStandby.Update(standby);
+                    if (iSubscribed)
+                    {
+                        iStandby.Update(standby);
+                    }
                 });
             });
         }
@@ -599,7 +630,10 @@ namespace OpenHome.Av
             {
                 iDisposeHandler.WhenNotDisposed(() =>
                 {
-                    ParseParameterXml(paramXml);
+                    if (iSubscribed)
+                    {
+                        ParseParameterXml(paramXml);
+                    }
                 });
             });
         }
@@ -632,6 +666,7 @@ namespace OpenHome.Av
         }
 
         private readonly CpDevice iCpDevice;
+        private bool iSubscribed;
         private TaskCompletionSource<bool> iSubscribedSource;
         private TaskCompletionSource<bool> iSubscribedConfigurationSource;
         private TaskCompletionSource<bool> iSubscribedVolkanoSource;

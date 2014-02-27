@@ -7,6 +7,192 @@ using OpenHome.Os.App;
 
 namespace OpenHome.Av
 {
+    class MultiroomWatcher : IOrderedWatcher<IStandardRoom>, IDisposable
+    {
+        class ZoneWatcher : IWatcher<IZoneReceiver>, IWatcher<IZoneSender>, IDisposable
+        {
+            private readonly DisposeHandler iDisposeHandler;
+            private readonly MultiroomWatcher iWatcher;
+            private readonly IStandardRoom iRoom;
+
+            public ZoneWatcher(MultiroomWatcher aWatcher, IStandardRoom aRoom)
+            {
+                iDisposeHandler = new DisposeHandler();
+                iWatcher = aWatcher;
+                iRoom = aRoom;
+
+                iRoom.ZoneReceiver.AddWatcher(this);
+                iRoom.ZoneSender.AddWatcher(this);
+            }
+
+            public void Dispose()
+            {
+                iDisposeHandler.Dispose();
+
+                iRoom.ZoneReceiver.RemoveWatcher(this);
+                iRoom.ZoneSender.RemoveWatcher(this);
+            }
+
+            public void ItemOpen(string aId, IZoneReceiver aValue)
+            {
+                if (aValue.Enabled)
+                {
+                    iWatcher.AddZoneReceiver(iRoom);
+                }
+            }
+
+            public void ItemUpdate(string aId, IZoneReceiver aValue, IZoneReceiver aPrevious)
+            {
+                if (aPrevious.Enabled && !aValue.Enabled)
+                {
+                    iWatcher.RemoveZoneReceiver(iRoom);
+                }
+
+                if (aValue.Enabled && !aPrevious.Enabled)
+                {
+                    iWatcher.AddZoneReceiver(iRoom);
+                }
+            }
+
+            public void ItemClose(string aId, IZoneReceiver aValue)
+            {
+                if (aValue.Enabled)
+                {
+                    iWatcher.RemoveZoneReceiver(iRoom);
+                }
+            }
+
+            public void ItemOpen(string aId, IZoneSender aValue)
+            {
+                if (aValue.Enabled)
+                {
+                    iWatcher.AddZoneSender(iRoom);
+                }
+            }
+
+            public void ItemUpdate(string aId, IZoneSender aValue, IZoneSender aPrevious)
+            {
+                if (aPrevious.Enabled && !aValue.Enabled)
+                {
+                    iWatcher.RemoveZoneSender(iRoom);
+                }
+
+                if (aValue.Enabled && !aPrevious.Enabled)
+                {
+                    iWatcher.AddZoneSender(iRoom);
+                }
+            }
+
+            public void ItemClose(string aId, IZoneSender aValue)
+            {
+                if (aValue.Enabled)
+                {
+                    iWatcher.RemoveZoneSender(iRoom);
+                }
+            }
+        }
+
+        private readonly DisposeHandler iDisposeHandler;
+        private readonly Dictionary<IStandardRoom, ZoneWatcher> iZoneWatchers;
+        private readonly List<IStandardRoom> iZoneReceivers;
+        private readonly List<IStandardRoom> iZoneSenders;
+        private readonly IWatchableOrdered<IStandardRoom> iRooms;
+        private readonly Watchable<bool> iHasMultiroom;
+
+        public MultiroomWatcher(IStandardHouse aHouse, Watchable<bool> aHasMultiroom)
+        {
+            iDisposeHandler = new DisposeHandler();
+            iZoneWatchers = new Dictionary<IStandardRoom, ZoneWatcher>();
+            iZoneReceivers = new List<IStandardRoom>();
+            iZoneSenders = new List<IStandardRoom>();
+            iRooms = aHouse.Rooms;
+            iHasMultiroom = aHasMultiroom;
+
+            aHouse.Network.Schedule(() =>
+            {
+                iRooms.AddWatcher(this);
+            });
+        }
+
+        public void Dispose()
+        {
+            iDisposeHandler.Dispose();
+
+            iRooms.RemoveWatcher(this);
+
+            foreach (ZoneWatcher w in iZoneWatchers.Values)
+            {
+                w.Dispose();
+            }
+            iZoneWatchers.Clear();
+        }
+
+        public void OrderedOpen()
+        {
+        }
+
+        public void OrderedInitialised()
+        {
+        }
+
+        public void OrderedClose()
+        {
+        }
+
+        public void OrderedAdd(IStandardRoom aItem, uint aIndex)
+        {
+            iZoneWatchers.Add(aItem, new ZoneWatcher(this, aItem));
+        }
+
+        public void OrderedMove(IStandardRoom aItem, uint aFrom, uint aTo)
+        {
+        }
+
+        public void OrderedRemove(IStandardRoom aItem, uint aIndex)
+        {
+            iZoneWatchers[aItem].Dispose();
+            iZoneWatchers.Remove(aItem);
+        }
+
+        public void AddZoneReceiver(IStandardRoom aRoom)
+        {
+            iZoneReceivers.Add(aRoom);
+            UpdateHasMultiroom();
+        }
+
+        public void RemoveZoneReceiver(IStandardRoom aRoom)
+        {
+            iZoneReceivers.Remove(aRoom);
+            UpdateHasMultiroom();
+        }
+
+        public void AddZoneSender(IStandardRoom aRoom)
+        {
+            iZoneSenders.Add(aRoom);
+            UpdateHasMultiroom();
+        }
+
+        public void RemoveZoneSender(IStandardRoom aRoom)
+        {
+            iZoneSenders.Remove(aRoom);
+            UpdateHasMultiroom();
+        }
+
+        private void UpdateHasMultiroom()
+        {
+            bool hasMultiroom = ((iZoneReceivers.Count > 0) && (iZoneSenders.Count > 0));
+
+            if(iZoneReceivers.Count == 1 && iZoneSenders.Count == 1)
+            {
+                if(iZoneSenders[0] == iZoneReceivers[0])
+                {
+                    hasMultiroom = false;
+                }
+            }
+            iHasMultiroom.Update(hasMultiroom);
+        }
+    }
+
     class SatelliteWatcher : IWatcher<IEnumerable<ITopology4Source>>, IWatcher<IZoneSender>, IDisposable
     {
         private readonly DisposeHandler iDisposeHandler;
@@ -469,6 +655,7 @@ namespace OpenHome.Av
         IWatchableOrdered<IStandardRoom> Rooms { get; }
         IWatchableOrdered<IProxySender> Senders { get; }
         IWatchable<IEnumerable<ITopology4Registration>> Registrations { get; }
+        IWatchable<bool> HasMultiroom { get; }
         INetwork Network { get; }
     }
 
@@ -491,6 +678,9 @@ namespace OpenHome.Av
             iRoomWatchers = new Dictionary<ITopology4Room, RoomWatcher>();
             iRegistrations = new Watchable<IEnumerable<ITopology4Registration>>(iNetwork, "Registrations", new List<ITopology4Registration>());
             iSatelliteWatchers = new Dictionary<ITopology4Room, SatelliteWatcher>();
+
+            iHasMultiroom = new Watchable<bool>(iNetwork, "HasMultiroom", false);
+            iMultiroomWatcher = new MultiroomWatcher(this, iHasMultiroom);
 
             iSendersList = new SendersList(aNetwork);
 
@@ -526,12 +716,14 @@ namespace OpenHome.Av
                 }
 
                 iSendersList.Dispose();
+                iMultiroomWatcher.Dispose();
             });
             iWatchableRooms.Dispose();
             iRoomLookup.Clear();
             iRoomWatchers.Clear();
             iSatelliteWatchers.Clear();
             iRegistrations.Dispose();
+            iHasMultiroom.Dispose();
 
             iTopology4.Dispose();
             iTopology3.Dispose();
@@ -567,6 +759,14 @@ namespace OpenHome.Av
             get
             {
                 return iRegistrations;
+            }
+        }
+
+        public IWatchable<bool> HasMultiroom
+        {
+            get
+            {
+                return iHasMultiroom;
             }
         }
 
@@ -803,6 +1003,9 @@ namespace OpenHome.Av
         private readonly Topologym iTopologym;
         private readonly Topology3 iTopology3;
         private readonly Topology4 iTopology4;
+
+        private readonly Watchable<bool> iHasMultiroom;
+        private readonly MultiroomWatcher iMultiroomWatcher;
 
         private readonly WatchableOrdered<IStandardRoom> iWatchableRooms;
         private readonly Dictionary<ITopology4Room, StandardRoom> iRoomLookup;
