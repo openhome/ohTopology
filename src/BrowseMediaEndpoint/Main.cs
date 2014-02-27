@@ -21,7 +21,7 @@ namespace BrowseMediaEndpoint
         private readonly WatchableThread iWatchableThread;
         private readonly Network iNetwork;
         
-        private DeviceInjectorMediaEndpoint iDeviceInjectorMediaEndpoint;
+        private InjectorMediaEndpoint iDeviceInjectorMediaEndpoint;
         private IWatchableUnordered<IDevice> iDevices;
 
         private IProxyMediaEndpoint iMediaEndpoint;
@@ -50,7 +50,7 @@ namespace BrowseMediaEndpoint
 
             iNetwork.Execute(() =>
             {
-                iDeviceInjectorMediaEndpoint = new DeviceInjectorMediaEndpoint(iNetwork, log);
+                iDeviceInjectorMediaEndpoint = new InjectorMediaEndpoint(iNetwork, log);
                 iDevices = iNetwork.Create<IProxyMediaEndpoint>();
             });
         }
@@ -112,6 +112,8 @@ namespace BrowseMediaEndpoint
                 {
                     if (iMediaEndpointSession.Snapshot != null)
                     {
+                        AlphaMap(iMediaEndpointSession.Snapshot);
+
                         iMediaEndpointSession.Snapshot.Read(0, iMediaEndpointSession.Snapshot.Total, (fragment) =>
                         {
                             iNetwork.Schedule(() =>
@@ -121,6 +123,21 @@ namespace BrowseMediaEndpoint
                         });
                     }
                 });
+            }
+        }
+
+        private void AlphaMap(IWatchableSnapshot<IMediaDatum> aSnapshot)
+        {
+            if (aSnapshot.Alpha != null)
+            {
+                Console.Write("Alpha:");
+
+                foreach (var entry in aSnapshot.Alpha)
+                {
+                    Console.Write(" {0}", entry);
+                }
+
+                Console.WriteLine();
             }
         }
 
@@ -217,6 +234,13 @@ namespace BrowseMediaEndpoint
                         }
                     }
                 }
+                else
+                {
+                    iWatchableThread.Schedule(() =>
+                    {
+                        Browse((IMediaDatum)null);
+                    });
+                }
             }
         }
 
@@ -238,7 +262,7 @@ namespace BrowseMediaEndpoint
                         Console.WriteLine("{0}ms", sw.Milliseconds);
                     }
 
-                    Console.WriteLine("{0}: {1} items", count, iMediaEndpointSession.Snapshot.Total);
+                    Console.WriteLine("snapshot {0}: {1} items", count, iMediaEndpointSession.Snapshot.Total);
                 });
             }
             catch
@@ -391,15 +415,28 @@ namespace BrowseMediaEndpoint
                         {
                             if (iMediaEndpoint != null)
                             {
-                                iMediaEndpointSession.Dispose();
                                 iMediaEndpoint.Dispose();
+
+                                if (iMediaEndpointSession != null)
+                                {
+                                    iMediaEndpointSession.Dispose();
+                                    iMediaEndpointSession = null;
+                                }
                             }
 
                             iMediaEndpoint = me;
 
-                            iMediaEndpointSession = iMediaEndpoint.CreateSession().Result;
-                            
-                            Select();
+                            iMediaEndpoint.CreateSession((session) =>
+                            {
+                                if (iMediaEndpointSession != null)
+                                {
+                                    iMediaEndpointSession.Dispose();
+                                }
+
+                                iMediaEndpointSession = session;
+
+                                Select();
+                            });
 
                             return;
                         }
@@ -434,14 +471,19 @@ namespace BrowseMediaEndpoint
 
         public void Dispose()
         {
-            if (iMediaEndpoint != null)
+            iWatchableThread.Execute(() =>
             {
-                iWatchableThread.Execute(() =>
+                if (iMediaEndpoint != null)
                 {
-                    iMediaEndpointSession.Dispose();
                     iMediaEndpoint.Dispose();
-                });
-            }
+
+                    if (iMediaEndpointSession != null)
+                    {
+                        iMediaEndpointSession.Dispose();
+                        iMediaEndpointSession = null;
+                    }
+                }
+            });
 
             iDeviceInjectorMediaEndpoint.Dispose();
 
