@@ -19,7 +19,8 @@ namespace StressMediaEndpoint
         protected readonly INetwork iNetwork;
         protected readonly IProxyMediaEndpoint iMediaEndpoint;
 
-        private Task<IMediaEndpointSession> iTask;
+        private ManualResetEvent iReady;
+
         protected IMediaEndpointSession iSession;
 
         protected Test(IWatchableThread aWatchableThread, INetwork aNetwork, IProxyMediaEndpoint aMediaEndpoint)
@@ -28,15 +29,18 @@ namespace StressMediaEndpoint
             iNetwork = aNetwork;
             iMediaEndpoint = aMediaEndpoint;
 
-            iWatchableThread.Execute(() =>
+            iReady = new ManualResetEvent(false);
+
+            iMediaEndpoint.CreateSession((session) =>
             {
-                iTask = iMediaEndpoint.CreateSession();
+                iReady.Set();
+                iSession = session;
             });
         }
 
         public void Run()
         {
-            iSession = iTask.Result;
+            iReady.WaitOne();
             DoRun();
         }
 
@@ -46,6 +50,7 @@ namespace StressMediaEndpoint
 
         public void Dispose()
         {
+            iReady.Dispose();
         }
     }
 

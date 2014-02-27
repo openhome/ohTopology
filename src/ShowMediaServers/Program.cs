@@ -19,8 +19,6 @@ namespace ShowMediaServers
         private readonly INetwork iNetwork;
         private readonly IProxyMediaEndpoint iProxy;
 
-        private List<Task> iTasks;
-
         private IMediaEndpointSession iSession;
 
         public TestMediaEndpointSession(INetwork aNetwork, IProxyMediaEndpoint aProxy)
@@ -28,21 +26,10 @@ namespace ShowMediaServers
             iNetwork = aNetwork;
             iProxy = aProxy;
 
-            iTasks = new List<Task>();
-
-            iTasks.Add(iProxy.CreateSession().ContinueWith(SessionCreated));
-        }
-
-        private void SessionCreated(Task<IMediaEndpointSession> aTask)
-        {
-            iSession = aTask.Result;
-
-            /*
-            iNetwork.Schedule(() =>
+            iProxy.CreateSession((session) =>
             {
-                iSession.Browse(null, ContainerCreated);
+                iSession = session;
             });
-            */
         }
 
         private void ContainerCreated()
@@ -89,14 +76,12 @@ namespace ShowMediaServers
 
         public void Dispose()
         {
-            lock (iTasks)
-            {
-                Task.WaitAll(iTasks.ToArray());
-            }
-
             iNetwork.Execute(() =>
             {
-                iSession.Dispose();
+                if (iSession != null)
+                {
+                    iSession.Dispose();
+                }
             });
         }
     }
@@ -255,11 +240,11 @@ namespace ShowMediaServers
 
             using (var network = new Network(watchableThread, 50, log))
             {
-                using (var mock = new DeviceInjectorMock(network, ".", log))
+                using (var mock = new InjectorMock(network, ".", log))
                 {
                     mock.Execute("medium");
 
-                    using (var real = new DeviceInjectorMediaEndpoint(network, log))
+                    using (var real = new InjectorMediaEndpoint(network, log))
                     {
                         using (var client = new Client(network))
                         {

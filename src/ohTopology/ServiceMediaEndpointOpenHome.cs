@@ -28,6 +28,8 @@ namespace OpenHome.Av
         private readonly Encoding iEncoding;
         private readonly MediaEndpointSupervisor iSupervisor;
 
+        private readonly HttpClient iClient;
+
         public ServiceMediaEndpointOpenHome(INetwork aNetwork, IInjectorDevice aDevice, string aId, string aType, string aName, string aInfo,
             string aUrl, string aArtwork, string aManufacturerName, string aManufacturerInfo, string aManufacturerUrl,
             string aManufacturerArtwork, string aModelName, string aModelInfo, string aModelUrl, string aModelArtwork,
@@ -39,7 +41,10 @@ namespace OpenHome.Av
             iSessionHandler = aSessionHandler;
 
             iEncoding = new UTF8Encoding(false);
+
             iSupervisor = new MediaEndpointSupervisor(this, aLog);
+
+            iClient = new HttpClient(iNetwork);
         }
 
         public override IProxy OnCreate(IDevice aDevice)
@@ -67,9 +72,7 @@ namespace OpenHome.Av
         {
             //Console.WriteLine("REQUEST   : {0}", aUri);
 
-            var client = new HttpClient(iNetwork);
-
-            client.Read(aUri, aCancellationToken, (buffer) =>
+            iClient.Read(aUri, aCancellationToken, (buffer) =>
             {
                 if (buffer != null)
                 {
@@ -349,6 +352,8 @@ namespace OpenHome.Av
             base.Dispose();
 
             iSupervisor.Dispose();
+
+            iClient.Dispose();
         }
     }
 

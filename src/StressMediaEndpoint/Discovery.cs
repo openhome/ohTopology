@@ -25,7 +25,7 @@ namespace StressMediaEndpoint
         
         private readonly Network iNetwork;
 
-        private DeviceInjectorMediaEndpoint iDeviceInjectorMediaEndpoint;
+        private InjectorMediaEndpoint iInjectorMediaEndpoint;
 
         private IWatchableUnordered<IDevice> iDevices;
 
@@ -54,7 +54,7 @@ namespace StressMediaEndpoint
 
             iNetwork.Execute(() =>
             {
-                iDeviceInjectorMediaEndpoint = new DeviceInjectorMediaEndpoint(iNetwork, log);
+                iInjectorMediaEndpoint = new InjectorMediaEndpoint(iNetwork, log);
                 iDevices = iNetwork.Create<IProxyMediaEndpoint>();
                 iDevices.AddWatcher(this);
             });
@@ -167,7 +167,7 @@ namespace StressMediaEndpoint
                 });
             }
 
-            iDeviceInjectorMediaEndpoint.Dispose();
+            iInjectorMediaEndpoint.Dispose();
 
             iNetwork.Dispose();
         }

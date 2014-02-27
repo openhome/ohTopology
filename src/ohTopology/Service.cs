@@ -116,6 +116,7 @@ namespace OpenHome.Av
                     Do.Assert(iSubscribeTask == null);
                     iSubscribeTask = OnSubscribe();
                 }
+
                 ++iRefCount;
 
                 if (iSubscribeTask != null)

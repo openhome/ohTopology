@@ -21,6 +21,7 @@
     <WarningLevel>4</WarningLevel>
     <OutputPath>..\..\build\ohTopology.net\bin\Debug</OutputPath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
