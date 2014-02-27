@@ -159,6 +159,8 @@ namespace OpenHome.Av
 
         public void Unsubscribe()
         {
+            Assert();
+
             Do.Assert(iRefCount != 0);
             --iRefCount;
             if (iRefCount == 0)
