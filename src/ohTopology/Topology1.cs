@@ -45,14 +45,14 @@ namespace OpenHome.Av
             {
                 iDevices.RemoveWatcher(this);
                 iPendingSubscriptions.Clear();
+
+                // dispose of all products, which will in turn unsubscribe
+                foreach (var p in iProductLookup.Values)
+                {
+                    p.Dispose();
+                }
             });
             iDevices = null;
-
-            // dispose of all products, which will in turn unsubscribe
-            foreach (var p in iProductLookup.Values)
-            {
-                p.Dispose();
-            }
             iProductLookup = null;
 
             iProducts.Dispose();

@@ -37,7 +37,7 @@ namespace OpenHome.Av
 
         private readonly DisposeHandler iDisposeHandler;
         private readonly Dictionary<string, IDisposable> iDevices;
-        private readonly CpDeviceListUpnpServiceType iDeviceList;
+        private readonly ICpDeviceList iDeviceList;
 
         public InjectorMediaEndpoint(Network aNetwork, ILog aLog)
         {
@@ -46,7 +46,7 @@ namespace OpenHome.Av
 
             iDisposeHandler = new DisposeHandler();
             iDevices = new Dictionary<string, IDisposable>();
-            iDeviceList = new CpDeviceListUpnpServiceType("upnp.org", "ContentDirectory", 1, Added, Removed);
+            iDeviceList = new ModeratedCpDeviceList(iLog, "upnp.org", "ContentDirectory", 1, Added, Removed);
         }
 
         internal INetwork Network
