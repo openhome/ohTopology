@@ -46,7 +46,7 @@ namespace OpenHome.Av
 
             iDisposeHandler = new DisposeHandler();
             iDevices = new Dictionary<string, IDisposable>();
-            iDeviceList = new ModeratedCpDeviceList("upnp.org", "ContentDirectory", 1, Added, Removed);
+            iDeviceList = new ModeratedCpDeviceList(iLog, "upnp.org", "ContentDirectory", 1, Added, Removed);
         }
 
         internal INetwork Network

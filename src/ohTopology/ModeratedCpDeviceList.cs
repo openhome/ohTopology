@@ -21,9 +21,13 @@ namespace OpenHome.Av
         private Dictionary<string, CpDevice> iDevicesPendingRemove;
         private bool iRefreshing;
         private const uint kModeratorRefreshTimeout = 3 * 60 * 1000;
+        private ILog iLog;
+        private string iType;
 
-        public ModeratedCpDeviceList(string aDomain, string aType, uint aVersion, Action<CpDeviceList, CpDevice> aAdded, Action<CpDeviceList, CpDevice> aRemoved)
+        public ModeratedCpDeviceList(ILog aLog, string aDomain, string aType, uint aVersion, Action<CpDeviceList, CpDevice> aAdded, Action<CpDeviceList, CpDevice> aRemoved)
         {
+            iType = aType;
+            iLog = aLog;
             iAdded = aAdded;
             iRemoved = aRemoved;
             iDeviceList = new CpDeviceListUpnpServiceType(aDomain, aType, aVersion, Added, Removed);
@@ -39,6 +43,7 @@ namespace OpenHome.Av
         {
             lock (iLock)
             {
+                iLog.Write("ModeratedCpDeviceList.Refresh ({0})\n", iType);
                 iRefreshing = true;
                 iDeviceList.Refresh();
                 iModeratorRefresh.Signal();
@@ -49,7 +54,8 @@ namespace OpenHome.Av
         {
             lock (iLock)
             {
-                iRefreshing = false; 
+                iLog.Write("ModeratedCpDeviceList.ModeratorRefreshExpired ({0}) {1}\n", iType, iDevicesPendingRemove.Keys.Count);
+                iRefreshing = false;
                 var pendingRemove = iDevicesPendingRemove.Keys.ToList();
                 foreach (var udn in pendingRemove)
                 {
@@ -72,6 +78,7 @@ namespace OpenHome.Av
             lock (iLock)
             {
                 var udn = aDevice.Udn();
+                iLog.Write("+ModeratedDeviceList ({0}) {1} {2}\n", iType, udn, iRefreshing);
                 if (iDevicesPendingRemove.ContainsKey(udn))
                 {
                     iDevicesPendingRemove.Remove(udn);
@@ -90,6 +97,7 @@ namespace OpenHome.Av
             lock (iLock)
             {
                 var udn = aDevice.Udn();
+                iLog.Write("-ModeratedDeviceList ({0}) {1} {2}\n", iType, udn, iRefreshing);
                 if (iRefreshing)
                 {
                     if (!iDevicesPendingRemove.ContainsKey(udn))

@@ -26,7 +26,7 @@ namespace OpenHome.Av
             iNetwork = aNetwork;
             iLog = aLog;
             iType = aType;
-            iDeviceList = new ModeratedCpDeviceList(aDomain, aType, aVersion, Added, Removed);
+            iDeviceList = new ModeratedCpDeviceList(iLog, aDomain, aType, aVersion, Added, Removed);
             iDeviceLookup = new Dictionary<string,IInjectorDevice>();
         }
 
