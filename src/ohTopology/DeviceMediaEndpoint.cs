@@ -213,7 +213,7 @@ namespace OpenHome.Av
         }
     }
 
-    internal class InjectorDeviceOpenHome : IDisposable
+    internal class InjectorDeviceOpenHome : IWatcher<bool>, IDisposable
     {
         private readonly InjectorMediaEndpoint iInjector;
         private readonly string iUdn;
@@ -231,7 +231,7 @@ namespace OpenHome.Av
         private CancellationTokenSource iCancellationTokenSource;
 
         private IEventSupervisorSession iEventSession;
-        private IDisposable iEventMediaEndpoints;
+        private IDisposable iSubsrciptionMediaEndpoints;
 
         public InjectorDeviceOpenHome(InjectorMediaEndpoint aInjector, string aUdn, Uri aUri, CpDevice aDevice, ILog aLog)
         {
@@ -261,12 +261,13 @@ namespace OpenHome.Av
                     {
                         var json = JsonParser.Parse(value) as JsonString;
 
-                        var resolved = ResolveEndpoint(json.Value);
+                        var endpoint = ResolveEndpoint(json.Value);
 
-                        if (resolved != null)
+                        if (endpoint != null)
                         {
-                            iEventSession = iInjector.CreateEventSession(resolved);
-                            iEventMediaEndpoints = iEventSession.Create("ps.me", Update);
+                            iEventSession = iInjector.CreateEventSession(endpoint);
+                            iEventSession.Alive.AddWatcher(this);
+                            iSubsrciptionMediaEndpoints = iEventSession.Create("ps.me", Update);
                         }
                     }
                     catch
@@ -336,6 +337,28 @@ namespace OpenHome.Av
             });
         }
 
+        private void RemoveAll()
+        {
+            foreach (var entry in iEndpoints)
+            {
+                List<IDisposable> handlers;
+
+                if (iEventHandlers.TryGetValue(entry.Key, out handlers))
+                {
+                    iEventHandlers.Remove(entry.Key);
+
+                    foreach (var handler in handlers)
+                    {
+                        handler.Dispose();
+                    }
+                }
+
+                iInjector.RemoveDevice(entry.Value);
+            }
+
+            iEndpoints.Clear();
+        }
+
         private void UpdateEndpoints(JsonObject aEndpoints)
         {
             var refresh = new Dictionary<string, IInjectorDevice>();
@@ -399,6 +422,27 @@ namespace OpenHome.Av
             iEndpoints = refresh;
         }
 
+
+        // IWatcher<bool>
+
+        public void ItemOpen(string aId, bool aValue)
+        {
+        }
+
+        public void ItemUpdate(string aId, bool aValue, bool aPrevious)
+        {
+            if (!aValue)
+            {
+                // device comms have gone
+
+                RemoveAll();
+            }
+        }
+
+        public void ItemClose(string aId, bool aValue)
+        {
+        }
+
         // IDisposable
 
         public void Dispose()
@@ -413,7 +457,7 @@ namespace OpenHome.Av
 
                 if (iEventSession != null)
                 {
-                    iEventMediaEndpoints.Dispose();
+                    iSubsrciptionMediaEndpoints.Dispose();
 
                     foreach (var handlers in iEventHandlers.Values)
                     {
@@ -424,6 +468,8 @@ namespace OpenHome.Av
                     }
 
                     iEventHandlers.Clear();
+
+                    iEventSession.Alive.RemoveWatcher(this);
 
                     iEventSession.Dispose();
 
