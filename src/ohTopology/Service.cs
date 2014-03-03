@@ -24,6 +24,7 @@ namespace OpenHome.Av
         private uint iRefCount;
 
         protected readonly DisposeHandler iDisposeHandler;
+
         protected Task iSubscribeTask;
 
         protected Service(INetwork aNetwork, IInjectorDevice aDevice, ILog aLog)
@@ -46,6 +47,7 @@ namespace OpenHome.Av
             iDisposeHandler.Dispose();
             
             iCancelSubscribe.Cancel();
+
             OnCancelSubscribe();
 
             // wait for any inflight subscriptions to complete
@@ -132,8 +134,7 @@ namespace OpenHome.Av
                             }
                             else
                             {
-                                --iRefCount;
-                                if (iRefCount == 0)
+                                if (--iRefCount == 0)
                                 {
                                     iSubscribeTask = null;
                                 }
@@ -162,10 +163,11 @@ namespace OpenHome.Av
             Assert();
 
             Do.Assert(iRefCount != 0);
-            --iRefCount;
-            if (iRefCount == 0)
+
+            if (--iRefCount == 0)
             {
                 OnUnsubscribe();
+                
                 if (iSubscribeTask != null)
                 {
                     try
@@ -176,12 +178,15 @@ namespace OpenHome.Av
                     {
                         HandleAggregate(ex);
                     }
+
                     iSubscribeTask = null;
                 }
             }
         }
 
-        protected virtual void OnUnsubscribe() { }
+        protected virtual void OnUnsubscribe()
+        {
+        }
 
         protected Task Start(Action aAction)
         {
