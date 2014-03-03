@@ -207,7 +207,7 @@ namespace OpenHome.Av
             foreach (var element in elements)
             {
                 var attribute = element.Attribute(XName.Get(aAttribute));
-                if (attribute.Value.Length > 0)
+                if (attribute != null && attribute.Value.Length > 0)
                 {
                     aDatum.Add(aTag, attribute.Value);
                 }
