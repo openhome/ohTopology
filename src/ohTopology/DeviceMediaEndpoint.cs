@@ -231,7 +231,7 @@ namespace OpenHome.Av
         private CancellationTokenSource iCancellationTokenSource;
 
         private IEventSupervisorSession iEventSession;
-        private IDisposable iSubsrciptionMediaEndpoints;
+        private IDisposable iSubscriptionMediaEndpoints;
 
         public InjectorDeviceOpenHome(InjectorMediaEndpoint aInjector, string aUdn, Uri aUri, CpDevice aDevice, ILog aLog)
         {
@@ -267,7 +267,7 @@ namespace OpenHome.Av
                         {
                             iEventSession = iInjector.CreateEventSession(endpoint);
                             iEventSession.Alive.AddWatcher(this);
-                            iSubsrciptionMediaEndpoints = iEventSession.Create("ps.me", Update);
+                            iSubscriptionMediaEndpoints = iEventSession.Create("ps.me", Update);
                         }
                     }
                     catch
@@ -457,7 +457,7 @@ namespace OpenHome.Av
 
                 if (iEventSession != null)
                 {
-                    iSubsrciptionMediaEndpoints.Dispose();
+                    iSubscriptionMediaEndpoints.Dispose();
 
                     foreach (var handlers in iEventHandlers.Values)
                     {
