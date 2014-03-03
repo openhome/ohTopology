@@ -1041,8 +1041,15 @@ namespace OpenHome.Av
         {
             base.Dispose();
 
-            iConfigured.Dispose();
-            iUnconfigured.Dispose();
+            if (iConfigured != null)
+            {
+                iConfigured.Dispose();
+            }
+
+            if (iUnconfigured != null)
+            {
+                iUnconfigured.Dispose();
+            }
         }
 
         public IWatchable<IWatchableSnapshot<IMediaPreset>> Configured

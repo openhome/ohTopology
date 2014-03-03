@@ -21,6 +21,7 @@
     <WarningLevel>4</WarningLevel>
     <OutputPath>..\..\build\ohTopology.net\bin\Debug</OutputPath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -84,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ByteArray.cs" />
+    <Compile Include="ModeratedCpDeviceList.cs" />
     <Compile Include="ServiceVolkano.cs" />
     <Compile Include="SourceControllerDisc.cs" />
     <Compile Include="CpLinnCoUkSdp1.cs" />

@@ -55,6 +55,7 @@ namespace OpenHome.Av
         string ModelName { get; }
         string ManufacturerName { get; }
         string ProductId { get; }
+        string ProductImageUri { get; }
         IDevice Device { get; }
 
         IWatchable<string> Room { get; }
@@ -125,6 +126,14 @@ namespace OpenHome.Av
             get
             {
                 return iGroup.ProductId;
+            }
+        }
+
+        public string ProductImageUri
+        {
+            get
+            {
+                return iGroup.ProductImageUri;
             }
         }
 

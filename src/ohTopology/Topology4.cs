@@ -287,6 +287,7 @@ namespace OpenHome.Av
         string ModelName { get; }
         string ManufacturerName { get; }
         string ProductId { get; }
+        string ProductImageUri { get; }
         IWatchable<string> Registration { get; }
         void SetRegistration(string aValue);
     }
@@ -417,6 +418,14 @@ namespace OpenHome.Av
             get
             {
                 return iGroup.ProductId;
+            }
+        }
+
+        public string ProductImageUri
+        {
+            get
+            {
+                return iGroup.ProductImageUri;
             }
         }
 
