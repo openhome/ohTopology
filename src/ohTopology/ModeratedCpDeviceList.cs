@@ -78,7 +78,9 @@ namespace OpenHome.Av
             lock (iLock)
             {
                 var udn = aDevice.Udn();
-                iLog.Write("+ModeratedDeviceList ({0}) {1} {2}\n", iType, udn, iRefreshing);
+                string location = string.Empty;
+                aDevice.GetAttribute("Upnp.Location", out location);
+                iLog.Write("+ModeratedDeviceList ({0}) {1} {2} {3}\n", iType, udn, iRefreshing, location);
                 if (iDevicesPendingRemove.ContainsKey(udn))
                 {
                     iDevicesPendingRemove.Remove(udn);
