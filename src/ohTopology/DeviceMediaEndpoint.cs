@@ -431,6 +431,8 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, bool aValue, bool aPrevious)
         {
+            iLog.Write("~DeviceInjector (MediaEndpoint) {0} Alive={1}\n", iUdn, aValue);
+
             if (!aValue)
             {
                 // device comms have gone
