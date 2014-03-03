@@ -106,7 +106,11 @@ namespace OpenHome.Av
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Title);
             Convert(aElement, "album", kNsUpnp, datum, iNetwork.TagManager.Audio.AlbumTitle);
             Convert(aElement, "artist", kNsUpnp, datum, iNetwork.TagManager.Audio.Artist);
+            Convert(aElement, "originalTrackNumber", kNsUpnp, datum, iNetwork.TagManager.Audio.Track);
             Convert(aElement, "res", kNsDidlLite, datum, iNetwork.TagManager.Audio.Uri);
+            //Convert(aElement, "res@sampleFrequency", kNsDidlLite, datum, iNetwork.TagManager.Audio.Samplerate);
+            //Convert(aElement, "res@bitsPerSample", kNsDidlLite, datum, iNetwork.TagManager.Audio.Bitdepth);
+            //Convert(aElement, "res@bitrate", kNsDidlLite, datum, iNetwork.TagManager.Audio.Bitrate);
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
 
             return (datum);
