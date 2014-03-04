@@ -105,7 +105,7 @@ namespace OpenHome.Av
         {
             var udn = aDevice.Udn();
 
-            iLog.Write("+DeviceInjector (MediaEndpoint) {0}\n", udn);
+            iLog.Write("+DeviceInjector (MediaEndpointManager) {0}\n", udn);
 
             string deviceXml;
 
@@ -152,7 +152,7 @@ namespace OpenHome.Av
         {
             var udn = aDevice.Udn();
 
-            iLog.Write("-DeviceInjector (MediaEndpoint) {0}\n", udn);
+            iLog.Write("-DeviceInjector (MediaEndpointManager) {0}\n", udn);
 
             lock (iDevices)
             {
@@ -353,6 +353,8 @@ namespace OpenHome.Av
                     }
                 }
 
+                iLog.Write("-InjectorMediaEndpoint {0}\n", entry.Key);
+
                 iInjector.RemoveDevice(entry.Value);
             }
 
@@ -387,6 +389,8 @@ namespace OpenHome.Av
                         }
                     }
 
+                    iLog.Write("-InjectorMediaEndpoint {0}\n", entry.Key);
+
                     iInjector.RemoveDevice(entry.Value);
                 }
             }
@@ -413,6 +417,8 @@ namespace OpenHome.Av
 
                     refresh.Add(entry.Key, device);
 
+                    iLog.Write("+InjectorMediaEndpoint {0}\n", entry.Key);
+
                     iInjector.AddDevice(device);
                 }
             }
@@ -431,7 +437,7 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, bool aValue, bool aPrevious)
         {
-            iLog.Write("~DeviceInjector (MediaEndpoint) {0} Alive={1}\n", iUdn, aValue);
+            iLog.Write("~DeviceInjector (MediaEndpointManager) {0} Alive={1}\n", iUdn, aValue);
 
             if (!aValue)
             {
