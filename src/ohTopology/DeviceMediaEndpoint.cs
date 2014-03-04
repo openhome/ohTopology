@@ -46,7 +46,7 @@ namespace OpenHome.Av
 
             iDisposeHandler = new DisposeHandler();
             iDevices = new Dictionary<string, IDisposable>();
-            iDeviceList = new ModeratedCpDeviceList(iLog, "upnp.org", "ContentDirectory", 1, Added, Removed);
+            iDeviceList = new CpDeviceListUpnpServiceType("upnp.org", "ContentDirectory", 1, Added, Removed);
         }
 
         internal INetwork Network
@@ -66,7 +66,7 @@ namespace OpenHome.Av
 
         internal void RemoveDevice(IInjectorDevice aDevice)
         {
-            Console.WriteLine("Remove : {0}", aDevice.Udn);
+            //Console.WriteLine("Remove : {0}", aDevice.Udn);
 
             iNetwork.Remove(aDevice);
         }
@@ -423,7 +423,7 @@ namespace OpenHome.Av
                 }
             }
 
-            Console.WriteLine("{0} has {1} endpoints", iUdn, refresh.Count);
+            //Console.WriteLine("{0} has {1} endpoints", iUdn, refresh.Count);
 
             iEndpoints = refresh;
         }
