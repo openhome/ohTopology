@@ -417,7 +417,7 @@ namespace OpenHome.Av
 
                     refresh.Add(entry.Key, device);
 
-                    iLog.Write("+InjectorMediaEndpoint {0}\n", entry.Key);
+                    iLog.Write("+InjectorMediaEndpoint {0} ({1})\n", ((JsonObject)entry.Value).GetStringValue("Name"), ((JsonObject)entry.Value).GetStringValue("Type"));
 
                     iInjector.AddDevice(device);
                 }
