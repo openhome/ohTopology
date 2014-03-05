@@ -136,6 +136,7 @@ namespace OpenHome.Av
                         case "object.container.person.musicArtist":
                             return (ParseContainerMusicArtist(aElement, id));
                         case "object.container.album.musicAlbum":
+                        case "object.container.playlistContainer":
                             return (ParseContainerMusicAlbum(aElement, id));
                         case "object.container.genre.musicGenre":
                             return (ParseContainerMusicGenre(aElement, id));
