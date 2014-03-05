@@ -106,8 +106,13 @@ namespace OpenHome.Av
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Title);
             Convert(aElement, "album", kNsUpnp, datum, iNetwork.TagManager.Audio.AlbumTitle);
             Convert(aElement, "artist", kNsUpnp, datum, iNetwork.TagManager.Audio.Artist);
+            Convert(aElement, "originalTrackNumber", kNsUpnp, datum, iNetwork.TagManager.Audio.Track);
             Convert(aElement, "res", kNsDidlLite, datum, iNetwork.TagManager.Audio.Uri);
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
+
+            ParseAttribute(aElement, "res", "sampleFrequency", kNsDidlLite, datum, iNetwork.TagManager.Audio.Samplerate);
+            ParseAttribute(aElement, "res", "bitsPerSample", kNsDidlLite, datum, iNetwork.TagManager.Audio.Bitdepth);
+            ParseAttribute(aElement, "res", "bitrate", kNsDidlLite, datum, iNetwork.TagManager.Audio.Bitrate);
 
             return (datum);
         }
@@ -131,6 +136,7 @@ namespace OpenHome.Av
                         case "object.container.person.musicArtist":
                             return (ParseContainerMusicArtist(aElement, id));
                         case "object.container.album.musicAlbum":
+                        case "object.container.playlistContainer":
                             return (ParseContainerMusicAlbum(aElement, id));
                         case "object.container.genre.musicGenre":
                             return (ParseContainerMusicGenre(aElement, id));
@@ -164,7 +170,10 @@ namespace OpenHome.Av
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title);
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Container.Artwork);
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.AlbumTitle);
-            Convert(aElement, "artist", kNsUpnp, datum, iNetwork.TagManager.Audio.AlbumArtist);
+            if (!Convert(aElement, "artist", kNsUpnp, datum, iNetwork.TagManager.Audio.AlbumArtist))
+            {
+                Convert(aElement, "creator", kNsDc, datum, iNetwork.TagManager.Audio.AlbumArtist);
+            }
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
 
             return (datum);
@@ -192,8 +201,23 @@ namespace OpenHome.Av
             return (datum);
         }
 
-        private void Convert(XElement aElement, string aName, string aNamespace, MediaDatum aDatum, ITag aTag)
+        private void ParseAttribute(XElement aElement, string aName, string aAttribute, string aNamespace, MediaDatum aDatum, ITag aTag)
         {
+            var elements = aElement.Descendants(XName.Get(aName, aNamespace));
+
+            foreach (var element in elements)
+            {
+                var attribute = element.Attribute(XName.Get(aAttribute));
+                if (attribute != null && attribute.Value.Length > 0)
+                {
+                    aDatum.Add(aTag, attribute.Value);
+                }
+            }
+        }
+
+        private bool Convert(XElement aElement, string aName, string aNamespace, MediaDatum aDatum, ITag aTag)
+        {
+            bool found = false;
             var elements = aElement.Descendants(XName.Get(aName, aNamespace));
 
             foreach (var element in elements)
@@ -201,8 +225,11 @@ namespace OpenHome.Av
                 if (element.Value.Length > 0)
                 {
                     aDatum.Add(aTag, element.Value);
+                    found = true;
                 }
             }
+
+            return found;
         }
 
 

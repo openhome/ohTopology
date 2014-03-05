@@ -273,7 +273,10 @@ namespace OpenHome.Av
                         {
                             iSessionHandler("me." + iId + "." + session, (id, seq) =>
                             {
-                                iSupervisor.Refresh(session);
+                                if (!aCancellationToken.IsCancellationRequested)
+                                {
+                                    iSupervisor.Refresh(session);
+                                }
                             });
 
                             aCallback(session);

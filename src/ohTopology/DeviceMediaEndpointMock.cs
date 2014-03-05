@@ -54,7 +54,7 @@ namespace OpenHome.Av
             Add("FFE4E1", "000080");
 
 
-            Console.WriteLine("Port: " + iHttpFramework.Port);
+            //Console.WriteLine("Port: " + iHttpFramework.Port);
 
             Add<IProxyMediaEndpoint>(new ServiceMediaEndpointMock(aNetwork, this, "mock", "Music",
                 "Mock", "Mock", "http://www.openhome.org", "",
@@ -144,7 +144,7 @@ namespace OpenHome.Av
 
             var query = Lri.ParseQuery(request.Query);
             var lri = new Lri(request.Path, query);
-            Console.WriteLine("HandleRequest: " + lri.FullPathAndQuery());
+            //Console.WriteLine("HandleRequest: " + lri.FullPathAndQuery());
             if (lri.Any())
             {
                 var segment = lri.First();
@@ -174,7 +174,7 @@ namespace OpenHome.Av
         private void ProcessRequestArtwork(IHttpRequest aRequest, ILri aLri)
         {
 
-            Console.WriteLine("ProcessRequestArtwork: " + aLri.FullPathAndQuery());
+            //Console.WriteLine("ProcessRequestArtwork: " + aLri.FullPathAndQuery());
             if (!aLri.Any())
             {
                 aRequest.SendNotFound();

@@ -46,7 +46,7 @@ namespace OpenHome.Av
 
             iDisposeHandler = new DisposeHandler();
             iDevices = new Dictionary<string, IDisposable>();
-            iDeviceList = new ModeratedCpDeviceList(iLog, "upnp.org", "ContentDirectory", 1, Added, Removed);
+            iDeviceList = new CpDeviceListUpnpServiceType("upnp.org", "ContentDirectory", 1, Added, Removed);
         }
 
         internal INetwork Network
@@ -66,7 +66,7 @@ namespace OpenHome.Av
 
         internal void RemoveDevice(IInjectorDevice aDevice)
         {
-            Console.WriteLine("Remove : {0}", aDevice.Udn);
+            //Console.WriteLine("Remove : {0}", aDevice.Udn);
 
             iNetwork.Remove(aDevice);
         }
@@ -105,7 +105,7 @@ namespace OpenHome.Av
         {
             var udn = aDevice.Udn();
 
-            iLog.Write("+DeviceInjector (MediaEndpoint) {0}\n", udn);
+            iLog.Write("+DeviceInjector (MediaEndpointManager) {0}\n", udn);
 
             string deviceXml;
 
@@ -152,7 +152,7 @@ namespace OpenHome.Av
         {
             var udn = aDevice.Udn();
 
-            iLog.Write("-DeviceInjector (MediaEndpoint) {0}\n", udn);
+            iLog.Write("-DeviceInjector (MediaEndpointManager) {0}\n", udn);
 
             lock (iDevices)
             {
@@ -231,7 +231,7 @@ namespace OpenHome.Av
         private CancellationTokenSource iCancellationTokenSource;
 
         private IEventSupervisorSession iEventSession;
-        private IDisposable iSubsrciptionMediaEndpoints;
+        private IDisposable iSubscriptionMediaEndpoints;
 
         public InjectorDeviceOpenHome(InjectorMediaEndpoint aInjector, string aUdn, Uri aUri, CpDevice aDevice, ILog aLog)
         {
@@ -267,7 +267,7 @@ namespace OpenHome.Av
                         {
                             iEventSession = iInjector.CreateEventSession(endpoint);
                             iEventSession.Alive.AddWatcher(this);
-                            iSubsrciptionMediaEndpoints = iEventSession.Create("ps.me", Update);
+                            iSubscriptionMediaEndpoints = iEventSession.Create("ps.me", Update);
                         }
                     }
                     catch
@@ -353,6 +353,8 @@ namespace OpenHome.Av
                     }
                 }
 
+                iLog.Write("-InjectorMediaEndpoint {0}\n", entry.Key);
+
                 iInjector.RemoveDevice(entry.Value);
             }
 
@@ -387,6 +389,8 @@ namespace OpenHome.Av
                         }
                     }
 
+                    iLog.Write("-InjectorMediaEndpoint {0}\n", entry.Key);
+
                     iInjector.RemoveDevice(entry.Value);
                 }
             }
@@ -410,11 +414,13 @@ namespace OpenHome.Av
 
                     refresh.Add(entry.Key, device);
 
+                    iLog.Write("+InjectorMediaEndpoint {0} ({1})\n", ((JsonObject)entry.Value).GetStringValue("Name"), ((JsonObject)entry.Value).GetStringValue("Type"));
+
                     iInjector.AddDevice(device);
                 }
             }
 
-            Console.WriteLine("{0} has {1} endpoints", iUdn, refresh.Count);
+            //Console.WriteLine("{0} has {1} endpoints", iUdn, refresh.Count);
 
             iEndpoints = refresh;
         }
@@ -428,6 +434,8 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, bool aValue, bool aPrevious)
         {
+            iLog.Write("~DeviceInjector (MediaEndpointManager) {0} Alive={1}\n", iUdn, aValue);
+
             if (!aValue)
             {
                 // device comms has gone
@@ -454,7 +462,7 @@ namespace OpenHome.Av
 
                 if (iEventSession != null)
                 {
-                    iSubsrciptionMediaEndpoints.Dispose();
+                    iSubscriptionMediaEndpoints.Dispose();
 
                     foreach (var handlers in iEventHandlers.Values)
                     {

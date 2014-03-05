@@ -448,7 +448,7 @@ namespace OpenHome.Av
                 {
                     if (iSubscribed)
                     {
-                        Console.WriteLine("VolumeChanged: " + Device.Udn + " " + iService.PropertyVolume());
+                        //Console.WriteLine("VolumeChanged: " + Device.Udn + " " + iService.PropertyVolume());
                         iValue.Update(volume);
                     }
                 });
