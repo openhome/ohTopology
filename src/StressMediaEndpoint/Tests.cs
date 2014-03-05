@@ -31,10 +31,13 @@ namespace StressMediaEndpoint
 
             iReady = new ManualResetEvent(false);
 
-            iMediaEndpoint.CreateSession((session) =>
+            iWatchableThread.Schedule(() =>
             {
-                iReady.Set();
-                iSession = session;
+                iMediaEndpoint.CreateSession((session) =>
+                {
+                    iReady.Set();
+                    iSession = session;
+                });
             });
         }
 
@@ -51,6 +54,34 @@ namespace StressMediaEndpoint
         public void Dispose()
         {
             iReady.Dispose();
+        }
+    }
+
+    public class TestMediaEndpointStable : Test
+    {
+        private readonly WatchableTimer iTimer;
+        private readonly EventWaitHandle iDone;
+
+        public TestMediaEndpointStable(IWatchableThread aWatchableThread, INetwork aNetwork, IProxyMediaEndpoint aMediaEndpoint)
+            : base(aWatchableThread, aNetwork, aMediaEndpoint)
+        {
+            iTimer = new WatchableTimer(iWatchableThread, TimerExpired);
+            iDone = new ManualResetEvent(false);
+            Console.WriteLine("Test Endpoint Stable {0}-{1}", aMediaEndpoint.Device.Udn, aMediaEndpoint.Id);
+        }
+
+        public override void DoRun()
+        {
+            iTimer.FireIn(10000);
+            iDone.WaitOne();
+            Console.WriteLine("Test completed successfully");
+        }
+
+        private void TimerExpired()
+        {
+            iTimer.Dispose();
+            iSession.Dispose();
+            iDone.Set();
         }
     }
 
@@ -313,12 +344,19 @@ namespace StressMediaEndpoint
 
         public void Run()
         {
+            TestMediaEndpointStable();
             TestRapidBrowsing();
             TestBrowseWholeTree();
             TestSearch();
             TestMatch();
             TestLink();
             //TestList();
+        }
+
+        private void TestMediaEndpointStable()
+        {
+            var test = new TestMediaEndpointStable(iWatchableThread, iNetwork, iMediaEndpoint);
+            test.Run();
         }
 
         private void TestRapidBrowsing()

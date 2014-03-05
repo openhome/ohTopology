@@ -30,8 +30,7 @@ namespace OpenHome.Av
 
         private readonly ServiceMediaEndpointOpenHome iService;
 
-        public DeviceMediaEndpointOpenHome(INetwork aNetwork, Uri aUri, string aId, JsonValue aJson,
-            Action<string, Action<string, uint>> aSessionHandler, ILog aLog)
+        public DeviceMediaEndpointOpenHome(INetwork aNetwork, Uri aUri, string aId, JsonValue aJson, ILog aLog, Action<string, Action<string, uint>> aSessionHandler)
             : base(aId)
         {
             var json = aJson as JsonObject;

@@ -473,19 +473,26 @@ namespace OpenHome.Av
         public void CreateSession(Action<IMediaEndpointSession> aCallback)
         {
             iClient.Assert(); // must be called on the watchable thread
-            Stopwatch s = new Stopwatch();
-            s.Start();
+
+            Stopwatch sw = new Stopwatch();
+            
+            sw.Start();
+            
             using (iDisposeHandler.Lock())
             {
                 var token = iCancellationTokenSource.Token;
 
-                iClient.Create(iCancellationTokenSource.Token, (session) =>
+                iClient.Create(iCancellationTokenSource.Token, (id) =>
                 {
-                    var newSession = new MediaEndpointSupervisorSession(iClient, session, DestroySession, iLog);
-                    iSessions.Add(session, newSession);
-                    s.Stop();
-                    iLog.Write("CreateSession ({0}) took {1} milliseconds\n", session, s.Milliseconds);
-                    aCallback(newSession);
+                    var session = new MediaEndpointSupervisorSession(iClient, id, DestroySession, iLog);
+
+                    iSessions.Add(id, session);
+                    
+                    sw.Stop();
+                    
+                    iLog.Write("CreateSession({0}) {1}ms\n", id, sw.Milliseconds);
+                    
+                    aCallback(session);
                 });
             }
         }

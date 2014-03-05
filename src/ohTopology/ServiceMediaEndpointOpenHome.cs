@@ -195,6 +195,7 @@ namespace OpenHome.Av
         private string Resolve(string aValue)
         {
             Uri absoluteUri;
+
             if (Uri.TryCreate(aValue, UriKind.Absolute, out absoluteUri))
             {
                 if (!absoluteUri.IsFile)

@@ -399,17 +399,14 @@ namespace OpenHome.Av
 
                 if (!refresh.TryGetValue(entry.Key, out device))
                 {
-                    iEventHandlers.Add(entry.Key, new List<IDisposable>());
+                    var handlers = new List<IDisposable>();
 
-                    device = new DeviceMediaEndpointOpenHome(iInjector.Network, iUri, entry.Key, entry.Value, (id, action) =>
+                    iEventHandlers.Add(entry.Key, handlers);
+
+                    device = new DeviceMediaEndpointOpenHome(iInjector.Network, iUri, entry.Key, entry.Value, iLog, (id, action) =>
                     {
-                        List<IDisposable> handlers;
-
-                        if (iEventHandlers.TryGetValue(entry.Key, out handlers))
-                        {
-                            handlers.Add(iEventSession.Create(id, action));
-                        }
-                    }, iLog);
+                        handlers.Add(iEventSession.Create(id, action));
+                    });
 
                     refresh.Add(entry.Key, device);
 
@@ -433,7 +430,7 @@ namespace OpenHome.Av
         {
             if (!aValue)
             {
-                // device comms have gone
+                // device comms has gone
 
                 RemoveAll();
             }
