@@ -339,7 +339,6 @@ namespace StressMediaEndpoint
             iWatchableThread = aWatchableThread;
             iNetwork = aNetwork;
             iMediaEndpoint = aMediaEndpoint;
-
         }
 
         public void Run()
