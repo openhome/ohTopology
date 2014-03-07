@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using OpenHome.Os.App;
+using OpenHome.Net.ControlPoint;
 
 namespace OpenHome.Av
 {
@@ -10,13 +12,14 @@ namespace OpenHome.Av
         Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata, bool aPlay);
         Task<uint> InsertNext(string aUri, IMediaMetadata aMetadata, bool aPlay);
         Task<uint> InsertEnd(string aUri, IMediaMetadata aMetadata, bool aPlay);
+        Task MakeRoomForInsert(uint aCount);
         Task Delete(IMediaPreset aValue);
         Task DeleteAll();
     }
 
     class PlaylistWriter : IPlaylistWriter
     {
-        private IProxyPlaylist iPlaylist;
+        private readonly IProxyPlaylist iPlaylist;
 
         public PlaylistWriter(IProxyPlaylist aPlaylist)
         {
@@ -75,6 +78,11 @@ namespace OpenHome.Av
                 return t2.Result;
             });
             return t1;
+        }
+
+        public Task MakeRoomForInsert(uint aCount)
+        {
+            return iPlaylist.MakeRoomForInsert(aCount);
         }
 
         public Task Delete(IMediaPreset aMediaPreset)

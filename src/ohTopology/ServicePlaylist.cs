@@ -163,6 +163,7 @@ namespace OpenHome.Av
         Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata);
         Task<uint> InsertNext(string aUri, IMediaMetadata aMetadata);
         Task<uint> InsertEnd(string aUri, IMediaMetadata aMetadata);
+        Task MakeRoomForInsert(uint aCount);
         Task Delete(IMediaPreset aValue);
         Task DeleteAll();
         Task SetRepeat(bool aValue);
@@ -288,6 +289,7 @@ namespace OpenHome.Av
         public abstract Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata);
         public abstract Task<uint> InsertNext(string aUri, IMediaMetadata aMetadata);
         public abstract Task<uint> InsertEnd(string aUri, IMediaMetadata aMetadata);
+        public abstract Task MakeRoomForInsert(uint aCount);
         public abstract Task Delete(IMediaPreset aValue);
         public abstract Task DeleteAll();
         public abstract Task SetRepeat(bool aValue);
@@ -618,18 +620,50 @@ namespace OpenHome.Av
             return taskSource.Task;
         }
 
+        public override Task MakeRoomForInsert(uint aCount)
+        {
+            IList<uint> idArray = ByteArray.Unpack(iService.PropertyIdArray());
+            IEnumerable<uint> ids = idArray.Take((int)aCount);
+
+            return Task.Factory.ContinueWhenAll(Delete(ids).ToArray(), (tasks) => { Task.WaitAll(tasks); });
+        }
+
+        private IList<Task> Delete(IEnumerable<uint> aIds)
+        {
+            IList<Task> tasks = new List<Task>();
+            foreach (uint id in aIds)
+            {
+                tasks.Add(Delete(id));
+            }
+            return tasks;
+        }
+
         public override Task Delete(IMediaPreset aValue)
         {
             Do.Assert(aValue is MediaPresetPlaylist);
             uint id = (aValue as MediaPresetPlaylist).Id;
 
+            return Delete(id);
+        }
+
+        private Task Delete(uint aId)
+        {
             TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
-            iService.BeginDeleteId(id, (ptr) =>
+            iService.BeginDeleteId(aId, (ptr) =>
             {
                 try
                 {
                     iService.EndDeleteId(ptr);
                     taskSource.SetResult(true);
+                }
+                catch (ProxyError e)
+                {
+                    if (e.Code == 800)      // id not found (silently handle)
+                    {
+                        taskSource.SetResult(true);
+                        return;
+                    }
+                    taskSource.SetException(e);
                 }
                 catch (Exception e)
                 {
@@ -1230,6 +1264,18 @@ namespace OpenHome.Av
             return task;
         }
 
+        public override Task MakeRoomForInsert(uint aCount)
+        {
+            Task task = Task.Factory.StartNew(() =>
+            {
+                iNetwork.Schedule(() =>
+                {
+                    iIdArray.RemoveRange(0, (int)aCount);
+                });
+            });
+            return task;
+        }
+
         public override Task Delete(IMediaPreset aValue)
         {
             uint id = (aValue as MediaPresetPlaylist).Id;
@@ -1447,6 +1493,11 @@ namespace OpenHome.Av
         public Task<uint> InsertEnd(string aUri, IMediaMetadata aMetadata)
         {
             return iService.InsertEnd(aUri, aMetadata);
+        }
+
+        public Task MakeRoomForInsert(uint aCount)
+        {
+            return iService.MakeRoomForInsert(aCount);
         }
 
         public Task Delete(IMediaPreset aValue)
