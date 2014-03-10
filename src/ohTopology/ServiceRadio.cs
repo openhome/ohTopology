@@ -454,6 +454,15 @@ namespace OpenHome.Av
                     iService.EndSetId(ptr);
                     taskSource.SetResult(true);
                 }
+                catch (ProxyError e)
+                {
+                    if (e.Code == 800)      // id not found (silently handle)
+                    {
+                        taskSource.SetResult(true);
+                        return;
+                    }
+                    taskSource.SetException(e);
+                }
                 catch (Exception e)
                 {
                     taskSource.SetException(e);
