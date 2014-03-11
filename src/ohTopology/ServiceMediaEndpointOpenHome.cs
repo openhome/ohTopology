@@ -261,28 +261,25 @@ namespace OpenHome.Av
         {
             Fetch(aCancellationToken, CreateUri("create"), (value) =>
             {
-                Task.Factory.StartNew(() =>
+                if (!aCancellationToken.IsCancellationRequested)
                 {
                     var json = JsonParser.Parse(value) as JsonString;
 
-                    var session = json.Value;
-
-                    iNetwork.Schedule(() =>
+                    if (json != null)
                     {
-                        if (!aCancellationToken.IsCancellationRequested)
-                        {
-                            iSessionHandler("me." + iId + "." + session, (id, seq) =>
-                            {
-                                if (!aCancellationToken.IsCancellationRequested)
-                                {
-                                    iSupervisor.Refresh(session);
-                                }
-                            });
+                        var session = json.Value;
 
-                            aCallback(session);
-                        }
-                    });
-                });
+                        iSessionHandler("me." + iId + "." + session, (id, seq) =>
+                        {
+                            if (!aCancellationToken.IsCancellationRequested)
+                            {
+                                iSupervisor.Refresh(session);
+                            }
+                        });
+
+                        aCallback(session);
+                    }
+                }
             });
         }
 
