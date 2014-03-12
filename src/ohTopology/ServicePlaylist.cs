@@ -147,6 +147,8 @@ namespace OpenHome.Av
     {
         IWatchable<uint> Id { get; }
         IWatchable<IInfoMetadata> InfoNext { get; }
+        IWatchable<IInfoMetadata> InfoCurrent { get; }
+        IWatchable<int> InfoCurrentIndex { get; }
         IWatchable<string> TransportState { get; }
         IWatchable<bool> Repeat { get; }
         IWatchable<bool> Shuffle { get; }
@@ -183,6 +185,8 @@ namespace OpenHome.Av
             : base(aNetwork, aDevice, aLog)
         {
             iId = new Watchable<uint>(aNetwork, "Id", 0);
+            iInfoCurrentIndex = new Watchable<int>(aNetwork, "CurrentIndex", -1);
+            iInfoCurrent = new Watchable<IInfoMetadata>(aNetwork, "InfoCurrent", InfoMetadata.Empty);
             iInfoNext = new Watchable<IInfoMetadata>(aNetwork, "InfoNext", InfoMetadata.Empty);
             iTransportState = new Watchable<string>(aNetwork, "TransportState", string.Empty);
             iRepeat = new Watchable<bool>(aNetwork, "Repeat", false);
@@ -219,6 +223,22 @@ namespace OpenHome.Av
             get
             {
                 return iId;
+            }
+        }
+
+        public IWatchable<int> InfoCurrentIndex
+        {
+            get
+            {
+                return iInfoCurrentIndex;
+            }
+        }
+
+        public IWatchable<IInfoMetadata> InfoCurrent
+        {
+            get
+            {
+                return iInfoCurrent;
             }
         }
 
@@ -300,6 +320,8 @@ namespace OpenHome.Av
 
         protected IWatchableThread iThread;
         protected Watchable<uint> iId;
+        protected Watchable<int> iInfoCurrentIndex;
+        protected Watchable<IInfoMetadata> iInfoCurrent;
         protected Watchable<IInfoMetadata> iInfoNext;
         protected Watchable<string> iTransportState;
         protected Watchable<bool> iRepeat;
@@ -794,6 +816,7 @@ namespace OpenHome.Av
                     if (iSubscribed)
                     {
                         iId.Update(id);
+                        EvaluateInfoCurrent(id, idArray);
                         EvaluateInfoNext(id, idArray);
                     }
                 });
@@ -811,10 +834,42 @@ namespace OpenHome.Av
                     {
                         iCacheSession.SetValid(idArray);
                         iMediaSupervisor.Update(new PlaylistSnapshot(iNetwork, iCacheSession, idArray, this));
+                        EvaluateInfoCurrent(iId.Value, idArray);
                         EvaluateInfoNext(iId.Value, idArray);
                     }
                 });
             });
+        }
+
+        private void EvaluateInfoCurrent(uint aId, IList<uint> aIdArray)
+        {
+            int index = aIdArray.IndexOf(aId);
+            iInfoCurrentIndex.Update(index);
+            if (index != -1)
+            {
+                iCacheSession.Entries(new uint[] { aIdArray.ElementAt(index) }).ContinueWith((t) =>
+                {
+                    iNetwork.Schedule(() =>
+                    {
+                        iDisposeHandler.WhenNotDisposed(() =>
+                        {
+                            try
+                            {
+                                IIdCacheEntry entry = t.Result.ElementAt(0);
+                                iInfoCurrent.Update(new InfoMetadata(entry.Metadata, entry.Uri));
+                            }
+                            catch
+                            {
+                                iInfoCurrent.Update(InfoMetadata.Empty);
+                            }
+                        });
+                    });
+                });
+            }
+            else
+            {
+                iInfoCurrent.Update(InfoMetadata.Empty);
+            }
         }
 
         private void EvaluateInfoNext(uint aId, IList<uint> aIdArray)
@@ -1417,6 +1472,22 @@ namespace OpenHome.Av
         public IWatchable<uint> Id
         {
             get { return iService.Id; }
+        }
+
+        public IWatchable<int> InfoCurrentIndex
+        {
+            get
+            {
+                return iService.InfoCurrentIndex;
+            }
+        }
+
+        public IWatchable<IInfoMetadata> InfoCurrent
+        {
+            get
+            {
+                return iService.InfoCurrent;
+            }
         }
 
         public IWatchable<IInfoMetadata> InfoNext

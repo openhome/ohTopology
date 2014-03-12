@@ -206,11 +206,27 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<bool> Shuffle 
-        { 
+        public IWatchable<bool> Shuffle
+        {
             get
             {
                 return iPlaylist.Shuffle;
+            }
+        }
+
+        public IWatchable<int> InfoCurrentIndex
+        {
+            get
+            {
+                return iPlaylist.InfoCurrentIndex;
+            }
+        }
+
+        public IWatchable<IInfoMetadata> InfoCurrent
+        {
+            get
+            {
+                return iPlaylist.InfoCurrent;
             }
         }
 
