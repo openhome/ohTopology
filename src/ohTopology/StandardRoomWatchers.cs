@@ -222,14 +222,6 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<IInfoMetadata> InfoCurrent
-        {
-            get
-            {
-                return iPlaylist.InfoCurrent;
-            }
-        }
-
         public void SetRepeat(bool aValue)
         {
             iPlaylist.SetRepeat(aValue);
