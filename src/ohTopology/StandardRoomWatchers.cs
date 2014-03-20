@@ -950,7 +950,11 @@ namespace OpenHome.Av
                             }
                             MediaMetadata metadata = new MediaMetadata();
                             metadata.Add(iNetwork.TagManager.Audio.Title, fullname);
-                            metadata.Add(iNetwork.TagManager.Audio.Artwork, v.ArtworkUri);
+                            if (v.ArtworkUri != null)
+                            {
+                                metadata.Add(iNetwork.TagManager.Audio.Artwork, v.ArtworkUri);
+                            }
+                            Do.Assert(v.Uri != null);
                             metadata.Add(iNetwork.TagManager.Audio.Uri, v.Uri);
                             presets.Add(new MediaPresetSender(iNetwork, index + 1, index, metadata, v, iReceiver));
                             ++index;
