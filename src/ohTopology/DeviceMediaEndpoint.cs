@@ -409,7 +409,10 @@ namespace OpenHome.Av
 
                     device = new DeviceMediaEndpointOpenHome(iInjector.Network, iUri, entry.Key, entry.Value, iLog, (id, action) =>
                     {
-                        handlers.Add(iEventSession.Create(id, action));
+                        if (iEventHandlers.TryGetValue(entry.Key, out handlers)) // see #921
+                        {
+                            handlers.Add(iEventSession.Create(id, action));
+                        }
                     });
 
                     refresh.Add(entry.Key, device);

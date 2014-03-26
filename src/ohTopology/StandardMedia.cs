@@ -176,7 +176,7 @@ namespace OpenHome.Av
         {
             aItem.Create<IProxyMediaEndpoint>((endpoint) =>
             {
-                iLog.Write("+StandardMedia {0} with {1}\n", endpoint.Name, string.Join(", ", endpoint.Attributes));
+                iLog.Write("+StandardMedia {0} ({1}) with {2}\n", endpoint.Name, endpoint.ModelInfo, string.Join(", ", endpoint.Attributes));
 
                 if (!iDisposed)
                 {
