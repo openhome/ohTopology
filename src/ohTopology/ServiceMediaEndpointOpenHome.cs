@@ -59,13 +59,12 @@ namespace OpenHome.Av
 
         internal string CreateUri(string aFormat, params object[] aArguments)
         {
-            var relative = string.Format(aFormat, aArguments);
-            return (string.Format("{0}/{1}", iUri, relative));
+            return iUri + "/" + string.Format(aFormat, aArguments);
         }
 
-        internal string ResolveUri(string aValue)
+        internal string ResolveResourceUri(string aValue)
         {
-            return (iUri + "/res" + aValue);
+            return iUri + "/res/" + aValue;
         }
 
         private void Fetch(CancellationToken aCancellationToken, string aUri, Action<string> aJsonParser)
@@ -203,7 +202,7 @@ namespace OpenHome.Av
                     return aValue;
                 }
             }
-            return ResolveUri(aValue);
+            return ResolveResourceUri(aValue);
         }
 
         private IEnumerable<string> GetMetadatumValues(JsonValue aValue)

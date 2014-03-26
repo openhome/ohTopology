@@ -27,7 +27,7 @@
     },
     {   "name": "ohOs",
         "type": "openhome",
-        "version": "0.2.804",
+        "version": "0.2.813",
         "platform-specific": false,
         "remote-archive-path": "http://openhome.org/releases/artifacts/ohOs2/ohOs2-${version}-AnyPlatform-Release.tar.gz",
         "dest": "dependencies/AnyPlatform/ohOs",
