@@ -192,7 +192,12 @@ namespace OpenHome.Av
 
             if (Uri.TryCreate(aValue, UriKind.Absolute, out uri))
             {
-                return uri.AbsoluteUri;
+                // the following mysterious code is to cope with a wierdness in the monomac library
+
+                if (!uri.IsFile) 
+                { 
+                    return aValue; 
+                } 
             }
 
             if (aValue.StartsWith("/"))
