@@ -543,6 +543,16 @@ namespace OpenHome.Av
                     }
                 }
             }
+            else
+            {
+                if (iSender != null && iSender.Enabled)
+                {
+                    if (aPrevious.Sender == iSender.Device)
+                    {
+                        iHouse.AddRoom(iRoom);
+                    }
+                }
+            }
         }
 
         public void ItemClose(string aId, IZoneSender aValue) { }
@@ -919,6 +929,10 @@ namespace OpenHome.Av
                             }
                         }
                     }
+                    else
+                    {
+                        throw new NotSupportedException();
+                    }
                 });
             }
         }
@@ -951,6 +965,7 @@ namespace OpenHome.Av
             {
                 if (r.AddToZone(aDevice, aRoom))
                 {
+                    RemoveRoom(aRoom);
                     break;
                 }
             }
@@ -962,6 +977,7 @@ namespace OpenHome.Av
             {
                 if (r != aRoom && r.RemoveFromZone(aDevice, aRoom))
                 {
+                    AddRoom(aRoom);
                     break;
                 }
             }

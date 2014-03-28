@@ -271,7 +271,7 @@ namespace OpenHome.Av
         IVolumeController CreateVolumeController();
     }
 
-    class ZoneSender : IZoneSender, IDisposable, IWatcher<IZoneSender>, IOrderedWatcher<IStandardRoom>
+    class ZoneSender : IZoneSender, IDisposable
     {
         public ZoneSender(StandardRoom aRoom)
             : this(false, aRoom, null)
@@ -299,7 +299,6 @@ namespace OpenHome.Av
         {
             foreach (StandardRoom r in iListeners)
             {
-                r.ZoneSender.RemoveWatcher(this);
                 r.RemovedFromZone(this);
             }
             iListeners.Clear();
@@ -377,8 +376,6 @@ namespace OpenHome.Av
         {
             iListeners.Add(aRoom);
 
-            aRoom.ZoneSender.AddWatcher(this);
-
             // insert the room
             iWatchableListeners.Add(aRoom, GetInsertIndex(aRoom));
             iHasListeners.Update(iWatchableListeners.Values.Count() > 0);
@@ -387,8 +384,6 @@ namespace OpenHome.Av
 
         internal void RemoveFromZone(StandardRoom aRoom)
         {
-            aRoom.ZoneSender.RemoveWatcher(this);
-
             iListeners.Remove(aRoom);
 
             iWatchableListeners.Remove(aRoom);
@@ -419,71 +414,6 @@ namespace OpenHome.Av
         private readonly Watchable<bool> iHasListeners;
         private readonly List<StandardRoom> iListeners;
         private readonly WatchableOrdered<IStandardRoom> iWatchableListeners;
-
-        public void OrderedOpen()
-        {
-        }
-
-        public void OrderedInitialised()
-        {
-        }
-
-        public void OrderedClose()
-        {
-        }
-
-        public void OrderedAdd(IStandardRoom aItem, uint aIndex)
-        {
-            if (aItem != iRoom)
-            {
-                iWatchableListeners.Add(aItem, GetInsertIndex(aItem));
-                iHasListeners.Update(iWatchableListeners.Values.Count() > 0);
-            }
-        }
-
-        public void OrderedMove(IStandardRoom aItem, uint aFrom, uint aTo)
-        {
-        }
-
-        public void OrderedRemove(IStandardRoom aItem, uint aIndex)
-        {
-            if (aItem != iRoom)
-            {
-                iWatchableListeners.Remove(aItem);
-                iHasListeners.Update(iWatchableListeners.Values.Count() > 0);
-            }
-        }
-
-        public void ItemOpen(string aId, IZoneSender aValue)
-        {
-            aValue.Listeners.AddWatcher(this);
-        }
-
-        public void ItemUpdate(string aId, IZoneSender aValue, IZoneSender aPrevious)
-        {
-            aPrevious.Listeners.RemoveWatcher(this);
-            foreach (var r in aPrevious.Listeners.Values)
-            {
-                if (r != iRoom)
-                {
-                    iWatchableListeners.Remove(r);
-                }
-            }
-
-            aValue.Listeners.AddWatcher(this);
-        }
-
-        public void ItemClose(string aId, IZoneSender aValue)
-        {
-            foreach (var r in aValue.Listeners.Values)
-            {
-                if (r != iRoom)
-                {
-                    iWatchableListeners.Remove(r);
-                }
-            }
-            aValue.Listeners.RemoveWatcher(this);
-        }
     }
 
     public interface IZoneReceiver

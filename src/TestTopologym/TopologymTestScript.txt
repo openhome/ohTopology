@@ -12,6 +12,7 @@ expect 4c494e4e-0026-0f99-1114-ef000004013f Group Added
 expect 4c494e4e-0026-0f99-1114-ef000004013f open Sender False
 empty
 
+// Make Kitchen listen to Bedroom
 mock network update 4c494e4e-0026-0f99-1111-ef000004013f receiver metadata Bedroom ohz://239.255.255.250:51972/4c494e4e-0026-0f99-1113-ef000004013f
 empty
 
@@ -19,6 +20,7 @@ mock network update 4c494e4e-0026-0f99-1111-ef000004013f receiver transportstate
 expect 4c494e4e-0026-0f99-1111-ef000004013f update Sender True 4c494e4e-0026-0f99-1113-ef000004013f
 empty
 
+// Make Kitchen listen to Sitting Room
 mock network update 4c494e4e-0026-0f99-1111-ef000004013f receiver metadata Sitting Room ohz://239.255.255.250:51972/4c494e4e-0026-0f99-1112-ef000004013f
 expect 4c494e4e-0026-0f99-1111-ef000004013f update Sender True 4c494e4e-0026-0f99-1112-ef000004013f
 empty
