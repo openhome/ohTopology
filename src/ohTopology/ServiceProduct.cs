@@ -19,12 +19,10 @@ namespace OpenHome.Av
         IWatchable<uint> SourceIndex { get; }
         IWatchable<string> SourceXml { get; }
         IWatchable<bool> Standby { get; }
-        IWatchable<string> Registration { get; }
 
         Task SetSourceIndex(uint aValue);
         Task SetSourceIndexByName(string aValue);
         Task SetStandby(bool aValue);
-        Task SetRegistration(string aValue);
 
         string Attributes { get; }
         string ManufacturerImageUri { get; }
@@ -124,18 +122,9 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<string> Registration
-        {
-            get
-            {
-                return iRegistration;
-            }
-        }
-
         public abstract Task SetSourceIndex(uint aValue);
         public abstract Task SetSourceIndexByName(string aValue);
         public abstract Task SetStandby(bool aValue);
-        public abstract Task SetRegistration(string aValue);
 
         // IProduct methods
 
@@ -274,7 +263,6 @@ namespace OpenHome.Av
             iCpDevice.AddRef();
 
             iService = new CpProxyAvOpenhomeOrgProduct1(aCpDevice);
-            iServiceConfiguration = new CpProxyLinnCoUkConfiguration1(aCpDevice);
 
             string value;
             if (aCpDevice.GetAttribute("Upnp.Service.linn-co-uk.Volkano", out value))
@@ -291,10 +279,7 @@ namespace OpenHome.Av
             iService.SetPropertySourceXmlChanged(HandleSourceXmlChanged);
             iService.SetPropertyStandbyChanged(HandleStandbyChanged);
 
-            iServiceConfiguration.SetPropertyParameterXmlChanged(HandleParameterXmlChanged);
-
             iService.SetPropertyInitialEvent(HandleInitialEvent);
-            iServiceConfiguration.SetPropertyInitialEvent(HandleInitialEventConfiguration);
         }
 
         public override void Dispose()
@@ -303,9 +288,6 @@ namespace OpenHome.Av
 
             iService.Dispose();
             iService = null;
-
-            iServiceConfiguration.Dispose();
-            iServiceConfiguration = null;
 
             if (iServiceVolkano != null)
             {
@@ -319,16 +301,13 @@ namespace OpenHome.Av
         protected override Task OnSubscribe()
         {
             Do.Assert(iSubscribedSource == null);
-            Do.Assert(iSubscribedConfigurationSource == null);
             Do.Assert(iSubscribedVolkanoSource == null);
 
             TaskCompletionSource<bool> volkano = new TaskCompletionSource<bool>();
             iSubscribedSource = new TaskCompletionSource<bool>();
-            iSubscribedConfigurationSource = new TaskCompletionSource<bool>();
             iSubscribedVolkanoSource = volkano;
 
             iService.Subscribe();
-            iServiceConfiguration.Subscribe();
 
             if (iServiceVolkano != null)
             {
@@ -371,7 +350,7 @@ namespace OpenHome.Av
             iSubscribed = true;
                 
             return Task.Factory.ContinueWhenAll(
-                new Task[] { iSubscribedSource.Task, iSubscribedConfigurationSource.Task, iSubscribedVolkanoSource.Task },
+                new Task[] { iSubscribedSource.Task, iSubscribedVolkanoSource.Task },
                 (tasks) => { Task.WaitAll(tasks); });
         }
 
@@ -380,10 +359,6 @@ namespace OpenHome.Av
             if (iSubscribedSource != null)
             {
                 iSubscribedSource.TrySetCanceled();
-            }
-            if (iSubscribedConfigurationSource != null)
-            {
-                iSubscribedConfigurationSource.TrySetCanceled();
             }
             if (iSubscribedVolkanoSource != null)
             {
@@ -415,36 +390,14 @@ namespace OpenHome.Av
             }
         }
 
-        private void HandleInitialEventConfiguration()
-        {
-            string propertyXml = iServiceConfiguration.PropertyParameterXml();
-            iNetwork.Schedule(() =>
-            {
-                iDisposeHandler.WhenNotDisposed(() =>
-                {
-                    ParseParameterXml(propertyXml);
-                });
-            });
-
-            if (!iSubscribedConfigurationSource.Task.IsCanceled)
-            {
-                iSubscribedConfigurationSource.SetResult(true);
-            }
-        }
-
         protected override void OnUnsubscribe()
         {
             if (iService != null)
             {
                 iService.Unsubscribe();
             }
-            if (iServiceConfiguration != null)
-            {
-                iServiceConfiguration.Unsubscribe();
-            }
 
             iSubscribedSource = null;
-            iSubscribedConfigurationSource = null;
             iSubscribedVolkanoSource = null;
 
             iSubscribed = false;
@@ -497,47 +450,6 @@ namespace OpenHome.Av
                 {
                     iService.EndSetStandby(ptr);
                     taskSource.SetResult(true);
-                }
-                catch (Exception e)
-                {
-                    taskSource.SetException(e);
-                }
-            });
-            taskSource.Task.ContinueWith(t => { iLog.Write("Unobserved exception: {0}\n", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
-            return taskSource.Task;
-        }
-
-        public override Task SetRegistration(string aValue)
-        {
-            TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
-            iServiceConfiguration.BeginSetParameter("TuneIn Radio", "Test Mode", "true", (ptr) =>
-            {
-                try
-                {
-                    iServiceConfiguration.EndSetParameter(ptr);
-                    iServiceConfiguration.BeginSetParameter("TuneIn Radio", "Password", aValue, (ptr2) =>
-                    {
-                        try
-                        {
-                            iServiceConfiguration.EndSetParameter(ptr2);
-                            iServiceConfiguration.BeginSetParameter("TuneIn Radio", "Test Mode", "false", (ptr3) =>
-                            {
-                                try
-                                {
-                                    iServiceConfiguration.EndSetParameter(ptr3);
-                                    taskSource.SetResult(true);
-                                }
-                                catch (Exception e)
-                                {
-                                    taskSource.SetException(e);
-                                }
-                            });
-                        }
-                        catch (Exception e)
-                        {
-                            taskSource.SetException(e);
-                        }
-                    });
                 }
                 catch (Exception e)
                 {
@@ -623,55 +535,11 @@ namespace OpenHome.Av
             });
         }
 
-        private void HandleParameterXmlChanged()
-        {
-            string paramXml = iServiceConfiguration.PropertyParameterXml();
-            iNetwork.Schedule(() =>
-            {
-                iDisposeHandler.WhenNotDisposed(() =>
-                {
-                    if (iSubscribed)
-                    {
-                        ParseParameterXml(paramXml);
-                    }
-                });
-            });
-        }
-
-        private void ParseParameterXml(string aParameterXml)
-        {
-            XmlDocument document = new XmlDocument();
-            document.LoadXml(aParameterXml);
-
-            //<ParameterList>
-            // ...
-            //  <Parameter>
-            //    <Target>TuneIn Radio</Target>
-            //    <Name>Password</Name>
-            //    <Type>string</Type>
-            //    <Value></Value>
-            //  </Parameter>
-            // ...
-            //</ParameterList>
-
-            System.Xml.XmlNode registration = document.SelectSingleNode("/ParameterList/Parameter[Target=\"TuneIn Radio\" and Name=\"Password\"]/Value");
-            if (registration != null && registration.FirstChild != null)
-            {
-                iRegistration.Update(registration.FirstChild.Value);
-            }
-            else
-            {
-                iRegistration.Update(string.Empty);
-            }
-        }
-
         private readonly CpDevice iCpDevice;
         private bool iSubscribed;
         private TaskCompletionSource<bool> iSubscribedSource;
-        private TaskCompletionSource<bool> iSubscribedConfigurationSource;
         private TaskCompletionSource<bool> iSubscribedVolkanoSource;
         private CpProxyAvOpenhomeOrgProduct1 iService;
-        private CpProxyLinnCoUkConfiguration1 iServiceConfiguration;
         private CpProxyLinnCoUkVolkano1 iServiceVolkano;
     }
 
@@ -965,18 +833,6 @@ namespace OpenHome.Av
             return task;
         }
 
-        public override Task SetRegistration(string aValue)
-        {
-            Task task = Task.Factory.StartNew(() =>
-            {
-                iNetwork.Schedule(() =>
-                {
-                    iRegistration.Update(aValue);
-                });
-            });
-            return task;
-        }
-
         private SourceXml iSourceXmlFactory;
     }
 
@@ -1012,11 +868,6 @@ namespace OpenHome.Av
             get { return iService.Standby; }
         }
 
-        public IWatchable<string> Registration
-        {
-            get { return iService.Registration; }
-        }
-
         public Task SetSourceIndex(uint aValue)
         {
             return iService.SetSourceIndex(aValue);
@@ -1030,11 +881,6 @@ namespace OpenHome.Av
         public Task SetStandby(bool aValue)
         {
             return iService.SetStandby(aValue);
-        }
-
-        public Task SetRegistration(string aValue)
-        {
-            return iService.SetRegistration(aValue);
         }
 
         public string Attributes

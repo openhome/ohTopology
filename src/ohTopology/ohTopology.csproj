@@ -97,7 +97,6 @@
     <Compile Include="ServiceMediaEndpointContentDirectory.cs" />
     <Compile Include="ServiceMediaEndpointMock.cs" />
     <Compile Include="ServiceMediaEndpoint.cs" />
-    <Compile Include="CpLinnCoUkConfiguration1.cs" />
     <Compile Include="CpLinnCoUkVolkano1.cs" />
     <Compile Include="IdCache.cs" />
     <Compile Include="Joinable.cs" />

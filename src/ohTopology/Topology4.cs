@@ -288,8 +288,6 @@ namespace OpenHome.Av
         string ManufacturerName { get; }
         string ProductId { get; }
         string ProductImageUri { get; }
-        IWatchable<string> Registration { get; }
-        void SetRegistration(string aValue);
     }
 
     public interface ITopology4Group
@@ -429,14 +427,6 @@ namespace OpenHome.Av
             }
         }
 
-        public IWatchable<string> Registration
-        {
-            get
-            {
-                return iGroup.Registration;
-            }
-        }
-
         public IWatchable<ITopologymSender> Sender
         {
             get
@@ -450,14 +440,6 @@ namespace OpenHome.Av
             get
             {
                 return iWatchableSource;
-            }
-        }
-
-        public void SetRegistration(string aValue)
-        {
-            if (iGroup != null)
-            {
-                iGroup.SetRegistration(aValue);
             }
         }
 
