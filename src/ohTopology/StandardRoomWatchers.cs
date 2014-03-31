@@ -191,7 +191,7 @@ namespace OpenHome.Av
         private WatchableSourceSelectorWatchableSnapshot iWatchableSnapshot;
         private StandardRoomWatcherProxyCreator<IProxyPlaylist> iCreateProxy;
         private IProxyPlaylist iPlaylist;
-        private IPlaylistWriter iPlaylistWriter;
+        private PlaylistWriter iPlaylistWriter;
 
         public StandardRoomWatcherMusic(IStandardRoom aRoom)
             : base(aRoom)
@@ -318,7 +318,7 @@ namespace OpenHome.Av
             // iSource = aSource;
             iPlaylist = aPlaylist;
             iWatchableSnapshot = new WatchableSourceSelectorWatchableSnapshot(iNetwork, aSource, aPlaylist.Snapshot);
-            iPlaylistWriter = new PlaylistWriter(aPlaylist);
+            iPlaylistWriter = new PlaylistWriter(iNetwork, aSource, aPlaylist);
             SetEnabled(true);
         }
 
@@ -337,6 +337,7 @@ namespace OpenHome.Av
 
                 iPlaylist.Dispose();
                 iPlaylist = null;
+                iPlaylistWriter.Dispose();
                 iPlaylistWriter = null;
                 // iSource = null;
             }

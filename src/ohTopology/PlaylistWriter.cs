@@ -17,13 +17,22 @@ namespace OpenHome.Av
         Task DeleteAll();
     }
 
-    class PlaylistWriter : IPlaylistWriter
+    class PlaylistWriter : IPlaylistWriter, IDisposable
     {
+        private readonly IWatchableThread iThread;
         private readonly IProxyPlaylist iPlaylist;
+        private IMediaPreset iSourcePreset;
 
-        public PlaylistWriter(IProxyPlaylist aPlaylist)
+        public PlaylistWriter(IWatchableThread aThread, ITopology4Source aSource, IProxyPlaylist aPlaylist)
         {
+            iThread = aThread;
+            iSourcePreset = aSource.CreatePreset();
             iPlaylist = aPlaylist;
+        }
+
+        public void Dispose()
+        {
+            iSourcePreset.Dispose();
         }
 
         public Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata, bool aPlay)
@@ -36,7 +45,11 @@ namespace OpenHome.Av
                     uint id = t.Result;
                     if (aPlay)
                     {
-                        iPlaylist.SeekId(id);
+                        iThread.Schedule(() =>
+                        {
+                            iSourcePreset.Play();
+                            iPlaylist.SeekId(id);
+                        });
                     }
                 });
                 return t2.Result;
@@ -54,7 +67,11 @@ namespace OpenHome.Av
                     uint id = t.Result;
                     if (aPlay)
                     {
-                        iPlaylist.SeekId(id);
+                        iThread.Schedule(() =>
+                        {
+                            iSourcePreset.Play();
+                            iPlaylist.SeekId(id);
+                        });
                     }
                 });
                 return t2.Result;
@@ -72,7 +89,11 @@ namespace OpenHome.Av
                     uint id = t.Result;
                     if (aPlay)
                     {
-                        iPlaylist.SeekId(id);
+                        iThread.Schedule(() =>
+                        {
+                            iSourcePreset.Play();
+                            iPlaylist.SeekId(id);
+                        });
                     }
                 });
                 return t2.Result;
