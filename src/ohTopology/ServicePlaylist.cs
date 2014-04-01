@@ -573,7 +573,7 @@ namespace OpenHome.Av
         public override Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata)
         {
             TaskCompletionSource<uint> taskSource = new TaskCompletionSource<uint>();
-            iService.BeginInsert(aAfterId, aUri, iNetwork.TagManager.ToDidlLite(aMetadata), (ptr) =>
+            iService.BeginInsert(aAfterId, aUri, iNetwork.TagManager.ToDidlLite(aMetadata, (s) => iLog.Write(s)), (ptr) =>
             {
                 try
                 {
@@ -595,7 +595,7 @@ namespace OpenHome.Av
             uint id = iService.PropertyId();
 
             TaskCompletionSource<uint> taskSource = new TaskCompletionSource<uint>();
-            iService.BeginInsert(id, aUri, iNetwork.TagManager.ToDidlLite(aMetadata), (ptr) =>
+            iService.BeginInsert(id, aUri, iNetwork.TagManager.ToDidlLite(aMetadata, (s) => iLog.Write(s)), (ptr) =>
             {
                 try
                 {
@@ -623,7 +623,7 @@ namespace OpenHome.Av
             }
 
             TaskCompletionSource<uint> taskSource = new TaskCompletionSource<uint>();
-            iService.BeginInsert(id, aUri, iNetwork.TagManager.ToDidlLite(aMetadata), (ptr) =>
+            iService.BeginInsert(id, aUri, iNetwork.TagManager.ToDidlLite(aMetadata, (s) => iLog.Write(s)), (ptr) =>
             {
                 try
                 {

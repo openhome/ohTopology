@@ -183,7 +183,7 @@ namespace OpenHome.Av
         private static readonly string kNsDc = "http://purl.org/dc/elements/1.1/";
         private static readonly string kNsUpnp = "urn:schemas-upnp-org:metadata-1-0/upnp/";
 
-        public static string ToDidlLite(this ITagManager aTagManager, IMediaMetadata aMetadata)
+        public static string ToDidlLite(this ITagManager aTagManager, IMediaMetadata aMetadata, Action<string> aTempLogFunction)
         {
             if (aMetadata == null)
             {
@@ -201,6 +201,17 @@ namespace OpenHome.Av
             XmlElement container = document.CreateElement("item", kNsDidl);
 
             XmlElement title = document.CreateElement("dc", "title", kNsDc);
+            if (aMetadata[aTagManager.Audio.Title] == null)
+            {
+                System.Text.StringBuilder builder = new System.Text.StringBuilder();
+                foreach(var mediaMetadata in aMetadata)
+                {
+                    foreach(var val in mediaMetadata.Value.Values)
+                        builder.AppendFormat("{0} : {1}\n", mediaMetadata.Key.FullName, val);
+                }
+                aTempLogFunction(string.Format("Bug #1156 - null title in metadata: \n\n{0}\n\n", builder.ToString()));
+                Do.Assert(false);
+            }
             title.AppendChild(document.CreateTextNode(aMetadata[aTagManager.Audio.Title].Value));
 
             container.AppendChild(title);
