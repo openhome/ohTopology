@@ -425,7 +425,6 @@ namespace OpenHome.Av
 
         public void ItemOpen(string aId, IZoneSender aValue)
         {
-            Do.Assert(iInDirectListeners.Count == 0);
             aValue.Listeners.AddWatcher(this);
         }
 
