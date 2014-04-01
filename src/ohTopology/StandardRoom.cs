@@ -271,7 +271,7 @@ namespace OpenHome.Av
         IVolumeController CreateVolumeController();
     }
 
-    class ZoneSender : IZoneSender, IDisposable
+    class ZoneSender : IZoneSender, IWatcher<IZoneSender>, IOrderedWatcher<IStandardRoom>, IDisposable
     {
         public ZoneSender(StandardRoom aRoom)
             : this(false, aRoom, null)
@@ -291,17 +291,20 @@ namespace OpenHome.Av
             iDevice = aDevice;
 
             iHasListeners = new Watchable<bool>(aRoom.Network, "HasListeners", false);
-            iListeners = new List<StandardRoom>();
+            iDirectListeners = new List<StandardRoom>();
+            iInDirectListeners = new List<IStandardRoom>();
             iWatchableListeners = new WatchableOrdered<IStandardRoom>(aRoom.Network);
         }
 
         public void Dispose()
         {
-            foreach (StandardRoom r in iListeners)
+            foreach (StandardRoom r in iDirectListeners)
             {
+                r.ZoneSender.RemoveWatcher(this);
                 r.RemovedFromZone(this);
             }
-            iListeners.Clear();
+            iDirectListeners.Clear();
+            iInDirectListeners.Clear();
 
             iDisposeHandler.Dispose();
 
@@ -374,7 +377,9 @@ namespace OpenHome.Av
 
         internal void AddToZone(StandardRoom aRoom)
         {
-            iListeners.Add(aRoom);
+            iDirectListeners.Add(aRoom);
+
+            aRoom.ZoneSender.AddWatcher(this);
 
             // insert the room
             iWatchableListeners.Add(aRoom, GetInsertIndex(aRoom));
@@ -384,7 +389,9 @@ namespace OpenHome.Av
 
         internal void RemoveFromZone(StandardRoom aRoom)
         {
-            iListeners.Remove(aRoom);
+            aRoom.ZoneSender.RemoveWatcher(this);
+
+            iDirectListeners.Remove(aRoom);
 
             iWatchableListeners.Remove(aRoom);
             iHasListeners.Update(iWatchableListeners.Values.Count() > 0);
@@ -412,8 +419,86 @@ namespace OpenHome.Av
         private readonly StandardRoom iRoom;
         private readonly IDevice iDevice;
         private readonly Watchable<bool> iHasListeners;
-        private readonly List<StandardRoom> iListeners;
+        private readonly List<StandardRoom> iDirectListeners;
+        private readonly List<IStandardRoom> iInDirectListeners;
         private readonly WatchableOrdered<IStandardRoom> iWatchableListeners;
+
+        public void ItemOpen(string aId, IZoneSender aValue)
+        {
+            Do.Assert(iInDirectListeners.Count == 0);
+            aValue.Listeners.AddWatcher(this);
+        }
+
+        public void ItemUpdate(string aId, IZoneSender aValue, IZoneSender aPrevious)
+        {
+            aPrevious.Listeners.RemoveWatcher(this);
+
+            foreach (var r in aPrevious.Listeners.Values)
+            {
+                if (!iDirectListeners.Contains(r))
+                {
+                    iWatchableListeners.Remove(r);
+                }
+            }
+
+            iInDirectListeners.Clear();
+
+            aValue.Listeners.AddWatcher(this);
+        }
+
+        public void ItemClose(string aId, IZoneSender aValue)
+        {
+            aValue.Listeners.RemoveWatcher(this);
+
+            foreach (var r in aValue.Listeners.Values)
+            {
+                if (!iDirectListeners.Contains(r))
+                {
+                    iWatchableListeners.Remove(r);
+                }
+            }
+
+            iInDirectListeners.Clear();
+        }
+
+        public void OrderedOpen()
+        {
+        }
+
+        public void OrderedInitialised()
+        {
+        }
+
+        public void OrderedClose()
+        {
+        }
+
+        public void OrderedAdd(IStandardRoom aItem, uint aIndex)
+        {
+            if (!iInDirectListeners.Contains(aItem))
+            {
+                iInDirectListeners.Add(aItem);
+                if (!iDirectListeners.Contains(aItem))
+                {
+                    iWatchableListeners.Add(aItem, GetInsertIndex(aItem));
+                    iHasListeners.Update(iWatchableListeners.Values.Count() > 0);
+                }
+            }
+        }
+
+        public void OrderedMove(IStandardRoom aItem, uint aFrom, uint aTo)
+        {
+        }
+
+        public void OrderedRemove(IStandardRoom aItem, uint aIndex)
+        {
+            bool removed = iInDirectListeners.Remove(aItem);
+            if (!iDirectListeners.Contains(aItem) && removed)
+            {
+                iWatchableListeners.Remove(aItem);
+                iHasListeners.Update(iWatchableListeners.Values.Count() > 0);
+            }
+        }
     }
 
     public interface IZoneReceiver

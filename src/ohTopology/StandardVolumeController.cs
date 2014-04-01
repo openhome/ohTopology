@@ -627,19 +627,25 @@ namespace OpenHome.Av
 
         public void OrderedAdd(IStandardRoom aItem, uint aIndex)
         {
-            VolumeWatcher w = new VolumeWatcher(this, aItem);
-            iVolumeLookup.Add(aItem, w);
+            if (aItem != iZone.Room)
+            {
+                VolumeWatcher w = new VolumeWatcher(this, aItem);
+                iVolumeLookup.Add(aItem, w);
+            }
         }
 
         public void OrderedMove(IStandardRoom aItem, uint aFrom, uint aTo) { }
 
         public void OrderedRemove(IStandardRoom aItem, uint aIndex)
         {
-            VolumeWatcher watcher;
-            if (iVolumeLookup.TryGetValue(aItem, out watcher))
+            if (aItem != iZone.Room)
             {
-                watcher.Dispose();
-                iVolumeLookup.Remove(aItem);
+                VolumeWatcher watcher;
+                if (iVolumeLookup.TryGetValue(aItem, out watcher))
+                {
+                    watcher.Dispose();
+                    iVolumeLookup.Remove(aItem);
+                }
             }
         }
 

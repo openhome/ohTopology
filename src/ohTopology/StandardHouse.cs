@@ -189,6 +189,11 @@ namespace OpenHome.Av
                     hasMultiroom = false;
                 }
             }
+            if (iZoneSenders.Count == 1 && iZoneSenders[0].ZoneSender.Value.HasListeners.Value)
+            {
+                hasMultiroom = true;
+            }
+
             iHasMultiroom.Update(hasMultiroom);
         }
     }
@@ -245,15 +250,10 @@ namespace OpenHome.Av
                     break;
                 }
             }
-            if (!iIsSatellite)
-            {
-                iHouse.AddRoom(iRoom);
-            }
         }
 
         public void ItemUpdate(string aId, IEnumerable<ITopology4Source> aValue, IEnumerable<ITopology4Source> aPrevious)
         {
-            bool wasSatellite = false;
             string oldMaster = iMasterRoom;
             // set iMasterRoom to be empty here to cater for the case that 
             // we get a byebye from a DS before the byebye from its proxied device 
@@ -269,19 +269,9 @@ namespace OpenHome.Av
 
             if (oldMaster != iMasterRoom)
             {
-                bool remove = false;
-                bool add = false;
                 if (!string.IsNullOrEmpty(oldMaster))
                 {
-                    wasSatellite = iHouse.RemoveSatellite(oldMaster, iRoom);
-                    if (!wasSatellite)
-                    {
-                        remove = true;
-                    }
-                }
-                else
-                {
-                    remove = true;
+                    iHouse.RemoveSatellite(oldMaster, iRoom);
                 }
 
                 iIsSatellite = false;
@@ -289,47 +279,25 @@ namespace OpenHome.Av
                 if (!string.IsNullOrEmpty(iMasterRoom))
                 {
                     iIsSatellite = iHouse.AddSatellite(iMasterRoom, iRoom);
-                    if (!iIsSatellite)
-                    {
-                        add = true;
-                    }
-                }
-                else
-                {
-                    add = true;
-                }
-
-                if (remove != add)
-                {
-                    if (remove)
-                    {
-                        iHouse.RemoveRoom(iRoom);
-                    }
-                    if (add)
-                    {
-                        iHouse.AddRoom(iRoom);
-                    }
                 }
             }
         }
 
         public void ItemClose(string aId, IEnumerable<ITopology4Source> aValue)
         {
-            bool wasSatellite = false;
             foreach (ITopology4Source s in aValue)
             {
                 if (s.Type == "Receiver")
                 {
                     //iMasterRoom = string.Empty;
-                    wasSatellite = iHouse.RemoveSatellite(s.Name, iRoom);
+                    if (iIsSatellite)
+                    {
+                        iHouse.RemoveSatellite(s.Name, iRoom);
+                        iIsSatellite = false;
+                    }
                     break;
                 }
             }
-            if (!wasSatellite)
-            {
-                iHouse.RemoveRoom(iRoom);
-            }
-            iIsSatellite = false;
         }
 
         public void RoomAdded(StandardRoom aRoom)
@@ -350,7 +318,6 @@ namespace OpenHome.Av
             {
                 if (iHouse.AddSatellite(iMasterRoom, iRoom))
                 {
-                    iHouse.RemoveRoom(iRoom);
                     iIsSatellite = true;
                 }
             }
@@ -358,23 +325,17 @@ namespace OpenHome.Av
 
         public void ItemUpdate(string aId, IZoneSender aValue, IZoneSender aPrevious)
         {
-            if (aPrevious.Enabled && aValue.Room.Name == iMasterRoom)
+            if (aPrevious.Enabled && aValue.Room.Name == iMasterRoom && iIsSatellite)
             {
-                foreach (var r in iRooms)
+                if (iHouse.RemoveSatellite(iMasterRoom, iRoom))
                 {
-                    if (r.Name == iMasterRoom)
-                    {
-                        r.RemoveSatellite(iRoom);
-                        iHouse.AddRoom(iRoom);
-                        iIsSatellite = false;
-                    }
+                    iIsSatellite = false;
                 }
             }
             if (aValue.Enabled && aValue.Room.Name == iMasterRoom)
             {
                 if (iHouse.AddSatellite(iMasterRoom, iRoom))
                 {
-                    iHouse.RemoveRoom(iRoom);
                     iIsSatellite = true;
                 }
             }
@@ -382,16 +343,11 @@ namespace OpenHome.Av
 
         public void ItemClose(string aId, IZoneSender aValue)
         {
-            if (aValue.Enabled && aValue.Room.Name == iMasterRoom)
+            if (aValue.Enabled && aValue.Room.Name == iMasterRoom && iIsSatellite)
             {
-                foreach (var r in iRooms)
+                if (iHouse.RemoveSatellite(iMasterRoom, iRoom))
                 {
-                    if (r.Name == iMasterRoom && iIsSatellite)
-                    {
-                        r.RemoveSatellite(iRoom);
-                        iHouse.AddRoom(iRoom);
-                        iIsSatellite = false;
-                    }
+                    iIsSatellite = false;
                 }
             }
         }
@@ -549,7 +505,7 @@ namespace OpenHome.Av
                 {
                     if (aPrevious.Sender == iSender.Device)
                     {
-                        iHouse.AddRoom(iRoom);
+                        iHouse.RemoveFromZone(null, iRoom);
                     }
                 }
             }
@@ -688,6 +644,8 @@ namespace OpenHome.Av
             iRoomWatchers = new Dictionary<ITopology4Room, RoomWatcher>();
             iRegistrations = new Watchable<IEnumerable<ITopology4Registration>>(iNetwork, "Registrations", new List<ITopology4Registration>());
             iSatelliteWatchers = new Dictionary<ITopology4Room, SatelliteWatcher>();
+            iSatellites = new List<IStandardRoom>();
+            iZones = new List<IStandardRoom>();
 
             iHasMultiroom = new Watchable<bool>(iNetwork, "HasMultiroom", false);
             iMultiroomWatcher = new MultiroomWatcher(this, iHasMultiroom);
@@ -722,6 +680,7 @@ namespace OpenHome.Av
 
                 foreach (var kvp in iRoomLookup)
                 {
+                    RemoveRoom(kvp.Value);
                     kvp.Value.Dispose();
                 }
 
@@ -815,6 +774,8 @@ namespace OpenHome.Av
 
             iRoomLookup.Add(aRoom, room);
 
+            AddRoom(room);
+
             foreach (var kvp in iSatelliteWatchers)
             {
                 kvp.Value.RoomAdded(room);
@@ -855,6 +816,8 @@ namespace OpenHome.Av
 
             iSatelliteWatchers[aRoom].Dispose();
             iSatelliteWatchers.Remove(aRoom);
+
+            RemoveRoom(room);
 
             iRoomLookup.Remove(aRoom);
 
@@ -937,7 +900,7 @@ namespace OpenHome.Av
             }
         }
 
-        internal void AddRoom(StandardRoom aRoom)
+        private void AddRoom(StandardRoom aRoom)
         {
             // calculate where to insert the room
             uint index = 0;
@@ -954,7 +917,7 @@ namespace OpenHome.Av
             iWatchableRooms.Add(aRoom, index);
         }
 
-        internal void RemoveRoom(StandardRoom aRoom)
+        private void RemoveRoom(StandardRoom aRoom)
         {
             iWatchableRooms.Remove(aRoom);
         }
@@ -965,7 +928,16 @@ namespace OpenHome.Av
             {
                 if (r.AddToZone(aDevice, aRoom))
                 {
-                    RemoveRoom(aRoom);
+                    bool cyclic = aRoom.ZoneSender.Value.Listeners.Values.Contains(aRoom);
+                    // we don't remove the room that makes a cyclical link of zones
+                    if (!cyclic)
+                    {
+                        if (!iSatellites.Contains(aRoom))
+                        {
+                            RemoveRoom(aRoom);
+                        }
+                    }
+                    iZones.Add(aRoom);
                     break;
                 }
             }
@@ -973,23 +945,61 @@ namespace OpenHome.Av
 
         internal void RemoveFromZone(IDevice aDevice, StandardRoom aRoom)
         {
+            if (aDevice == null)
+            {
+                bool cyclic = aRoom.ZoneSender.Value.Listeners.Values.Contains(aRoom);
+                if (!iSatellites.Contains(aRoom))
+                {
+                    if (!cyclic)
+                    {
+                        AddRoom(aRoom);
+                    }
+                }
+                iZones.Remove(aRoom);
+                return;
+            }
+
             foreach (StandardRoom r in iRoomLookup.Values)
             {
+                bool cyclic = aRoom.ZoneSender.Value.Listeners.Values.Contains(aRoom);
                 if (r != aRoom && r.RemoveFromZone(aDevice, aRoom))
                 {
-                    AddRoom(aRoom);
+                    if (!iSatellites.Contains(aRoom))
+                    {
+                        if (!cyclic)
+                        {
+                            AddRoom(aRoom);
+                        }
+                        // we have broken the cyclical link
+                        // both rooms would have been removed however the room that created the cyclic link was a special case and was't removed
+                        // now that the link is broken we need to determine if we are removing the last room, in which case
+                        else
+                        {
+                            if (iWatchableRooms.Values.Contains(r))
+                            {
+                                RemoveRoom(r);
+                                AddRoom(aRoom);
+                            }
+                        }
+                    }
+                    iZones.Remove(aRoom);
                     break;
                 }
             }
         }
 
-        internal bool AddSatellite(string aName, IStandardRoom aRoom)
+        internal bool AddSatellite(string aName, StandardRoom aRoom)
         {
             foreach (StandardRoom r in iRoomLookup.Values)
             {
                 if (r.ZoneSender.Value.Enabled && r.Name == aName)
                 {
                     r.AddSatellite(aRoom);
+                    if (!iZones.Contains(aRoom))
+                    {
+                        RemoveRoom(aRoom);
+                    }
+                    iSatellites.Add(aRoom);
                     return true;
                 }
             }
@@ -997,13 +1007,18 @@ namespace OpenHome.Av
             return false;
         }
 
-        internal bool RemoveSatellite(string aName, IStandardRoom aRoom)
+        internal bool RemoveSatellite(string aName, StandardRoom aRoom)
         {
             foreach (StandardRoom r in iRoomLookup.Values)
             {
-                if (r.ZoneSender.Value.Enabled && r.Name == aName)
+                if (r.Name == aName)
                 {
                     r.RemoveSatellite(aRoom);
+                    if (!iZones.Contains(aRoom))
+                    {
+                        AddRoom(aRoom);
+                    }
+                    iSatellites.Remove(aRoom);
                     return true;
                 }
             }
@@ -1031,5 +1046,7 @@ namespace OpenHome.Av
 
         private readonly Dictionary<ITopology4Room, RoomWatcher> iRoomWatchers;
         private readonly Dictionary<ITopology4Room, SatelliteWatcher> iSatelliteWatchers;
+        private readonly List<IStandardRoom> iSatellites;
+        private readonly List<IStandardRoom> iZones;
     }
 }
