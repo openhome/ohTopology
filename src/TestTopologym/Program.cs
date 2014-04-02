@@ -6,7 +6,7 @@ using OpenHome.Os;
 using OpenHome.Av;
 using OpenHome.Os.App;
 
-namespace TestTopology3
+namespace TestTopologym
 {
     class Program
     {
