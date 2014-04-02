@@ -928,7 +928,6 @@ namespace OpenHome.Av
         {
             foreach (StandardRoom r in iRoomLookup.Values)
             {
-                bool cyclic1 = r.ZoneSender.Value.Listeners.Values.Contains(r);
                 if (r.AddToZone(aDevice, aRoom))
                 {
                     bool cyclic2 = r.ZoneSender.Value.Listeners.Values.Contains(r);
