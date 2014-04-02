@@ -96,20 +96,18 @@ mock network update 4c494e4e-0026-0f99-1111-ef000004013f sender status Disabled
 expect Kitchen update ZoneSender False  Kitchen
 expect Room Added: Bedroom at 0
 expect Bedroom open ZoneSender True 4c494e4e-0026-0f99-1113-ef000004013f Bedroom
-expect Bedroom open ZoneReceiver True Kitchen
+expect Bedroom open ZoneReceiver True 
 expect Bedroom open HasListeners False
 expect Bedroom open Zone HasVolume True
 expect Bedroom open Zone Mute False
 expect Bedroom open Zone Volume 50
 expect Room Added: Dining Room at 1
 expect Dining Room open ZoneSender True 4c494e4e-0026-0f99-1114-ef000004013f Dining Room
-expect Dining Room open ZoneReceiver True Kitchen
+expect Dining Room open ZoneReceiver True 
 expect Dining Room open HasListeners False
 expect Dining Room open Zone HasVolume True
 expect Dining Room open Zone Mute False
 expect Dining Room open Zone Volume 50
-expect Bedroom update ZoneReceiver True 
-expect Dining Room update ZoneReceiver True 
 empty
 mock network update 4c494e4e-0026-0f99-1111-ef000004013f sender status Enabled
 expect Kitchen update ZoneSender True 4c494e4e-0026-0f99-1111-ef000004013f Kitchen
@@ -432,12 +430,11 @@ expect test2 update ZoneSender False  test2
 expect test2 remove Satellite test1
 expect Room Added: test1 at 3
 expect test1 open ZoneSender True 60 test1
-expect test1 open ZoneReceiver True test2
+expect test1 open ZoneReceiver True 
 expect test1 open HasListeners False
 expect test1 open Zone HasVolume True
 expect test1 open Zone Mute False
 expect test1 open Zone Volume 50
-expect test1 update ZoneReceiver True 
 empty
 
 // unhook all rooms
@@ -512,7 +509,6 @@ expect Kitchen remove Listener DiningRoom
 expect Kitchen update Zone Mute True
 expect Kitchen update Zone Volume 100
 expect Kitchen update HasListeners False
-expect Room Removed: Kitchen at 1
 expect Room Added: DiningRoom at 1
 expect DiningRoom open ZoneSender True 4c494e4e-0026-0f99-1114-ef000004013f DiningRoom
 expect DiningRoom open ZoneReceiver True 
@@ -524,12 +520,77 @@ expect DiningRoom open Zone Volume 75
 expect DiningRoom remove Listener Kitchen
 expect DiningRoom update Zone Volume 50
 expect DiningRoom update HasListeners False
-expect Room Added: Kitchen at 2
+expect Kitchen update ZoneReceiver True 
+expect Room Removed: Kitchen at 2
+empty
+
+mock network remove 4c494e4e-0026-0f99-1113-ef000004013f
+expect Room Removed: Bedroom at 0
+empty
+
+mock network remove 4c494e4e-0026-0f99-1114-ef000004013f
+expect Room Removed: DiningRoom at 0
+empty
+
+mock network add 4c494e4e-0026-0f99-1111-ef000004013f
+expect Room Added: Kitchen at 0
 expect Kitchen open ZoneSender True 4c494e4e-0026-0f99-1111-ef000004013f Kitchen
 expect Kitchen open ZoneReceiver True 
 expect Kitchen open HasListeners False
 expect Kitchen open Zone HasVolume True
 expect Kitchen open Zone Mute True
 expect Kitchen open Zone Volume 100
-expect Room Removed: Kitchen at 2
+empty
+
+mock network add 4c494e4e-0026-0f99-1114-ef000004013f
+expect Room Added: DiningRoom at 0
+expect DiningRoom open ZoneSender True 4c494e4e-0026-0f99-1114-ef000004013f DiningRoom
+expect DiningRoom open ZoneReceiver True 
+expect DiningRoom open HasListeners False
+expect DiningRoom open Zone HasVolume True
+expect DiningRoom open Zone Mute False
+expect DiningRoom open Zone Volume 50
+expect DiningRoom add Listener Kitchen
+expect DiningRoom update Zone Volume 75
+expect DiningRoom update HasListeners True
+expect Kitchen update ZoneReceiver True DiningRoom
+expect Room Removed: Kitchen at 1
+expect DiningRoom add Listener DiningRoom
+expect DiningRoom update ZoneReceiver True Kitchen
+empty
+
+mock network update 4c494e4e-0026-0f99-1114-ef000004013f sender status Disabled
+expect DiningRoom update ZoneSender False  DiningRoom
+expect Room Added: Kitchen at 1
+expect Kitchen open ZoneSender True 4c494e4e-0026-0f99-1111-ef000004013f Kitchen
+expect Kitchen open ZoneReceiver True 
+expect Kitchen open HasListeners True
+expect Kitchen add Listener DiningRoom
+expect Kitchen open Zone HasVolume True
+expect Kitchen open Zone Mute False
+expect Kitchen open Zone Volume 75
+empty
+
+mock network update 4c494e4e-0026-0f99-1114-ef000004013f sender status Enabled
+expect DiningRoom update ZoneSender True 4c494e4e-0026-0f99-1114-ef000004013f DiningRoom
+expect DiningRoom open HasListeners False
+expect DiningRoom open Zone HasVolume True
+expect DiningRoom open Zone Mute False
+expect DiningRoom open Zone Volume 50
+expect DiningRoom add Listener DiningRoom
+expect DiningRoom update HasListeners True
+expect DiningRoom add Listener Kitchen
+expect DiningRoom update Zone Volume 75
+expect Kitchen update ZoneReceiver True DiningRoom
+expect Room Removed: Kitchen at 1
+empty
+
+mock network update 4c494e4e-0026-0f99-1111-ef000004013f sender status Disabled
+expect DiningRoom remove Listener DiningRoom
+expect DiningRoom update ZoneReceiver True 
+empty
+
+mock network update 4c494e4e-0026-0f99-1111-ef000004013f sender status Enabled
+expect DiningRoom update ZoneReceiver True Kitchen
+expect DiningRoom add Listener DiningRoom
 empty

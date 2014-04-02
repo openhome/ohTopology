@@ -505,7 +505,7 @@ namespace OpenHome.Av
                 {
                     if (aPrevious.Sender == iSender.Device)
                     {
-                        iHouse.RemoveFromZone(null, iRoom);
+                        iHouse.RemoveFromZone(iSender.Device, iRoom);
                     }
                 }
             }
@@ -915,26 +915,36 @@ namespace OpenHome.Av
 
             // insert the room
             iWatchableRooms.Add(aRoom, index);
+            iLog.Write("Added {0}\n", aRoom.Name);
         }
 
         private void RemoveRoom(StandardRoom aRoom)
         {
             iWatchableRooms.Remove(aRoom);
+            iLog.Write("Removed {0}\n", aRoom.Name);
         }
 
         internal void AddToZone(IDevice aDevice, StandardRoom aRoom)
         {
             foreach (StandardRoom r in iRoomLookup.Values)
             {
+                bool cyclic1 = r.ZoneSender.Value.Listeners.Values.Contains(r);
                 if (r.AddToZone(aDevice, aRoom))
                 {
-                    bool cyclic = aRoom.ZoneSender.Value.Listeners.Values.Contains(aRoom);
-                    // we don't remove the room that makes a cyclical link of zones
-                    if (!cyclic)
+                    bool cyclic2 = r.ZoneSender.Value.Listeners.Values.Contains(r);
+                    if (!iSatellites.Contains(aRoom))
                     {
-                        if (!iSatellites.Contains(aRoom))
+                        // we don't remove the room that makes a cyclical link of zones
+                        if (!cyclic2)
                         {
                             RemoveRoom(aRoom);
+                        }
+                        else
+                        {
+                            if (iWatchableRooms.Values.Contains(aRoom) && iWatchableRooms.Values.Contains(r))
+                            {
+                                RemoveRoom(aRoom);
+                            }
                         }
                     }
                     iZones.Add(aRoom);
@@ -945,39 +955,25 @@ namespace OpenHome.Av
 
         internal void RemoveFromZone(IDevice aDevice, StandardRoom aRoom)
         {
-            if (aDevice == null)
-            {
-                bool cyclic = aRoom.ZoneSender.Value.Listeners.Values.Contains(aRoom);
-                if (!iSatellites.Contains(aRoom))
-                {
-                    if (!cyclic)
-                    {
-                        AddRoom(aRoom);
-                    }
-                }
-                iZones.Remove(aRoom);
-                return;
-            }
-
             foreach (StandardRoom r in iRoomLookup.Values)
             {
-                bool cyclic = aRoom.ZoneSender.Value.Listeners.Values.Contains(aRoom);
+                bool cyclic1 = aRoom.ZoneSender.Value.Listeners.Values.Contains(aRoom);
                 if (r != aRoom && r.RemoveFromZone(aDevice, aRoom))
                 {
+                    bool cyclic2 = aRoom.ZoneSender.Value.Listeners.Values.Contains(aRoom);
                     if (!iSatellites.Contains(aRoom))
                     {
-                        if (!cyclic)
+                        if (!cyclic1)
                         {
-                            AddRoom(aRoom);
-                        }
-                        // we have broken the cyclical link
-                        // both rooms would have been removed however the room that created the cyclic link was a special case and was't removed
-                        // now that the link is broken we need to determine if we are removing the last room, in which case
-                        else
-                        {
-                            if (iWatchableRooms.Values.Contains(r))
+                            if (!iWatchableRooms.Values.Contains(aRoom))
                             {
-                                RemoveRoom(r);
+                                AddRoom(aRoom);
+                            }
+                        }
+                        else if (cyclic1 && !cyclic2)
+                        {
+                            if (!iWatchableRooms.Values.Contains(aRoom))
+                            {
                                 AddRoom(aRoom);
                             }
                         }

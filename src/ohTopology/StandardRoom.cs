@@ -377,6 +377,8 @@ namespace OpenHome.Av
 
         internal void AddToZone(StandardRoom aRoom)
         {
+            iRoom.Network.Assert();
+
             iDirectListeners.Add(aRoom);
 
             aRoom.ZoneSender.AddWatcher(this);
@@ -389,12 +391,14 @@ namespace OpenHome.Av
 
         internal void RemoveFromZone(StandardRoom aRoom)
         {
-            aRoom.ZoneSender.RemoveWatcher(this);
+            iRoom.Network.Assert();
 
-            iDirectListeners.Remove(aRoom);
+            aRoom.ZoneSender.RemoveWatcher(this);
 
             iWatchableListeners.Remove(aRoom);
             iHasListeners.Update(iWatchableListeners.Values.Count() > 0);
+
+            iDirectListeners.Remove(aRoom);
             aRoom.RemovedFromZone(this);
         }
 
@@ -436,11 +440,13 @@ namespace OpenHome.Av
             {
                 if (!iDirectListeners.Contains(r))
                 {
-                    iWatchableListeners.Remove(r);
+                    bool removed = iInDirectListeners.Remove(r);
+                    if (removed)
+                    {
+                        iWatchableListeners.Remove(r);
+                    }
                 }
             }
-
-            iInDirectListeners.Clear();
 
             aValue.Listeners.AddWatcher(this);
         }
@@ -453,11 +459,13 @@ namespace OpenHome.Av
             {
                 if (!iDirectListeners.Contains(r))
                 {
-                    iWatchableListeners.Remove(r);
+                    bool removed = iInDirectListeners.Remove(r);
+                    if (removed)
+                    {
+                        iWatchableListeners.Remove(r);
+                    }
                 }
             }
-
-            iInDirectListeners.Clear();
         }
 
         public void OrderedOpen()
@@ -476,9 +484,9 @@ namespace OpenHome.Av
         {
             if (!iInDirectListeners.Contains(aItem))
             {
-                iInDirectListeners.Add(aItem);
                 if (!iDirectListeners.Contains(aItem))
                 {
+                    iInDirectListeners.Add(aItem);
                     iWatchableListeners.Add(aItem, GetInsertIndex(aItem));
                     iHasListeners.Update(iWatchableListeners.Values.Count() > 0);
                 }
@@ -1010,8 +1018,9 @@ namespace OpenHome.Av
                 if (iWatchableZoneSender.Value.Enabled)
                 {
                     ZoneSender z = iZoneSender;
-                    iZoneSender = new ZoneSender(this);
-                    iWatchableZoneSender.Update(iZoneSender);
+                    ZoneSender newZoneSender = new ZoneSender(this);
+                    iWatchableZoneSender.Update(newZoneSender);
+                    iZoneSender = newZoneSender;
                     z.Dispose();
                 }
             }
