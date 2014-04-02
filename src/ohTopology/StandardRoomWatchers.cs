@@ -1193,16 +1193,16 @@ namespace OpenHome.Av
         }
     }
 
-    public class StandardRoomWatcherExternalWithDisc : StandardRoomWatcherExternal
+    public class StandardRoomWatcherExternalWithDiscAndNetAux : StandardRoomWatcherExternal
     {
-        public StandardRoomWatcherExternalWithDisc(IStandardRoom aRoom)
+        public StandardRoomWatcherExternalWithDiscAndNetAux(IStandardRoom aRoom)
             : base(aRoom)
         {
         }
 
         protected override bool IsExternal(ITopology4Source aSource)
         {
-            return (aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi" || aSource.Type == "Disc");
+            return (aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi" || aSource.Type == "Disc" || aSource.Type == "NetAux");
         }
     }
 
