@@ -47,8 +47,8 @@ namespace TestStandardHouse
                 iWatcherSenders = new StandardRoomWatcherSenders(aHouse, aRoom);
 
                 iFactory.Create<RoomDetails>(iInfo.Name, iInfo.Details, (v, w) => w("Details " + v.Enabled + " " + v.BitDepth + " " + v.BitRate + " " + v.CodecName + " " + v.Duration + " " + v.Lossless + " " + v.SampleRate));
-                iFactory.Create<RoomMetadata>(iInfo.Name, iInfo.Metadata, (v, w) => w("Metadata " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metadata) + " " + v.Uri));
-                iFactory.Create<RoomMetatext>(iInfo.Name, iInfo.Metatext, (v, w) => w("Metatext " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metatext)));
+                iFactory.Create<RoomMetadata>(iInfo.Name, iInfo.Metadata, (v, w) => w("Metadata " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metadata, (s) => Console.WriteLine(s) ) + " " + v.Uri));
+                iFactory.Create<RoomMetatext>(iInfo.Name, iInfo.Metatext, (v, w) => w("Metatext " + v.Enabled + " " + iTagManager.ToDidlLite(v.Metatext, (s) => Console.WriteLine(s) )));
 
                 iFactory.Create<bool>(iController.Name, iController.Active, (v, w) => w("Controller Active " + v));
                 iFactory.Create<bool>(iController.Name, iController.HasVolume, (v, w) => w("HasVolume " + v));
@@ -123,7 +123,7 @@ namespace TestStandardHouse
                                     CreateResultWatcherPreset(iFactoryRadioPresetsPlaying, p);
 
                                     info += p.Index + " ";
-                                    string didl = iTagManager.ToDidlLite(p.Metadata);
+                                    string didl = iTagManager.ToDidlLite(p.Metadata, (s) => Console.WriteLine(s));
                                     info += didl;
                                     info += "\n";
                                 }

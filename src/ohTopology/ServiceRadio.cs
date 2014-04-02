@@ -475,7 +475,7 @@ namespace OpenHome.Av
         public override Task SetChannel(string aUri, IMediaMetadata aMetadata)
         {
             TaskCompletionSource<bool> taskSource = new TaskCompletionSource<bool>();
-            iService.BeginSetChannel(aUri, iNetwork.TagManager.ToDidlLite(aMetadata), (ptr) =>
+            iService.BeginSetChannel(aUri, iNetwork.TagManager.ToDidlLite(aMetadata, (s) => iLog.Write(s)), (ptr) =>
             {
                 try
                 {
