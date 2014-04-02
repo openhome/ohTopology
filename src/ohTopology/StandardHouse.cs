@@ -619,6 +619,7 @@ namespace OpenHome.Av
     public interface IStandardHouse
     {
         IWatchableOrdered<IStandardRoom> Rooms { get; }
+        IWatchableOrdered<IStandardRoom> RoomsAvailable { get; }
         IWatchableOrdered<IProxySender> Senders { get; }
         IWatchable<IEnumerable<ITopology4Registration>> Registrations { get; }
         IWatchable<bool> HasMultiroom { get; }
@@ -640,6 +641,7 @@ namespace OpenHome.Av
             iTopology4 = new Topology4(iTopology3, aLog);
  
             iWatchableRooms = new WatchableOrdered<IStandardRoom>(iNetwork);
+            iWatchableRoomsAvailable = new WatchableOrdered<IStandardRoom>(iNetwork);
             iRoomLookup = new Dictionary<ITopology4Room, StandardRoom>();
             iRoomWatchers = new Dictionary<ITopology4Room, RoomWatcher>();
             iRegistrations = new Watchable<IEnumerable<ITopology4Registration>>(iNetwork, "Registrations", new List<ITopology4Registration>());
@@ -688,6 +690,7 @@ namespace OpenHome.Av
                 iMultiroomWatcher.Dispose();
             });
             iWatchableRooms.Dispose();
+            iWatchableRoomsAvailable.Dispose();
             iRoomLookup.Clear();
             iRoomWatchers.Clear();
             iSatelliteWatchers.Clear();
@@ -708,6 +711,17 @@ namespace OpenHome.Av
                 using (iDisposeHandler.Lock())
                 {
                     return iWatchableRooms;
+                }
+            }
+        }
+
+        public IWatchableOrdered<IStandardRoom> RoomsAvailable
+        {
+            get
+            {
+                using (iDisposeHandler.Lock())
+                {
+                    return iWatchableRoomsAvailable;
                 }
             }
         }
@@ -776,6 +790,8 @@ namespace OpenHome.Av
 
             AddRoom(room);
 
+            iWatchableRoomsAvailable.Add(room, GetInsertIndex(room, iWatchableRoomsAvailable.Values));
+
             foreach (var kvp in iSatelliteWatchers)
             {
                 kvp.Value.RoomAdded(room);
@@ -818,6 +834,8 @@ namespace OpenHome.Av
             iSatelliteWatchers.Remove(aRoom);
 
             RemoveRoom(room);
+
+            iWatchableRoomsAvailable.Remove(room);
 
             iRoomLookup.Remove(aRoom);
 
@@ -902,9 +920,16 @@ namespace OpenHome.Av
 
         private void AddRoom(StandardRoom aRoom)
         {
+            // insert the room
+            iWatchableRooms.Add(aRoom, GetInsertIndex(aRoom, iWatchableRooms.Values));
+            iLog.Write("Added {0}\n", aRoom.Name);
+        }
+
+        private uint GetInsertIndex(IStandardRoom aRoom, IEnumerable<IStandardRoom> aList)
+        {
             // calculate where to insert the room
-            uint index = 0;
-            foreach (IStandardRoom r in iWatchableRooms.Values)
+            int index = 0;
+            foreach (IStandardRoom r in aList)
             {
                 if (aRoom.Name.CompareTo(r.Name) < 0)
                 {
@@ -913,9 +938,7 @@ namespace OpenHome.Av
                 ++index;
             }
 
-            // insert the room
-            iWatchableRooms.Add(aRoom, index);
-            iLog.Write("Added {0}\n", aRoom.Name);
+            return ((uint)index);
         }
 
         private void RemoveRoom(StandardRoom aRoom)
@@ -995,6 +1018,7 @@ namespace OpenHome.Av
                         RemoveRoom(aRoom);
                     }
                     iSatellites.Add(aRoom);
+                    iWatchableRoomsAvailable.Remove(aRoom);
                     return true;
                 }
             }
@@ -1014,6 +1038,7 @@ namespace OpenHome.Av
                         AddRoom(aRoom);
                     }
                     iSatellites.Remove(aRoom);
+                    iWatchableRoomsAvailable.Add(aRoom, GetInsertIndex(aRoom, iWatchableRoomsAvailable.Values));
                     return true;
                 }
             }
@@ -1034,6 +1059,7 @@ namespace OpenHome.Av
         private readonly MultiroomWatcher iMultiroomWatcher;
 
         private readonly WatchableOrdered<IStandardRoom> iWatchableRooms;
+        private readonly WatchableOrdered<IStandardRoom> iWatchableRoomsAvailable;
         private readonly Dictionary<ITopology4Room, StandardRoom> iRoomLookup;
 
         private readonly SendersList iSendersList;
