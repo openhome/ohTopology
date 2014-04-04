@@ -316,22 +316,17 @@ namespace OpenHome.Av
                     try
                     {
                         iServiceVolkano.EndProductId(ptr, out iProductId);
-                        lock (volkano)
-                        {
-                            if (!volkano.Task.IsCanceled)
-                            {
-                                volkano.SetResult(true);
-                            }
-                        }
                     }
-                    catch (ProxyError e)
+                    catch (Exception e)
                     {
-                        lock (volkano)
+                        iLog.Write("Failed to retrieve product ID for {0} - {1}\n", iCpDevice.Udn(), e.Message);
+                    }
+
+                    lock (volkano)
+                    {
+                        if (!volkano.Task.IsCanceled)
                         {
-                            if (!volkano.Task.IsCanceled)
-                            {
-                                volkano.SetException(e);
-                            }
+                            volkano.SetResult(true);
                         }
                     }
                 });
