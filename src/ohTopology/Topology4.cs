@@ -1010,12 +1010,12 @@ namespace OpenHome.Av
             }
 
             // check for parent of an existing root
-            foreach (Topology4Group g in iRoots)
+            IEnumerable<Topology4Group> roots = new List<Topology4Group>(iRoots);
+            foreach (Topology4Group g in roots)
             {
                 if (aGroup.AddIfIsChild(g))
                 {
                     iRoots.Remove(g);
-                    break;
                 }
             }
 

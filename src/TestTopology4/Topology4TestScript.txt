@@ -614,3 +614,96 @@ Sender Mock DS
 Senders end
 empty
 
+
+// test for #1216
+mock network create ds 100
+mock network update 100 product room Lounge
+mock network update 100 product name Video
+mock network create dsm 101
+mock network update 101 product room Lounge
+mock network update 101 product name Music
+mock network create dsm 102
+mock network update 102 product room Lounge
+mock network update 102 product source 5 name Music
+mock network update 102 product source 6 name Video
+empty
+
+mock network add 100
+expect Room Added Lounge
+expect Lounge open Standby eOn
+expect Lounge open 
+Sources begin
+Source 0 Video Playlist Playlist True True True 100 Volume 100
+Source 1 Video Radio Radio True True True 100 Volume 100
+Source 3 Video Songcast Receiver True True True 100 Volume 100
+Sources end
+expect Video open Source 0 Video Playlist Playlist True True True 100 Volume 100
+expect Video open 
+Senders begin
+Sender Video
+Senders end
+empty
+
+mock network add 101
+expect Video open Source 0 Video Playlist Playlist True True True 100 Volume 100
+expect Video open 
+Senders begin
+Sender Video
+Senders end
+expect Music open Source 0 Music Playlist Playlist True True True 101 Volume 101
+expect Music open 
+Senders begin
+Sender Music
+Senders end
+expect Lounge update 
+Sources begin
+Source 0 Video Playlist Playlist True True True 100 Volume 100
+Source 1 Video Radio Radio True True True 100 Volume 100
+Source 3 Video Songcast Receiver True True True 100 Volume 100
+Source 0 Music Playlist Playlist True True True 101 Volume 101
+Source 1 Music Radio Radio True True True 101 Volume 101
+Source 3 Music Songcast Receiver True True True 101 Volume 101
+Source 5 Music Analog1 Analog True True True 101 Volume 101
+Source 6 Music Analog2 Analog True True True 101 Volume 101
+Source 7 Music Phono Analog True True True 101 Volume 101
+Source 8 Music SPDIF1 Digital True True True 101 Volume 101
+Source 9 Music SPDIF2 Digital True True True 101 Volume 101
+Source 10 Music TOSLINK1 Digital True True True 101 Volume 101
+Source 11 Music TOSLINK2 Digital True True True 101 Volume 101
+Sources end
+empty
+
+mock network add 102
+expect Mock Dsm open Source 0 Mock Dsm Playlist Playlist True True True 102 Volume 102
+expect Mock Dsm open 
+Senders begin
+Sender Mock Dsm
+Sender Video
+Sender Music
+Senders end
+expect Lounge update 
+Sources begin
+Source 0 Mock Dsm Playlist Playlist True True True 102 Volume 102
+Source 1 Mock Dsm Radio Radio True True True 102 Volume 102
+Source 3 Mock Dsm Songcast Receiver True True True 102 Volume 102
+Source 0 Music Playlist Playlist True True True 101 Volume 102 101
+Source 1 Music Radio Radio True True True 101 Volume 102 101
+Source 3 Music Songcast Receiver True True True 101 Volume 102 101
+Source 5 Music Analog1 Analog True True True 101 Volume 102 101
+Source 6 Music Analog2 Analog True True True 101 Volume 102 101
+Source 7 Music Phono Analog True True True 101 Volume 102 101
+Source 8 Music SPDIF1 Digital True True True 101 Volume 102 101
+Source 9 Music SPDIF2 Digital True True True 101 Volume 102 101
+Source 10 Music TOSLINK1 Digital True True True 101 Volume 102 101
+Source 11 Music TOSLINK2 Digital True True True 101 Volume 102 101
+Source 0 Video Playlist Playlist True True True 100 Volume 102 100
+Source 1 Video Radio Radio True True True 100 Volume 102 100
+Source 3 Video Songcast Receiver True True True 100 Volume 102 100
+Source 7 Mock Dsm Phono Analog True True True 102 Volume 102
+Source 8 Mock Dsm SPDIF1 Digital True True True 102 Volume 102
+Source 9 Mock Dsm SPDIF2 Digital True True True 102 Volume 102
+Source 10 Mock Dsm TOSLINK1 Digital True True True 102 Volume 102
+Source 11 Mock Dsm TOSLINK2 Digital True True True 102 Volume 102
+Sources end
+empty
+
