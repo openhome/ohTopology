@@ -1138,7 +1138,7 @@ namespace OpenHome.Av
 
         protected virtual bool IsExternal(ITopology4Source aSource)
         {
-            return (aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi");
+            return (aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi" || aSource.Type == "Aux");
         }
 
         private bool IsConfigured(ITopology4Source aSource)
@@ -1202,7 +1202,7 @@ namespace OpenHome.Av
 
         protected override bool IsExternal(ITopology4Source aSource)
         {
-            return (aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi" || aSource.Type == "Disc" || aSource.Type == "NetAux");
+            return (base.IsExternal(aSource) || aSource.Type == "Disc" || aSource.Type == "NetAux");
         }
     }
 
