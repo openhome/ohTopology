@@ -1138,7 +1138,7 @@ namespace OpenHome.Av
 
         protected virtual bool IsExternal(ITopology4Source aSource)
         {
-            return (aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi" || aSource.Type == "Aux");
+            return (aSource.Type == "Analog" || aSource.Type == "Digital" || aSource.Type == "Hdmi" || aSource.Type == "Aux" || aSource.Type == "Tuner" || aSource.Type == "Spdif" || aSource.Type == "Toslink");
         }
 
         private bool IsConfigured(ITopology4Source aSource)
