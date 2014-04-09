@@ -49,7 +49,6 @@ namespace OpenHome.Av
             iSourceIndex = new Watchable<uint>(aNetwork, "SourceIndex", 0);
             iSourceXml = new Watchable<string>(aNetwork, "SourceXml", string.Empty);
             iStandby = new Watchable<bool>(aNetwork, "Standby", false);
-            iRegistration = new Watchable<string>(aNetwork, "Registration", string.Empty);
         }
 
         public override void Dispose()
@@ -70,9 +69,6 @@ namespace OpenHome.Av
 
             iStandby.Dispose();
             iStandby = null;
-
-            iRegistration.Dispose();
-            iRegistration = null;
         }
 
         public override IProxy OnCreate(IDevice aDevice)
@@ -251,7 +247,6 @@ namespace OpenHome.Av
         protected Watchable<uint> iSourceIndex;
         protected Watchable<string> iSourceXml;
         protected Watchable<bool> iStandby;
-        protected Watchable<string> iRegistration;
     }
 
     class ServiceProductNetwork : ServiceProduct
@@ -760,11 +755,6 @@ namespace OpenHome.Av
             {
                 IEnumerable<string> value = aValue.Skip(1);
                 iStandby.Update(bool.Parse(value.First()));
-            }
-            else if (command == "registration")
-            {
-                IEnumerable<string> value = aValue.Skip(1);
-                iRegistration.Update(value.First());
             }
             else if (command == "source")
             {
