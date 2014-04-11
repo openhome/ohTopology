@@ -297,19 +297,15 @@ namespace OpenHome.Av
         {
             using (iDisposeHandler.Lock())
             {
-                Task<IEnumerable<IIdCacheEntry>> task = Task<IEnumerable<IIdCacheEntry>>.Factory.StartNew(() =>
+                Task<IEnumerable<IIdCacheEntry>> job = CreateJob(aIds);
+
+                lock (iQueueHigh)
                 {
-                    Task<IEnumerable<IIdCacheEntry>> job = CreateJob(aIds);
+                    iQueueHigh.Enqueue(job);
+                }
+                iSemaphoreHigh.Release();
 
-                    lock (iQueueHigh)
-                    {
-                        iQueueHigh.Enqueue(job);
-                    }
-                    iSemaphoreHigh.Release();
-
-                    return job.Result;
-                });
-                return task;
+                return job;
             }
         }
 
