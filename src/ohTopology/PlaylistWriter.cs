@@ -37,68 +37,52 @@ namespace OpenHome.Av
 
         public Task<uint> Insert(uint aAfterId, string aUri, IMediaMetadata aMetadata, bool aPlay)
         {
-            Task<uint> t1 = Task<uint>.Factory.StartNew(() =>
+            return iPlaylist.Insert(aAfterId, aUri, aMetadata).ContinueWith((t) =>
             {
-                Task<uint> t2 = iPlaylist.Insert(aAfterId, aUri, aMetadata);
-                t2.ContinueWith((t) =>
+                if (aPlay)
                 {
-                    uint id = t.Result;
-                    if (aPlay)
+                    iThread.Schedule(() =>
                     {
-                        iThread.Schedule(() =>
-                        {
-                            iSourcePreset.Play();
-                            iPlaylist.SeekId(id);
-                        });
-                    }
-                });
-                return t2.Result;
+                        iSourcePreset.Play();
+                        iPlaylist.SeekId(t.Result);
+                    });
+                }
+
+                return t.Result;
             });
-            return t1;
         }
 
         public Task<uint> InsertNext(string aUri, IMediaMetadata aMetadata, bool aPlay)
         {
-            Task<uint> t1 = Task<uint>.Factory.StartNew(() =>
+            return iPlaylist.InsertNext(aUri, aMetadata).ContinueWith((t) =>
             {
-                Task<uint> t2 = iPlaylist.InsertNext(aUri, aMetadata);
-                t2.ContinueWith((t) =>
+                if (aPlay)
                 {
-                    uint id = t.Result;
-                    if (aPlay)
+                    iThread.Schedule(() =>
                     {
-                        iThread.Schedule(() =>
-                        {
-                            iSourcePreset.Play();
-                            iPlaylist.SeekId(id);
-                        });
-                    }
-                });
-                return t2.Result;
+                        iSourcePreset.Play();
+                        iPlaylist.SeekId(t.Result);
+                    });
+                }
+                return t.Result;
             });
-            return t1;
         }
 
         public Task<uint> InsertEnd(string aUri, IMediaMetadata aMetadata, bool aPlay)
         {
-            Task<uint> t1 = Task<uint>.Factory.StartNew(() =>
+            return iPlaylist.InsertEnd(aUri, aMetadata).ContinueWith((t) =>
             {
-                Task<uint> t2 = iPlaylist.InsertEnd(aUri, aMetadata);
-                t2.ContinueWith((t) =>
+                if (aPlay)
                 {
-                    uint id = t.Result;
-                    if (aPlay)
+                    iThread.Schedule(() =>
                     {
-                        iThread.Schedule(() =>
-                        {
-                            iSourcePreset.Play();
-                            iPlaylist.SeekId(id);
-                        });
-                    }
-                });
-                return t2.Result;
+                        iSourcePreset.Play();
+                        iPlaylist.SeekId(t.Result);
+                    });
+                }
+
+                return t.Result;
             });
-            return t1;
         }
 
         public Task MakeRoomForInsert(uint aCount)
