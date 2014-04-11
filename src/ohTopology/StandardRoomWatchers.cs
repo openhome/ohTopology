@@ -302,12 +302,10 @@ namespace OpenHome.Av
             {
                 if (s.Type == "Playlist")
                 {
-                    if (iCreateProxy != null)
-                    {
-                        iCreateProxy.Dispose();
-                        iCreateProxy = null;
-                    }
+                    DeleteProxy();
+
                     iCreateProxy = new StandardRoomWatcherProxyCreator<IProxyPlaylist>(s, CreatedProxy);
+                    
                     return;
                 }
             }
