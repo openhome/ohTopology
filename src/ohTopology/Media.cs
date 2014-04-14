@@ -346,7 +346,11 @@ namespace OpenHome.Av
                         }
                     }
                 }
-                catch (XmlException) { }
+                catch (XmlException e)
+                {
+                    metadata.Add(aTagManager.Audio.Title, "Invalid Metadata");
+                    metadata.Add(aTagManager.Audio.Description, e.ToString());
+                }
             }
             
             metadata.Add(aTagManager.System.Folder, aMetadata);
