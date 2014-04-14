@@ -103,7 +103,11 @@ namespace OpenHome.Av
         {
             var datum = new MediaDatum(null);
 
-            Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Title);
+            if (!Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Title))
+            {
+                iLog.Write("Bug #1156 - null title in metadata:\n{0}\n\n", aElement.ToString());
+                Do.Assert(false);
+            }
             Convert(aElement, "album", kNsUpnp, datum, iNetwork.TagManager.Audio.AlbumTitle);
             Convert(aElement, "artist", kNsUpnp, datum, iNetwork.TagManager.Audio.Artist);
             Convert(aElement, "originalTrackNumber", kNsUpnp, datum, iNetwork.TagManager.Audio.Track);
@@ -155,7 +159,11 @@ namespace OpenHome.Av
         {
             var datum = new MediaDatum(aId, iNetwork.TagManager.Audio.Artist);
 
-            Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title);
+            if(!Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title))
+            {
+                iLog.Write("Bug #1156 - null title in metadata:\n{0}\n\n", aElement.ToString());
+                Do.Assert(false);
+            }
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Container.Artwork);
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Artist);
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
@@ -167,7 +175,11 @@ namespace OpenHome.Av
         {
             var datum = new MediaDatum(aId, iNetwork.TagManager.Audio.AlbumTitle);
 
-            Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title);
+            if(!Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title))
+            {
+                iLog.Write("Bug #1156 - null title in metadata:\n{0}\n\n", aElement.ToString());
+                Do.Assert(false);
+            }
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Container.Artwork);
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.AlbumTitle);
             if (!Convert(aElement, "artist", kNsUpnp, datum, iNetwork.TagManager.Audio.AlbumArtist))
@@ -183,7 +195,11 @@ namespace OpenHome.Av
         {
             var datum = new MediaDatum(aId, iNetwork.TagManager.Audio.Genre);
 
-            Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title);
+            if(!Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title))
+            {
+                iLog.Write("Bug #1156 - null title in metadata:\n{0}\n\n", aElement.ToString());
+                Do.Assert(false);
+            }
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Container.Artwork);
             Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Audio.Genre);
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Audio.Artwork);
@@ -195,7 +211,11 @@ namespace OpenHome.Av
         {
             var datum = new MediaDatum(aId, iNetwork.TagManager.Container.Title);
 
-            Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title);
+            if(!Convert(aElement, "title", kNsDc, datum, iNetwork.TagManager.Container.Title))
+            {
+                iLog.Write("Bug #1156 - null title in metadata:\n{0}\n\n", aElement.ToString());
+                Do.Assert(false);
+            }
             Convert(aElement, "albumArtURI", kNsUpnp, datum, iNetwork.TagManager.Container.Artwork);
 
             return (datum);
