@@ -8,30 +8,7 @@
         "configure-args": [
             "--ohnet-lib-dir", "${dest}${name}-${platform}-${titlecase-debugmode}/lib",
             "--ohnet-include-dir", "${dest}${name}-${platform}-${titlecase-debugmode}/include/ohnet"
-        ],
-        "_comment": [
-            "See ohos for more examples, and ohdevtools/dependencies.py for details",
-            "of the predefined values and expansion rules."
         ]
-    },
-    {
-	    "name": "ohNet-AnyPlatform",
-        "type": "openhome",
-        "platform-specific": true,
-        "version": "1.0.1247",
-        "archive-suffix": "-Release",
-		"archive-directory": "${binary-repo}/ohNet/",
-        "archive-filename": "${archive-prefix}ohNet-${version}-${archive-platform}${archive-suffix}${archive-extension}",
-        "dest": "dependencies/AnyPlatform/ohNet",
-        "strip-archive-dirs":1
-    },
-    {   "name": "ohOs",
-        "type": "openhome",
-        "version": "0.2.1026",
-        "platform-specific": false,
-        "remote-archive-path": "http://openhome.org/releases/artifacts/ohOs2/ohOs2-${version}-AnyPlatform-Release.tar.gz",
-        "dest": "dependencies/AnyPlatform/ohOs",
-        "strip-archive-dirs":1
     },
     {
 	    "name": "ohWafHelpers",
@@ -39,13 +16,5 @@
         "platform-specific": false,
         "version": "0.0.58",
         "archive-filename": "${name}-${version}.tar.gz"
-    },
-	{
-	    "name": "NuGet",
-        "type": "external",
-        "version": "1.7.30402.9028",
-        "platform-specific": false,
-        "archive-filename": "${name}.${version}.tar.gz",
-        "configure-args": []
     }
 ]
