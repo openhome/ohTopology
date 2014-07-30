@@ -1,3 +1,4 @@
-Copyright 2011-13, Linn Products Ltd. All rights reserved.
+Copyright 2011-14, Linn Products Ltd. All rights reserved.
 
-Please contact Linn - at software-licenses@linn.co.uk - to discuss a license for this code.
+All code in this project is licensed under the 2-clause (Simplified) BSD license.
+See BsdLicense.txt for details.
