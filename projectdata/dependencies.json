@@ -3,7 +3,7 @@
 	    "name": "ohNet",
         "type": "openhome",
         "platform-specific": true,
-        "version": "1.0.964",
+        "version": "1.1.1456",
         "archive-suffix": "-${titlecase-debugmode}",
         "configure-args": [
             "--ohnet-lib-dir", "${dest}${name}-${platform}-${titlecase-debugmode}/lib",
@@ -15,19 +15,45 @@
         ]
     },
     {
+	    "name": "ohNetGenerated",
+        "type": "openhome",
+        "platform-specific": true,
+        "version": "1.0.66",
+        "archive-suffix": "-${titlecase-debugmode}",
+        "configure-args": [
+            "--ohnetgenerated-lib-dir", "${dest}${name}-${platform}-${titlecase-debugmode}/lib",
+            "--ohnetgenerated-include-dir", "${dest}${name}-${platform}-${titlecase-debugmode}/include/ohnet"
+        ],
+        "_comment": [
+            "See ohos for more examples, and ohdevtools/dependencies.py for details",
+            "of the predefined values and expansion rules."
+        ]
+    },
+    {
 	    "name": "ohNet-AnyPlatform",
         "type": "openhome",
         "platform-specific": true,
-        "version": "1.0.964",
+        "version": "1.1.1456",
         "archive-suffix": "-Release",
 		"archive-directory": "${binary-repo}/ohNet/",
         "archive-filename": "${archive-prefix}ohNet-${version}-${archive-platform}${archive-suffix}${archive-extension}",
         "dest": "dependencies/AnyPlatform/ohNet",
         "strip-archive-dirs":1
     },
+    {
+	    "name": "ohNetGenerated-AnyPlatform",
+        "type": "openhome",
+        "platform-specific": true,
+        "version": "1.0.66",
+        "archive-suffix": "-Release",
+		"archive-directory": "${binary-repo}/ohNetGenerated/",
+        "archive-filename": "${archive-prefix}ohNetGenerated-${version}-${archive-platform}${archive-suffix}${archive-extension}",
+        "dest": "dependencies/AnyPlatform/ohNetGenerated",
+        "strip-archive-dirs":1
+    },
     {   "name": "ohOs",
         "type": "openhome",
-        "version": "0.2.813",
+        "version": "0.2.824",
         "platform-specific": false,
         "remote-archive-path": "http://openhome.org/releases/artifacts/ohOs2/ohOs2-${version}-AnyPlatform-Release.tar.gz",
         "dest": "dependencies/AnyPlatform/ohOs",
@@ -37,7 +63,7 @@
 	    "name": "ohWafHelpers",
         "type": "openhome",
         "platform-specific": false,
-        "version": "0.0.22",
+        "version": "0.0.70",
         "archive-filename": "${name}-${version}.tar.gz"
     },
 	{

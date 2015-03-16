@@ -37,34 +37,34 @@
       <HintPath>..\..\dependencies\nuget\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
     <Reference Include="CpAvOpenhomeOrgInfo1.net">
-      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgInfo1.net.dll</HintPath>
+      <HintPath>..\..\dependencies\AnyPlatform\ohNetGenerated\lib\CpAvOpenhomeOrgInfo1.net.dll</HintPath>
     </Reference>
     <Reference Include="CpAvOpenhomeOrgMediaServer1.net">
-      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgMediaServer1.net.dll</HintPath>
+      <HintPath>..\..\dependencies\AnyPlatform\ohNetGenerated\lib\CpAvOpenhomeOrgMediaServer1.net.dll</HintPath>
     </Reference>
     <Reference Include="CpAvOpenhomeOrgPlaylist1.net">
-      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgPlaylist1.net.dll</HintPath>
+      <HintPath>..\..\dependencies\AnyPlatform\ohNetGenerated\lib\CpAvOpenhomeOrgPlaylist1.net.dll</HintPath>
     </Reference>
     <Reference Include="CpAvOpenhomeOrgProduct1.net">
-      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgProduct1.net.dll</HintPath>
+      <HintPath>..\..\dependencies\AnyPlatform\ohNetGenerated\lib\CpAvOpenhomeOrgProduct1.net.dll</HintPath>
     </Reference>
     <Reference Include="CpAvOpenhomeOrgRadio1.net">
-      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgRadio1.net.dll</HintPath>
+      <HintPath>..\..\dependencies\AnyPlatform\ohNetGenerated\lib\CpAvOpenhomeOrgRadio1.net.dll</HintPath>
     </Reference>
     <Reference Include="CpAvOpenhomeOrgReceiver1.net">
-      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgReceiver1.net.dll</HintPath>
+      <HintPath>..\..\dependencies\AnyPlatform\ohNetGenerated\lib\CpAvOpenhomeOrgReceiver1.net.dll</HintPath>
     </Reference>
     <Reference Include="CpAvOpenhomeOrgSender1.net">
-      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgSender1.net.dll</HintPath>
+      <HintPath>..\..\dependencies\AnyPlatform\ohNetGenerated\lib\CpAvOpenhomeOrgSender1.net.dll</HintPath>
     </Reference>
     <Reference Include="CpAvOpenhomeOrgTime1.net">
-      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgTime1.net.dll</HintPath>
+      <HintPath>..\..\dependencies\AnyPlatform\ohNetGenerated\lib\CpAvOpenhomeOrgTime1.net.dll</HintPath>
     </Reference>
     <Reference Include="CpAvOpenhomeOrgVolume1.net">
-      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpAvOpenhomeOrgVolume1.net.dll</HintPath>
+      <HintPath>..\..\dependencies\AnyPlatform\ohNetGenerated\lib\CpAvOpenhomeOrgVolume1.net.dll</HintPath>
     </Reference>
     <Reference Include="CpUpnpOrgContentDirectory1.net">
-      <HintPath>..\..\dependencies\AnyPlatform\ohNet\lib\CpUpnpOrgContentDirectory1.net.dll</HintPath>
+      <HintPath>..\..\dependencies\AnyPlatform\ohNetGenerated\lib\CpUpnpOrgContentDirectory1.net.dll</HintPath>
     </Reference>
     <Reference Include="ohHttpServer">
       <HintPath>..\..\dependencies\AnyPlatform\ohOs\ohHttpServer.dll</HintPath>
