@@ -13,9 +13,12 @@ from utilfuncs import invoke_test, guess_dest_platform, configure_toolchain, gue
 
 def options(opt):
     opt.load('msvc')
+    opt.load('compiler_c')
     opt.load('compiler_cxx')
     opt.add_option('--ohnet-include-dir', action='store', default=None)
     opt.add_option('--ohnet-lib-dir', action='store', default=None)
+    opt.add_option('--ohnetgenerated-include-dir', action='store', default=None)
+    opt.add_option('--ohnetgenerated-lib-dir', action='store', default=None)
     opt.add_option('--ohnet', action='store', default=None)
     opt.add_option('--debug', action='store_const', dest="debugmode", const="Debug", default="Release")
     opt.add_option('--release', action='store_const', dest="debugmode",  const="Release", default="Release")
@@ -39,6 +42,7 @@ def configure(conf):
     if conf.options.dest_platform in ['Windows-x86', 'Windows-x64']:
         conf.env.LIB_OHNET=['ws2_32', 'iphlpapi', 'dbghelp']
     conf.env.STLIB_OHNET=['ohNetProxies', 'TestFramework', 'ohNetCore']
+    conf.env.STLIB_OHNETGENERATED=['ohNetGeneratedDevices', 'ohNetGeneratedProxies']
     conf.env.INCLUDES = conf.path.find_node('.').abspath()
 
 def get_node(bld, node_or_filename):
@@ -78,29 +82,29 @@ def build(bld):
                 'OpenHome/Av/CpTopology3.cpp',
                 'OpenHome/Av/CpTopology4.cpp',
             ],
-            use=['OHNET'],
+            use=['OHNET', 'OHNETGENERATED'],
             target='ohTopology')
 
     # Tests
     bld.program(
             source='OpenHome/Av/Tests/TestTopology1.cpp',
-            use=['OHNET', 'ohTopology'],
+            use=['OHNET', 'OHNETGENERATED', 'ohTopology'],
             target='TestTopology1')
     bld.program(
             source='OpenHome/Av/Tests/TestTopology2.cpp',
-            use=['OHNET', 'ohTopology'],
+            use=['OHNET', 'OHNETGENERATED', 'ohTopology'],
             target='TestTopology2')
     bld.program(
             source='OpenHome/Av/Tests/TestTopology3.cpp',
-            use=['OHNET', 'ohTopology'],
+            use=['OHNET', 'OHNETGENERATED', 'ohTopology'],
             target='TestTopology3')
     bld.program(
             source='OpenHome/Av/Tests/TestTopology4.cpp',
-            use=['OHNET', 'ohTopology'],
+            use=['OHNET', 'OHNETGENERATED', 'ohTopology'],
             target='TestTopology4')
     bld.program(
             source='OpenHome/Av/Tests/TestTopology.cpp',
-            use=['OHNET', 'ohTopology'],
+            use=['OHNET', 'OHNETGENERATED', 'ohTopology'],
             target='TestTopology')
 
     # Bundles
