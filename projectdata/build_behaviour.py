@@ -1,6 +1,6 @@
 from ci import (OpenHomeBuilder, require_version)
 
-require_version(34)
+require_version(41)
 
 class Builder(OpenHomeBuilder):
     native_package_location = 'buildhudson/{packagename}'
