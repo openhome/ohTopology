@@ -4,8 +4,8 @@
 #include <OpenHome/OhNetTypes.h>
 #include <OpenHome/Private/Fifo.h>
 #include <OpenHome/Private/Thread.h>
-#include <OpenHome/Net/Core/CpAvOpenhomeOrgProduct1.h>
-#include <OpenHome/Net/Core/CpAvOpenhomeOrgVolume1.h>
+#include <Generated/CpAvOpenhomeOrgProduct1.h>
+#include <Generated/CpAvOpenhomeOrgVolume1.h>
 
 #include <vector>
 

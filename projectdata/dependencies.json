@@ -3,7 +3,7 @@
 	    "name": "ohNet",
         "type": "openhome",
         "platform-specific": true,
-        "version": "1.0.1247",
+        "version": "1.2.1527",
         "archive-suffix": "-${titlecase-debugmode}",
         "configure-args": [
             "--ohnet-lib-dir", "${dest}${name}-${platform}-${titlecase-debugmode}/lib",
@@ -14,7 +14,7 @@
 	    "name": "ohWafHelpers",
         "type": "openhome",
         "platform-specific": false,
-        "version": "0.0.58",
+        "version": "0.0.70",
         "archive-filename": "${name}-${version}.tar.gz"
     }
 ]
