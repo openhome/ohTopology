@@ -29,6 +29,16 @@ def options(opt):
     #opt.add_option('--dest', action='store', default=None)
 
 def configure(conf):
+
+    def set_env(conf, varname, value):
+        conf.msg(
+                'Setting %s to' % varname,
+                "True" if value is True else
+                "False" if value is False else
+                value)
+        setattr(conf.env, varname, value)
+        return value
+
     conf.msg("debugmode:", conf.options.debugmode)
     if conf.options.dest_platform is None:
         try:
@@ -46,6 +56,9 @@ def configure(conf):
         '.',
         conf.path.find_node('.').abspath()
         ]
+
+    mono = set_env(conf, 'MONO', [] if conf.options.dest_platform.startswith('Windows') else ["mono", "--runtime=v4.0"])
+
 
 def get_node(bld, node_or_filename):
     if isinstance(node_or_filename, Node):

@@ -66,18 +66,20 @@ CpTopology2Group::CpTopology2Group(CpDevice& aDevice, ICpTopology2GroupHandler& 
     UpdateRoom(aRoom);
     UpdateName(aName);
 
-	iHandler.AddRef();
+    iHandler.AddRef();
 
-    if (&iDevice != 0) {  // device with zero address used by test code
+    const TBool isValid = reinterpret_cast<TUint64>(&iDevice) != 0; // null device used by test code
+    if (isValid) {
         iDevice.AddRef();
     }
 }
 
 CpTopology2Group::~CpTopology2Group()
 {
-	iHandler.RemoveRef();
+    iHandler.RemoveRef();
 
-    if (&iDevice != 0) { // device with zero address used by test code
+    const TBool isValid = reinterpret_cast<TUint64>(&iDevice) != 0; // null device used by tes$
+    if (isValid) {
         iDevice.RemoveRef();
     }
 
