@@ -1,5 +1,4 @@
-#!/usr/bin/python
-
+#!/usr/bin/python2
 import sys
 import os
 
