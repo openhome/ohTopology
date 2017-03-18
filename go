@@ -1,6 +1,6 @@
 #!/bin/sh
 readlinkf() {
-    python -c 'import os,sys;print os.path.realpath(sys.argv[1])' $1
+    python2 -c 'import os,sys;print os.path.realpath(sys.argv[1])' $1
 }
 SCRIPT=`readlinkf $0`
 PROJECT_ROOT=`dirname $SCRIPT`
@@ -25,4 +25,4 @@ else
   export PYTHONPATH=$OHDEVTOOLS_ROOT:$PYTHONPATH
 fi
 cd "$PROJECT_ROOT"
-python -u -m go $@
+python2 -u -m go $@
