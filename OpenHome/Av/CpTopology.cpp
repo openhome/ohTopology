@@ -1,10 +1,10 @@
-#include <OpenHome/Av/CpTopology.h>
+#include "CpTopology.h"
 
 #include <OpenHome/Private/Debug.h>
 #include <OpenHome/Private/Parser.h>
 #include <OpenHome/Private/Ascii.h>
 #include <OpenHome/Net/Private/XmlParser.h>
-#include <OpenHome/Av/Debug.h>
+#include "Debug.h"
 
 #include "CpTopology4.h"
 
